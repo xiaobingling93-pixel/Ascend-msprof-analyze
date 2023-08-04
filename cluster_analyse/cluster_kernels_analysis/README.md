@@ -7,15 +7,18 @@
 #### 使用说明
 命令：python3 cluster_prof_Info_analysis.py -–dir XX/XX/XXX --type XX --top_n XX
 解释：
---dir 集群的profiling路径信息  格式为 /node0_XXX/PROF_XXX
-比如集群有两台机器16张卡  那么就是 
-    /node0_XXX 文件夹为第一台机器的，八张卡profiling数据
-    /node1_XXX 文件夹为第二台机器的，八张卡profiling数据
---type 获取什么类型的分析信息（html、csv、all） 如果写了其他的会报错
---top_n html分析独有，表示需要展示的是task_duration的方差为top_n的算子 
+--dir -d 
+    集群的profiling路径信息  格式为 /node0_XXX/PROF_XXX
+    比如集群有两台机器16张卡  那么就是 
+        /node0_XXX 文件夹为第一台机器的，八张卡profiling数据
+        /node1_XXX 文件夹为第二台机器的，八张卡profiling数据
+--type -t 
+    获取什么类型的分析信息（html、csv、all） 如果写了其他的会报错
+--top_n -n 
+    html分析独有，表示需要展示的是task_duration的方差为top_n的算子 
     top_n >= 1 
-    如果输入的是奇数，会默认加1变成偶数个
-    如果输入小于等于0，那么会默认只输出一个最大算子的信息
+        如果输入的是奇数，会默认加1变成偶数个
+        如果输入小于等于0，那么会默认只输出一个最大算子的信息
 
 输出描述：
 表格：cluster_op_time_analysis.csv
