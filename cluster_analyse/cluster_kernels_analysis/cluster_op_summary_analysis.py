@@ -210,15 +210,13 @@ class StatisticalInfoToHtmlAnalyzer(OpSummaryAnalyzerBase):
                              col=(i % col_num) + 1)
         fig.update_layout(margin=dict(l=20, r=20, t=20, b=20),
                           height=int(500 * row_num),
-                          width=int(rank_num * 50 * col_num),
+                          width=int(rank_num * 100 * col_num),
                           title_text="Op Performance Comparison")
         plot(fig, filename=self.result_dir + "/" + column + "_Info.html")
 
     def getCalNum(self, rank_num):
         # 计算每行应该画多少个子图
-        if rank_num <= 8:
-            return 3
-        elif rank_num <= 16:
+        if rank_num <= 16:
             return 2
         else:
             return 1
