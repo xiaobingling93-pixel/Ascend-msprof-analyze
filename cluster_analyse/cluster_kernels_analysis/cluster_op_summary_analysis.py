@@ -45,8 +45,11 @@ class FormDataProcessor:
             # 读取CSV文件
             df = pd.read_csv(f)
             # 保留需要的列
-            df = df[columns_to_keep]
-
+            try:
+                df = df[columns_to_keep]
+            except KeyError:
+                print(f"{f}文件没有所需的列，请确认profiling数据的正确性:\n,以下列可能不存在{columns_to_keep}\n")
+                continue
             # 从文件名提取设备ID
             # 添加新列 "device_id"
             df['device_id'] = self.getDeviceId(f)
@@ -106,7 +109,7 @@ class ViewInfoManager:
                 'TimeToCsvAnalyzer':
                     {'columns_to_group': ["Op Name", "Input Shapes", "Input Data Types", "Output Shapes"],
                      'extend_attr_to_group': ["device_id", "node_id"],
-                     "columns_to_view": ["aicore_time(us)"],
+                     "columns_to_view": ["Task Duration(us)"],
                      'calculate_fun': ['mean', 'var', 'max', 'min']
                      },
                 'StatisticalInfoToHtmlAnalyzer':
@@ -270,4 +273,4 @@ def main():
 if __name__ == "__main__":
     main()
 
-    
+
