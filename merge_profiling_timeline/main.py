@@ -100,17 +100,17 @@ def get_timeline_path(pro_path, type):
 def get_absolute_ts_start_info(pro_path) -> float:
     for root, dirs, files in os.walk(pro_path):
         for file in files:
-            if "start_json" in file and ".done" not in file:
+            if "start_info" in file and ".done" not in file:
                 start_json = os.path.join(root, file)
                 break
-        if start_json:
-            with open(start_json, "r+") as f:
-                info = json.load(f)
-            ts_us = float(info.get("collectionTimeBegin"), 0)
-            ts_ns = float(info.get("clockMonotonicRaw"), 0)
-            if ts_us and ts_ns:
-                return 0
-        return ts_us-ts_ns/1000
+    if start_json:
+        with open(start_json, "r+") as f:
+            info = json.load(f)
+        ts_us = float(info.get("collectionTimeBegin"), 0)
+        ts_ns = float(info.get("clockMonotonicRaw"), 0)
+        if not ts_us and not ts_ns:
+            return 0
+    return ts_us-ts_ns/1000
 
 def get_rank_id_from_info_json(pro_path):
     info_json = ""
