@@ -70,6 +70,7 @@ def get_timeline_info(args, prof_dirs):
 
         # 从info.json读取rank_id
         rank_id = get_rank_id_from_info_json(pro_path)
+        ts_difference_us = get_absolute_ts_start_info(pro_path)
         if rank_id is None:
             print(f"WARN, There is not rank id info in {pro_path}")
             continue
@@ -77,7 +78,7 @@ def get_timeline_info(args, prof_dirs):
         timeline_path = get_timeline_path(pro_path, args.type)
 
         if os.path.exists(timeline_path):
-            timeline_info[rank_id] = timeline_path
+            timeline_info[rank_id] = (timeline_path, ts_difference_us)
         else:
             print(f"WARN, The file \"{timeline_path}\" does not exist.")
     return timeline_info
@@ -96,6 +97,20 @@ def get_timeline_path(pro_path, type):
                 return timeline_path
     return
 
+def get_absolute_ts_start_info(pro_path) -> float:
+    for root, dirs, files in os.walk(pro_path):
+        for file in files:
+            if "start_json" in file and ".done" not in file:
+                start_json = os.path.join(root, file)
+                break
+        if start_json:
+            with open(start_json, "r+") as f:
+                info = json.load(f)
+            ts_us = float(info.get("collectionTimeBegin"), 0)
+            ts_ns = float(info.get("clockMonotonicRaw"), 0)
+            if ts_us and ts_ns:
+                return 0
+        return ts_us-ts_ns/1000
 
 def get_rank_id_from_info_json(pro_path):
     info_json = ""
@@ -119,8 +134,6 @@ def merge_timeline_general(args):
     timeline_info = get_timeline_info(args, prof_dir)
     timeline_files_dict = {}
 
-    node_time_diff = get_node_time_diff(args.timediff) if args.timediff else None
-
     # 合并部分profiling items
     process_list = args.items.split(",") if args.items else None
 
@@ -132,7 +145,7 @@ def merge_timeline_general(args):
 
     for rank_id in rank_ids:
         timeline_files_dict[rank_id] = timeline_info.get(rank_id)
-    merge_timeline_events(timeline_files_dict, process_list, node_time_diff)
+    merge_timeline_events(timeline_files_dict, process_list)
 
 
 def merge_timeline_custom(args):
@@ -140,25 +153,24 @@ def merge_timeline_custom(args):
     timeline_files = natural_sort(os.listdir(args.data))
     timeline_files_dict = {}
     for idx, timeline_file in enumerate(timeline_files):
-        timeline_files_dict[idx] = os.path.join(args.data, timeline_file)
-    node_time_diff = get_node_time_diff(args.timediff) if args.timediff else None
+        timeline_files_dict[idx] = (os.path.join(args.data, timeline_file),0)
     # 合并部分profiling items
     process_list = args.items.split(",") if args.items else None
-    merge_timeline_events(timeline_files_dict, process_list, node_time_diff)
+    merge_timeline_events(timeline_files_dict, process_list)
 
 
-def merge_timeline_events(timeline_file_dict, process_list, node_time_diff=None):
+def merge_timeline_events(timeline_file_dict, process_list):
     """
     输入需要合并的timeline文件路径及对应的rank_id/id、需要合并的process_list、校准时间差node_time_diff
     输出合并timeline
     """
     new_events = []
-    for rank_id, timeline_file_path in timeline_file_dict.items():
+    for rank_id, data_tuple in timeline_file_dict.items():
+        timeline_file_path = data_tuple[0]
+        ts_difference_us = data_tuple[1]
         node = rank_id // 8
         print("rank id: ", rank_id, "timeline file: ", timeline_file_path)
 
-        # 获取相应的时间差异
-        node_time = node_time_diff[node] if node_time_diff else None
         try:
             with open(timeline_file_path, 'r+') as f:
                 cur_events = json.load(f)
@@ -189,8 +201,8 @@ def merge_timeline_events(timeline_file_dict, process_list, node_time_diff=None)
                 continue
 
             # 当前节点间时间误差可用时，进行时间校准
-            if event.get("ts") and node_time:
-                event["ts"] = event["ts"] - node_time * 1000000
+            if event.get("ts") and ts_difference_us:
+                event["ts"] = event["ts"] + ts_difference_us
 
             # 区分不同rank的同一进程的pid
             if isinstance(event.get("pid"), (str, int)):
