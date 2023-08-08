@@ -1,19 +1,3 @@
-#!/bin/bash
-# Copyright 2023 Huawei Technologies Co., Ltd
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-
 from pathlib import Path
 
 import pandas as pd
@@ -168,7 +152,7 @@ class TimeToCsvAnalyzer(OpSummaryAnalyzerBase):
 class StatisticalInfoToHtmlAnalyzer(OpSummaryAnalyzerBase):
     def __init__(self, chip_type, top_n, dir_path):
         super().__init__(chip_type, "StatisticalInfoToHtmlAnalyzer", dir_path)
-        self.top_n = top_n if top_n % 2 == 0 else top_n + 1
+        self.top_n = top_n
         # top_n 如果不符合要求，报警告
 
     def GenerateDeliverable(self, summary_data, rank_num):
@@ -192,7 +176,7 @@ class StatisticalInfoToHtmlAnalyzer(OpSummaryAnalyzerBase):
 
     def drawPloty(self, column, summary_data, top_n_data, rank_num):
         col_num = self.getCalNum(rank_num)
-        row_num = self.top_n // col_num
+        row_num = self.top_n // col_num if self.top_n % col_num == 0 else (self.top_n + 1) // col_num
         fig = make_subplots(rows=row_num, cols=col_num, vertical_spacing=0.03)
         for i, (_, operation) in enumerate(top_n_data.iterrows()):
             op_data = summary_data[(summary_data["Op Name"] == operation["Op Name"]) &
