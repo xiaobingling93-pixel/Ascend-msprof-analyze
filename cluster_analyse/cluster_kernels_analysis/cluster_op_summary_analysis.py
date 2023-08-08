@@ -44,8 +44,11 @@ class FormDataProcessor:
             # 读取CSV文件
             df = pd.read_csv(f)
             # 保留需要的列
-            df = df[columns_to_keep]
-
+            try:
+                df = df[columns_to_keep]
+            except KeyError:
+                print(f"{f}文件没有所需的列，请确认profiling数据的正确性:\n,以下列可能不存在{columns_to_keep}\n")
+                continue
             # 从文件名提取设备ID
             # 添加新列 "device_id"
             df['device_id'] = self.getDeviceId(f)
@@ -105,7 +108,7 @@ class ViewInfoManager:
                 'TimeToCsvAnalyzer':
                     {'columns_to_group': ["Op Name", "Input Shapes", "Input Data Types", "Output Shapes"],
                      'extend_attr_to_group': ["device_id", "node_id"],
-                     "columns_to_view": ["aicore_time(us)"],
+                     "columns_to_view": ["Task Duration(us)"],
                      'calculate_fun': ['mean', 'var', 'max', 'min']
                      },
                 'StatisticalInfoToHtmlAnalyzer':
@@ -164,7 +167,7 @@ class TimeToCsvAnalyzer(OpSummaryAnalyzerBase):
 class StatisticalInfoToHtmlAnalyzer(OpSummaryAnalyzerBase):
     def __init__(self, chip_type, top_n, dir_path):
         super().__init__(chip_type, "StatisticalInfoToHtmlAnalyzer", dir_path)
-        self.top_n = top_n if top_n % 2 == 0 else top_n + 1
+        self.top_n = top_n
         # top_n 如果不符合要求，报警告
 
     def GenerateDeliverable(self, summary_data, rank_num):
@@ -188,7 +191,7 @@ class StatisticalInfoToHtmlAnalyzer(OpSummaryAnalyzerBase):
 
     def drawPloty(self, column, summary_data, top_n_data, rank_num):
         col_num = self.getCalNum(rank_num)
-        row_num = self.top_n // col_num
+        row_num = self.top_n // col_num if self.top_n % col_num == 0 else (self.top_n + 1) // col_num
         fig = make_subplots(rows=row_num, cols=col_num, vertical_spacing=0.03)
         for i, (_, operation) in enumerate(top_n_data.iterrows()):
             op_data = summary_data[(summary_data["Op Name"] == operation["Op Name"]) &
@@ -209,15 +212,13 @@ class StatisticalInfoToHtmlAnalyzer(OpSummaryAnalyzerBase):
                              col=(i % col_num) + 1)
         fig.update_layout(margin=dict(l=20, r=20, t=20, b=20),
                           height=int(500 * row_num),
-                          width=int(rank_num * 50 * col_num),
+                          width=int(rank_num * 100 * col_num),
                           title_text="Op Performance Comparison")
         plot(fig, filename=self.result_dir + "/" + column + "_Info.html")
 
     def getCalNum(self, rank_num):
         # 计算每行应该画多少个子图
-        if rank_num <= 8:
-            return 3
-        elif rank_num <= 16:
+        if rank_num <= 16:
             return 2
         else:
             return 1
