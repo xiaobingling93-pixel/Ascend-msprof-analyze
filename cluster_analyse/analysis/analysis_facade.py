@@ -1,4 +1,4 @@
-# Copyright (c) 2023, Huawei Technologies.
+# Copyright (c) 2023, Huawei Technologies Co., Ltd.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0  (the "License");
@@ -13,6 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
+from communication_group.communication_group_generator import CommunicationGroupGenerator
+
+
 class AnalysisFacade:
     analysis_module = {}
 
@@ -21,4 +25,9 @@ class AnalysisFacade:
         self.data_map = data_map
         self.communication_group = communication_group
 
+    def cluster_analyze(self):
+        data_map = PytorchDataPreprocessor(self.collection_path).get_data_map()
+        if not data_map:
+            print("Can not get rank info or profiling data.")
+        communication_group = CommunicationGroupGenerator(self.collection_path, data_map).generate()
 
