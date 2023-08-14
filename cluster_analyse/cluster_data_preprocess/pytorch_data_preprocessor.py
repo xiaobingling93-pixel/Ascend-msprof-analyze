@@ -13,16 +13,41 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections import defaultdict
 import os
 
-
 class PytorchDataPreprocessor:
-    def __init__(self, collection_path: str):
-        self.collection_path = collection_path
-        self.data_map = {}
+    PROFILER_INFO_HEAD = 'profiler_info_'
+    PROFILER_INFO_EXTENSION = '.json'
 
-    def get_data_map(self):
-        self.input_data()
+    def __init__(self, path: str):
+        self.path = os.path.realpath(path)
 
-    def input_data(self):
-        pass
+    def get_data_map(self) -> dict:
+        if not os.path.exists(self.path) or not os.access(self.path, os.R_OK):
+            print('[Error]path:{} not exist or not accessable.'.format(self.path))
+            return dict()
+
+        collector_dirs = [dir_name for dir_name in os.listdir(self.path) if os.path.isdir(os.path.join(self.path, dir_name))]
+        ascend_pt_dirs = [dir_name for dir_name in collector_dirs if dir_name.endswith("ascend_pt")]
+
+        rank_id_map = defaultdict(list)
+        for dir_name in ascend_pt_dirs:
+            rank_id = self.get_rank_id(dir_name)
+            if rank_id < 0:
+                print('[Error]fail to get rankid or rankid invalid.')
+
+            rank_id_map[rank_id].append(dir_name)
+
+        ret_dict = dict()
+        for (rank_id, dir_list) in rank_id_map.items():
+            dir_list.sort(key=lambda x: x.split('_')[-3])
+            ret_dict[rank_id] = os.path.join(self.path, dir_list[0])
+        return ret_dict
+
+    def get_rank_id(self, dir_name: str) -> int:
+        files = os.listdir(os.path.join(self.path, dir_name))
+        for file_name in files:
+            if file_name.startswith(self.PROFILER_INFO_HEAD) and file_name.endswith(self.PROFILER_INFO_EXTENSION):
+                return int(file_name[len(self.PROFILER_INFO_HEAD): -1 * len(self.PROFILER_INFO_EXTENSION)])
+        return -1
