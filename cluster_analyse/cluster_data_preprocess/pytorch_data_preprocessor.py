@@ -14,7 +14,9 @@
 # limitations under the License.
 
 from collections import defaultdict
+from common_func.file_manager import FileManager
 import os
+
 
 class PytorchDataPreprocessor:
     PROFILER_INFO_HEAD = 'profiler_info_'
@@ -24,9 +26,7 @@ class PytorchDataPreprocessor:
         self.path = os.path.realpath(path)
 
     def get_data_map(self) -> dict:
-        if not os.path.exists(self.path) or not os.access(self.path, os.R_OK):
-            print('[Error]path:{} not exist or not accessable.'.format(self.path))
-            return dict()
+        FileManager.check_file_or_directory_path(self.path, isdir=True)
 
         collector_dirs = [dir_name for dir_name in os.listdir(self.path) if os.path.isdir(os.path.join(self.path, dir_name))]
         ascend_pt_dirs = [dir_name for dir_name in collector_dirs if dir_name.endswith("ascend_pt")]
@@ -36,7 +36,7 @@ class PytorchDataPreprocessor:
             rank_id = self.get_rank_id(dir_name)
             if rank_id < 0:
                 print('[Error]fail to get rankid or rankid invalid.')
-
+                continue
             rank_id_map[rank_id].append(dir_name)
 
         ret_dict = dict()

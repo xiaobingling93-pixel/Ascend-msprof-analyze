@@ -16,6 +16,9 @@
 import argparse
 from cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
 from communication_group.communication_group_generator import CommunicationGroupGenerator
+from common_func.constant import Constant
+from common_func.file_manager import FileManager
+from analysis.analysis_facade import AnalysisFacade
 
 
 class Interface:
@@ -25,8 +28,24 @@ class Interface:
         self.communication_group = {}
 
     def run(self):
+        FileManager.create_output_dir(self.collection_path)
         data_map = PytorchDataPreprocessor(self.collection_path).get_data_map()
-        communication_group = CommunicationGroupGenerator(self.collection_path, data_map).generate()
+        if not data_map:
+            print("Can not get rank info or profiling data.")
+            return
+        communication_group, collective_group_dict, communication_ops = \
+            CommunicationGroupGenerator(self.collection_path, data_map).generate()
+        if not collective_group_dict:
+            print("Can not get communication info from ranks")
+            return
+        params = {
+            Constant.COLLECTION_PATH: self.collection_path,
+            Constant.DATA_MAP: data_map,
+            Constant.COLLECTIVE_GROUP: collective_group_dict,
+            Constant.COMMUNICATION_OPS: communication_ops,
+            Constant.COMMUNICATION_GROUP: communication_group
+        }
+        AnalysisFacade(params).cluster_analyze()
 
 
 if __name__ == "__main__":

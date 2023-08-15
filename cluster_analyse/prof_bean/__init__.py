@@ -12,17 +12,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-from analysis.communication_analysis import CommunicationAnalysis
-from analysis.step_trace_time_analysis import StepTraceTimeAnalysis
-
-
-class AnalysisFacade:
-    analysis_module = {CommunicationAnalysis, StepTraceTimeAnalysis}
-
-    def __init__(self, param: dict):
-        self.param = param
-
-    def cluster_analyze(self):
-        for analysis in self.analysis_module:
-            analysis(self.param).run()
