@@ -13,16 +13,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from analysis.communication_analysis import CommunicationAnalysis
-from analysis.step_trace_time_analysis import StepTraceTimeAnalysis
 
+class StepTraceTimeBean:
+    STEP = "Step"
+    COMPLEMENT_HEADER = ["Step", "Type", "Index"]
 
-class AnalysisFacade:
-    analysis_module = {CommunicationAnalysis, StepTraceTimeAnalysis}
+    def __init__(self, data: list):
+        self._data = data
 
-    def __init__(self, param: dict):
-        self.param = param
+    @property
+    def row(self) -> list:
+        row = []
+        for field_name in self._data.keys():
+            if field_name == self.STEP:
+                continue
+            row.append(float(self._data.get(field_name, )))
+        return row
 
-    def cluster_analyze(self):
-        for analysis in self.analysis_module:
-            analysis(self.param).run()
+    @property
+    def step(self) -> float:
+        return float(self._data.get(self.STEP, ''))
+
+    @property
+    def all_headers(self) -> list:
+        return self.COMPLEMENT_HEADER + list(self._data.keys())[1:]

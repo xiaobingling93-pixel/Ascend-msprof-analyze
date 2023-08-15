@@ -33,6 +33,18 @@ class FileManager:
         Exception Description:
             when invalid data throw exception
         """
+        if not os.access(path, os.R_OK):
+            raise RuntimeError(
+                'The path {} does not have permission to read. Please check the path permission'.format(path))
+
+        if len(path) > Constant.MAX_PATH_LENGTH:
+            msg = f"The length of file path exceeded the maximum value {Constant.MAX_PATH_LENGTH}: {path}"
+            raise RuntimeError(msg)
+
+        if os.path.islink(path):
+            msg = f"Invalid profiling path is soft link: {path}"
+            raise RuntimeError(msg)
+
         if isdir:
             if not os.path.exists(path):
                 raise RuntimeError('The path {} is not exist.'.format(path))
@@ -46,10 +58,6 @@ class FileManager:
         else:
             if not os.path.isfile(path):
                 raise RuntimeError('{} is an invalid file or non-exist.'.format(path))
-
-        if not os.access(path, os.R_OK):
-            raise RuntimeError(
-                'The path {} does not have permission to read. Please check the path permission'.format(path))
 
     @classmethod
     def read_csv_file(cls, file_path: str, class_bean: any) -> list:
@@ -78,7 +86,7 @@ class FileManager:
         if file_size <= 0:
             return {}
         if file_size > Constant.MAX_JSON_SIZE:
-            print(f"The file size exceeds the preset value {Constant.MAX_CSV_SIZE / 1024 / 1024}MB, "
+            print(f"The file size exceeds the preset value {Constant.MAX_JSON_SIZE / 1024 / 1024}MB, "
                   f"please check the file: {file_path}")
             return {}
         try:
@@ -92,49 +100,44 @@ class FileManager:
     def create_csv_file(cls, profiler_path: str, data: list, file_name: str, headers: list = None) -> None:
         if not data:
             return
-        file_path = os.path.join(profiler_path, Constant.OUTPUT_DIR, file_name)
+        output_path = os.path.join(profiler_path, Constant.CLUSTER_ANALYSIS_OUTPUT)
+        output_file = os.path.join(output_path, file_name)
+        cls.check_file_or_directory_path(output_path, isdir=True)
         try:
-            with os.fdopen(os.open(file_path, os.O_WRONLY | os.O_CREAT, Constant.FILE_AUTHORITY), "w",
+            with os.fdopen(os.open(output_file, os.O_WRONLY | os.O_CREAT, Constant.FILE_AUTHORITY), "w",
                            newline="") as file:
                 writer = csv.writer(file)
                 if headers:
                     writer.writerow(headers)
                 writer.writerows(data)
         except Exception:
-            raise RuntimeError(f"Can't create file: {file_path}")
+            raise RuntimeError(f"Can't create file: {output_file}")
 
     @classmethod
-    def create_json_file(cls, profiler_path: str, data: list, file_name: str) -> None:
+    def create_json_file(cls, profiler_path: str, data: dict, file_name: str) -> None:
         if not data:
             return
-        file_path = os.path.join(profiler_path, Constant.OUTPUT_DIR, file_name)
-        cls.create_json_file_by_path(file_path, data)
-
-    @classmethod
-    def create_json_file_by_path(cls, output_path: str, data: list) -> None:
-        dir_name = os.path.dirname(output_path)
-        if not os.path.exists(dir_name):
-            try:
-                os.makedirs(dir_name, mode=Constant.DIR_AUTHORITY)
-            except Exception:
-                raise RuntimeError(f"Can't create directory: {dir_name}")
+        output_path = os.path.join(profiler_path, Constant.CLUSTER_ANALYSIS_OUTPUT)
+        output_file = os.path.join(output_path, file_name)
+        cls.check_file_or_directory_path(output_path, isdir=True)
         try:
-            with os.fdopen(os.open(output_path, os.O_WRONLY | os.O_CREAT, Constant.FILE_AUTHORITY), "w") as file:
+            with os.fdopen(os.open(output_file, os.O_WRONLY | os.O_CREAT, Constant.FILE_AUTHORITY), "w") as file:
                 json.dump(data, file)
         except Exception:
-            raise RuntimeError(f"Can't create file: {output_path}")
+            raise RuntimeError(f"Can't create the file: {output_file}")
 
     @classmethod
-    def remove_and_make_output_dir(cls, profiler_path) -> None:
-        output_path = os.path.join(profiler_path, Constant.OUTPUT_DIR)
+    def create_output_dir(cls, collection_path: str) -> None:
+        output_path = os.path.join(collection_path, Constant.CLUSTER_ANALYSIS_OUTPUT)
         if os.path.isdir(output_path):
             try:
+                cls.check_file_or_directory_path(output_path, isdir=True)
                 shutil.rmtree(output_path)
                 os.makedirs(output_path, mode=Constant.DIR_AUTHORITY)
             except Exception:
-                raise RuntimeError(f"Can't delete files in the directory: {output_path}")
+                raise RuntimeError(f"Can't delete the directory: {output_path}")
             return
         try:
             os.makedirs(output_path, mode=Constant.DIR_AUTHORITY)
         except Exception:
-            raise RuntimeError(f"Can't create directory: {output_path}")
+            raise RuntimeError(f"Can't create the directory: {output_path}")
