@@ -66,18 +66,8 @@ python3 main.py -d path/to/cann_profiling/ --rank 0,1
 ```
 python3 main.py -d path/to/cann_profiling/ --items CANN,Ascend_Hardware
 ```
-
-4、合并多机多卡的timeline时, 需要-t指定节点间的时间误差文件路径, 用以校准节点间的时间：
-
-```
-python3 main.py -d path/to/cann_profiling/ -t path/to/time_difference.json --rank 0,8,
-```
-
-合并timeline查看：
-> 在 -o 指定的目录（默认在-d指定的目录下）的msprof_merged_*p.json为合并后的文件
-
-## 2 多timeline融合(自定义)
-### 2.1 数据采集
+4、合并多timeline(自定义)
+4.1 数据采集
 将需要合并的timeline文件全部放在同一目录下
 数据目录结构示意如下：
 ```
@@ -92,7 +82,7 @@ python3 main.py -d path/to/cann_profiling/ -t path/to/time_difference.json --ran
     |- step_trace_3.json
     ...
 ```
-### 2.2 合并timeline
+4.2 合并timeline
 使用脚本`merge_profiling_timeline/main.py`合并timeline
 
 可选参数：
@@ -106,14 +96,17 @@ python3 main.py -d path/to/cann_profiling/ -t path/to/time_difference.json --ran
 ```
 python3 main.py -d path/to/timeline/ --type custom
 ```
-合并timeline查看：同
+合并timeline查看：
+> 在 -o 指定的目录（默认在-d指定的目录下）的msprof_merged_*p.json为合并后的文件
+
 
 ## 3 超大timeline文件查看
 
-直接使用以下命令
+下载whl包并安装：
+https://gitee.com/aerfaliang/trace_processor/releases/download/trace_processor_37.0/trace_processor-37.0-py3-none-any.whl
+安装完成后直接使用以下命令
 ```
-cd merge_profiling_timeline
-python ./trace_processor --httpd path/to/msprof_merged_*p.json 
+python3 ./trace_processor --httpd path/to/msprof_merged_*p.json 
 ```
 等待加载完毕，刷新[perfetto](https://ui.perfetto.dev/)界面，点击`YES, use loaded trace`即可展示timeline
 
