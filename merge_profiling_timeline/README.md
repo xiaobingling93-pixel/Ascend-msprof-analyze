@@ -9,7 +9,7 @@
 ### 1.1 数据采集
 使用msporf采集数据，将采集到的所有节点的profiling数据拷贝到当前机器同一目录下，以下假设数据在/home/test/cann_profiling下
 
-e2e profiling数据目录结构如下, 合并timeline必需数据：`msprof*.json`和`info.json.*`：
+e2e profiling数据目录结构如下：
 ```
 |- cann_profiling
     |- PROF_***
@@ -21,7 +21,7 @@ e2e profiling数据目录结构如下, 合并timeline必需数据：`msprof*.jso
     |- PROF_***
     ...
 ```
-ascend pytorch profiling数据目录结构如下
+ascend pytorch profiling数据目录结构如下：
 ```
 |- ascend_pytorch_profiling
     |- **_ascend_pt
@@ -43,7 +43,7 @@ ascend pytorch profiling数据目录结构如下
 - --type: 指定需要合并timeline场景，可选参数：`pytorch`, `e2e`, `custom`
   - `pytorch`：通过ascend pytorch方式采集profiling数据，合并所有卡的trace_view.json
   - `e2e`：通过e2e方式采集profiling数据，优先合并总timeline，没有生成则选择合并device目录下的msprof_*.json
-  - `custom` ：自定义需要合并的timeline数据，具体参考第2章节
+  - `custom` ：自定义需要合并的timeline数据，具体参考示例
 
 
 
@@ -67,9 +67,7 @@ python3 main.py -d path/to/cann_profiling/ --items CANN,Ascend_Hardware
 ```
 4、合并多timeline(自定义)
 
-4.1 数据采集
-将需要合并的timeline文件全部放在同一目录下
-数据目录结构示意如下：
+以上场景不支持的情况下，可以使用自定义的合并方式，将需要合并的timeline文件放在同一目录下，数据目录结构示意如下：
 ```
 |- timeline
     |- msprof_0.json
@@ -82,18 +80,9 @@ python3 main.py -d path/to/cann_profiling/ --items CANN,Ascend_Hardware
     |- step_trace_3.json
     ...
 ```
-4.2 合并timeline
-使用脚本`merge_profiling_timeline/main.py`合并timeline
-
-可选参数：
-- -d: **必选参数**，指定profiling数据文件或文件夹路径
-- -o: 可选参数，指定合并后的timeline文件输出的路径，默认为'-d'输入的路径
-- --type: 指定需要合并timeline场景，指定参数：`custom`
-  - `custom` ：自定义需要合并的timeline数据
-
 **使用示例**：
 
-将需要合并的所有timeline放在同一目录下，通过下面的命令合并所有timeline
+通过下面的命令合并所有timeline，同样支持-o、--rank、--items等参数:
 ```
 python3 main.py -d path/to/timeline/ --type custom
 ```
@@ -105,6 +94,7 @@ python3 main.py -d path/to/timeline/ --type custom
 
 下载whl包并安装：
 https://gitee.com/aerfaliang/trace_processor/releases/download/trace_processor_37.0/trace_processor-37.0-py3-none-any.whl
+
 安装完成后直接使用以下命令
 ```
 python3 ./trace_processor --httpd path/to/msprof_merged_*p.json 
