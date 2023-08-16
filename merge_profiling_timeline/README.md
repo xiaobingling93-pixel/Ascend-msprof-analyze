@@ -37,7 +37,6 @@ ascend pytorch profiling数据目录结构如下
 
 可选参数：
 - -d: **必选参数**，profiling数据文件或文件夹路径
-- -t: **当需要融合多机多卡timeline时需要校准多机间的时间**，传入时间校准的time_difference.json文件路径， 该文件的获取参考[节点间时间差获取](https://gitee.com/aerfaliang/merge_profiling_timeline/tree/master/get_nodes_timediff)
 - -o: 可选参数，指定合并后的timeline文件输出的路径，默认为'-d'输入的路径
 - --rank：可选参数，指定需要合并timeline的卡号，默认全部合并
 - --items：可选参数，指定需要合并的profiling数据项，默认全部合并
@@ -67,6 +66,7 @@ python3 main.py -d path/to/cann_profiling/ --rank 0,1
 python3 main.py -d path/to/cann_profiling/ --items CANN,Ascend_Hardware
 ```
 4、合并多timeline(自定义)
+
 4.1 数据采集
 将需要合并的timeline文件全部放在同一目录下
 数据目录结构示意如下：
@@ -90,6 +90,7 @@ python3 main.py -d path/to/cann_profiling/ --items CANN,Ascend_Hardware
 - -o: 可选参数，指定合并后的timeline文件输出的路径，默认为'-d'输入的路径
 - --type: 指定需要合并timeline场景，指定参数：`custom`
   - `custom` ：自定义需要合并的timeline数据
+
 **使用示例**：
 
 将需要合并的所有timeline放在同一目录下，通过下面的命令合并所有timeline
