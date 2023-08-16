@@ -106,8 +106,8 @@ def get_absolute_ts_start_info(pro_path) -> float:
     if start_json:
         with open(start_json, "r+") as f:
             info = json.load(f)
-        ts_us = float(info.get("collectionTimeBegin"), 0)
-        ts_ns = float(info.get("clockMonotonicRaw"), 0)
+        ts_us = float(info.get("collectionTimeBegin"))
+        ts_ns = float(info.get("clockMonotonicRaw"))
         if not ts_us and not ts_ns:
             return 0
     return ts_us-ts_ns/1000
@@ -183,15 +183,15 @@ def merge_timeline_events(timeline_file_dict, process_list):
             if event.get("name") == "process_name" and event.get("ph") == "M":
                 if event.get("args"):
                     proc_pid_dict[event["args"].get("name")] = event.get("pid")
-        process_list = process_list if process_list else list(proc_pid_dict.keys())
+        process_list_tmp = process_list if process_list else list(proc_pid_dict.keys())
         # 提取待合并的items的pid
         merged_pids = set()
-        for pro in process_list:
+        for pro in process_list_tmp:
             pro = " ".join(pro.split("_")) if "_" in pro else pro
 
             if pro not in proc_pid_dict.keys():
-                print(f"{pro} is invalid item, valid items: {list(proc_pid_dict.keys())}")
-                continue
+                print(f"main.py: error argument --items: invalid choice: '{pro}' (choose from {list(proc_pid_dict.keys())})")
+                return
             merged_pids.add(proc_pid_dict.get(pro))
 
         for event in cur_events:
