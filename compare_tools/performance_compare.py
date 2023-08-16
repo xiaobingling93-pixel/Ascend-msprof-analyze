@@ -19,9 +19,9 @@ def performance_compare(args):
     if ArgsManager().base_profiling_type == Constant.NPU:
         npu_path = ArgsManager().base_profiling.file_path
     elif ArgsManager().base_profiling_type == Constant.GPU:
-        npu_path = ArgsManager().base_profiling.file_path
+        gpu_path = ArgsManager().base_profiling.file_path
     if ArgsManager().comparison_profiling_type == Constant.NPU:
-        gpu_path = ArgsManager().comparison_profiling.file_path
+        npu_path = ArgsManager().comparison_profiling.file_path
     elif ArgsManager().comparison_profiling_type == Constant.GPU:
         gpu_path = ArgsManager().comparison_profiling.file_path
     prof_main(npu_path, gpu_path)
@@ -49,9 +49,13 @@ def main():
     args = parser.parse_args()
 
     ArgsManager().init(args)
-    performance_compare(args)
+    try:
+        performance_compare(args)
+    except Exception:
+        print("profiling analyze failed.")
     dir_path = args.output_path if args.output_path else "./"
-    file_name = "performance_comparison_result_{}.xlsx".format(time.strftime("%Y%m%d%H%M%S", time.localtime(time.time())))
+    file_name = "performance_comparison_result_{}.xlsx".format(
+        time.strftime("%Y%m%d%H%M%S", time.localtime(time.time())))
     result_file_path = os.path.join(dir_path, file_name)
 
     ComparisonGenerator(args).create_excel(result_file_path)

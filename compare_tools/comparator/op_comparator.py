@@ -127,3 +127,5 @@ class OpComparator:
             match_list.reverse()
             for data in match_list:
                 op_deque.append(data)
+
+        return drill_down_result
