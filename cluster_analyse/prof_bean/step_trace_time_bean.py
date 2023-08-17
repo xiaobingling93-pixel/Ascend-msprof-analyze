@@ -31,8 +31,8 @@ class StepTraceTimeBean:
         return row
 
     @property
-    def step(self) -> float:
-        return float(self._data.get(self.STEP, ''))
+    def step(self) -> str:
+        return self._data.get(self.STEP, '')
 
     @property
     def all_headers(self) -> list:
