@@ -69,7 +69,7 @@ class CommunicationGroupGenerator:
     def generate_p2p_communication_group(self):
         stage_group = {}
         for rank_set in self.collective_group_dict.values():
-            unioned_set = {}
+            unioned_set = set()
             remove_key = []
             for first_rank, stage in stage_group.items():
                 if UnionFind.is_connected(rank_set, stage):
