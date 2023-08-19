@@ -65,18 +65,17 @@
 > 命令行输入python3  cluster_op_summary_analysis.py  -d  /XX/XX/XXX  -t all -n  10
 
 ### 1、csv表格展示：
-![图片说明](http://image.huawei.com/tiny-lts/v1/images/7f302c36ef7b61ffd60509ad1225ba47_865x337.png@900-0-90-f.png)
+
 ### 2、html箱线图展示
 查看时直接将html拖到浏览器里即可
 
-![图片说明](http://image.huawei.com/tiny-lts/v1/images/2384a3fa10fbb9615fb16aa5614d0c2c_865x333.png@900-0-90-f.png)
 
 下面这张图以两机16卡为例，展示每一个算子在每个device上的数据箱线图
 有top_n个算子就会有top_n个坐标系，每个坐标系表示一个算子的特性。以total_time的平均值从左向右依次向下排序
 - 横坐标：node_device 表示第几个node的第几张卡，从小到大排序
 - 纵坐标：时间
 - 坐标名：在坐标下方，以op_name-input_shape 拼接展示
-![图片说明](http://image.huawei.com/tiny-lts/v1/images/52399bdaca96ada2754cdf416a260f4c_1543x1015.png@900-0-90-f.png)
+
 # 结果说明
 ### cluster_op_time_ analysis.csv表格
 将算子以op_name、input_shape、input_size、output_shape进行分类，统计每一类算子，在不同node的不同device上，total_time的最大、最小、方差、平均时间以及范围
