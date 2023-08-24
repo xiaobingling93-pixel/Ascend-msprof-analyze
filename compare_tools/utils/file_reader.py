@@ -16,7 +16,7 @@ class FileReader:
         if file_size <= 0:
             return []
         if file_size > Constant.MAX_FILE_SIZE:
-            print(f"The file size exceeds the preset value {Constant.MAX_FILE_SIZE / 1024 / 1024}MB, "
+            print(f"[WARNING] The file size exceeds the preset value {Constant.MAX_FILE_SIZE / 1024 / 1024}MB, "
                   f"please check the file: {file_path}")
             return []
         try:
@@ -35,7 +35,7 @@ class FileReader:
         if file_size <= 0:
             return []
         if file_size > Constant.MAX_FILE_SIZE:
-            print(f"[WARN] The file size exceeds the preset value {Constant.MAX_FILE_SIZE / 1024 / 1024}MB, "
+            print(f"[WARNING] The file size exceeds the preset value {Constant.MAX_FILE_SIZE / 1024 / 1024}MB, "
                   f"please check the file: {file_path}")
             return []
         result_data = []

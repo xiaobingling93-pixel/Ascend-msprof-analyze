@@ -4,6 +4,7 @@ from math import ceil
 from utils.compare_event import KernelEvent
 from utils.constant import Constant
 from utils.file_reader import FileReader
+from utils.trace_event_data import TraceEventData
 
 
 class ProfilingParser(metaclass=ABCMeta):
@@ -270,27 +271,52 @@ class NPUProfilingParser(ProfilingParser):
 
     def get_communication_data(self):
         self._communication_data, self._communication_task_data = [], {}
-        pid, tid = None, None
         json_data = FileReader.read_trace_file(self._json_path)
+        pid = None
         for data in json_data:
-            if data.get("ph", "") == "M" and data.get("name", "") == "thread_name" \
-                    and data.get("args", {}).get("name", "") == "Communication OP":
-                pid = data.get("pid", "")
-                tid = data.get("tid", "")
-        if not pid or not tid:
+            trace_event = TraceEventData(data)
+            if not trace_event.is_process_meta():
+                continue
+            if trace_event.is_hccl_process():
+                pid = trace_event.pid
+                break
+        if pid is None:
             return
+        tid_list = []
         for data in json_data:
-            if data.get("ph", "") == "X" and data.get("pid", "") == pid and data.get("tid", "") == tid:
+            trace_event = TraceEventData(data)
+            if not trace_event.is_thread_meta():
+                continue
+            if trace_event.pid != pid:
+                continue
+            if trace_event.is_communication_op_thread():
+                tid_list.append(trace_event.tid)
+
+        if not tid_list:
+            return
+
+        for data in json_data:
+            trace_event = TraceEventData(data)
+            if not trace_event.is_x_mode():
+                continue
+            if trace_event.pid != pid:
+                continue
+            if trace_event.tid in tid_list:
                 self._communication_data.append(data)
         if not self._communication_data:
             return
         for data in json_data:
-            if data.get("ph", "") != "X" or data.get("pid", "") != pid or data.get("tid", "") == tid:
+            trace_event = TraceEventData(data)
+            if not trace_event.is_x_mode():
                 continue
-            ts = data.get("ts", 0)
+            if trace_event.pid != pid:
+                continue
+            if trace_event.tid in tid_list:
+                continue
+            ts = trace_event.start_time
             for communication_op in self._communication_data:
-                if ts < communication_op.get("ts", 0) or ts - communication_op.get("ts", 0) > communication_op.get(
-                        "dur", 0):
+                comm_op_event = TraceEventData(communication_op)
+                if ts < comm_op_event.start_time or ts > comm_op_event.end_time:
                     continue
                 name_list = communication_op.get("name", "").split("_")
                 if len(name_list) >= 2:

@@ -14,7 +14,7 @@ class IndexComparator:
     def compare(self) -> list:
         base_data, comparison_data = [], []
         if not self._base_profiling.communication_data:
-            print(f"[warning] Can't find any communication op in the file: {self._base_profiling.json_path}")
+            print(f"[WARNING] Can't find any communication op in the file: {self._base_profiling.json_path}")
         for data in self._base_profiling.communication_data:
             name_list = data.get("name", "").split("_")
             if len(name_list) >= 2:
@@ -29,7 +29,7 @@ class IndexComparator:
             comparison_data = []
         else:
             if not self._comparison_profiling.communication_data:
-                print(f"[warning] Can't find any communication op in the file: {self._comparison_profiling.json_path}")
+                print(f"[WARNING] Can't find any communication op in the file: {self._comparison_profiling.json_path}")
             for data in self._comparison_profiling.communication_data:
                 name_list = data.get("name", "").split("_")
                 if len(name_list) >= 2:
