@@ -22,7 +22,7 @@ from argparse import ArgumentParser
 
 
 FILTER_DIRS = [".profiler", "HCCL_PROF", "timeline", "query", 'sqlite', 'log']
-MAX_INDEX_COUNT = 1000
+RANK_ID_POS = 1000
 
 
 # 获取时间差异文件中的node和时间差的对应关系，保存到字典中
@@ -144,6 +144,9 @@ def merge_timeline_general(args):
         rank_ids = list(timeline_info.keys())
 
     for rank_id in rank_ids:
+        if not timeline_info.get(rank_id):
+            print(f"main.py: error rank '{rank_id}' ")
+            return
         timeline_files_dict[rank_id] = timeline_info.get(rank_id)
     merge_timeline_events(timeline_files_dict, process_list)
 
@@ -219,18 +222,21 @@ def merge_timeline_events(timeline_file_dict, process_list):
                 if event.get("args") is not None and event["args"].get("name") is not None:
                     event["args"]["name"] = event["args"]["name"] + f"_{rank_id}"
 
+            #modify connect id
+            if event.get('id') and (event.get('ph') == 's' or event.get('ph') == 'f'):
+                event['id'] = event.get('id') * RANK_ID_POS + rank_id
+
             new_events.append(event)
 
-    output_path = os.path.join(args.output, f"msprof_merged_{len(timeline_file_dict)}p.json")
-    with open(output_path, 'w') as f:
+    out_path =  f"{args.output}_merged.json"
+    with open(out_path, 'w') as f:
         json.dump(new_events, f)
-    print(f"timeline merged output path: {output_path}")
+    print(f"timeline merged output path: {out_path}")
 
 
 def parse_args():
     parser = ArgumentParser(description="Merge timeline for multi card")
     parser.add_argument("--data", "-d", default=None, help="root dir of PROF_* data")
-    parser.add_argument("--timediff", "-t", default=None, help="JSON file for saving startup time differences")
     parser.add_argument("--output", "-o", default=None, help="save path of msprof_merged.json ")
     parser.add_argument("--rank", default=None, help="List of ranks to be merged. By default, all ranks are merged")
     parser.add_argument("--items", default=None, help="Specify the data items to be merged. in the timeline.")
