@@ -53,7 +53,7 @@ ascend pytorch profiler数据目录结构如下：
 
 
 **使用示例**：
-1、合并单机多卡timeline，默认合并所有卡、所有数据项，生成first_merge.json在path/to/cann_profiling/output/目录下(不设置-o参数时默认生成_merge.json在数据目录（path/to/cann_profiling/）下：
+1、合并单机多卡timeline，默认合并所有卡、所有数据项，生成first.json在path/to/cann_profiling/output/目录下(不设置-o参数时默认生成merge.json在数据目录（path/to/cann_profiling/）下：
 
 ```
 python3 main.py -d path/to/cann_profiling/ -o path/to/cann_profiling/output/first --type pytorch
