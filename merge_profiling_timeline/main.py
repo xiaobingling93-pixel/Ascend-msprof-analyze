@@ -145,7 +145,7 @@ def merge_timeline_general(args):
 
     for rank_id in rank_ids:
         if not timeline_info.get(rank_id):
-            print(f"main.py: error rank '{rank_id}' ")
+            print(f"main.py: error rank_id '{rank_id}' ")
             return
         timeline_files_dict[rank_id] = timeline_info.get(rank_id)
     merge_timeline_events(timeline_files_dict, process_list)
@@ -224,7 +224,7 @@ def merge_timeline_events(timeline_file_dict, process_list):
 
             #modify connect id
             if event.get('id') and (event.get('ph') == 's' or event.get('ph') == 'f'):
-                event['id'] = event.get('id') * RANK_ID_POS + rank_id
+                event['id'] = float(event.get('id')) * RANK_ID_POS + rank_id
 
             new_events.append(event)
 
@@ -239,7 +239,7 @@ def parse_args():
     parser.add_argument("--data", "-d", default=None, help="root dir of PROF_* data")
     parser.add_argument("--output", "-o", default=None, help="save path of msprof_merged.json ")
     parser.add_argument("--rank", default=None, help="List of ranks to be merged. By default, all ranks are merged")
-    parser.add_argument("--items", default=None, help="Specify the data items to be merged. in the timeline.")
+    parser.add_argument("--items", default=None, help="Specify the data items (python，CANN，Ascend Hardware，HCCL，..)to be merged. in the timeline.")
     parser.add_argument("--type", choices=('pytorch', 'e2e', 'custom'), help="Customize the timeline file to be merged.")
     arg = parser.parse_args()
     return arg
