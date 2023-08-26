@@ -19,9 +19,9 @@ def performance_compare(args):
     if ArgsManager().base_profiling_type == Constant.NPU:
         npu_path = ArgsManager().base_profiling.file_path
     elif ArgsManager().base_profiling_type == Constant.GPU:
-        npu_path = ArgsManager().base_profiling.file_path
+        gpu_path = ArgsManager().base_profiling.file_path
     if ArgsManager().comparison_profiling_type == Constant.NPU:
-        gpu_path = ArgsManager().comparison_profiling.file_path
+        npu_path = ArgsManager().comparison_profiling.file_path
     elif ArgsManager().comparison_profiling_type == Constant.GPU:
         gpu_path = ArgsManager().comparison_profiling.file_path
     prof_main(npu_path, gpu_path)
@@ -49,16 +49,23 @@ def main():
     args = parser.parse_args()
 
     ArgsManager().init(args)
-    performance_compare(args)
+    try:
+        performance_compare(args)
+    except Exception:
+        print("[WARNING] Profiling failed to analyze.")
+
+    print("[INFO] Start to compare performance data, please wait.")
     dir_path = args.output_path if args.output_path else "./"
-    file_name = "performance_comparison_result_{}.xlsx".format(time.strftime("%Y%m%d%H%M%S", time.localtime(time.time())))
-    result_file_path = os.path.join(dir_path, file_name)
+    file_name = "performance_comparison_result_{}.xlsx".format(
+        time.strftime("%Y%m%d%H%M%S", time.localtime(time.time())))
+    result_file_path = os.path.realpath(os.path.join(dir_path, file_name))
 
     ComparisonGenerator(args).create_excel(result_file_path)
+    print(f"[INFO] The comparison result file has been generated: {result_file_path}")
 
 
 if __name__ == "__main__":
     start_time = datetime.datetime.now()
     main()
     end_time = datetime.datetime.now()
-    print(f'The comparison task has been completed in a total time of {end_time - start_time}')
+    print(f'[INFO] The comparison task has been completed in a total time of {end_time - start_time}')

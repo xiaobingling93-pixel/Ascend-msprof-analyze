@@ -117,7 +117,7 @@ class CommunicationAnalysis:
             total_time_info_dict[Constant.SYNCHRONIZATION_TIME_RATIO] = 0
         else:
             total_time_info_dict[Constant.SYNCHRONIZATION_TIME_RATIO] = \
-                round(total_time_info_dict[Constant.WAIT_TIME_MS] /
+                round(total_time_info_dict[Constant.SYNCHRONIZATION_TIME_MS] /
                       (total_time_info_dict[Constant.SYNCHRONIZATION_TIME_MS] +
                        total_time_info_dict[Constant.TRANSIT_TIME_MS]), 4)
 

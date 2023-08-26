@@ -9,7 +9,7 @@
 
 ### 1.1 数据采集
 
-使用msporf采集数据，将采集到的所有节点的profiling数据拷贝到当前机器同一目录下，以下假设数据在/home/test/cann_profiling下
+使用msprof采集数据，将采集到的所有节点的profiling数据拷贝到当前机器同一目录下，以下假设数据在/home/test/cann_profiling下
 
 e2e profiling数据目录结构如下：
 
@@ -52,10 +52,7 @@ ascend pytorch profiler数据目录结构如下：
 - --items：可选参数，指定需要合并的profiling数据项（python，Ascend Hardware，CANN，HCCL，PTA，Overlap Analysis），默认全部合并
 
 
-
-
 **使用示例**：
-
 1、合并单机多卡timeline，默认合并所有卡、所有数据项，生成first_merge.json在path/to/cann_profiling/output/目录下(不设置-o参数时默认生成_merge.json在数据目录（path/to/cann_profiling/）下：
 
 ```
