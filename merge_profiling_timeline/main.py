@@ -228,7 +228,7 @@ def merge_timeline_events(timeline_file_dict, process_list):
 
             new_events.append(event)
     out_path = f"{args.output}.json"
-    if os.path.exists(output_path):
+    if os.path.exists(out_path):
         print(f"File {out_path} existed before and is now overwritten.")
         os.remove(out_path)
     try:
