@@ -243,7 +243,7 @@ def merge_timeline_events(timeline_file_dict, process_list):
 def parse_args():
     parser = ArgumentParser(description="Merge timeline for multi card")
     parser.add_argument("-i", "--input", default=None, help="root dir of PROF_* data")
-    parser.add_argument("-o", "--output", default=None, help="save path of merged.json ")
+    parser.add_argument("-o", "--output", default="./merged", help="save path of merged.json ")
     parser.add_argument("--rank", default=None, help="List of ranks to be merged. By default, all ranks are merged")
     parser.add_argument("--items", default=None, help="Specify the data items (python，CANN，Ascend Hardware，HCCL，..)to be merged. in the timeline.")
     parser.add_argument("--type", choices=('pytorch', 'e2e', 'custom'), help="Customize the timeline file to be merged.")
@@ -253,9 +253,6 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
-
-    if not args.output:
-        args.output = "./merged"
     print("========================== start merge timeline ====================")
     if args.type == "custom":
         merge_timeline_custom(args)
