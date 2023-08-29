@@ -57,9 +57,10 @@ class Constant(object):
     TS = "ts"
     ALLOCATION_TIME = "Allocation Time(us)"
     RELEASE_TIME = "Release Time(us)"
+    MEMORY_DURATION = "Memory Duration(us)"
     MEMORY_OP_NAME = 'OP Name'
     NAME = "Name"
-    CMP_MEMORY_HEADER = [OP_NAME, INPUT_SHAPE + " / " + MEMORY_OP_NAME, INPUT_TYPE + " / " + RELEASE_TIME, SIZE]
+    CMP_MEMORY_HEADER = [OP_NAME, INPUT_SHAPE + " / " + MEMORY_OP_NAME, INPUT_TYPE + " / " + MEMORY_DURATION, SIZE]
 
     # compare type
     OPERATOR_COMPARE = "OperatorCompare"
