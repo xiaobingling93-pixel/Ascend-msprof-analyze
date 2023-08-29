@@ -96,7 +96,7 @@ class OpComparisonGenerator:
                 diff = Constant.NA
             op_name = data[0].name if data[0] else data[1].name
 
-            summary_data = base_summary_data + comparison_summary_data + [diff, op_name, diff]
+            summary_data = base_summary_data + comparison_summary_data + [diff, op_name, Constant.NA]
             for index in range(len(headers)):
                 value = summary_data[index]
                 if headers[index] == Constant.DIFF:
@@ -106,10 +106,11 @@ class OpComparisonGenerator:
                     elif value != Constant.NA and value >= 0:
                         ws.cell(row=row_index, column=index + 1).font = Font(name='Arial', color=Constant.RED_COLOR)
                 if headers[index] == Constant.DIFF_FILTER:
-                    if value != Constant.NA and value < 0:
+                    diff_value = summary_data[headers.index(Constant.DIFF)]
+                    if diff_value != Constant.NA and diff_value < 0:
                         ws.cell(row=row_index, column=index + 1).fill = PatternFill("solid",
                                                                                     fgColor=Constant.GREEN_COLOR)
-                    elif value != Constant.NA and value >= 0:
+                    elif diff_value != Constant.NA and diff_value >= 0:
                         ws.cell(row=row_index, column=index + 1).fill = PatternFill("solid", fgColor=Constant.RED_COLOR)
                 elif headers[index] != Constant.OP_NAME_FILTER:
                     ws.cell(row=row_index, column=index + 1).fill = PatternFill("solid",

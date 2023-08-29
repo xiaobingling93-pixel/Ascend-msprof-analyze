@@ -47,4 +47,4 @@ class MemoryEvent:
         else:
             duration = Constant.NA
         name = self._event.get(Constant.NAME, "") if self._event.get(Constant.NAME, "") else self._name
-        return [name, self._event.get(Constant.SIZE, 0), duration]
+        return [name, duration, self._event.get(Constant.SIZE, 0)]
