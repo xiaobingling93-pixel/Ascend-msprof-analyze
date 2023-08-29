@@ -42,36 +42,41 @@ ascend pytorch profiler数据目录结构如下：
 
 可选参数：
 
-- -d: **必选参数**，profiling数据文件或文件夹路径
+- -i: **必选参数**，profiling数据文件或文件夹路径
 - --type: **必选参数**,指定需要合并timeline场景，可选参数有：`pytorch`, `e2e`, `custom`
   - `pytorch`：通过ascend pytorch方式采集profiling数据，合并所有卡的trace_view.json
   - `e2e`：通过e2e方式采集profiling数据，优先合并总timeline，没有生成则选择合并device目录下的msprof_*.json
   - `custom` ：自定义需要合并的timeline数据，具体参考示例
-- -o: 可选参数，指定合并后的timeline文件输出的路径（路径末尾可以设置文件名，具体用法参考示例），默认为'-d'输入的路径
+- -o: 可选参数，指定合并后的timeline文件输出的路径（路径末尾可以设置文件名，具体用法参考示例），不设置该参数的情况下默认文件输出的路径为当前目录（默认文件名为merged.json）
 - --rank：可选参数，指定需要合并timeline的卡号，默认全部合并
-- --items：可选参数，指定需要合并的profiling数据项（python，Ascend Hardware，CANN，HCCL，PTA，Overlap Analysis），默认全部合并
+- --items：可选参数，指定需要合并的profiling数据项（python，Ascend_Hardware，CANN，HCCL，PTA，Overlap_Analysis），默认全部合并(item直接使用Ascend Hardware作为参数会被误认为是两个参数，因此作为一个参数时使用'_'连接)
 
 
 **使用示例**：
-1、合并单机多卡timeline，默认合并所有卡、所有数据项，生成first_merge.json在path/to/cann_profiling/output/目录下(不设置-o参数时默认生成_merge.json在数据目录（path/to/cann_profiling/）下：
+1、合并单机多卡timeline，默认合并所有卡、所有数据项，生成first.json在path/to/cann_profiling/output/目录下：
 
 ```
-python3 main.py -d path/to/cann_profiling/ -o path/to/cann_profiling/output/first --type pytorch
+python3 main.py -i path/to/cann_profiling/ -o path/to/cann_profiling/output/first --type pytorch
 ```
-
-2、合并单机多卡timeline，只合并0卡和1卡：
-
-```
-python3 main.py -d path/to/cann_profiling/ -o path/to/cann_profiling/output/2p --type pytorch --rank 0,1
-```
-
-3、合并单机多卡timeline，合并所有卡的CANN层和Ascend_Hardware层数据
+2、合并单机多卡timeline，默认合并所有卡、所有数据项，不设置-o参数时默认生成merge.json在当前目录下：
 
 ```
-python3 main.py -d path/to/cann_profiling/ --type pytorch --items CANN,Ascend_Hardware
+python3 main.py -i path/to/cann_profiling/ --type pytorch
 ```
 
-4、合并多timeline(自定义)
+3、合并单机多卡timeline，只合并0卡和1卡：
+
+```
+python3 main.py -i path/to/cann_profiling/ -o path/to/cann_profiling/output/2p --type pytorch --rank 0,1
+```
+
+4、合并单机多卡timeline，合并所有卡的CANN层和Ascend_Hardware层数据
+
+```
+python3 main.py -i path/to/cann_profiling/ --type pytorch --items CANN,Ascend_Hardware
+```
+
+5、合并多timeline(自定义)
 
 以上场景不支持的情况下，可以使用自定义的合并方式，将需要合并的timeline文件放在同一目录下（附：该场景比较特殊，与正常合并不同，无法直接读取info.json中的rank_id, 因此该场景下的rank_id为默认分配的序号，用于区分不同文件的相同层，不代表实际rank_id）
 数据目录结构示意如下：
@@ -81,11 +86,8 @@ python3 main.py -d path/to/cann_profiling/ --type pytorch --items CANN,Ascend_Ha
     |- msprof_0.json
     |- msprof_1.json
     |- msprof_2.json
-    |- msprof_3.json
-    |- step_trace_0.json
-    |- step_trace_1.json
-    |- step_trace_2.json
-    |- step_trace_3.json
+    |- hccl_3.json
+    |- hccl_4.json
     ...
 ```
 
@@ -94,12 +96,12 @@ python3 main.py -d path/to/cann_profiling/ --type pytorch --items CANN,Ascend_Ha
 通过下面的命令合并所有timeline，同样支持-o、--rank、--items等参数:
 
 ```
-python3 main.py -d path/to/timeline/ --type custom
+python3 main.py -i path/to/timeline/ -o path/to/timeline/xxx --type custom
 ```
 
 合并timeline查看：
 
-> 在 -o 指定的目录（默认在-d指定的目录下）的_merged.json为合并后的文件
+> 在 -o 指定的目录（不设置-o时默认在当前目录下的merged.json）的xxx.json为合并后的文件
 
 
 ## 2 超大timeline文件查看

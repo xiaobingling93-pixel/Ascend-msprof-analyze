@@ -66,7 +66,7 @@ def get_timeline_info(args, prof_dirs):
     timeline_info = {}
 
     for prof in prof_dirs:
-        pro_path = os.path.join(args.data, prof)
+        pro_path = os.path.join(args.input, prof)
 
         # 从info.json读取rank_id
         rank_id = get_rank_id_from_info_json(pro_path)
@@ -130,7 +130,7 @@ def get_rank_id_from_info_json(pro_path):
 
 def merge_timeline_general(args):
     """合并e2e profiling生成的msprof*.json"""
-    prof_dir = get_path_dir(args.data)
+    prof_dir = get_path_dir(args.input)
     timeline_info = get_timeline_info(args, prof_dir)
     timeline_files_dict = {}
 
@@ -153,10 +153,10 @@ def merge_timeline_general(args):
 
 def merge_timeline_custom(args):
     """合并指定目录里所有timeline文件"""
-    timeline_files = natural_sort(os.listdir(args.data))
+    timeline_files = natural_sort(os.listdir(args.input))
     timeline_files_dict = {}
     for idx, timeline_file in enumerate(timeline_files):
-        timeline_files_dict[idx] = (os.path.join(args.data, timeline_file),0)
+        timeline_files_dict[idx] = (os.path.join(args.input, timeline_file),0)
     # 合并部分profiling items
     process_list = args.items.split(",") if args.items else None
     merge_timeline_events(timeline_files_dict, process_list)
@@ -227,17 +227,23 @@ def merge_timeline_events(timeline_file_dict, process_list):
                 event['id'] = float(event.get('id')) * RANK_ID_POS + rank_id
 
             new_events.append(event)
-
-    out_path =  f"{args.output}_merged.json"
-    with open(out_path, 'w') as f:
-        json.dump(new_events, f)
+    out_path = f"{args.output}.json"
+    if os.path.exists(out_path):
+        print(f"File {out_path} existed before and is now overwritten.")
+        os.remove(out_path)
+    try:
+        with open(out_path, 'w') as f:
+            json.dump(new_events, f)
+    except FileNotFoundError:
+        print(f"Param -o (output path) is not exists, please check it.")
+        return
     print(f"timeline merged output path: {out_path}")
 
 
 def parse_args():
     parser = ArgumentParser(description="Merge timeline for multi card")
-    parser.add_argument("--data", "-d", default=None, help="root dir of PROF_* data")
-    parser.add_argument("--output", "-o", default=None, help="save path of msprof_merged.json ")
+    parser.add_argument("-i", "--input", default=None, help="root dir of PROF_* data")
+    parser.add_argument("-o", "--output", default="./merged", help="save path of merged.json ")
     parser.add_argument("--rank", default=None, help="List of ranks to be merged. By default, all ranks are merged")
     parser.add_argument("--items", default=None, help="Specify the data items (python，CANN，Ascend Hardware，HCCL，..)to be merged. in the timeline.")
     parser.add_argument("--type", choices=('pytorch', 'e2e', 'custom'), help="Customize the timeline file to be merged.")
@@ -247,9 +253,6 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
-
-    if not args.output:
-        args.output = args.data
     print("========================== start merge timeline ====================")
     if args.type == "custom":
         merge_timeline_custom(args)
