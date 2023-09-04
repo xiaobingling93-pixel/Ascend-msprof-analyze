@@ -112,6 +112,12 @@ class ArgsManager:
             msg = f"Invalid param, --gpu_flow_cat exceeded the maximum value {Constant.MAX_FLOW_CAT_LEN}"
             raise RuntimeError(msg)
 
+        if not any([self._args.enable_profiling_compare, self._args.enable_operator_compare,
+                    self._args.enable_memory_compare, self._args.enable_communication_compare]):
+            self._args.enable_profiling_compare = True
+            self._args.enable_operator_compare = True
+            self._args.enable_memory_compare = True
+            self._args.enable_communication_compare = True
         base_profiling_dict = self.parse_profiling_path(self._args.base_profiling_path)
         comparison_profiling_dict = self.parse_profiling_path(self._args.comparison_profiling_path)
 

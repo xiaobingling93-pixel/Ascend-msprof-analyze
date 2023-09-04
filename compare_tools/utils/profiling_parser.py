@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from math import ceil
 
-from utils.compare_event import KernelEvent
+from utils.compare_event import KernelEvent, MemoryEvent
 from utils.constant import Constant
 from utils.file_reader import FileReader
 from utils.trace_event_data import TraceEventData
@@ -53,7 +53,7 @@ class GPUProfilingParser(ProfilingParser):
         return self._kernel_dict
 
     @property
-    def memory_list(self) -> dict:
+    def memory_list(self) -> list:
         if self._memory_list is None:
             self.get_memory_list()
         return self._memory_list
@@ -83,13 +83,13 @@ class GPUProfilingParser(ProfilingParser):
         flow_kernel_dict = {}
         json_data = FileReader.read_trace_file(self._json_path)
         total_events = json_data.get("traceEvents", [])
-        flow_cat = self._args.gpu_flow_cat if self._args.gpu_flow_cat else "async_gpu"
+        flow_cat = (self._args.gpu_flow_cat,) if self._args.gpu_flow_cat else ("async_gpu", "async_cpu_to_gpu", "ac2g")
 
         flow_start_dict, flow_end_dict, kernel_dict = {}, {}, {}
         for event in total_events:
-            if event.get("cat") == flow_cat and event.get("ph") == "s":
+            if event.get("cat") in flow_cat and event.get("ph") == "s":
                 flow_start_dict[event.get("id")] = event
-            elif event.get("cat") == flow_cat and event.get("ph") == "f":
+            elif event.get("cat") in flow_cat and event.get("ph") == "f":
                 flow_end_dict[event.get("id")] = event
             elif event.get("cat", "").capitalize() == "Kernel".capitalize():
                 kernel_dict["{}-{}-{}".format(event.get("pid"), event.get("tid"), event.get("ts"))] = event
@@ -175,7 +175,7 @@ class NPUProfilingParser(ProfilingParser):
         return self._kernel_dict
 
     @property
-    def memory_list(self) -> dict:
+    def memory_list(self) -> list:
         if self._memory_list is None:
             self.get_memory_list()
         return self._memory_list
@@ -239,6 +239,8 @@ class NPUProfilingParser(ProfilingParser):
             return
         memory_data = FileReader.read_csv_file(self._memory_data_path)
         for data in memory_data:
+            if not data.get(Constant.ALLOCATION_TIME, 0):
+                continue
             if "cann::" in data.get("Name", ""):
                 ts_time = float(data.get(Constant.ALLOCATION_TIME, 0))
                 match_dequeue_data = self._match_cann_memory_data(dequeue_data, ts_time)

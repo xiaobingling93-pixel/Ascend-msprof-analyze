@@ -42,9 +42,12 @@ class MemoryEvent:
         return self._event.get(Constant.SIZE, 0)
 
     def get_record(self) -> list:
-        if self._event.get(Constant.RELEASE_TIME):
-            duration = float(self._event.get(Constant.RELEASE_TIME)) - self._event.get(Constant.ALLOCATION_TIME, 0)
-        else:
+        if not self._event.get(Constant.ALLOCATION_TIME):
             duration = Constant.NA
+        elif not self._event.get(Constant.RELEASE_TIME):
+            duration = Constant.NA
+        else:
+            duration = float(self._event.get(Constant.RELEASE_TIME)) - self._event.get(Constant.ALLOCATION_TIME, 0)
+
         name = self._event.get(Constant.NAME, "") if self._event.get(Constant.NAME, "") else self._name
         return [name, duration, self._event.get(Constant.SIZE, 0)]

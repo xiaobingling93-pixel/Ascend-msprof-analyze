@@ -12,7 +12,7 @@ from utils.constant import Constant
 
 
 def performance_compare(args):
-    if args.disable_profiling_compare:
+    if not args.enable_profiling_compare:
         return
     npu_path = ''
     gpu_path = ''
@@ -30,21 +30,17 @@ def performance_compare(args):
 def main():
     sys.path.append(os.path.dirname(__file__))
     parser = argparse.ArgumentParser(description="Compare trace of GPU and NPU")
-    parser.add_argument("base_profiling_path", type=str, default='', help="base profiling file path")
-    parser.add_argument("comparison_profiling_path", type=str, default='', help="comparison profiling file path")
-    parser.add_argument("--disable_profiling_compare", default=False, action='store_true',
-                        help="不进行GPU与NPU的性能拆解")
-    parser.add_argument("--disable_operator_compare", default=False, action='store_true',
-                        help="do not compare operator execution time")
-    parser.add_argument("--disable_memory_compare", default=False, action='store_true',
-                        help="do not compare memory usage by operator dimensions")
-    parser.add_argument("--disable_communication_compare", default=False, action='store_true',
-                        help="do not compare communication operator execution time")
+    parser.add_argument("base_profiling_path", type=str, default='', help="基准性能数据的文件路径")
+    parser.add_argument("comparison_profiling_path", type=str, default='', help="比较性能数据的文件路径")
+    parser.add_argument("--enable_profiling_compare", default=False, action='store_true', help="开启总体性能比较")
+    parser.add_argument("--enable_operator_compare", default=False, action='store_true', help="开启算子性能比较")
+    parser.add_argument("--enable_memory_compare", default=False, action='store_true', help="开启算子内存比较")
+    parser.add_argument("--enable_communication_compare", default=False, action='store_true', help="开启通信性能比较")
     parser.add_argument("--output_path", type=str, default='', help="性能数据比对结果的存放路径")
     parser.add_argument("--max_kernel_num", type=int, help="每个torch op的kernel数量限制")
     parser.add_argument("--op_name_map", type=ast.literal_eval, default={},
-                        help="配置GPU OP与NPU OP等价的名称映射关系，以字典的形式传入")
-    parser.add_argument("--use_input_shape", default=False, action='store_true', help="使用input shape作为匹配信息")
+                        help="配置GPU与NPU等价的算子名称映射关系，以字典的形式传入")
+    parser.add_argument("--use_input_shape", default=False, action='store_true', help="开启算子的精准匹配")
     parser.add_argument("--gpu_flow_cat", type=str, default='', help="gpu flow event的分类标识")
     args = parser.parse_args()
 
@@ -54,14 +50,15 @@ def main():
     except Exception:
         print("[WARNING] Profiling failed to analyze.")
 
-    print("[INFO] Start to compare performance data, please wait.")
-    dir_path = args.output_path if args.output_path else "./"
-    file_name = "performance_comparison_result_{}.xlsx".format(
-        time.strftime("%Y%m%d%H%M%S", time.localtime(time.time())))
-    result_file_path = os.path.realpath(os.path.join(dir_path, file_name))
+    if any([args.enable_operator_compare, args.enable_memory_compare, args.enable_communication_compare]):
+        print("[INFO] Start to compare performance data, please wait.")
+        dir_path = args.output_path if args.output_path else "./"
+        file_name = "performance_comparison_result_{}.xlsx".format(
+            time.strftime("%Y%m%d%H%M%S", time.localtime(time.time())))
+        result_file_path = os.path.realpath(os.path.join(dir_path, file_name))
 
-    ComparisonGenerator(args).create_excel(result_file_path)
-    print(f"[INFO] The comparison result file has been generated: {result_file_path}")
+        ComparisonGenerator(args).create_excel(result_file_path)
+        print(f"[INFO] The comparison result file has been generated: {result_file_path}")
 
 
 if __name__ == "__main__":
