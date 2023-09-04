@@ -17,15 +17,15 @@ class ComparisonGenerator:
 
     def create_excel(self, file_path: str):
         wb = Workbook()
-        if not self._args.disable_operator_compare or not self._args.disable_memory_compare:
+        if self._args.enable_operator_compare or self._args.enable_memory_compare:
             op_compare_result = OpComparator(self._args).compare()
             if op_compare_result:
-                if not self._args.disable_operator_compare:
+                if self._args.enable_operator_compare:
                     OpComparisonGenerator(self._args, op_compare_result, Constant.OPERATOR_COMPARE).create_sheet(wb)
-                if not self._args.disable_memory_compare:
+                if self._args.enable_memory_compare:
                     OpComparisonGenerator(self._args, op_compare_result, Constant.MEMORY_COMPARE).create_sheet(wb)
 
-        if not self._args.disable_communication_compare:
+        if self._args.enable_communication_compare:
             index_compare_result = IndexComparator(self._args).compare()
             if not index_compare_result.empty:
                 CommunicationComparisonGenerator(self._args, index_compare_result).create_sheet(wb)

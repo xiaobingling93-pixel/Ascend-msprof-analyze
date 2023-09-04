@@ -90,11 +90,11 @@ class OpComparator:
         root_node = TreeBuilder.build_tree(torch_op_data)
 
         kernel_dict, memory_list = {}, []
-        if not self._args.disable_operator_compare:
+        if self._args.enable_operator_compare:
             kernel_dict = profiling_instance.kernel_dict
             if not kernel_dict:
                 print(f"[WARNING] Can't find any flow event in the file: {profiling_instance.json_path}")
-        if not self._args.disable_memory_compare:
+        if self._args.enable_memory_compare:
             memory_list = profiling_instance.memory_list
             if not memory_list:
                 print(f"[WARNING] Can't find any memory event in the file: {profiling_instance.file_path}")
