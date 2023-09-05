@@ -15,14 +15,19 @@
 
 from analysis.communication_analysis import CommunicationAnalysis
 from analysis.step_trace_time_analysis import StepTraceTimeAnalysis
+from analysis.communication_analysis import CommMatrixAnalysis
 
 
 class AnalysisFacade:
-    analysis_module = {CommunicationAnalysis, StepTraceTimeAnalysis}
+    analysis_module = {CommunicationAnalysis, StepTraceTimeAnalysis, CommMatrixAnalysis}
 
     def __init__(self, param: dict):
         self.param = param
 
     def cluster_analyze(self):
         for analysis in self.analysis_module:
-            analysis(self.param).run()
+            try:
+                analysis(self.param).run()
+            except Exception:
+                print(f"{analysis.__name__} failed.")
+

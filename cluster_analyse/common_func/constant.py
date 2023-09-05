@@ -20,6 +20,7 @@ class Constant(object):
     CLUSTER_ANALYSIS_OUTPUT = "cluster_analysis_output"
     SINGLE_OUTPUT = "ASCEND_PROFILER_OUTPUT"
     COMM_JSON = "communication.json"
+    COMM_MATRIX_JSON = "communication_matrix.json"
     STEP_TIME_CSV = "step_trace_time.csv"
 
     # file authority
@@ -60,6 +61,7 @@ class Constant(object):
     COMMUNICATION_OPS = "communication_ops"
     COLLECTION_PATH = "collection_path"
     COMMUNICATION_GROUP = "communication_group"
+    TRANSPORT_TYPE = "Transport Type"
 
     # step time
     RANK = 'rank'
