@@ -1,40 +1,61 @@
-# att
+# 功能介绍
+集群场景下，多卡间的算子情况，只能通过查看每张卡各自的性能数据来了解，不能直观的对比各卡之间算子的性能差异。
+cluster_op_summary_analysis.py脚本基于多卡性能数据的op_summary信息，统计并展示各卡中执行最快、最慢、均值和方差的TopN算子。
 
-#### 介绍
-集群训练的profiling分析工具
-可以根据op_summry*.csv文件分析算子的运行时间分布
+## 交附件
+### cluster_op_time_ analysis.csv
+将算子以op_name、input_shape、input_size、output_shape进行分类，统计每一类算子，在不同节点（node）的不同卡（device）上，执行时间的最大、最小、方差、平均时间以及范围。
+### xxx_info.html
+主要是各个特性（time\ratio）的html文件，以html方式展示top_n算子的箱线图
+xxx表示AI Core和AI Vector Core算子性能指标中的耗时（time）和占比（ratio）字段。
+以html文件展示TopN算子执行耗时和占比的箱线图。
+有TopN个算子就会有TopN个坐标系，每个坐标系表示一个算子的特性，以total_time的平均值从左向右依次向下排序。
 
-#### 使用说明
-命令：python3 cluster_prof_Info_analysis.py -–dir XX/XX/XXX --type XX --top_n XX
-解释：
---dir -d 
-    集群的profiling路径信息  格式为 /node0_XXX/PROF_XXX
-    比如集群有两台机器16张卡  那么就是 
-        /node0_XXX 文件夹为第一台机器的，八张卡profiling数据
-        /node1_XXX 文件夹为第二台机器的，八张卡profiling数据
---type -t 
-    获取什么类型的分析信息（html、csv、all） 如果写了其他的会报错
---top_n -n 
-    html分析独有，表示需要展示的是task_duration的方差为top_n的算子 
-    top_n >= 1 
-        如果输入的是奇数，会默认加1变成偶数个
-        如果输入小于等于0，那么会默认只输出一个最大算子的信息
+横坐标：node_device表示第几个node的第几张卡，从小到大排序。
+纵坐标：时间。
+坐标名：在坐标下方，以op_name-input_shape拼接展示。
+# 操作指导
+- 1、准备性能数据
+拷贝所有node上的性能数据到一个环境里，性能数据必须包含在node*目录下，例如当前集群场景为2机16卡，那么就是两个node分别有八个device，拷贝性能数据目录如下：
 
-输出描述：
-表格：cluster_op_time_analysis.csv
-描述：
-1、 统计算子在每个device运行的均值、方差、最大值、最小值和范围
-2、 生成csv表格
-根据 Op name：【"Op Name", "Input Shapes", "Input Data Types", "Output Shapes"】 分类
-展示各个算子在不同卡上的task_duration的方差、均值、最大值、最小值，以及范围
+    ├── node0             // 可以是node0或nodeo_xxx，表示某个节点
+    
+    │   ├── PROF_XXXXX    // 单个device的性能数据，须完成msprof性能数据解析
+    
+    │       ├── SUMMARY
+    
+    │           ├── op_summary_XX.csv
 
-html：cluster_op_summary_analysis.html
-描述：
-1、统计算子在所有device中运行的均值、方差、最大值、最小值和范围，找到task_duration的方差为top_n的算子
-2、画出top_n个算子在每一个device上的箱线图
-3、生成time和ratio的静态html文件
+    |    ......               // 一共八张卡的性能数据
 
-提示：
-1、 top_n 必须大于0，如果输入<=0,默认只导出一个算子的数据
-2、 所有PROF_XXX里都没有op_summary的，不会显示算子情况
-3、 部分没有op_summary的，不显示也不报错
+    ├── node1             // 可以是node1 或者node1_xxx表示某个节点
+    
+    │   ├── PROF_XXXXX    // 单个device的profiling数据
+    
+    │       ├── SUMMARY
+    
+    │           ├── op_summary_XX.csv   // 用来做解析的op_summary表格
+
+    |    ......            
+
+- 2、拷贝脚本准备环境
+将cluster_prof_Info_analysis.py脚本拷贝到一个文件夹里，并安装对应的Python库:
+
+> pip install pandas
+
+> pip install ploty
+
+- 3、运行脚本
+> python3 cluster_prof_Info_analysis.py –d {data_path} -t {type} -n {top_n}
+-d 集群场景性能数据目录，输入node的上一级目录。
+-t 获取分析信息结果文件类型，可取值：html、csv、all，默认html。
+-n html分析独有，表示需要展示的是平均时间top_n的算子，默认10，配置超过30时需要一定时间。
+
+异常情况处理：
+-n参数必须大于0，如果输入<=0, 默认只导出一个算子的数据。
+配置-n参数值大于算子总数时，按等于算子数处理。
+部分没有op_summary的，不显示也不报错。
+目录下不存在op_summary时，执行报错无法找到数据文件。
+op_summary列数据错误或读不到数据时，提示具体出错文件。
+-t参数配置错误时，提示输入错误，并提示正确的配置。
+
