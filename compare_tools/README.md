@@ -69,7 +69,7 @@ ascend pytorch profiler数据目录结构如下：
 将att代码仓下载到本地，执行以下命令：
 
 ```bash
-# 进入进入att代码仓目录下的compare_tools目录
+# 进入att代码仓目录下的compare_tools目录
 cd att/profiler/compare_tools
 # 执行最简比对命令
 python performance_compare.py [基准性能数据文件] [比对性能数据文件] --output_path=./result_dir
