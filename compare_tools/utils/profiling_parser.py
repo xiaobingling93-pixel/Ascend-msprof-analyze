@@ -91,7 +91,7 @@ class GPUProfilingParser(ProfilingParser):
                 flow_start_dict[event.get("id")] = event
             elif event.get("cat") in flow_cat and event.get("ph") == "f":
                 flow_end_dict[event.get("id")] = event
-            elif event.get("cat", "").capitalize() == "Kernel".capitalize():
+            elif event.get("cat", "").lower() == "kernel":
                 kernel_dict["{}-{}-{}".format(event.get("pid"), event.get("tid"), event.get("ts"))] = event
 
         for flow_id, start_flow in flow_start_dict.items():
@@ -138,7 +138,7 @@ class GPUProfilingParser(ProfilingParser):
         json_data = FileReader.read_trace_file(self._json_path)
         total_events = json_data.get("traceEvents", [])
         for data in total_events:
-            if data.get("cat", "") == "Kernel" and data.get("name", "").split("_")[0] == "ncclKernel":
+            if data.get("cat", "").lower() == "kernel" and data.get("name", "").split("_")[0].lower() == "ncclkernel":
                 self._communication_data.append(data)
 
 

@@ -53,14 +53,14 @@ class GpuProfilingParser:
             cat = event.get('cat')
             if cat.lower() != 'kernel':
                 continue
-            if 'nccl' in name:
+            if 'nccl' in name.lower():
                 for timestep in range(ts + 1, ts + dur + 1):
                     marks[str(timestep)] += 1  # mark this timestep in communication stream
                 continue
             else:
                 for timestep in range(ts + 1, ts + dur + 1):
                     marks[str(timestep)] += -100  # mark this timestep in compute stream
-            if 'gemm' in name:
+            if 'gemm' in name.lower():
                 cube_time += float(dur)
             all_op_time += float(dur)
             op_list.append([ts, name, cat, dur])
@@ -90,7 +90,7 @@ class GpuProfilingParser:
     def parse_memory_reserved(self):
         memories = [
             event.get('args').get('Total Reserved') for event in self.trace_events
-            if event.get('name') == '[memory]' and event.get('args').get('Device Id') >= 0
+            if event.get('name', '').lower() == '[memory]' and event.get('args').get('Device Id') >= 0
         ]
         if not memories:
             print("Gpu profiling data doesn't contain memory info")
@@ -100,7 +100,7 @@ class GpuProfilingParser:
     def infer_compute_stream_id(self):
         kernel_stream_ids = []
         for event in self.trace_events:
-            is_kernel_exec_event = event.get('cat') == 'Kernel' and 'nccl' not in event.get('name')
+            is_kernel_exec_event = event.get('cat', '').lower() == 'kernel' and 'nccl' not in event.get('name', '').lower()
             has_stream_id_event = event.get('args') and event.get('args').get('stream')
             if is_kernel_exec_event and has_stream_id_event:
                 kernel_stream_ids.append(event.get('args').get('stream'))

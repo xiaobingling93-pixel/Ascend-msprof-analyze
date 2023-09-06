@@ -38,6 +38,7 @@ class NpuProfilingParser:
             print('Npu trace json file is not available.')
             return
         compute_time = 0
+        communication_time = 0
         min_ts = sys.float_info.max
         max_ts = sys.float_info.min
         ts_flag = False  # 表明没有获取到compute time的耗时
@@ -48,13 +49,21 @@ class NpuProfilingParser:
         ai_core_res = defaultdict(float)
         for dic in data:
             self.get_ts_by_task_type(dic, event_wait_sqe, ai_core_dict, event_wait_sqe_res, ai_core_res)
-            if ('name' in dic) and (dic.get('name') == 'compute_time'):
+            if ('name' in dic) and (dic.get('name', '') == 'Computing'):
                 ts_flag = True
                 ts = dic.get('ts')
                 dur = dic.get('dur')
                 compute_time += dur
                 min_ts = ts if ts < min_ts else min_ts
                 max_ts = (ts + dur) if (ts + dur) > max_ts else max_ts
+            if ('name' in dic) and (dic.get('name', '') == 'Communication(Not Overlapped)'):
+                ts_flag = True
+                ts = dic.get('ts')
+                dur = dic.get('dur')
+                communication_time += dur
+                min_ts = ts if ts < min_ts else min_ts
+                max_ts = (ts + dur) if (ts + dur) > max_ts else max_ts
+
         # AI_CORE和EVENT_WAIT_SQE共存为计算流
         compute_stream = []
         parallel_stream = []
@@ -75,10 +84,9 @@ class NpuProfilingParser:
             self.parallel_time = self.interval_intersection(cs_event_wait_sqe_list, cs_ai_core_list)
         self.profiling_info.compute_time = compute_time / 10 ** 6 if ts_flag else ai_core_res[compute_stream[0]] / 10 ** 6
         self.profiling_info.e2e_time = (max_ts - min_ts) / 10 ** 6 if ts_flag else (self.max_aicore_ts - self.min_aicore_ts) / 10 ** 6
-        self.profiling_info.communication_not_overlapped = (event_wait_sqe_res[compute_stream[0]] - 
-            self.parallel_time) / 10 ** 6
-        time_required = (self.profiling_info.cube_time + self.profiling_info.vector_time) + \
-            self.profiling_info.communication_not_overlapped
+        self.profiling_info.communication_not_overlapped = communication_time / 10 ** 6 \
+            if ts_flag else (event_wait_sqe_res[compute_stream[0]] - self.parallel_time) / 10 ** 6
+        time_required = self.profiling_info.compute_time + self.profiling_info.communication_not_overlapped
         if self.npu_step_time:
             self.profiling_info.scheduling_time = self.npu_step_time - time_required
         else:
