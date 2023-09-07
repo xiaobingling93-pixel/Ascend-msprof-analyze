@@ -65,7 +65,7 @@ class TorchOpNode:
         self._child_nodes.append(child_node)
 
     def set_kernel_list(self, kernel_list: list):
-        self._kernel_list = kernel_list
+        self._kernel_list.extend(kernel_list)
 
     def add_kernel_num(self, kernel_num: int):
         self._kernel_num += kernel_num
