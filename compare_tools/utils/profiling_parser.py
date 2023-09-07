@@ -75,7 +75,7 @@ class GPUProfilingParser(ProfilingParser):
         json_data = FileReader.read_trace_file(self._json_path)
         total_events = json_data.get("traceEvents", [])
         for event in total_events:
-            if event.get("cat").lower() == "cpu_op":
+            if event.get("cat", "").lower() == "cpu_op" or event.get("cat", "").lower() == "user_annotation":
                 torch_op_list.append(event)
         self._torch_op_data = torch_op_list
 
@@ -87,9 +87,9 @@ class GPUProfilingParser(ProfilingParser):
 
         flow_start_dict, flow_end_dict, kernel_dict = {}, {}, {}
         for event in total_events:
-            if event.get("cat") in flow_cat and event.get("ph") == "s":
+            if event.get("cat", "") in flow_cat and event.get("ph") == "s":
                 flow_start_dict[event.get("id")] = event
-            elif event.get("cat") in flow_cat and event.get("ph") == "f":
+            elif event.get("cat", "") in flow_cat and event.get("ph") == "f":
                 flow_end_dict[event.get("id")] = event
             elif event.get("cat", "").lower() == "kernel" and event.get("name", "").split("_")[0].lower() != "ncclkernel":
                 kernel_dict["{}-{}-{}".format(event.get("pid"), event.get("tid"), event.get("ts"))] = event
@@ -196,7 +196,7 @@ class NPUProfilingParser(ProfilingParser):
         torch_op_list = []
         json_data = FileReader.read_trace_file(self._json_path)
         for event in json_data:
-            if event.get("cat") == "cpu_op":
+            if event.get("cat", "").lower() == "cpu_op":
                 torch_op_list.append(event)
         self._torch_op_data = torch_op_list
 
@@ -207,11 +207,11 @@ class NPUProfilingParser(ProfilingParser):
 
         flow_start_dict, flow_end_dict, kernel_dict = {}, {}, {}
         for event in json_data:
-            if event.get("cat") == flow_cat and event.get("ph") == "s":
+            if event.get("cat", "") == flow_cat and event.get("ph") == "s":
                 flow_start_dict[event.get("id")] = event
-            elif event.get("cat") == flow_cat and event.get("ph") == "f":
+            elif event.get("cat", "") == flow_cat and event.get("ph") == "f":
                 flow_end_dict[event.get("id")] = event
-            elif event.get("ph") == "X" and event.get("cat") != 'cpu_op':
+            elif event.get("ph") == "X" and event.get("cat", "") != 'cpu_op':
                 kernel_dict["{}-{}-{}".format(event.get("pid"), event.get("tid"), event.get("ts"))] = event
 
         for flow_id, start_flow in flow_start_dict.items():
@@ -230,9 +230,9 @@ class NPUProfilingParser(ProfilingParser):
         enqueue_dict, dequeue_data = {}, []
         json_data = FileReader.read_trace_file(self._json_path)
         for data in json_data:
-            if data.get("cat", "enqueue"):
+            if data.get("cat", "").lower() == "enqueue":
                 enqueue_dict[data.get("args", {}).get("correlation_id", "")] = data
-            elif data.get("cat", "dequeue"):
+            elif data.get("cat", "").lower() == "dequeue":
                 dequeue_data.append(data)
 
         if not self._memory_data_path:
