@@ -8,23 +8,12 @@ import time
 from generation.comparison_generator import ComparisonGenerator
 from utils.args_manager import ArgsManager
 from profiling_analysis.profiling_parse import prof_main
-from utils.constant import Constant
 
 
 def performance_compare(args):
     if not args.enable_profiling_compare:
         return
-    npu_path = ''
-    gpu_path = ''
-    if ArgsManager().base_profiling_type == Constant.NPU:
-        npu_path = ArgsManager().base_profiling.file_path
-    elif ArgsManager().base_profiling_type == Constant.GPU:
-        gpu_path = ArgsManager().base_profiling.file_path
-    if ArgsManager().comparison_profiling_type == Constant.NPU:
-        npu_path = ArgsManager().comparison_profiling.file_path
-    elif ArgsManager().comparison_profiling_type == Constant.GPU:
-        gpu_path = ArgsManager().comparison_profiling.file_path
-    prof_main(npu_path, gpu_path)
+    prof_main()
 
 
 def main():
@@ -45,6 +34,7 @@ def main():
     args = parser.parse_args()
 
     ArgsManager().init(args)
+
     try:
         performance_compare(args)
     except Exception:

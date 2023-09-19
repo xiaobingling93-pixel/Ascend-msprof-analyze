@@ -17,32 +17,34 @@ import sys
 import pandas as pd
 from collections import defaultdict
 import profiling_analysis.parser_helper as parser_helper
+from utils.file_reader import FileReader
 
 
 class NpuProfilingParser:
-    def __init__(self, npu_step_time, add_cube_name, npu_file_path):
+    FLASH_ATTENTION = "flashattention"
+
+    def __init__(self, npu_step_time, npu_file_path):
         self.npu_json_file = npu_file_path.get('trace_view')
-        self.npu_summary_file = npu_file_path.get('op_summary')
+        self.npu_summary_file = npu_file_path.get('kernel_details')
         self.npu_mem_file = npu_file_path.get('memory_record')
-        self.profiling_info = parser_helper.ProfilingInfo()
+        self.info_json = npu_file_path.get('info')
+        self.profiling_info = parser_helper.ProfilingInfo('NPU')
         self.npu_step_time = npu_step_time
         self.parallel_time = 0
         self.aicore_time = 0
-        self.cube_op_type = ['MatMul', 'BatchMatMul']
-        self.cube_op_type = list(set(self.cube_op_type + add_cube_name))
-        self.min_aicore_ts = sys.float_info.max
-        self.max_aicore_ts = sys.float_info.min
+        self.min_stream_ts = sys.float_info.max
+        self.max_stream_ts = sys.float_info.min
 
     def parse_npu_json_events(self):
         if not self.npu_json_file:
-            print('Npu trace json file is not available.')
+            print('[WARNING] Npu trace json file is not available.')
             return
         compute_time = 0
         communication_time = 0
         min_ts = sys.float_info.max
         max_ts = sys.float_info.min
         ts_flag = False  # 表明没有获取到compute time的耗时
-        data = parser_helper.read_json_file(self.npu_json_file)
+        data = FileReader.read_trace_file(self.npu_json_file)
         event_wait_sqe = defaultdict(list)
         ai_core_dict = defaultdict(list)
         event_wait_sqe_res = defaultdict(float)
@@ -74,7 +76,7 @@ class NpuProfilingParser:
             compute_stream = list(event_wait_sqe.keys() & ai_core_dict.keys())
             parallel_stream = list(ai_core_dict.keys() - set(compute_stream))
         else:
-            print('Npu trace json file lack of Stream info')
+            print('[WARNING] Npu trace json file lack of Stream info')
             return
         cs_event_wait_sqe_list = event_wait_sqe[compute_stream[0]]
         if parallel_stream:
@@ -83,7 +85,7 @@ class NpuProfilingParser:
             sorted(cs_ai_core_list, key=lambda x: (x[0]))
             self.parallel_time = self.interval_intersection(cs_event_wait_sqe_list, cs_ai_core_list)
         self.profiling_info.compute_time = compute_time / 10 ** 6 if ts_flag else ai_core_res[compute_stream[0]] / 10 ** 6
-        self.profiling_info.e2e_time = (max_ts - min_ts) / 10 ** 6 if ts_flag else (self.max_aicore_ts - self.min_aicore_ts) / 10 ** 6
+        self.profiling_info.e2e_time = (max_ts - min_ts) / 10 ** 6 if ts_flag else (self.max_stream_ts - self.min_stream_ts) / 10 ** 6
         self.profiling_info.communication_not_overlapped = communication_time / 10 ** 6 \
             if ts_flag else (event_wait_sqe_res[compute_stream[0]] - self.parallel_time) / 10 ** 6
         time_required = self.profiling_info.compute_time + self.profiling_info.communication_not_overlapped
@@ -94,48 +96,60 @@ class NpuProfilingParser:
         self.profiling_info.scheduling_ratio = self.profiling_info.scheduling_time / self.profiling_info.e2e_time \
             if self.profiling_info.e2e_time != 0 else 0
 
+    def parse_info_json(self):
+        if not self.info_json:
+            return
+        json_data = FileReader.read_trace_file(self.info_json)
+        if not json_data:
+            return
+        if "ProfilerActivity.CPU" not in json_data.get('config', {}).get('common_config', {}).get('activities', []):
+            return
+        if 'Level0' != json_data.get('experimental_config', {}).get('_profiler_level', ''):
+            return
+        self.profiling_info.minimal_profiling = True
+
     def parse_npu_csv_events(self):
+        self.parse_mem_csv()
         if not self.npu_summary_file:
-            print('Npu op summary csv file is not available.')
+            print('[WARNING] Npu kernel details csv file is not available.')
             return
         info = pd.read_csv(self.npu_summary_file, index_col=None)
         cube_time = 0.0
         vec_time = 0.0
-        ai_core_time = 0.0
-        vec_mac_flag = True  # True标记当前summary文件中存在pmu信息
+        fa_time = 0.0
+        cube_num = 0
+        vec_num = 0
         if info.get('aic_mac_time(us)') is None or info.get('aiv_vec_time(us)') is None:
-            print('当前的profiling结果可能是极简模式,通过cube算子白名单进行区分,白名单如下:')
-            print(self.cube_op_type)
-            vec_mac_flag = False
+            self.profiling_info.hide_op_details = True
+            return
         for i in range(len(info['Model ID'])):
-            task_type = info.loc[i, 'Task Type']
-            if task_type not in ['AI_CORE']:
-                continue
-            task_durations = info.loc[i, 'Task Duration(us)']
-            ai_core_time += task_durations
-            op_type = info.loc[i, 'OP Type']
-            if not vec_mac_flag:  # 如果是极简模式根据OP_Type计算完cube time后提前返回
-                cube_time += task_durations if op_type in self.cube_op_type else 0.0
-                continue
+            op_type = info.loc[i, 'Type']
             aiv_vec_time = info.loc[i, 'aiv_vec_time(us)']
-            if aiv_vec_time > 0:
+            if pd.isna(aiv_vec_time) or pd.isna(op_type):
+                continue
+            task_durations = info.loc[i, 'Duration(us)']
+            if self.FLASH_ATTENTION in op_type.lower():
+                fa_time += task_durations
+            elif aiv_vec_time > 0:
                 vec_time += task_durations
-        
-        if vec_mac_flag:
-            cube_time = (ai_core_time - vec_time) / 10 ** 6
-            vec_time /= 10 ** 6
-        else:
-            vec_time = (ai_core_time - cube_time) / 10 ** 6
-            cube_time /= 10 ** 6
-        self.profiling_info.cube_time = cube_time
-        self.profiling_info.vector_time = vec_time
+                vec_num += 1
+            else:
+                cube_time += task_durations
+                cube_num += 1
+        self.profiling_info.cube_time = cube_time / 10 ** 6
+        self.profiling_info.vec_time = vec_time / 10 ** 6
+        self.profiling_info.flash_attention_time = fa_time / 10 ** 6
+        self.profiling_info.cube_num = cube_num
+        self.profiling_info.vec_num = vec_num
+
+    def parse_mem_csv(self):
         if not self.npu_mem_file:
-            print('Npu op memory csv file is not available.')
+            print('[INFO] Npu op memory csv file is not available.')
             return
         try:
             info = pd.read_csv(self.npu_mem_file, usecols=['Total Reserved(MB)'], index_col=None)
         except ValueError:
-            print('Npu profiling data does not contain memory info.')
+            print('[ERROR] Load memory info failed.')
         else:
             self.profiling_info.memory_used = max(info.get('Total Reserved(MB)')) / 1024
 
@@ -167,7 +181,7 @@ class NpuProfilingParser:
                 enent_wait_res[stream_id] += dur
                 event_wait_sqe[stream_id].append([ts, ts + dur])
             elif args.get('Task Type') == 'AI_CORE':
-                self.min_aicore_ts = ts if ts < self.min_aicore_ts else self.min_aicore_ts
-                self.max_aicore_ts = (ts + dur) if (ts + dur) > self.max_aicore_ts else self.max_aicore_ts
                 ai_core_res[stream_id] += dur
                 ai_core_dict[stream_id].append([ts, ts + dur])
+            self.min_stream_ts = ts if ts < self.min_stream_ts else self.min_stream_ts
+            self.max_stream_ts = (ts + dur) if (ts + dur) > self.max_stream_ts else self.max_stream_ts
