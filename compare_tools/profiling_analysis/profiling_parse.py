@@ -21,66 +21,94 @@ from prettytable import PrettyTable
 from profiling_analysis.gpu_parser import GpuProfilingParser
 from profiling_analysis.npu_parser import NpuProfilingParser
 from profiling_analysis.parser_helper import ProfilingInfo
+from utils.args_manager import ArgsManager
+from utils.constant import Constant
 
 
-def parse_command():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-g', '--gpu', required=False, default='', metavar='(FILE)', help='Gpu profiling json file.')
-    parser.add_argument('-glt', '--gpu_log_time', required=False, default=0.0, type=float, help='Gpu one step time(s)')
-    parser.add_argument('-n', '--npu', required=False, default='', metavar='(FILE)',
-                        help='Npu single core profiling root path.')
-    parser.add_argument('-nlt', '--npu_log_time', required=False, default=0.0, metavar='(FILE)', type=float,
-                        help='Npu one step time(s).')
-    parser.add_argument('-aop', '--add_cube_op', required=False, default=[], nargs='*', help='add cube op name')
-    return parser.parse_args()
+def generate_table_info(base_profiling_info, comp_profiling_info, table):
+    headers = ['']
+    base_col = [f'{base_profiling_info.profiling_type}']
+    comp_col = [f'{comp_profiling_info.profiling_type}']
+    if not base_profiling_info.hide_op_details and not comp_profiling_info.hide_op_details:
+        headers.extend(['Cube Time(Num)', 'Vector Time(Num)'])
+        base_col.extend([f'{base_profiling_info.cube_time:.3f}s({base_profiling_info.cube_num})',
+                         f'{base_profiling_info.vec_time:.3f}s({base_profiling_info.vec_num})'])
+        comp_col.extend([f'{comp_profiling_info.cube_time:.3f}s({comp_profiling_info.cube_num})',
+                         f'{comp_profiling_info.vec_time:.3f}s({comp_profiling_info.vec_num})'])
+    if base_profiling_info.flash_attention_time or comp_profiling_info.flash_attention_time:
+        headers.append('Flash Attention Time')
+        base_col.append(f'{base_profiling_info.flash_attention_time:.3f}s')
+        comp_col.append(f'{comp_profiling_info.flash_attention_time:.3f}s')
+    headers.extend(['Computing Time'])
+    base_col.extend([f'{base_profiling_info.compute_time:.3f}s'])
+    comp_col.extend([f'{comp_profiling_info.compute_time:.3f}s'])
+    if base_profiling_info.memory_used or comp_profiling_info.memory_used:
+        headers.append('Mem Usage')
+        base_col.append(f'{base_profiling_info.memory_used:.2f}G')
+        comp_col.append(f'{comp_profiling_info.memory_used:.2f}G')
+    cue = ''
+    if ((base_profiling_info.profiling_type == "NPU" and not base_profiling_info.minimal_profiling) or
+            (comp_profiling_info.profiling_type == "NPU" and not comp_profiling_info.minimal_profiling)):
+        cue = '(Not minimal profiling)'
+
+    headers.extend(['Uncovered Communication Time', 'Free Time', 'E2E Time' + cue])
+    base_col.extend(
+        [f'{base_profiling_info.communication_not_overlapped: .3f}s', f'{base_profiling_info.scheduling_time:.3f}s',
+         f'{base_profiling_info.e2e_time:.3f}s'])
+    comp_col.extend(
+        [f'{comp_profiling_info.communication_not_overlapped: .3f}s', f'{comp_profiling_info.scheduling_time:.3f}s',
+         f'{comp_profiling_info.e2e_time:.3f}s'])
+    table.field_names = headers
+    table.add_row(base_col)
+    table.add_row(comp_col)
 
 
-def show_table(gpu_profiling_info, npu_profiling_info):
+def show_table(base_profiling_info, comp_profiling_info):
     table = PrettyTable()
-    table.title = '大模型性能拆解'
-    table.field_names = ['', 'cube算子', 'vector算子', '计算流耗时', '通信', '调度耗时', '调度占比', '内存',
-                         'E2E性能值']
-    table.add_row(['GPU基线', f'{gpu_profiling_info.cube_time:.3f}s', f'{gpu_profiling_info.vector_time:.3f}s',
-                  f'{gpu_profiling_info.compute_time:.3f}s', f'{gpu_profiling_info.communication_not_overlapped: .3f}s',
-                  f'{gpu_profiling_info.scheduling_time:.3f}', f'{gpu_profiling_info.scheduling_ratio:.2%}',
-                  f'{gpu_profiling_info.memory_used:.2f}G', f'{gpu_profiling_info.e2e_time:.3f}s'])
-    table.add_row(['当前现状', f'{npu_profiling_info.cube_time:.3f}s', f'{npu_profiling_info.vector_time:.3f}s',
-                  f'{npu_profiling_info.compute_time:.3f}s', f'{npu_profiling_info.communication_not_overlapped: .3f}s',
-                  f'{npu_profiling_info.scheduling_time:.3f}', f'{npu_profiling_info.scheduling_ratio:.2%}',
-                  f'{npu_profiling_info.memory_used:.2f}G', f'{npu_profiling_info.e2e_time:.3f}s'])
+    table.title = 'Model Profiling Time Distribution'
+    generate_table_info(base_profiling_info, comp_profiling_info, table)
     print(table)
 
 
 def parse_gpu(gpu_path):
-    if gpu_path:
-        gpu_parser = GpuProfilingParser(gpu_path)
-        gpu_parser.parse_events()
-        return gpu_parser.profiling_info
-    print('Gpu trace json file is not specified.')
-    return ProfilingInfo()
+    gpu_parser = GpuProfilingParser(gpu_path)
+    gpu_parser.parse_events()
+    return gpu_parser.profiling_info
 
 
 def parse_npu(npu_path):
-    npu_parser = NpuProfilingParser(0, [], npu_path)
-    npu_parser.parse_npu_csv_events()
-    npu_parser.parse_npu_json_events()
-    return npu_parser.profiling_info
-
-
-def prof_main(npu_path, gpu_path):
-    if not npu_path or not gpu_path:
-        return
-
-    npu_dir = {'trace_view': None, 'memory_record': None, 'op_summary': None}
+    npu_dir = {'trace_view': None, 'memory_record': None, 'kernel_details': None}
     for root, _, files in os.walk(npu_path):
         for file in files:
             if file == 'trace_view.json':
                 npu_dir['trace_view'] = os.path.join(root, file)
             if file == 'memory_record.csv':
                 npu_dir['memory_record'] = os.path.join(root, file)
-            if 'op_summary_' in file:
-                npu_dir['op_summary'] = os.path.join(root, file)
-    show_table(parse_gpu(gpu_path), parse_npu(npu_dir))
+            if 'kernel_details' in file:
+                npu_dir['kernel_details'] = os.path.join(root, file)
+            if 'profiler_info' in file:
+                npu_dir['info'] = os.path.join(root, file)
+
+    npu_parser = NpuProfilingParser(0, npu_dir)
+    npu_parser.parse_npu_csv_events()
+    npu_parser.parse_info_json()
+    npu_parser.parse_npu_json_events()
+    return npu_parser.profiling_info
+
+
+def prof_main():
+    base_info = ProfilingInfo('None')
+    comp_info = ProfilingInfo('None')
+    if ArgsManager().base_profiling_type == Constant.NPU:
+        base_info = parse_npu(ArgsManager().base_profiling.file_path)
+    elif ArgsManager().base_profiling_type == Constant.GPU:
+        base_info = parse_gpu(ArgsManager().base_profiling.file_path)
+    if ArgsManager().comparison_profiling_type == Constant.NPU:
+        comp_info = parse_npu(ArgsManager().comparison_profiling.file_path)
+    elif ArgsManager().comparison_profiling_type == Constant.GPU:
+        comp_info = parse_gpu(ArgsManager().comparison_profiling.file_path)
+
+    show_table(base_info, comp_info)
 
 
 if __name__ == '__main__':
