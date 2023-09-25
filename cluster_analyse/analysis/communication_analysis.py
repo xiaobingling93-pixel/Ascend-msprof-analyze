@@ -253,4 +253,4 @@ class CommMatrixAnalysis(BaseCommAnalysis):
             link_dict[Constant.BANDWIDTH_GB_S] = \
                 self.compute_ratio(link_dict.get(Constant.TRANSIT_SIZE_MB, 0),
                                    link_dict.get(Constant.TRANSIT_TIME_MS, 0))
-
+        step_dict[Constant.TOTAL_OP_INFO] = total_op_info
