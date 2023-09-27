@@ -21,9 +21,8 @@ import re
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from plotly.offline import plot
-from threading import Thread
 import os
-import json
+
 import warnings
 
 
@@ -57,6 +56,7 @@ class FormDataProcessor:
             df['node_id'] = self.getNodeId(f)
 
             # 将数据添加到最终的数据框中
+            
             all_data = all_data.append(df, ignore_index=True)
         return all_data
 
@@ -181,15 +181,9 @@ class StatisticalInfoToHtmlAnalyzer(OpSummaryAnalyzerBase):
         self.top_n = min(max(self.top_n, 1), len(view_data))
         top_n_data = view_data.sort_values(("Task Duration(us)", 'var'), ascending=False).head(self.top_n)
 
-        threads = []
         for column in self.columns_to_view:
             # 分别给每一种特性画图
-            draw_thread = Thread(target=self.drawPloty, args=(column, summary_data, top_n_data, rank_num))
-            threads.append(draw_thread)
-            draw_thread.start()
-
-        for draw_thread in threads:
-            draw_thread.join()
+            self.drawPloty(column, summary_data, top_n_data, rank_num)
 
     def drawPloty(self, column, summary_data, top_n_data, rank_num):
         col_num = self.getCalNum(rank_num)
