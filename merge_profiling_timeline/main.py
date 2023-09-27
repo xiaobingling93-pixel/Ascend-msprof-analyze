@@ -19,6 +19,7 @@ import re
 
 from functools import partial
 from argparse import ArgumentParser
+from decimal import Decimal
 
 
 FILTER_DIRS = [".profiler", "HCCL_PROF", "timeline", "query", 'sqlite', 'log']
@@ -190,8 +191,6 @@ def merge_timeline_events(timeline_file_dict, process_list):
         # 提取待合并的items的pid
         merged_pids = set()
         for pro in process_list_tmp:
-            pro = " ".join(pro.split("_")) if "_" in pro else pro
-
             if pro not in proc_pid_dict.keys():
                 print(f"main.py: error argument --items: invalid choice: '{pro}' (choose from {list(proc_pid_dict.keys())})")
                 return
@@ -205,7 +204,7 @@ def merge_timeline_events(timeline_file_dict, process_list):
 
             # 当前节点间时间误差可用时，进行时间校准
             if event.get("ts") and ts_difference_us:
-                event["ts"] = event["ts"] + ts_difference_us
+                event["ts"] = str(Decimal(str(event["ts"])) + Decimal(str(ts_difference_us)))
 
             # 区分不同rank的同一进程的pid
             if isinstance(event.get("pid"), (str, int)):
