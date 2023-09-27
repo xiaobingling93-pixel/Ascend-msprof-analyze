@@ -49,7 +49,7 @@ ascend pytorch profiler数据目录结构如下：
   - `custom` ：自定义需要合并的timeline数据，具体参考示例
 - -o: 可选参数，指定合并后的timeline文件输出的路径（路径末尾可以设置文件名，具体用法参考示例），不设置该参数的情况下默认文件输出的路径为当前目录（默认文件名为merged.json）
 - --rank：可选参数，指定需要合并timeline的卡号，默认全部合并
-- --items：可选参数，指定需要合并的profiling数据项（python，Ascend_Hardware，CANN，HCCL，PTA，Overlap_Analysis），默认全部合并(item直接使用Ascend Hardware作为参数会被误认为是两个参数，因此作为一个参数时使用'_'连接)
+- --items：可选参数，指定需要合并的profiling数据项（python，Ascend Hardware，CANN，HCCL，PTA，Overlap Analysis），默认全部合并
 
 
 **使用示例**：
@@ -73,7 +73,7 @@ python3 main.py -i path/to/cann_profiling/ -o path/to/cann_profiling/output/2p -
 4、合并单机多卡timeline，合并所有卡的CANN层和Ascend_Hardware层数据
 
 ```
-python3 main.py -i path/to/cann_profiling/ --type pytorch --items CANN,Ascend_Hardware
+python3 main.py -i path/to/cann_profiling/ --type pytorch --items "CANN,Ascend Hardware"
 ```
 
 5、合并多timeline(自定义)
