@@ -206,12 +206,6 @@ def merge_timeline_events(timeline_file_dict, process_list):
             if event.get("ts") and ts_difference_us:
                 event["ts"] = str(Decimal(str(event["ts"])) + Decimal(str(ts_difference_us)))
 
-            # 区分不同rank的同一进程的pid
-            if isinstance(event.get("pid"), (str, int)):
-                # 合并GPU profiling/ after timeline pid modify
-                event["pid"] = int(''.join(x for x in str(event.get("pid")) if x.isdigit()) +
-                                   str(rank_id))
-
             # convert tid to int
             if isinstance(event.get("tid"), str):
                 event["tid"] = int(''.join(x for x in event["tid"] if x.isdigit()))
