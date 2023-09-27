@@ -41,6 +41,8 @@ class FormDataProcessor:
         # 存储所有合并后的数据
         all_data = pd.DataFrame()
         for f in self.files:
+            if "":
+                continue
             # 读取CSV文件
             df = pd.read_csv(f)
             # 保留需要的列
