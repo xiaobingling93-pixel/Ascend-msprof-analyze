@@ -33,11 +33,15 @@ class Interface:
         if not data_map:
             print("Can not get rank info or profiling data.")
             return
-        communication_group, collective_group_dict, communication_ops = \
-            CommunicationGroupGenerator(self.collection_path, data_map).generate()
-        if not collective_group_dict:
+        try:
+            communication_group, collective_group_dict, communication_ops = \
+                CommunicationGroupGenerator(self.collection_path, data_map).generate()
+        except RuntimeError:
             print("Can not get communication info from ranks")
-            return
+        finally:
+            communication_group = {}
+            communication_ops = []
+            collective_group_dict = {}
         params = {
             Constant.COLLECTION_PATH: self.collection_path,
             Constant.DATA_MAP: data_map,

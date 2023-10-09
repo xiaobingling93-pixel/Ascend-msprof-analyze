@@ -27,10 +27,11 @@ class PytorchDataPreprocessor:
 
     def get_data_map(self) -> dict:
         FileManager.check_file_or_directory_path(self.path, isdir=True)
-
-        collector_dirs = [dir_name for dir_name in os.listdir(self.path) if os.path.isdir(os.path.join(self.path, dir_name))]
-        ascend_pt_dirs = [dir_name for dir_name in collector_dirs if dir_name.endswith("ascend_pt")]
-
+        ascend_pt_dirs = []
+        for root, dirs, files in os.walk(self.path):
+            for dir_name in dirs:
+                if dir_name.endswith("ascend_pt"):
+                    ascend_pt_dirs.append(os.path.join(root, dir_name))
         rank_id_map = defaultdict(list)
         for dir_name in ascend_pt_dirs:
             rank_id = self.get_rank_id(dir_name)
@@ -46,7 +47,7 @@ class PytorchDataPreprocessor:
         return ret_dict
 
     def get_rank_id(self, dir_name: str) -> int:
-        files = os.listdir(os.path.join(self.path, dir_name))
+        files = os.listdir(dir_name)
         for file_name in files:
             if file_name.startswith(self.PROFILER_INFO_HEAD) and file_name.endswith(self.PROFILER_INFO_EXTENSION):
                 return int(file_name[len(self.PROFILER_INFO_HEAD): -1 * len(self.PROFILER_INFO_EXTENSION)])
