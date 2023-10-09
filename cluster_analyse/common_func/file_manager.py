@@ -33,6 +33,9 @@ class FileManager:
         Exception Description:
             when invalid data throw exception
         """
+        if not os.path.exists(path):
+            raise RuntimeError('{} is not exist.'.format(path))
+
         if not os.access(path, os.R_OK):
             raise RuntimeError(
                 'The path {} does not have permission to read. Please check the path permission'.format(path))
@@ -46,9 +49,6 @@ class FileManager:
             raise RuntimeError(msg)
 
         if isdir:
-            if not os.path.exists(path):
-                raise RuntimeError('The path {} is not exist.'.format(path))
-
             if not os.path.isdir(path):
                 raise RuntimeError('The path {} is not a directory.'.format(path))
 
