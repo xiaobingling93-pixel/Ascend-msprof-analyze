@@ -11,11 +11,20 @@ experimental\_config = torch\_npu.profiler.\_ExperimentalConfig(
 ​            )
 ##### 确认数据是否可用
 
-打开采集到的某张卡数据，可用的数据应该具备下图红框框出的几个数据，确认这几个文件生成后，继续下面的集群分析。
+打开采集到的某张卡数据(*ascend_pt结尾的文件夹)，可用的数据应该具备
+
+ **./profiler_info_x.json** 
+ **./ASCEND_PROFILER_OUTPUT/step_trace_time.csv，
+./ASCEND_PROFILER_OUTPUT/trace_view.json，
+./ASCEND_PROFILER_OUTPUT/kernel_details.csv，** 
+./ASCEND_PROFILER_OUTPUT/communication.json，
+./ASCEND_PROFILER_OUTPUT/communication_matrix.csv
+
+确认这几个文件生成后，继续下面的集群分析。
 
 # 数据汇聚与集群解析
 
-将数据汇集到一个目录下，使用本目录下的
+将所有卡的数据汇集到一个目录下，使用本目录下的
 python3 cluster_analysis.py -d {cluster profiling data path}, 即可生成cluster_analysis_output文件夹。
 
 # 交付件
@@ -23,27 +32,41 @@ python3 cluster_analysis.py -d {cluster profiling data path}, 即可生成cluste
 #### 首先需要看 cluster_step_trace_time.csv
 
 A列： Step数，是采集profiling是设置的，一般来说集群profiling采集一个step足够，如果采集多个step，需要先筛选一下。
+
 B列： Type，主要分两种，rank和stage, 和后面的index强相关，可以理解为一个是单卡rank，一个是rank group(pp 并行的stage），如果type为stage，则后面D-K列信息为rank group下的最大值。
+
 C列：Index，与type相关，表示卡号。
+
 D列：Computing， 此列统计计算时间。
+
 E列：Communication(Not Overlapped): 此列统计未被掩盖的通信耗时。
+
 F列：Overlapped: 统计计算与通信重叠的耗时。
+
 G列：Communication: 通信时间的全部耗时。
+
 H列：Free: 空闲时间，只device侧既不在通信也不在计算的耗时，可能在做sdma拷贝或者空等。
+
 I列：Stage时间，I、J、K列属于pp并行时有效的数值，stage时间代表除recieve算子时间外的时间。
+
 J列：Bubble时间，指receive时间的总和。
+
 K列：Communication（Not Overlapped and Exclude Receive）指剔除recieve算子外的并且不被掩盖的通信时间。
 
 tips:
 先筛选B列type为stage， 看stage间是否有问题，再筛选B列type为rank吗，看rank是否有问题，根据以下几点排查。
+
 * 根据Computing的时间差异判断是否有慢卡，或者有负载不均衡的现象。
+
 * 根据Free统计是否有host bound或者分布不均现象。
+
 * 根据Communication（Not Overlapped and Exclude Receive）时间判断是否通信耗时占比过大。
+
 * 根据Bubble时间的占比和理论计算公式判断bubble设置是否合理，是否stage间有不均衡现象。
 
 #### cluster_communication_matrix.json
 
-直接打开json, 如下图：
+直接打开json（vscode或json查看器）, 
 
 搜索"Total", 会有多个搜索结果，
 
