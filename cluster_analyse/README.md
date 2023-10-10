@@ -70,4 +70,16 @@ tips:
 
 搜索"Total", 会有多个搜索结果，
 
+一般来说链路带宽信息的结构：
+“{src_rank}-{dst_rank}”:{
+    "Transport Type": "LOCAL",
+    "Transit Time(ms)": 0.02462,
+    "Transit Size(MB)": 16.777216,
+    "Bandwidth(GB/s)": 681.4466
+}
+tips：
 可以根据rank互联的带宽以及链路类型，判断是否有慢链路的问题。
+
+- "LOCAL"是片内拷贝，速率非常快，不需要考虑。
+- “HCCS”或“PCIE”是节点内片间拷贝，速度在18GB左右或以上比较正常。
+- “RDMA”是节点间拷贝，910A速度在12GB左右或以上；910B速度在23-25GB左右比较正常。
