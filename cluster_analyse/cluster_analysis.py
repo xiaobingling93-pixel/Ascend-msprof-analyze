@@ -55,6 +55,5 @@ class Interface:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="cluster analysis module")
     parser.add_argument('-d', '--collection_path', type=str, required=True, help="profiling data path")
-    parser.add_argument('-o', '--output_path', type=str, help="analysis result output path")
     args = parser.parse_args()
     Interface(args).run()
