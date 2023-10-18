@@ -74,9 +74,9 @@ cd att/profiler/compare_tools
 # 执行最简比对命令
 python performance_compare.py [基准性能数据文件] [比对性能数据文件] --output_path=./result_dir
 ```
-- 基准性能数据文件：若以GPU为基准，指定到以".pt.trace"结尾的json文件；若以NPU不同版本为基准，指定文件参考**比对性能数据文件**。
-- 比对性能数据文件：可以指定以“ascend_pt”结尾的目录、ASCEND_PROFILER_OUTPUT目录或trace_view.json文件，指定trace_view.json无法显示算子的内存占用。
-- --output_path：性能比对结果存放的路径，默认保存在当前目录。
+- 基准性能数据文件(必选)：若以GPU为基准，指定到以".pt.trace"结尾的json文件；若以NPU不同版本为基准，指定文件参考**比对性能数据文件**。
+- 比对性能数据文件(必选)：可以指定以“ascend_pt”结尾的目录、ASCEND_PROFILER_OUTPUT目录或trace_view.json文件，指定trace_view.json无法显示算子的内存占用。
+- --output_path(可选)：性能比对结果存放的路径，默认保存在当前目录。
 
 工具将总体性能拆解为训练耗时和内存占用，其中训练耗时可拆分为算子、通信、调度三个维度，以打屏的形式输出总体指标，帮助用户定界劣化的方向。与此同时，工具还会生成performance_comparison_result_*.xlsl，展示每个算子在执行耗时、通信耗时、内存占用的优劣，可通过DIFF列大于0筛选出劣化算子。详细介绍请参见“**比对结果说明**”。
 

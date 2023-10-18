@@ -5,31 +5,40 @@
 当前集群调优工具主要支持Ascend Pytorch Profiler采集方式下的集群数据。
 
 我们要求至少是L1级别的数据。
-experimental\_config = torch\_npu.profiler.\_ExperimentalConfig(
-
-​              profiler\_level=torch\_npu.profiler.ProfilerLevel.**Level1**
-​            )
-##### 确认数据是否可用
+```python
+experimental_config = torch_npu.profiler._ExperimentalConfig(
+    profiler_level=torch_npu.profiler.ProfilerLevel.**Level1**
+)
+```
+### 确认数据是否可用
 
 打开采集到的某张卡数据(*ascend_pt结尾的文件夹)，可用的数据应该具备
 
- **./profiler_info_x.json** 
- **./ASCEND_PROFILER_OUTPUT/step_trace_time.csv，
-./ASCEND_PROFILER_OUTPUT/trace_view.json，
-./ASCEND_PROFILER_OUTPUT/kernel_details.csv，** 
-./ASCEND_PROFILER_OUTPUT/communication.json，
-./ASCEND_PROFILER_OUTPUT/communication_matrix.csv
+- **./profiler_info_x.json**,
+- **./ASCEND_PROFILER_OUTPUT/step_trace_time.csv**,
+- **./ASCEND_PROFILER_OUTPUT/trace_view.json**,
+- **./ASCEND_PROFILER_OUTPUT/kernel_details.csv**, 
+- ./ASCEND_PROFILER_OUTPUT/communication.json,
+- ./ASCEND_PROFILER_OUTPUT/communication_matrix.csv
 
 确认这几个文件生成后，继续下面的集群分析。
 
 # 数据汇聚与集群解析
 
-将所有卡的数据汇集到一个目录下，使用本目录下的
-python3 cluster_analysis.py -d {cluster profiling data path}, 即可生成cluster_analysis_output文件夹。
+将所有卡的数据汇集到一个目录下，在本目录下运行以下命令即可生 cluster_analysis_output文件夹。
+
+```shell
+python3 cluster_analysis.py -d {cluster profiling data path}
+```
+### 参数说明
+
+|           参数名        |                     说明                 |
+| ----------------------  | --------------------------------------- |
+| --collection_path (-d)  | profiling数据汇集目录，运行分析脚本之后会在该目录下自动创建cluster_analysis_output文件夹，保存分析数据 |
 
 # 交付件
 
-#### 首先需要看 cluster_step_trace_time.csv
+### 首先需要看 cluster_step_trace_time.csv
 
 A列： Step数，是采集profiling是设置的，一般来说集群profiling采集一个step足够，如果采集多个step，需要先筛选一下。
 
@@ -53,7 +62,7 @@ J列：Bubble时间，指receive时间的总和。
 
 K列：Communication（Not Overlapped and Exclude Receive）指剔除recieve算子外的并且不被掩盖的通信时间。
 
-tips:
+**Tips**:
 先筛选B列type为stage， 看stage间是否有问题，再筛选B列type为rank吗，看rank是否有问题，根据以下几点排查。
 
 * 根据Computing的时间差异判断是否有慢卡，或者有负载不均衡的现象。
@@ -64,21 +73,22 @@ tips:
 
 * 根据Bubble时间的占比和理论计算公式判断bubble设置是否合理，是否stage间有不均衡现象。
 
-#### cluster_communication_matrix.json
+### cluster_communication_matrix.json
 
 直接打开json（vscode或json查看器）, 
 
 搜索"Total", 会有多个搜索结果，
 
 一般来说链路带宽信息的结构：
-“{src_rank}-{dst_rank}”:{
+```
+{src_rank}-{dst_rank}: {
     "Transport Type": "LOCAL",
     "Transit Time(ms)": 0.02462,
     "Transit Size(MB)": 16.777216,
     "Bandwidth(GB/s)": 681.4466
 }
-tips：
-可以根据rank互联的带宽以及链路类型，判断是否有慢链路的问题。
+```
+**Tips**: 可以根据rank互联的带宽以及链路类型，判断是否有慢链路的问题。
 
 - "LOCAL"是片内拷贝，速率非常快，不需要考虑。
 - “HCCS”或“PCIE”是节点内片间拷贝，速度在18GB左右或以上比较正常。
