@@ -1,5 +1,6 @@
 import os.path
 
+from path_manager import PathManager
 from utils.constant import Constant
 from utils.file_reader import FileReader
 from utils.profiling_parser import GPUProfilingParser, NPUProfilingParser
@@ -45,38 +46,14 @@ class ArgsManager:
 
     @classmethod
     def check_profiling_path(cls, file_path: str):
-        if len(file_path) > Constant.MAX_PATH_LENGTH:
-            msg = f"The length of file path exceeded the maximum value {Constant.MAX_PATH_LENGTH}: {file_path}"
-            raise RuntimeError(msg)
-        if not os.path.exists(file_path):
-            msg = f"Invalid profiling path: {file_path}"
-            raise RuntimeError(msg)
-        if os.path.islink(file_path):
-            msg = f"Invalid profiling path is soft link: {file_path}"
-            raise RuntimeError(msg)
-        if not os.access(file_path, os.R_OK):
-            msg = f"The file path has no read permission: {file_path}"
-            raise RuntimeError(msg)
+        PathManager.input_path_common_check(file_path)
+        PathManager.check_path_owner_consistent(file_path)
 
     @classmethod
     def check_output_path(cls, output_path: str):
-        if len(output_path) > Constant.MAX_PATH_LENGTH:
-            msg = f"Invalid param, the length of output_path exceeded the maximum value {Constant.MAX_PATH_LENGTH}"
-            raise RuntimeError(msg)
-        if os.path.islink(output_path):
-            raise RuntimeError("Invalid param, the output_path is soft link")
-        if not os.path.exists(output_path):
-            try:
-                os.makedirs(output_path, mode=Constant.DIR_AUTHORITY)
-            except Exception:
-                msg = f"Can't create directory: {output_path}"
-                raise RuntimeError(msg)
-        if not os.path.isdir(output_path):
-            msg = f"Invalid output_path: {output_path}"
-            raise RuntimeError(msg)
-        if not os.access(output_path, os.W_OK):
-            msg = f"The output path has no write permission: {output_path}"
-            raise RuntimeError(msg)
+        PathManager.check_input_directory_path(output_path)
+        PathManager.make_dir_safety(output_path)
+        PathManager.check_path_writeable(output_path)
 
     def parse_profiling_path(self, file_path: str):
         self.check_profiling_path(file_path)
@@ -118,17 +95,22 @@ class ArgsManager:
             self._args.enable_operator_compare = True
             self._args.enable_memory_compare = True
             self._args.enable_communication_compare = True
-        base_profiling_dict = self.parse_profiling_path(self._args.base_profiling_path)
-        comparison_profiling_dict = self.parse_profiling_path(self._args.comparison_profiling_path)
+
+        base_profiling_path = PathManager.get_realpath(self._args.base_profiling_path)
+        self.check_profiling_path(base_profiling_path)
+        base_profiling_dict = self.parse_profiling_path(base_profiling_path)
+        comparison_profiling_path = PathManager.get_realpath(self._args.comparison_profiling_path)
+        self.check_profiling_path(comparison_profiling_path)
+        comparison_profiling_dict = self.parse_profiling_path(comparison_profiling_path)
 
         if self._args.output_path:
-            self.check_output_path(self._args.output_path)
+            self.check_output_path(PathManager.get_realpath(self._args.output_path))
 
         Constant.BASE_PROFILING = Constant.BASE_PROFILING + self._args.base_profiling_path
         self._base_profiling_type = base_profiling_dict.get(Constant.PROFILING_TYPE)
         self._base_profiling = self.PARSER_DICT.get(self._base_profiling_type)(self._args, base_profiling_dict)
 
-        if self._args.base_profiling_path == self._args.comparison_profiling_path:
+        if base_profiling_path == comparison_profiling_path:
             Constant.COMPARISON_PROFILING = "Same To Base Profiling"
             self._comparison_profiling_type = self._base_profiling_type
             self._comparison_profiling = self._base_profiling

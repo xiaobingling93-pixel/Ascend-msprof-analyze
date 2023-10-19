@@ -5,6 +5,8 @@ import os.path
 import sys
 import time
 
+sys.path.append(
+    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "cluster_analyse", "common_func"))
 from generation.comparison_generator import ComparisonGenerator
 from utils.args_manager import ArgsManager
 from profiling_analysis.profiling_parse import prof_main
@@ -17,7 +19,6 @@ def performance_compare(args):
 
 
 def main():
-    sys.path.append(os.path.dirname(__file__))
     parser = argparse.ArgumentParser(description="Compare trace of GPU and NPU")
     parser.add_argument("base_profiling_path", type=str, default='', help="基准性能数据的文件路径")
     parser.add_argument("comparison_profiling_path", type=str, default='', help="比较性能数据的文件路径")

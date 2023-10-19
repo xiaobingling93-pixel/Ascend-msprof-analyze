@@ -14,20 +14,24 @@
 # limitations under the License.
 
 import argparse
+
 from cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
 from communication_group.communication_group_generator import CommunicationGroupGenerator
 from common_func.constant import Constant
 from common_func.file_manager import FileManager
+from common_func.path_manager import PathManager
 from analysis.analysis_facade import AnalysisFacade
 
 
 class Interface:
     def __init__(self, args: argparse.Namespace):
-        self.collection_path = args.collection_path
+        self.collection_path = PathManager.get_realpath(args.collection_path)
         self.data_map = {}
         self.communication_group = {}
 
     def run(self):
+        PathManager.check_input_directory_path(self.collection_path)
+        PathManager.check_path_owner_consistent(self.collection_path)
         FileManager.create_output_dir(self.collection_path)
         data_map = PytorchDataPreprocessor(self.collection_path).get_data_map()
         if not data_map:

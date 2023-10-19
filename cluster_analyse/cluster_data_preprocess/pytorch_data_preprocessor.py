@@ -26,7 +26,6 @@ class PytorchDataPreprocessor:
         self.path = os.path.realpath(path)
 
     def get_data_map(self) -> dict:
-        FileManager.check_file_or_directory_path(self.path, isdir=True)
         ascend_pt_dirs = []
         for root, dirs, files in os.walk(self.path):
             for dir_name in dirs:
