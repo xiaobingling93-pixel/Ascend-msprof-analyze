@@ -71,7 +71,7 @@ def get_timeline_info(args, prof_dirs):
 
         # 从info.json读取rank_id
         rank_id = get_rank_id_from_info_json(pro_path)
-        ts_difference_us = get_absolute_ts_start_info(pro_path)
+        ts_difference_us = 0
         if rank_id is None:
             print(f"WARN, There is not rank id info in {pro_path}")
             continue
