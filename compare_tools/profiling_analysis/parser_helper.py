@@ -30,6 +30,7 @@ class ProfilingInfo:
         self.memory_used = 0.0
         self.e2e_time = 0.0
         self.scheduling_time = 0.0
-        self.flash_attention_time = 0.0
+        self.flash_attention_time_bwd = 0.0
+        self.flash_attention_time_fwd = 0.0
         self.minimal_profiling = False
         self.hide_op_details = False

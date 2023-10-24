@@ -40,7 +40,8 @@ class GpuProfilingParser:
     def parse_events(self):
         cube_time = 0.0
         all_op_time = 0.0
-        fa_time = 0.0
+        fa_time_bwd = 0.0
+        fa_time_fwd = 0.0
         cube_num = 0
         vec_num = 0
         op_list = []
@@ -68,7 +69,10 @@ class GpuProfilingParser:
                 for timestep in range(ts + 1, ts + dur + 1):
                     marks[str(timestep)] += -100  # mark this timestep in compute stream
             if self.is_flash_attention(name):
-                fa_time += float(dur)
+                if 'bwd' in name.lower():
+                    fa_time_bwd += float(dur)
+                else:
+                    fa_time_fwd += float(dur)
             elif self.CUBE_MARK in name.lower():
                 cube_num += 1
                 cube_time += float(dur)
@@ -80,9 +84,10 @@ class GpuProfilingParser:
         op_dataframe.to_csv('gpu_perf.csv', index=False)
         self.profiling_info.compute_time = len([_ for _, value in marks.items() if value < 0]) / 10 ** 6
         self.profiling_info.communication_not_overlapped = len([_ for _, value in marks.items() if value > 0]) / 10 ** 6
-        self.profiling_info.flash_attention_time = fa_time / 10 ** 6
+        self.profiling_info.flash_attention_time_bwd = fa_time_bwd / 10 ** 6
+        self.profiling_info.flash_attention_time_fwd = fa_time_fwd / 10 ** 6
         self.profiling_info.cube_time = cube_time / 10 ** 6
-        self.profiling_info.vec_time = (all_op_time - cube_time - fa_time) / 10 ** 6
+        self.profiling_info.vec_time = (all_op_time - cube_time - fa_time_fwd - fa_time_bwd) / 10 ** 6
         self.profiling_info.cube_num = cube_num
         self.profiling_info.vec_num = vec_num
         self.parse_e2e_time()

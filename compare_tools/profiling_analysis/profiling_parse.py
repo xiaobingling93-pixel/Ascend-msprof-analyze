@@ -35,10 +35,14 @@ def generate_table_info(base_profiling_info, comp_profiling_info, table):
                          f'{base_profiling_info.vec_time:.3f}s({base_profiling_info.vec_num})'])
         comp_col.extend([f'{comp_profiling_info.cube_time:.3f}s({comp_profiling_info.cube_num})',
                          f'{comp_profiling_info.vec_time:.3f}s({comp_profiling_info.vec_num})'])
-    if base_profiling_info.flash_attention_time or comp_profiling_info.flash_attention_time:
-        headers.append('Flash Attention Time')
-        base_col.append(f'{base_profiling_info.flash_attention_time:.3f}s')
-        comp_col.append(f'{comp_profiling_info.flash_attention_time:.3f}s')
+    if base_profiling_info.flash_attention_time_fwd or comp_profiling_info.flash_attention_time_fwd:
+        headers.append('Flash Attention Time(Forward)')
+        base_col.append(f'{base_profiling_info.flash_attention_time_fwd:.3f}s')
+        comp_col.append(f'{comp_profiling_info.flash_attention_time_fwd:.3f}s')
+    if base_profiling_info.flash_attention_time_bwd or comp_profiling_info.flash_attention_time_bwd:
+        headers.append('Flash Attention Time(Backward)')
+        base_col.append(f'{base_profiling_info.flash_attention_time_bwd:.3f}s')
+        comp_col.append(f'{comp_profiling_info.flash_attention_time_bwd:.3f}s')
     headers.extend(['Computing Time'])
     base_col.extend([f'{base_profiling_info.compute_time:.3f}s'])
     comp_col.extend([f'{comp_profiling_info.compute_time:.3f}s'])

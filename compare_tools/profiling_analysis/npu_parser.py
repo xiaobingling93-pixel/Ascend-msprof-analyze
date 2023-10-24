@@ -119,7 +119,8 @@ class NpuProfilingParser:
         info = pd.read_csv(self.npu_summary_file, index_col=None)
         cube_time = 0.0
         vec_time = 0.0
-        fa_time = 0.0
+        fa_time_fwd = 0.0
+        fa_time_bwd = 0.0
         cube_num = 0
         vec_num = 0
         if info.get('aic_mac_time(us)') is None or info.get('aiv_vec_time(us)') is None:
@@ -132,7 +133,10 @@ class NpuProfilingParser:
                 continue
             task_durations = info.loc[i, 'Duration(us)']
             if self.FLASH_ATTENTION in op_type.lower():
-                fa_time += task_durations
+                if 'bwd' in op_type.lower() or 'grad' in op_type.lower():
+                    fa_time_bwd += task_durations
+                else:
+                    fa_time_fwd += task_durations
             elif aiv_vec_time > 0:
                 vec_time += task_durations
                 vec_num += 1
@@ -141,7 +145,8 @@ class NpuProfilingParser:
                 cube_num += 1
         self.profiling_info.cube_time = cube_time / 10 ** 6
         self.profiling_info.vec_time = vec_time / 10 ** 6
-        self.profiling_info.flash_attention_time = fa_time / 10 ** 6
+        self.profiling_info.flash_attention_time_bwd = fa_time_bwd / 10 ** 6
+        self.profiling_info.flash_attention_time_fwd = fa_time_fwd / 10 ** 6
         self.profiling_info.cube_num = cube_num
         self.profiling_info.vec_num = vec_num
 
