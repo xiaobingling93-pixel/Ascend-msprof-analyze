@@ -92,4 +92,4 @@ K列：Communication（Not Overlapped and Exclude Receive）指剔除recieve算�
 
 - "LOCAL"是片内拷贝，速率非常快，不需要考虑。
 - “HCCS”或“PCIE”是节点内片间拷贝，速度在18GB左右或以上比较正常。
-- “RDMA”是节点间拷贝，910A速度在12GB左右或以上；910B速度在23-25GB左右比较正常。
+- “RDMA”是节点间拷贝，910A速度在12GB左右或以上。
