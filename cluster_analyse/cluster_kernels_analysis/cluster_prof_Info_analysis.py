@@ -64,7 +64,7 @@ class FormDataProcessor:
         file = self.files[0]
         df = pd.read_csv(file)
         if 'aiv_time(us)' in df.columns:
-            return "ASCEND_910B"
+            return "ASCEND_NEW"
         return "ASCEND_OTHER"
 
     def getDeviceId(self, dir_path):
@@ -89,7 +89,7 @@ class ViewInfoManager:
     def setOpSummaryColumnsParams(self):
         # 有些数据除了用表格的列进行分组之外，还添加了其他属性对数据进行分类，这部分数据放在extend_attr_to_group里面
         self.op_summary_columns_dict = {
-            'ASCEND_910B': {
+            'ASCEND_NEW': {
                 'TimeToCsvAnalyzer':
                     {'columns_to_group': ["Op Name", "Input Shapes", "Input Data Types", "Output Shapes"],
                      'extend_attr_to_group': ["device_id", "node_id"],
