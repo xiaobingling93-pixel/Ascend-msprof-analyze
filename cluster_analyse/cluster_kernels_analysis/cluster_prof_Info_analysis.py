@@ -273,7 +273,7 @@ class DeliverableGenerator:
             self.analyzers = [TimeToCsvAnalyzer(chip_type, args.dir)]
         else:
             warnings.warn("参数错误，请输入 all html csv 这三种类型")  # 发出一个警告信息
-
+1111
 
     def setColumnsToKeep(self):
         columns_to_keep = []
