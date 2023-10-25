@@ -22,8 +22,11 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from plotly.offline import plot
 import os
+import stat
 
 import warnings
+
+MAX_READ_FILE_BYTES = 64 * 1024 * 1024
 
 
 class FormDataProcessor:
@@ -42,6 +45,10 @@ class FormDataProcessor:
         for f in self.files:
             if "mindstudio_profiler_output" in f:
                 continue
+            # 判断csv文件大小
+            if not self.check_file_readable(f):
+                continue
+
             # 读取CSV文件
             df = pd.read_csv(f)
             # 保留需要的列
@@ -51,13 +58,19 @@ class FormDataProcessor:
                 print(f"{f}文件没有所需的列，请确认profiling数据的正确性:\n,以下列可能不存在{columns_to_keep}\n")
                 continue
             # 从文件名提取设备ID
+            try:
+                df['device_id'] = self.getDeviceId(f)
+            except:
+                print(f"文件 \"{f}\" 的路径或者是文件夹名没有按照要求，请确保存在[device_]这一级文件夹,具体操作指导见readme\n")
+                continue
             # 添加新列 "device_id"
-            df['device_id'] = self.getDeviceId(f)
-            df['node_id'] = self.getNodeId(f)
-
+            try:
+                df['node_id'] = self.getNodeId(f)
+            except:
+                print(f"文件 \"{f}\" 的路径或者是文件夹名没有按照要求，请确保存在[node*]这一级文件夹,具体操作指导见readme\n")
+                continue
             # 将数据添加到最终的数据框中
-            
-            all_data = all_data.append(df, ignore_index=True)
+            all_data = all_data._append(df, ignore_index=True)
         return all_data
 
     def getChipType(self):
@@ -78,6 +91,14 @@ class FormDataProcessor:
     def getRankNum(self):
         return len(self.files)
 
+    def check_file_readable(self, file_path):
+        if not os.access(file_path, os.R_OK):
+            print(f"the path \"{file_path}\" does not have permission to read")
+            return False
+        if os.path.getsize(file_path) > MAX_READ_FILE_BYTES:
+            print(f"the path \"{file_path}\" is to large, Please check the path")
+            return False
+        return True
 
 # 表驱动，获取不同芯片类型不同交付件的所需的列
 class ViewInfoManager:
@@ -163,6 +184,8 @@ class TimeToCsvAnalyzer(OpSummaryAnalyzerBase):
         for column in self.columns_to_view:
             view_data[column + '_range'] = view_data[column + '_max'] - view_data[column + '_min']
         view_data.to_csv(self.result_dir + "/cluster_duration_time_analysis.csv", index=False)
+        # 该文件权限设置为只读权限，不允许修改
+        os.chmod(self.result_dir + "/cluster_duration_time_analysis.csv", stat.S_IROTH)
         return view_data
 
 
@@ -211,6 +234,8 @@ class StatisticalInfoToHtmlAnalyzer(OpSummaryAnalyzerBase):
                           width=int(rank_num * 100 * col_num),
                           title_text="Op Performance Comparison")
         plot(fig, filename=self.result_dir + "/" + column + "_Info.html")
+        # 该文件权限设置为只读权限，不允许修改
+        os.chmod(self.result_dir + "/" + column + "_Info.html", stat.S_IROTH)
 
     def getCalNum(self, rank_num):
         # 计算每行应该画多少个子图
@@ -230,6 +255,10 @@ class DeliverableGenerator:
 
     def run(self):
         summary_data = self.formProcess.readSummaryData(self.columns_to_keep)
+        # 判断summarydata 数据是否为空，如果是空， 说明所有csv读取数据都失败了
+        if summary_data.empty:
+            print("没有符合要求的csv表格数据，请排查您的PROFILING数据")
+            return
         rank_num = self.formProcess.getRankNum()
         for analyzer in self.analyzers:
             analyzer.GenerateDeliverable(summary_data, rank_num)
@@ -255,15 +284,15 @@ class DeliverableGenerator:
 
 
 def main():
-        # 解析命令行参数
-        parser = argparse.ArgumentParser()
-        parser.add_argument("--dir", "-d", default=None, help="root dir of PROF_* data")
-        parser.add_argument("--top_n", "-n", default=10, help="how many operators to show", type=int)
-        parser.add_argument("--type", "-t", default='html', help="compare ratio or aicore-time", type=str)
-        args = parser.parse_args()
+    # 解析命令行参数
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dir", "-d", default=None, help="root dir of PROF_* data")
+    parser.add_argument("--top_n", "-n", default=10, help="how many operators to show", type=int)
+    parser.add_argument("--type", "-t", default='html', help="compare ratio or aicore-time", type=str)
+    args = parser.parse_args()
 
-        deviverable_gen = DeliverableGenerator(args)
-        deviverable_gen.run()
+    deviverable_gen = DeliverableGenerator(args)
+    deviverable_gen.run()
 
 if __name__ == "__main__":
     main()
