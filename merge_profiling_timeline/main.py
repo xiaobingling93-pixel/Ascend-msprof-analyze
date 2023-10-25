@@ -25,21 +25,6 @@ from decimal import Decimal
 FILTER_DIRS = [".profiler", "HCCL_PROF", "timeline", "query", 'sqlite', 'log']
 RANK_ID_POS = 1000
 
-
-# 获取时间差异文件中的node和时间差的对应关系，保存到字典中
-def get_node_time_diff(time_diff_file_path):
-    node_diff = {}
-    if not time_diff_file_path:
-        return None
-    with open(time_diff_file_path, 'r+', encoding='utf-8') as f:
-        all_time_diff = json.load(f)
-        node_idx = 0
-        for ip, timediff in all_time_diff.items():
-            node_diff[node_idx] = timediff
-            node_idx += 1
-        return node_diff
-
-
 def get_path_dir(path: str) -> list:
     """
     check result path exist JOB dir
@@ -47,9 +32,6 @@ def get_path_dir(path: str) -> list:
     """
     path_dir_filter = filter(partial(_path_dir_filter_func, root_dir=path), os.listdir(path))
     sub_dirs = list(path_dir_filter)
-    if not sub_dirs:
-        message = f"The path \"{path}\" does not have PROF dir. Please check the path."
-        print(message)
     return sub_dirs
 
 
@@ -71,7 +53,6 @@ def get_timeline_info(args, prof_dirs):
 
         # 从info.json读取rank_id
         rank_id = get_rank_id_from_info_json(pro_path)
-        ts_difference_us = 0
         if rank_id is None:
             print(f"WARN, There is not rank id info in {pro_path}")
             continue
@@ -79,7 +60,7 @@ def get_timeline_info(args, prof_dirs):
         timeline_path = get_timeline_path(pro_path, args.type)
 
         if os.path.exists(timeline_path):
-            timeline_info[rank_id] = (timeline_path, ts_difference_us)
+            timeline_info[rank_id] = timeline_path
         else:
             print(f"WARN, The file \"{timeline_path}\" does not exist.")
     return timeline_info
@@ -98,21 +79,6 @@ def get_timeline_path(pro_path, type):
                 return timeline_path
     return
 
-def get_absolute_ts_start_info(pro_path) -> float:
-    for root, dirs, files in os.walk(pro_path):
-        for file in files:
-            if "start_info" in file and ".done" not in file:
-                start_json = os.path.join(root, file)
-                break
-    if start_json:
-        with open(start_json, "r+") as f:
-            info = json.load(f)
-        ts_us = float(info.get("collectionTimeBegin", 0))
-        ts_ns = float(info.get("clockMonotonicRaw", 0))
-        if not ts_us and not ts_ns:
-            return 0
-    return ts_us-ts_ns/1000
-
 def get_rank_id_from_info_json(pro_path):
     info_json = ""
     rank_id = None
@@ -123,15 +89,29 @@ def get_rank_id_from_info_json(pro_path):
                 break
 
     if info_json:
-        with open(info_json, "r+") as f:
-            info = json.load(f)
-        rank_id = info.get("rank_id")
+        if os.path.islink(info_json):
+            print(f"The file: \"{info_json}\" is link. Please check the path.")
+            return
+        try:
+            with open(info_json, "r+") as f:
+                info = json.load(f)
+            rank_id = info.get("rank_id")
+        except Exception as err:
+            print("[ERROR] %s" % err)
+            return
     return rank_id
 
 
 def merge_timeline_general(args):
     """合并e2e profiling生成的msprof*.json"""
+    if not os.path.isdir(args.input):
+        print(f"No such file or directory: \"{args.input}\". Please check the path.")
+        return
     prof_dir = get_path_dir(args.input)
+    if not prof_dir:
+        message = f"The path \"{args.input}\" does not have PROF dir. Please check the path."
+        print(message)
+        return
     timeline_info = get_timeline_info(args, prof_dir)
     timeline_files_dict = {}
 
@@ -165,18 +145,18 @@ def merge_timeline_custom(args):
 
 def merge_timeline_events(timeline_file_dict, process_list):
     """
-    输入需要合并的timeline文件路径及对应的rank_id/id、需要合并的process_list、校准时间差node_time_diff
+    输入需要合并的timeline文件路径及对应的rank_id/id、需要合并的process_list
     输出合并timeline
     """
     new_events = []
-    for rank_id, data_tuple in timeline_file_dict.items():
-        timeline_file_path = data_tuple[0]
-        ts_difference_us = data_tuple[1]
+    for rank_id, timeline_path in timeline_file_dict.items():
         node = rank_id // 8
-        print("rank id: ", rank_id, "timeline file: ", timeline_file_path)
-
+        print("rank id: ", rank_id, "timeline file: ", timeline_path)
+        if os.path.islink(timeline_path):
+            print(f"The file: \"{timeline_path}\" is link. Please check the path.")
+            return
         try:
-            with open(timeline_file_path, 'r+') as f:
+            with open(timeline_path, 'r+') as f:
                 cur_events = json.load(f)
         except Exception as err:
             print("[ERROR] %s" % err)
@@ -202,10 +182,6 @@ def merge_timeline_events(timeline_file_dict, process_list):
             if merged_pids and event.get('pid') not in merged_pids:
                 continue
 
-            # 当前节点间时间误差可用时，进行时间校准
-            if event.get("ts") and ts_difference_us:
-                event["ts"] = str(Decimal(str(event["ts"])) + Decimal(str(ts_difference_us)))
-
             # convert tid to int
             if isinstance(event.get("tid"), str):
                 event["tid"] = int(''.join(x for x in event["tid"] if x.isdigit()))
@@ -221,6 +197,9 @@ def merge_timeline_events(timeline_file_dict, process_list):
 
             new_events.append(event)
     out_path = f"{args.output}.json"
+    if os.path.islink(out_path):
+        print(f"The file: \"{out_path}\" is link. Please check the path.")
+        return
     if os.path.exists(out_path):
         print(f"File {out_path} existed before and is now overwritten.")
         os.remove(out_path)
