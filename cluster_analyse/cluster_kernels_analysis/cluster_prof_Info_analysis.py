@@ -300,15 +300,15 @@ class DeliverableGenerator:
 
 
 def main():
-        # 解析命令行参数
-        parser = argparse.ArgumentParser()
-        parser.add_argument("--dir", "-d", default=None, help="root dir of PROF_* data")
-        parser.add_argument("--top_n", "-n", default=10, help="how many operators to show", type=int)
-        parser.add_argument("--type", "-t", default='html', help="compare ratio or aicore-time", type=str)
-        args = parser.parse_args()
+    # 解析命令行参数
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dir", "-d", default=None, help="root dir of PROF_* data")
+    parser.add_argument("--top_n", "-n", default=10, help="how many operators to show", type=int)
+    parser.add_argument("--type", "-t", default='html', help="compare ratio or aicore-time", type=str)
+    args = parser.parse_args()
 
-        deviverable_gen = DeliverableGenerator(args)
-        deviverable_gen.run()
+    deviverable_gen = DeliverableGenerator(args)
+    deviverable_gen.run()
 
 if __name__ == "__main__":
     main()
