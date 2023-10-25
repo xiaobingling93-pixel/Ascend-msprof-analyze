@@ -23,6 +23,7 @@ from plotly.subplots import make_subplots
 from plotly.offline import plot
 import os
 import stat
+import shutil
 
 import warnings
 
@@ -150,8 +151,6 @@ class ViewInfoManager:
 class OpSummaryAnalyzerBase:
     def __init__(self, chip_type, analyzer_type, dir_path):
         self.chip_type = chip_type
-        self.result_dir = f"{dir_path}/result"
-        os.makedirs(self.result_dir, exist_ok=True)  # 文件路径不存在则创建
         view_info = ViewInfoManager(chip_type).getColumnsInfo(analyzer_type)
         self.columns_to_view = view_info['columns_to_view']
         self.calculate_fun = view_info['calculate_fun']
@@ -160,6 +159,11 @@ class OpSummaryAnalyzerBase:
         if 'extend_attr_to_group' in view_info:
             extend_attr_to_group = view_info['extend_attr_to_group']
             self.attrs_to_group.extend(extend_attr_to_group)
+        # 创建结果文件
+        self.result_dir = f"{dir_path}/result"
+        if os.path.exists(self.result_dir):
+            shutil.rmtree(self.result_dir, onerror=self.on_rm_error)
+        os.makedirs(self.result_dir, exist_ok=True)  # 文件路径不存在则创建
 
     def getColumnsToGroup(self):
         return self.columns_to_group
@@ -172,6 +176,13 @@ class OpSummaryAnalyzerBase:
         calculate_dict = {self.columns_to_view[i]: self.calculate_fun for i in range(len(self.columns_to_view))}
         view_data = summary_data.groupby(self.attrs_to_group).agg(calculate_dict).reset_index()
         return view_data
+
+    def on_rm_error(self, func, path, exc_info):
+        # path contains the path of the file that couldn't be removed
+        # let's just assume that it's read-only and unlink it.
+        os.chmod(path, stat.S_IWRITE)
+        os.unlink(path)
+
 
 class TimeToCsvAnalyzer(OpSummaryAnalyzerBase):
     def __init__(self, chip_type, dir_path):
@@ -265,12 +276,17 @@ class DeliverableGenerator:
 
     def setAnalyzers(self, args):
         chip_type = self.formProcess.getChipType()
+        # 判断该路径是不是软链接，并修改为绝对路径
+        if os.path.islink(args.dir):
+            print(f"The file: \"{args.dir}\" is link. Please check the path.")
+            return
+        prof_path = os.path.realpath(args.dir)
         if args.type == "all":
-            self.analyzers = [TimeToCsvAnalyzer(chip_type, args.dir), StatisticalInfoToHtmlAnalyzer(chip_type, args.top_n, args.dir)]
+            self.analyzers = [TimeToCsvAnalyzer(chip_type, prof_path), StatisticalInfoToHtmlAnalyzer(chip_type, args.top_n, prof_path)]
         elif args.type == "html":
-            self.analyzers = [StatisticalInfoToHtmlAnalyzer(chip_type, args.top_n, args.dir)]
+            self.analyzers = [StatisticalInfoToHtmlAnalyzer(chip_type, args.top_n, prof_path)]
         elif args.type == "csv":
-            self.analyzers = [TimeToCsvAnalyzer(chip_type, args.dir)]
+            self.analyzers = [TimeToCsvAnalyzer(chip_type, prof_path)]
         else:
             warnings.warn("参数错误，请输入 all html csv 这三种类型")  # 发出一个警告信息
 
