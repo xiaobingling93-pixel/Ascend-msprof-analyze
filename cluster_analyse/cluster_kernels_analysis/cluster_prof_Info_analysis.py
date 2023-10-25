@@ -22,8 +22,11 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from plotly.offline import plot
 import os
+import stat
 
 import warnings
+
+MAX_READ_FILE_BYTES = 64 * 1024 * 1024
 
 
 class FormDataProcessor:
@@ -43,7 +46,7 @@ class FormDataProcessor:
             if "mindstudio_profiler_output" in f:
                 continue
             # 判断csv文件大小
-            if not check_file_readable(f):
+            if not self.check_file_readable(f):
                 continue
 
             # 读取CSV文件
@@ -58,16 +61,16 @@ class FormDataProcessor:
             try:
                 df['device_id'] = self.getDeviceId(f)
             except:
-                print(f"文件 \"{f}\" 的路径或者是文件夹名没有按照要求，请确保存在[device_]这一级文件夹\n")
+                print(f"文件 \"{f}\" 的路径或者是文件夹名没有按照要求，请确保存在[device_]这一级文件夹,具体操作指导见readme\n")
                 continue
             # 添加新列 "device_id"
             try:
                 df['node_id'] = self.getNodeId(f)
             except:
-                print(f"文件 \"{f}\" 的路径或者是文件夹名没有按照要求，请确保存在[node_*]这一级文件夹\n")
+                print(f"文件 \"{f}\" 的路径或者是文件夹名没有按照要求，请确保存在[node*]这一级文件夹,具体操作指导见readme\n")
                 continue
             # 将数据添加到最终的数据框中
-            all_data = all_data.append(df, ignore_index=True)
+            all_data = all_data._append(df, ignore_index=True)
         return all_data
 
     def getChipType(self):
@@ -89,10 +92,10 @@ class FormDataProcessor:
         return len(self.files)
 
     def check_file_readable(self, file_path):
-        if not os.access(path, os.R_OK):
+        if not os.access(file_path, os.R_OK):
             print(f"the path \"{file_path}\" does not have permission to read")
             return False
-        if os.path.getsize(path) > MAX_READFILE_BYTES:
+        if os.path.getsize(file_path) > MAX_READ_FILE_BYTES:
             print(f"the path \"{file_path}\" is to large, Please check the path")
             return False
         return True
@@ -252,6 +255,10 @@ class DeliverableGenerator:
 
     def run(self):
         summary_data = self.formProcess.readSummaryData(self.columns_to_keep)
+        # 判断summarydata 数据是否为空，如果是空， 说明所有csv读取数据都失败了
+        if summary_data.empty:
+            print("没有符合要求的csv表格数据，请排查您的PROFILING数据")
+            return
         rank_num = self.formProcess.getRankNum()
         for analyzer in self.analyzers:
             analyzer.GenerateDeliverable(summary_data, rank_num)
@@ -277,15 +284,15 @@ class DeliverableGenerator:
 
 
 def main():
-        # 解析命令行参数
-        parser = argparse.ArgumentParser()
-        parser.add_argument("--dir", "-d", default=None, help="root dir of PROF_* data")
-        parser.add_argument("--top_n", "-n", default=10, help="how many operators to show", type=int)
-        parser.add_argument("--type", "-t", default='html', help="compare ratio or aicore-time", type=str)
-        args = parser.parse_args()
+    # 解析命令行参数
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dir", "-d", default=None, help="root dir of PROF_* data")
+    parser.add_argument("--top_n", "-n", default=10, help="how many operators to show", type=int)
+    parser.add_argument("--type", "-t", default='html', help="compare ratio or aicore-time", type=str)
+    args = parser.parse_args()
 
-        deviverable_gen = DeliverableGenerator(args)
-        deviverable_gen.run()
+    deviverable_gen = DeliverableGenerator(args)
+    deviverable_gen.run()
 
 if __name__ == "__main__":
     main()
