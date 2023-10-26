@@ -45,7 +45,7 @@ Ascend PyTorch Profiler数据目录结构示例如下：
 | --type   | 指定需要合并timeline场景，可选取值：`pytorch`（通过Ascend PyTorch Profiler方式采集profiling数据，合并所有卡的trace_view.json）、`e2e`（通过E2E Profiling方式采集Profiling数据，优先合并总timeline，没有生成则选择合并device目录下的msprof_*.json）、`custom` （自定义需要合并的timeline数据，具体参考**使用示例**）。 | 是       |
 | -o       | 指定合并后的timeline文件输出的路径（路径末尾可以设置文件名，具体用法参考**使用示例**），不设置该参数的情况下默认文件输出的路径为当前目录（默认文件名为merged.json）。 | 否       |
 | --rank   | 指定需要合并timeline的Rank ID，默认全部合并。                | 否       |
-| --items  | 指定需要合并的Profiling数据项，包括：python、Ascend_Hardware、CANN、HCCL、PTA、Overlap_Analysis，默认全部合并。 | 否       |
+| --items  | 指定需要合并的Profiling数据项，包括：python、Ascend Hardware、CANN、HCCL、PTA、Overlap Analysis，默认全部合并。 | 否       |
 
 ### 使用示例
 
@@ -70,7 +70,7 @@ Ascend PyTorch Profiler数据目录结构示例如下：
 4. 合并单机多卡timeline，合并所有卡的CANN层和Ascend_Hardware层数据
 
    ```bash
-   python3 main.py -i path/to/cann_profiling/ --type pytorch --items CANN,Ascend_Hardware
+   python3 main.py -i path/to/cann_profiling/ --type pytorch --items "CANN,Ascend Hardware"
    ```
 
 5. 合并多timeline（自定义）
