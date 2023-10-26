@@ -14,7 +14,7 @@
 # limitations under the License.
 
 from pathlib import Path
-
+import sys
 import pandas as pd
 import argparse
 import re
@@ -24,8 +24,11 @@ from plotly.offline import plot
 import os
 import stat
 import shutil
-
 import warnings
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from common_func.path_manager import PathManager
 
 MAX_READ_FILE_BYTES = 64 * 1024 * 1024
 
@@ -37,7 +40,9 @@ class FormDataProcessor:
 
     def get_files_with_prefix_recursive(self, csv_path, match_str):
         matched_ir_files = list(Path(csv_path).rglob(match_str))
-        assert len(matched_ir_files) > 0, f"Didn't find any file in folder {csv_path} that matches {match_str}"
+        if not matched_ir_files:
+            msg = f"Didn't find any file in folder {csv_path} that matches {match_str}"
+            raise RuntimeError(msg)
         return [str(item) for item in matched_ir_files]
 
     def readSummaryData(self, columns_to_keep):
@@ -47,9 +52,7 @@ class FormDataProcessor:
             if "mindstudio_profiler_output" in f:
                 continue
             # 判断csv文件大小
-            if not self.check_file_readable(f):
-                continue
-
+            PathManager.check_path_readable(f)
             # 读取CSV文件
             df = pd.read_csv(f)
             # 保留需要的列
@@ -92,14 +95,6 @@ class FormDataProcessor:
     def getRankNum(self):
         return len(self.files)
 
-    def check_file_readable(self, file_path):
-        if not os.access(file_path, os.R_OK):
-            print(f"the path \"{file_path}\" does not have permission to read")
-            return False
-        if os.path.getsize(file_path) > MAX_READ_FILE_BYTES:
-            print(f"the path \"{file_path}\" is to large, Please check the path")
-            return False
-        return True
 
 # 表驱动，获取不同芯片类型不同交付件的所需的列
 class ViewInfoManager:
@@ -160,10 +155,12 @@ class OpSummaryAnalyzerBase:
             extend_attr_to_group = view_info['extend_attr_to_group']
             self.attrs_to_group.extend(extend_attr_to_group)
         # 创建结果文件
-        self.result_dir = f"{dir_path}/result"
+        self.result_dir = os.path.join(dir_path, "result")
+        PathManager.check_path_length(self.result_dir)
         if os.path.exists(self.result_dir):
             shutil.rmtree(self.result_dir, onerror=self.on_rm_error)
-        os.makedirs(self.result_dir, exist_ok=True)  # 文件路径不存在则创建
+        PathManager.check_path_writeable(dir_path)
+        PathManager.make_dir_safety(self.result_dir)
 
     def getColumnsToGroup(self):
         return self.columns_to_group
@@ -192,11 +189,16 @@ class TimeToCsvAnalyzer(OpSummaryAnalyzerBase):
         view_data = self.calculateViewData(summary_data)
         # 规范化列名
         view_data.columns = [''.join(col) if col[1] == "" else '_'.join(col) for col in view_data.columns]
-        for column in self.columns_to_view:
-            view_data[column + '_range'] = view_data[column + '_max'] - view_data[column + '_min']
-        view_data.to_csv(self.result_dir + "/cluster_duration_time_analysis.csv", index=False)
+        try:
+            for column in self.columns_to_view:
+                view_data[column + '_range'] = view_data[column + '_max'] - view_data[column + '_min']
+        except Exception as e:
+            raise RuntimeError("Invalid view data!") from e
+        save_path = os.path.join(self.result_dir, "cluster_duration_time_analysis.csv")
+        PathManager.check_path_length(save_path)
+        view_data.to_csv(save_path, index=False)
         # 该文件权限设置为只读权限，不允许修改
-        os.chmod(self.result_dir + "/cluster_duration_time_analysis.csv", stat.S_IROTH)
+        os.chmod(save_path, stat.S_IROTH)
         return view_data
 
 
@@ -244,9 +246,11 @@ class StatisticalInfoToHtmlAnalyzer(OpSummaryAnalyzerBase):
                           height=int(500 * row_num),
                           width=int(rank_num * 100 * col_num),
                           title_text="Op Performance Comparison")
-        plot(fig, filename=self.result_dir + "/" + column + "_Info.html")
+        save_plot_path = os.path.join(self.result_dir, column + "_Info.html")
+        PathManager.check_path_length(save_plot_path)
+        plot(fig, filename=save_plot_path)
         # 该文件权限设置为只读权限，不允许修改
-        os.chmod(self.result_dir + "/" + column + "_Info.html", stat.S_IROTH)
+        os.chmod(save_plot_path, stat.S_IROTH)
 
     def getCalNum(self, rank_num):
         # 计算每行应该画多少个子图
@@ -281,6 +285,7 @@ class DeliverableGenerator:
             print(f"The file: \"{args.dir}\" is link. Please check the path.")
             return
         prof_path = os.path.realpath(args.dir)
+        PathManager.input_path_common_check(prof_path)
         if args.type == "all":
             self.analyzers = [TimeToCsvAnalyzer(chip_type, prof_path), StatisticalInfoToHtmlAnalyzer(chip_type, args.top_n, prof_path)]
         elif args.type == "html":

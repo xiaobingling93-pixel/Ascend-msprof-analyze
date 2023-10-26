@@ -66,3 +66,10 @@ class Constant(object):
     # step time
     RANK = 'rank'
     STAGE = 'stage'
+
+    # epsilon
+    EPS = 1e-15
+
+    # file suffix
+    JSON_SUFFIX = ".json"
+    CSV_SUFFIX = ".csv"

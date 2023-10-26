@@ -1,4 +1,5 @@
 import copy
+from collections import namedtuple
 
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.workbook import Workbook
@@ -15,6 +16,7 @@ class OpComparisonGenerator:
         self._compare_type = compare_type
         self._base_headers = []
         self._comparison_headers = []
+        self._row_index = 3
         self.update_headers()
 
     def update_headers(self):
@@ -32,10 +34,23 @@ class OpComparisonGenerator:
     def create_sheet(self, workbook: Workbook):
         ws = workbook.create_sheet(self._compare_type, 0)
         ws.sheet_properties.tabColor = Constant.YELLOW_COLOR
-        # write headers
         headers = self._base_headers + self._comparison_headers + [Constant.DIFF, Constant.OP_NAME_FILTER,
                                                                    Constant.DIFF_FILTER]
+        self.writer_headers(ws, headers)
 
+        # write lines
+        self._row_index = 3
+        for data in self._compare_result_data:
+            base_event_list = TreeBuilder.get_total_compare_event(data[0], self._compare_type) if data[0] else []
+            comparison_event_list = TreeBuilder.get_total_compare_event(data[1], self._compare_type) if data[1] else []
+            diff = self.write_summary_lines(ws, headers, data, base_event_list, comparison_event_list)
+            self._row_index += 1
+            EventListWrapper = namedtuple('EventListWrapper', ['base_event_list', 'comparison_event_list'])
+            event_list = EventListWrapper(base_event_list, comparison_event_list)
+            self.write_detail_lines(ws, headers, data, diff, event_list)
+
+    def writer_headers(self, ws, headers):
+        # write headers
         base_trace_start_column = 0
         comparison_trace_start_column = len(self._base_headers)
         diff_start_column = len(self._base_headers) + len(self._comparison_headers)
@@ -70,90 +85,100 @@ class OpComparisonGenerator:
         ws.merge_cells(start_row=1, start_column=headers.index(Constant.DIFF_FILTER) + 1,
                        end_row=2, end_column=headers.index(Constant.DIFF_FILTER) + 1)
 
-        # write lines
-        row_index = 3
-        for data in self._compare_result_data:
-            # write summary lines
-            base_event_list = TreeBuilder.get_total_compare_event(data[0], self._compare_type) if data[0] else []
-            comparison_event_list = TreeBuilder.get_total_compare_event(data[1], self._compare_type) if data[1] else []
-            base_summary_data, comparison_summary_data = [Constant.NA] * len(self._base_headers), \
-                                                         [Constant.NA] * len(self._comparison_headers)
-            if data[0]:
-                base_summary_data[0] = data[0].name
-                base_summary_data[1] = data[0].input_shape
-                base_summary_data[2] = data[0].input_type
-                base_summary_data[3] = sum(
-                    [x.compare_index for x in base_event_list]) if base_event_list else Constant.NA
-            if data[1]:
-                comparison_summary_data[0] = data[1].name
-                comparison_summary_data[1] = data[1].input_shape
-                comparison_summary_data[2] = data[1].input_type
-                comparison_summary_data[3] = sum(
-                    [x.compare_index for x in comparison_event_list]) if comparison_event_list else Constant.NA
-            if base_event_list and comparison_event_list and base_summary_data[3]:
-                diff = (comparison_summary_data[3] - base_summary_data[3]) / base_summary_data[3]
-            else:
-                diff = Constant.NA
-            op_name = data[0].name if data[0] else data[1].name
+    def write_summary_lines(self, ws, headers, data, base_event_list, comparison_event_list):
+        def ws_write_diff(ws, index, value):
+            ws.cell(row=self._row_index, column=index + 1).number_format = '0.00%'
+            if value != Constant.NA and value < 0:
+                ws.cell(row=self._row_index, column=index + 1).font = Font(name='Arial', color=Constant.GREEN_COLOR)
+            elif value != Constant.NA and value >= 0:
+                ws.cell(row=self._row_index, column=index + 1).font = Font(name='Arial', color=Constant.RED_COLOR)
+        
+        def ws_write_diff_filter(ws, index, diff_value):
+            if diff_value != Constant.NA and diff_value < 0:
+                ws.cell(row=self._row_index, column=index + 1).fill = PatternFill("solid",
+                                                                            fgColor=Constant.GREEN_COLOR)
+            elif diff_value != Constant.NA and diff_value >= 0:
+                ws.cell(row=self._row_index, column=index + 1).fill = PatternFill("solid", fgColor=Constant.RED_COLOR)
+        # write summary lines
+        base_summary_data, comparison_summary_data = [Constant.NA] * len(self._base_headers), \
+                                                        [Constant.NA] * len(self._comparison_headers)
+        if data[0]:
+            base_summary_data[0] = data[0].name
+            base_summary_data[1] = data[0].input_shape
+            base_summary_data[2] = data[0].input_type
+            base_summary_data[3] = sum(
+                [x.compare_index for x in base_event_list]) if base_event_list else Constant.NA
+        if data[1]:
+            comparison_summary_data[0] = data[1].name
+            comparison_summary_data[1] = data[1].input_shape
+            comparison_summary_data[2] = data[1].input_type
+            comparison_summary_data[3] = sum(
+                [x.compare_index for x in comparison_event_list]) if comparison_event_list else Constant.NA
+        if base_event_list and comparison_event_list and base_summary_data[3]:
+            diff = (comparison_summary_data[3] - base_summary_data[3]) / base_summary_data[3]
+        else:
+            diff = Constant.NA
+        op_name = data[0].name if data[0] else data[1].name
 
-            summary_data = base_summary_data + comparison_summary_data + [diff, op_name, Constant.NA]
-            for index in range(len(headers)):
-                value = summary_data[index]
-                if headers[index] == Constant.DIFF:
-                    ws.cell(row=row_index, column=index + 1).number_format = '0.00%'
-                    if value != Constant.NA and value < 0:
-                        ws.cell(row=row_index, column=index + 1).font = Font(name='Arial', color=Constant.GREEN_COLOR)
-                    elif value != Constant.NA and value >= 0:
-                        ws.cell(row=row_index, column=index + 1).font = Font(name='Arial', color=Constant.RED_COLOR)
-                if headers[index] == Constant.DIFF_FILTER:
-                    diff_value = summary_data[headers.index(Constant.DIFF)]
-                    if diff_value != Constant.NA and diff_value < 0:
-                        ws.cell(row=row_index, column=index + 1).fill = PatternFill("solid",
-                                                                                    fgColor=Constant.GREEN_COLOR)
-                    elif diff_value != Constant.NA and diff_value >= 0:
-                        ws.cell(row=row_index, column=index + 1).fill = PatternFill("solid", fgColor=Constant.RED_COLOR)
-                elif headers[index] != Constant.OP_NAME_FILTER:
-                    ws.cell(row=row_index, column=index + 1).fill = PatternFill("solid",
-                                                                                fgColor=Constant.SUMMARY_LINE_COLOR)
+        summary_data = base_summary_data + comparison_summary_data + [diff, op_name, Constant.NA]
+        if len(summary_data) < len(headers):
+            raise RuntimeError("Fail to write summary lines!")
+        for index, header_name in enumerate(headers):
+            value = summary_data[index]
+            if header_name == Constant.DIFF:
+                ws_write_diff(ws, index, value)
+            if header_name == Constant.DIFF_FILTER:
+                diff_value = summary_data[headers.index(Constant.DIFF)]
+                ws_write_diff_filter(ws, index, diff_value)
+            elif header_name != Constant.OP_NAME_FILTER:
+                ws.cell(row=self._row_index, column=index + 1).fill = PatternFill("solid",
+                                                                            fgColor=Constant.SUMMARY_LINE_COLOR)
 
-                if value != Constant.NA:
-                    ws.cell(row=row_index, column=index + 1).value = value
-                    bold = headers[index] == Constant.OP_NAME
-                    if headers[index] != Constant.DIFF:
-                        ws.cell(row=row_index, column=index + 1).font = Font(name='Arial', bold=bold)
-                ws.cell(row=row_index, column=index + 1).border = Constant.BORDER
-            row_index += 1
+            if value != Constant.NA:
+                ws.cell(row=self._row_index, column=index + 1).value = value
+                bold = header_name == Constant.OP_NAME
+                if header_name != Constant.DIFF:
+                    ws.cell(row=self._row_index, column=index + 1).font = Font(name='Arial', bold=bold)
+            ws.cell(row=self._row_index, column=index + 1).border = Constant.BORDER
+        return diff
 
-            # write detail lines
-            base_event_num, comparison_event_num = len(base_event_list), len(comparison_event_list)
-            for index in range(max(base_event_num, comparison_event_num)):
-                base_detail_data, comparison_detail_data = [Constant.NA] * len(self._base_headers), \
-                                                           [Constant.NA] * len(self._comparison_headers)
-                base_detail_data[0] = "|"
-                comparison_detail_data[0] = "|"
-                if index < base_event_num:
-                    base_event = base_event_list[index]
-                    base_detail_data[1:] = base_event.get_record()
-                if index < comparison_event_num:
-                    comparison_event = comparison_event_list[index]
-                    comparison_detail_data[1:] = comparison_event.get_record()
+    def write_detail_lines(self, ws, headers, data, diff, event_list):
+        def ws_write_helper(ws, colum_index, value, diff, headers):
+            if value != Constant.NA:
+                ws.cell(row=self._row_index, column=colum_index + 1).value = value
+                bold = headers[colum_index] == Constant.OP_NAME
+                ws.cell(row=self._row_index, column=colum_index + 1).font = Font(name='Arial', bold=bold)
+            ws.cell(row=self._row_index, column=colum_index + 1).border = Constant.BORDER
+            if headers[colum_index] == Constant.DIFF_FILTER:
+                if diff != Constant.NA and diff < 0:
+                    ws.cell(row=self._row_index, column=colum_index + 1).fill = PatternFill("solid",
+                                                                                        fgColor=Constant.GREEN_COLOR)
+                elif diff != Constant.NA and diff >= 0:
+                    ws.cell(row=self._row_index, column=colum_index + 1).fill = PatternFill("solid",
+                                                                                        fgColor=Constant.RED_COLOR)
+            if headers[colum_index] == Constant.OP_NAME:
+                ws.cell(row=self._row_index, column=colum_index + 1).alignment = Alignment(horizontal="center",
+                                                                                        vertical="center")
 
-                detail_data = base_detail_data + comparison_detail_data + [Constant.NA, op_name, Constant.NA]
-                for colum_index in range(len(headers)):
-                    value = detail_data[colum_index]
-                    if value != Constant.NA:
-                        ws.cell(row=row_index, column=colum_index + 1).value = value
-                        bold = headers[colum_index] == Constant.OP_NAME
-                        ws.cell(row=row_index, column=colum_index + 1).font = Font(name='Arial', bold=bold)
-                    ws.cell(row=row_index, column=colum_index + 1).border = Constant.BORDER
-                    if headers[colum_index] == Constant.DIFF_FILTER:
-                        if diff != Constant.NA and diff < 0:
-                            ws.cell(row=row_index, column=colum_index + 1).fill = PatternFill("solid",
-                                                                                              fgColor=Constant.GREEN_COLOR)
-                        elif diff != Constant.NA and diff >= 0:
-                            ws.cell(row=row_index, column=colum_index + 1).fill = PatternFill("solid",
-                                                                                              fgColor=Constant.RED_COLOR)
-                    if headers[colum_index] == Constant.OP_NAME:
-                        ws.cell(row=row_index, column=colum_index + 1).alignment = Alignment(horizontal="center",
-                                                                                             vertical="center")
-                row_index += 1
+        base_event_list = event_list.base_event_list
+        comparison_event_list = event_list.comparison_event_list
+        # write detail lines
+        op_name = data[0].name if data[0] else data[1].name
+        base_event_num, comparison_event_num = len(base_event_list), len(comparison_event_list)
+        for index in range(max(base_event_num, comparison_event_num)):
+            base_detail_data, comparison_detail_data = [Constant.NA] * len(self._base_headers), \
+                                                        [Constant.NA] * len(self._comparison_headers)
+            base_detail_data[0] = "|"
+            comparison_detail_data[0] = "|"
+            if index < base_event_num:
+                base_event = base_event_list[index]
+                base_detail_data[1:] = base_event.get_record()
+            if index < comparison_event_num:
+                comparison_event = comparison_event_list[index]
+                comparison_detail_data[1:] = comparison_event.get_record()
+
+            detail_data = base_detail_data + comparison_detail_data + [Constant.NA, op_name, Constant.NA]
+            for colum_index in range(len(headers)):
+                value = detail_data[colum_index]
+                ws_write_helper(ws, colum_index, value, diff, headers)
+            self._row_index += 1

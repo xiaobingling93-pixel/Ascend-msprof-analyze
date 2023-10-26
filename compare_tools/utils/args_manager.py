@@ -1,6 +1,6 @@
 import os.path
 
-from path_manager import PathManager
+from common_func.path_manager import PathManager
 from utils.constant import Constant
 from utils.file_reader import FileReader
 from utils.profiling_parser import GPUProfilingParser, NPUProfilingParser

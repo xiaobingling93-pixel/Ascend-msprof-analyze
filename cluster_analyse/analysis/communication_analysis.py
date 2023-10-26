@@ -31,7 +31,7 @@ class BaseCommAnalysis:
 
     @staticmethod
     def compute_ratio(dividend: float, divisor: float):
-        if abs(divisor) < 1e-15:
+        if abs(divisor) < Constant.EPS:
             return 0
         else:
             return round(dividend / divisor, 4)

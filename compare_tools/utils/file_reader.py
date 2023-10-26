@@ -2,7 +2,7 @@ import csv
 import json
 import os
 
-from path_manager import PathManager
+from common_func.path_manager import PathManager
 from utils.constant import Constant
 
 
@@ -19,7 +19,7 @@ class FileReader:
             return []
         if file_size > Constant.MAX_FILE_SIZE:
             check_msg = input(
-                f"The file({file_path}) size exceeds the preset max value, do you continue reading the file? [y/n]")
+                f"The file({file_path}) size exceeds the preset max value. Continue reading the file? [y/n]")
             if check_msg.lower() != "y":
                 print(f"[WARNING] The user choose not to read the file: {file_path}")
                 return []
@@ -41,7 +41,7 @@ class FileReader:
             return []
         if file_size > Constant.MAX_FILE_SIZE:
             check_msg = input(
-                f"The file({file_path}) size exceeds the preset max value, do you continue reading the file? [y/n]")
+                f"The file({file_path}) size exceeds the preset max value. Continue reading the file? [y/n]")
             if check_msg.lower() != "y":
                 print(f"[WARNING] The user choose not to read the file: {file_path}")
                 return []

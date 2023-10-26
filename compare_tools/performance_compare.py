@@ -6,10 +6,12 @@ import sys
 import time
 
 sys.path.append(
-    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "cluster_analyse", "common_func"))
+    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "cluster_analyse"))
+
 from generation.comparison_generator import ComparisonGenerator
 from utils.args_manager import ArgsManager
 from profiling_analysis.profiling_parse import prof_main
+from common_func.path_manager import PathManager
 
 
 def performance_compare(args):
@@ -46,7 +48,7 @@ def main():
         dir_path = args.output_path if args.output_path else "./"
         file_name = "performance_comparison_result_{}.xlsx".format(
             time.strftime("%Y%m%d%H%M%S", time.localtime(time.time())))
-        result_file_path = os.path.realpath(os.path.join(dir_path, file_name))
+        result_file_path = PathManager.get_realpath(os.path.join(dir_path, file_name))
 
         ComparisonGenerator(args).create_excel(result_file_path)
         print(f"[INFO] The comparison result file has been generated: {result_file_path}")

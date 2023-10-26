@@ -42,7 +42,6 @@ class Interface:
                 CommunicationGroupGenerator(self.collection_path, data_map).generate()
         except RuntimeError:
             print("Can not get communication info from ranks")
-        finally:
             communication_group = {}
             communication_ops = []
             collective_group_dict = {}
