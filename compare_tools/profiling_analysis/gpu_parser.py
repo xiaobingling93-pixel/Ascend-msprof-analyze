@@ -19,6 +19,7 @@ import pandas as pd
 
 import profiling_analysis.parser_helper as parser_helper
 from utils.file_reader import FileReader
+from utils.constant import Constant
 
 
 class OpTimeWarper:
@@ -134,7 +135,10 @@ class GpuProfilingParser:
 
         self.profiling_info.scheduling_time = self.profiling_info.e2e_time - all_op_time / 10 ** 6 - \
                                               self.profiling_info.communication_not_overlapped
-        self.profiling_info.scheduling_ratio = self.profiling_info.scheduling_time / self.profiling_info.e2e_time
+        if self.profiling_info.e2e_time < Constant.EPS:
+            self.profiling_info.scheduling_ratio = 0.0
+        else:
+            self.profiling_info.scheduling_ratio = self.profiling_info.scheduling_time / self.profiling_info.e2e_time
         self.parse_memory_reserved()
 
     def parse_e2e_time(self):

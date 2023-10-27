@@ -15,9 +15,9 @@
 
 import os
 from abc import abstractmethod
+from collections import defaultdict
 
 from common_func.constant import Constant
-from collections import defaultdict
 from common_func.file_manager import FileManager
 
 

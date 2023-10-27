@@ -13,18 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from pathlib import Path
 import sys
-import pandas as pd
 import argparse
 import re
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-from plotly.offline import plot
 import os
 import stat
 import shutil
 import warnings
+from pathlib import Path
+
+import pandas as pd
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+from plotly.offline import plot
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -64,13 +65,13 @@ class FormDataProcessor:
             # 从文件名提取设备ID
             try:
                 df['device_id'] = self.getDeviceId(f)
-            except:
+            except Exception:
                 print(f"文件 \"{f}\" 的路径或者是文件夹名没有按照要求，请确保存在[device_]这一级文件夹,具体操作指导见readme\n")
                 continue
             # 添加新列 "device_id"
             try:
                 df['node_id'] = self.getNodeId(f)
-            except:
+            except Exception:
                 print(f"文件 \"{f}\" 的路径或者是文件夹名没有按照要求，请确保存在[node*]这一级文件夹,具体操作指导见readme\n")
                 continue
             # 将数据添加到最终的数据框中
@@ -100,7 +101,7 @@ class FormDataProcessor:
 class ViewInfoManager:
     def __init__(self, chip_type):
         self.chip_type = chip_type
-        self.op_summary_columns_dict = []
+        self.op_summary_columns_dict = {}
         self.setOpSummaryColumnsParams()
 
     def setOpSummaryColumnsParams(self):
@@ -140,7 +141,7 @@ class ViewInfoManager:
         }
 
     def getColumnsInfo(self, analyzer_type):
-        return self.op_summary_columns_dict[self.chip_type][analyzer_type]
+        return self.op_summary_columns_dict.get(self.chip_type, {}).get(analyzer_type)
 
 
 class OpSummaryAnalyzerBase:
@@ -258,6 +259,7 @@ class StatisticalInfoToHtmlAnalyzer(OpSummaryAnalyzerBase):
             return 2
         else:
             return 1
+
 
 class DeliverableGenerator:
     def __init__(self, args):

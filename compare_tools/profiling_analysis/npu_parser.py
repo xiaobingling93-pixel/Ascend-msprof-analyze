@@ -14,8 +14,8 @@
 # limitations under the License.
 
 import sys
-import pandas as pd
 from collections import defaultdict
+import pandas as pd
 import profiling_analysis.parser_helper as parser_helper
 from utils.file_reader import FileReader
 from common_func.path_manager import PathManager

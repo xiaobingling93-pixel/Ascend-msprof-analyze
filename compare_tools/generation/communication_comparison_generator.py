@@ -122,13 +122,13 @@ class CommunicationComparisonGenerator:
             comparison_detail_data[0] = "|"
             if index < len(base_data):
                 total_dur = sum([data[2] for data in base_data])
-                percent = 0.0 if total_dur < Constant.EPS else base_data[index][2] / total_dur
+                percent = 0.0 if abs(total_dur) < Constant.EPS else base_data[index][2] / total_dur
                 dur_percent = "%.2f%%" % (percent * 100)
                 base_data[index][0] = f"{base_data[index][0]} ({dur_percent})"
                 base_detail_data[1:] = base_data[index]
             if index < len(comparison_data):
                 total_dur = sum([data[2] for data in comparison_data])
-                percent = 0.0 if total_dur < Constant.EPS else comparison_data[index][2] / total_dur
+                percent = 0.0 if abs(total_dur) < Constant.EPS else comparison_data[index][2] / total_dur
                 dur_percent = "%.2f%%" % (percent * 100)
                 comparison_data[index][0] = f"{comparison_data[index][0]} ({dur_percent})"
                 comparison_detail_data[1:] = comparison_data[index]

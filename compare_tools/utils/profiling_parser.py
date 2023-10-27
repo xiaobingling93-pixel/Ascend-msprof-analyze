@@ -205,7 +205,7 @@ class NPUProfilingParser(ProfilingParser):
                 match_dequeue_data = self._match_cann_memory_data(dequeue_data, ts_time)
                 if match_dequeue_data is not None:
                     correlation_id = match_dequeue_data.get("args", {}).get("correlation_id", "")
-                    ts = enqueue_dict[correlation_id].get("ts", 0)
+                    ts = enqueue_dict.get(correlation_id, {}).get("ts", 0)
                     self._memory_list.append({Constant.SIZE: float(data.get(Constant.SIZE, 0)), Constant.TS: ts,
                                               Constant.NAME: data.get(Constant.NAME, ""),
                                               Constant.ALLOCATION_TIME: float(data.get(Constant.ALLOCATION_TIME, 0)),

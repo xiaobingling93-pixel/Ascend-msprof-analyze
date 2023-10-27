@@ -40,8 +40,8 @@ class FileManager:
                 reader = csv.DictReader(csv_file)
                 for row in reader:
                     result_data.append(class_bean(row))
-        except Exception:
-            raise RuntimeError(f"Failed to read the file: {base_name}")
+        except Exception as e:
+            raise RuntimeError(f"Failed to read the file: {base_name}") from e
         return result_data
 
     @classmethod
@@ -56,8 +56,8 @@ class FileManager:
         try:
             with open(file_path, "r") as json_file:
                 result_data = json.load(json_file)
-        except Exception:
-            raise RuntimeError(f"Failed to read the file: {base_name}")
+        except Exception as e:
+            raise RuntimeError(f"Failed to read the file: {base_name}") from e
         return result_data
 
     @classmethod
@@ -78,8 +78,8 @@ class FileManager:
                 if headers:
                     writer.writerow(headers)
                 writer.writerows(data)
-        except Exception:
-            raise RuntimeError(f"Can't create file: {base_name}")
+        except Exception as e:
+            raise RuntimeError(f"Can't create file: {base_name}") from e
 
     @classmethod
     def create_json_file(cls, profiler_path: str, data: dict, file_name: str) -> None:
@@ -94,8 +94,8 @@ class FileManager:
                 os.open(output_file, os.O_WRONLY | os.O_CREAT, cls.DATA_FILE_AUTHORITY), 'w'
             ) as file:
                 json.dump(data, file)
-        except Exception:
-            raise RuntimeError(f"Can't create the file: {base_name}")
+        except Exception as e:
+            raise RuntimeError(f"Can't create the file: {base_name}") from e
 
     @classmethod
     def create_output_dir(cls, collection_path: str) -> None:
