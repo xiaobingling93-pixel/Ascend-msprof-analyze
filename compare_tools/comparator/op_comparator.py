@@ -34,8 +34,8 @@ class OpComparator:
     def _matching_op(cls, base_ops: list, comparison_ops: list, name_func: any) -> list:
         if not comparison_ops:
             result_data = [None] * len(base_ops)
-            for index in range(len(base_ops)):
-                result_data[index] = [base_ops[index], None]
+            for index, value in enumerate(base_ops):
+                result_data[index] = [value, None]
             return result_data
 
         result_data = []

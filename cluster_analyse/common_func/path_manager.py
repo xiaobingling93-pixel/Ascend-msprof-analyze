@@ -38,9 +38,9 @@ class PathManager:
             when invalid data throw exception
         """
         cls.input_path_common_check(path)
-
+        base_name = os.path.basename(path)
         if os.path.isfile(path):
-            msg = "Invalid input path which is a file path: {path}"
+            msg = f"Invalid input path which is a file path: {base_name}"
             raise RuntimeError(msg)
 
     @classmethod
@@ -55,10 +55,21 @@ class PathManager:
             when invalid data throw exception
         """
         cls.input_path_common_check(path)
-
+        base_name = os.path.basename(path)
         if os.path.isdir(path):
-            msg = "Invalid input path which is a directory path: {path}"
+            msg = f"Invalid input path which is a directory path: {base_name}"
             raise RuntimeError(msg)
+
+    @classmethod
+    def check_path_length(cls, path: str):
+        if len(path) > cls.MAX_PATH_LENGTH:
+            raise RuntimeError("Length of input path exceeds the limit.")
+        path_split_list = path.split("/")
+        for path in path_split_list:
+            path_list = path.split("\\")
+            for name in path_list:
+                if len(name) > cls.MAX_FILE_NAME_LENGTH:
+                    raise RuntimeError("Length of input path exceeds the limit.")
 
     @classmethod
     def input_path_common_check(cls, path: str):
@@ -66,7 +77,7 @@ class PathManager:
             raise RuntimeError("Length of input path exceeds the limit.")
 
         if os.path.islink(path):
-            msg = f"Invalid input path which is a soft link: {path}"
+            msg = f"Invalid input path which is a soft link."
             raise RuntimeError(msg)
 
         if platform.system().lower() == cls.WINDOWS:
@@ -74,7 +85,7 @@ class PathManager:
         else:
             pattern = r'(\.|/|_|-|\s|[~0-9a-zA-Z])+'
         if not re.fullmatch(pattern, path):
-            msg = f"Invalid input path: {path}"
+            msg = f"Invalid input path."
             raise RuntimeError(msg)
 
         path_split_list = path.split("/")
@@ -94,8 +105,9 @@ class PathManager:
         Exception Description:
             when invalid path, prompt the user
         """
+        base_name = os.path.basename(path)
         if not os.path.exists(path):
-            msg = f"The path does not exist: {path}"
+            msg = f"Invalid path: {base_name}"
             raise RuntimeError(msg)
         if platform.system().lower() == cls.WINDOWS:
             return
@@ -116,10 +128,11 @@ class PathManager:
         """
         cls.check_path_owner_consistent(path)
         if os.path.islink(path):
-            msg = f"Invalid path which is a soft link: {path}"
+            msg = f"Invalid path which is a soft link."
             raise RuntimeError(msg)
+        base_name = os.path.basename(path)
         if not os.access(path, os.W_OK):
-            msg = f"The path permission check failed: {path}"
+            msg = f"The path permission check failed: {base_name}"
             raise RuntimeError(msg)
 
     @classmethod
@@ -134,15 +147,17 @@ class PathManager:
         """
         cls.check_path_owner_consistent(path)
         if os.path.islink(path):
-            msg = f"Invalid path which is a soft link: {path}"
+            msg = f"Invalid path which is a soft link."
             raise RuntimeError(msg)
+        base_name = os.path.basename(path)
         if not os.access(path, os.R_OK):
-            msg = f"The path permission check failed: {path}"
+            msg = f"The path permission check failed: {base_name}"
             raise RuntimeError(msg)
 
     @classmethod
     def remove_path_safety(cls, path: str):
-        msg = f"Failed to remove path: {path}"
+        base_name = os.path.basename(path)
+        msg = f"Failed to remove path: {base_name}"
         if os.path.islink(path):
             raise RuntimeError(msg)
         if os.path.exists(path):
@@ -153,7 +168,8 @@ class PathManager:
 
     @classmethod
     def make_dir_safety(cls, path: str):
-        msg = f"Failed to make directory: {path}"
+        base_name = os.path.basename(path)
+        msg = f"Failed to make directory: {base_name}"
         if os.path.islink(path):
             raise RuntimeError(msg)
         if os.path.exists(path):
@@ -165,7 +181,8 @@ class PathManager:
 
     @classmethod
     def create_file_safety(cls, path: str):
-        msg = f"Failed to create file: {path}"
+        base_name = os.path.basename(path)
+        msg = f"Failed to create file: {base_name}"
         if os.path.islink(path):
             raise RuntimeError(msg)
         if os.path.exists(path):
@@ -178,6 +195,6 @@ class PathManager:
     @classmethod
     def get_realpath(cls, path: str) -> str:
         if os.path.islink(path):
-            msg = f"Invalid input path which is a soft link: {path}"
+            msg = f"Invalid input path which is a soft link."
             raise RuntimeError(msg)
         return os.path.realpath(path)

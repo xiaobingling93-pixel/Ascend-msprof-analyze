@@ -1,4 +1,4 @@
-from abc import ABCMeta, abstractmethod
+from abc import abstractmethod
 from math import ceil
 
 from utils.compare_event import KernelEvent
@@ -7,31 +7,16 @@ from utils.file_reader import FileReader
 from utils.trace_event_data import TraceEventData
 
 
-class ProfilingParser(metaclass=ABCMeta):
-    @abstractmethod
-    def get_torch_op_data(self):
-        raise NotImplementedError
-
-    @abstractmethod
-    def get_kernel_dict(self):
-        raise NotImplementedError
-
-    @abstractmethod
-    def get_memory_list(self):
-        raise NotImplementedError
-
-
-class GPUProfilingParser(ProfilingParser):
+class ProfilingParser:
     def __init__(self, args: any, path_dict: dict):
         self._args = args
         self._profiling_path = path_dict.get(Constant.PROFILING_PATH)
-        self._json_path = path_dict.get(Constant.PROFILING_PATH)
         self._torch_op_data = None
         self._kernel_dict = None
         self._memory_list = None
         self._communication_data = None
         self._communication_task_data = None
-
+    
     @property
     def file_path(self) -> str:
         return self._profiling_path
@@ -69,6 +54,24 @@ class GPUProfilingParser(ProfilingParser):
         if self._communication_task_data is None:
             self.get_communication_data()
         return self._communication_task_data
+
+    @abstractmethod
+    def get_torch_op_data(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_kernel_dict(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_memory_list(self):
+        raise NotImplementedError
+
+
+class GPUProfilingParser(ProfilingParser):
+    def __init__(self, args: any, path_dict: dict):
+        super().__init__(args, path_dict)
+        self._json_path = path_dict.get(Constant.PROFILING_PATH)
 
     def get_torch_op_data(self):
         torch_op_list = []
@@ -144,53 +147,9 @@ class GPUProfilingParser(ProfilingParser):
 
 class NPUProfilingParser(ProfilingParser):
     def __init__(self, args: any, path_dict: str):
-        self._args = args
-        self._profiling_path = path_dict.get(Constant.PROFILING_PATH)
+        super().__init__(args, path_dict)
         self._json_path = path_dict.get(Constant.TRACE_PATH)
         self._memory_data_path = path_dict.get(Constant.MEMORY_DATA_PATH)
-        self._torch_op_data = None
-        self._kernel_dict = None
-        self._memory_list = None
-        self._communication_data = None
-        self._communication_task_data = None
-
-    @property
-    def file_path(self) -> str:
-        return self._profiling_path
-
-    @property
-    def json_path(self) -> str:
-        return self._json_path
-
-    @property
-    def torch_op_data(self) -> list:
-        if self._torch_op_data is None:
-            self.get_torch_op_data()
-        return self._torch_op_data
-
-    @property
-    def kernel_dict(self) -> dict:
-        if self._kernel_dict is None:
-            self.get_kernel_dict()
-        return self._kernel_dict
-
-    @property
-    def memory_list(self) -> list:
-        if self._memory_list is None:
-            self.get_memory_list()
-        return self._memory_list
-
-    @property
-    def communication_data(self) -> dict:
-        if self._communication_data is None:
-            self.get_communication_data()
-        return self._communication_data
-
-    @property
-    def communication_task_data(self) -> dict:
-        if self._communication_task_data is None:
-            self.get_communication_data()
-        return self._communication_task_data
 
     def get_torch_op_data(self):
         torch_op_list = []
@@ -272,55 +231,70 @@ class NPUProfilingParser(ProfilingParser):
         return dequeue_data[left] if end_time > ts_time else None
 
     def get_communication_data(self):
+        def get_pid(json_data):
+            pid = None
+            for data in json_data:
+                trace_event = TraceEventData(data)
+                if not trace_event.is_process_meta():
+                    continue
+                if trace_event.is_hccl_process():
+                    pid = trace_event.pid
+                    break
+            return pid
+        
+        def get_tid_list(pid, tid_list, json_data):
+            for data in json_data:
+                trace_event = TraceEventData(data)
+                if not trace_event.is_thread_meta():
+                    continue
+                if trace_event.pid != pid:
+                    continue
+                if trace_event.is_communication_op_thread():
+                    tid_list.append(trace_event.tid)
+        
+        def get_comm_data(pid, tid_list, json_data):
+            for data in json_data:
+                trace_event = TraceEventData(data)
+                if not trace_event.is_x_mode():
+                    continue
+                if trace_event.pid != pid:
+                    continue
+                if trace_event.tid in tid_list:
+                    self._communication_data.append(data)
+
+        def get_comm_task_data(pid, tid_list, json_data):
+            for data in json_data:
+                trace_event = TraceEventData(data)
+                if not trace_event.is_x_mode():
+                    continue
+                if trace_event.pid != pid:
+                    continue
+                if trace_event.tid in tid_list:
+                    continue
+                ts = trace_event.start_time
+                for communication_op in self._communication_data:
+                    comm_op_event = TraceEventData(communication_op)
+                    if ts < comm_op_event.start_time or ts > comm_op_event.end_time:
+                        continue
+                    name_list = communication_op.get("name", "").split("_")
+                    if len(name_list) >= 2:
+                        self._communication_task_data.setdefault(name_list[1].lower(), []).append(data)
+                    break
+
         self._communication_data, self._communication_task_data = [], {}
         json_data = FileReader.read_trace_file(self._json_path)
-        pid = None
-        for data in json_data:
-            trace_event = TraceEventData(data)
-            if not trace_event.is_process_meta():
-                continue
-            if trace_event.is_hccl_process():
-                pid = trace_event.pid
-                break
+
+        pid = get_pid(json_data)
         if pid is None:
             return
-        tid_list = []
-        for data in json_data:
-            trace_event = TraceEventData(data)
-            if not trace_event.is_thread_meta():
-                continue
-            if trace_event.pid != pid:
-                continue
-            if trace_event.is_communication_op_thread():
-                tid_list.append(trace_event.tid)
 
+        tid_list = []
+        get_tid_list(pid, tid_list, json_data)
         if not tid_list:
             return
 
-        for data in json_data:
-            trace_event = TraceEventData(data)
-            if not trace_event.is_x_mode():
-                continue
-            if trace_event.pid != pid:
-                continue
-            if trace_event.tid in tid_list:
-                self._communication_data.append(data)
+        get_comm_data(pid, tid_list, json_data)
         if not self._communication_data:
             return
-        for data in json_data:
-            trace_event = TraceEventData(data)
-            if not trace_event.is_x_mode():
-                continue
-            if trace_event.pid != pid:
-                continue
-            if trace_event.tid in tid_list:
-                continue
-            ts = trace_event.start_time
-            for communication_op in self._communication_data:
-                comm_op_event = TraceEventData(communication_op)
-                if ts < comm_op_event.start_time or ts > comm_op_event.end_time:
-                    continue
-                name_list = communication_op.get("name", "").split("_")
-                if len(name_list) >= 2:
-                    self._communication_task_data.setdefault(name_list[1].lower(), []).append(data)
-                break
+
+        get_comm_task_data(pid, tid_list, json_data)

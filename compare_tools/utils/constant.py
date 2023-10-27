@@ -15,6 +15,9 @@ class Constant(object):
     RED_COLOR = "00FF0000"
     SUMMARY_LINE_COLOR = "F0F8FF"
 
+    # epsilon
+    EPS = 1e-15
+
     # autority
     FILE_AUTHORITY = 0o640
     DIR_AUTHORITY = 0o750
