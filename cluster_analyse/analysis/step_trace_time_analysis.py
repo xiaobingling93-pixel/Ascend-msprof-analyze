@@ -14,9 +14,9 @@
 # limitations under the License.
 
 import os
+from collections import defaultdict
 
 from common_func.constant import Constant
-from collections import defaultdict
 from common_func.file_manager import FileManager
 from prof_bean.step_trace_time_bean import StepTraceTimeBean
 
@@ -71,7 +71,7 @@ class StepTraceTimeAnalysis:
             return
         step_group_dict = {}
         for data_list in self.step_data_list:
-            stage_group = 'None'
+            stage_group = tuple()
             for stage in stage_list:
                 if data_list[2] in stage:
                     stage_group = tuple(stage)

@@ -26,9 +26,9 @@ class FileReader:
         try:
             with open(file_path, "rt") as file:
                 json_data = json.loads(file.read())
-        except Exception:
+        except Exception as e:
             msg = f"Can't read file: {file_path}"
-            raise RuntimeError(msg)
+            raise RuntimeError(msg) from e
         return json_data
 
     @classmethod
@@ -51,9 +51,9 @@ class FileReader:
                 reader = csv.DictReader(csv_file)
                 for row in reader:
                     result_data.append(row)
-        except Exception:
+        except Exception as e:
             msg = f"Failed to read the file: {file_path}"
-            raise RuntimeError(msg)
+            raise RuntimeError(msg) from e
         return result_data
 
     @classmethod

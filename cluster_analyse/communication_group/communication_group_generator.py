@@ -15,9 +15,9 @@
 
 import os
 from copy import deepcopy
+from collections import defaultdict
 from common_func.constant import Constant
 from common_func.file_manager import FileManager
-from collections import defaultdict
 
 
 class CommunicationGroupGenerator:
@@ -171,4 +171,4 @@ class UnionFind(object):
         if p & q:
             return True
         else:
-            False
+            return False
