@@ -27,6 +27,8 @@ class NpuInfoWrapper:
         self,
         compute_time: int,
         communication_time: int,
+        sdma_time: int,
+        sdma_num: int,
         is_cluster: bool,
         event_wait_sqe: dict,
         ai_core_dict: dict,
@@ -35,6 +37,8 @@ class NpuInfoWrapper:
     ):
         self.compute_time = compute_time
         self.communication_time = communication_time
+        self.sdma_time = sdma_time
+        self.sdma_num = sdma_num
         self.is_cluster = is_cluster
         self.event_wait_sqe = event_wait_sqe
         self.ai_core_dict = ai_core_dict
@@ -56,6 +60,30 @@ class NpuProfilingParser:
         self.aicore_time = 0
         self.min_stream_ts = sys.float_info.max
         self.max_stream_ts = sys.float_info.min
+        self.sdma_sqe = defaultdict(float)
+        self.sdma_num_cnt = defaultdict(int)
+
+    def get_sdma_para(self, sdma_sqe, sdma_num_cnt, ai_core_dict, event_wait_sqe) -> (float, int):
+        compute_stream = []
+        parallel_stream = []
+        sdma_time = 0.0
+        sdma_parallel_time = 0.0
+        sdma_num = 0
+        sdma_parallel_num = 0
+        if len(ai_core_dict) == 1:
+            compute_stream.append(min(ai_core_dict.keys()))
+        elif len(ai_core_dict) == 2:  # 2个ai_core，存在并行流（当前最多2条算子计算流）
+            compute_stream = list(event_wait_sqe.keys() & ai_core_dict.keys())
+            parallel_stream = list(ai_core_dict.keys() - set(compute_stream))
+        else:
+            print('[WARNING] Npu Compute Stream Num Error.')
+        if parallel_stream:
+            sdma_parallel_time = sdma_sqe[parallel_stream[0]]
+            sdma_parallel_num = sdma_num_cnt[parallel_stream[0]]
+        if compute_stream:
+            sdma_time = sdma_sqe[compute_stream[0]] + sdma_parallel_time
+            sdma_num = sdma_num_cnt[compute_stream[0]] + sdma_parallel_num
+        return sdma_time, sdma_num
 
     def parse_npu_json_events(self):
         if not self.npu_json_file:
@@ -87,8 +115,9 @@ class NpuProfilingParser:
                 communication_time += dur
                 min_ts = ts if ts < min_ts else min_ts
                 max_ts = (ts + dur) if (ts + dur) > max_ts else max_ts
+        sdma_time, sdma_num = self.get_sdma_para(self.sdma_sqe, self.sdma_num_cnt, ai_core_dict, event_wait_sqe)
         npu_info_wrapper = NpuInfoWrapper(
-            compute_time, communication_time, is_cluster,
+            compute_time, communication_time, sdma_time, sdma_num, is_cluster,
             event_wait_sqe, ai_core_dict, event_wait_sqe_res, ai_core_res)
         self.update_npu_info(max_ts - min_ts, npu_info_wrapper)
 
@@ -100,6 +129,8 @@ class NpuProfilingParser:
         ai_core_dict = npu_info_wrapper.ai_core_dict
         event_wait_sqe_res = npu_info_wrapper.event_wait_sqe_res
         ai_core_res = npu_info_wrapper.ai_core_res
+        sdma_time = npu_info_wrapper.sdma_time
+        sdma_num = npu_info_wrapper.sdma_num
         # AI_CORE和EVENT_WAIT_SQE共存为计算流
         compute_stream = []
         parallel_stream = []
@@ -121,11 +152,16 @@ class NpuProfilingParser:
                 self.parallel_time = self.interval_intersection(cs_event_wait_sqe_list, cs_ai_core_list)
         self.profiling_info.compute_time = compute_time / 10 ** 6 if is_cluster else \
             ai_core_res[compute_stream[0]] / 10 ** 6
+        self.profiling_info.other_time = self.profiling_info.compute_time - self.profiling_info.cube_time - \
+            self.profiling_info.flash_attention_time_fwd - self.profiling_info.flash_attention_time_bwd - \
+            self.profiling_info.vec_time
         self.profiling_info.e2e_time = ts_dur / 10 ** 6 if is_cluster else \
             (self.max_stream_ts - self.min_stream_ts) / 10 ** 6
         self.profiling_info.communication_not_overlapped = communication_time / 10 ** 6 \
             if is_cluster else (event_wait_sqe_res[compute_stream[0]] - self.parallel_time) / 10 ** 6
         time_required = self.profiling_info.compute_time + self.profiling_info.communication_not_overlapped
+        self.profiling_info.sdma_time = sdma_time / 10 ** 6
+        self.profiling_info.sdma_num = sdma_num
         if self.npu_step_time:
             self.profiling_info.scheduling_time = self.npu_step_time - time_required
         else:
@@ -226,6 +262,9 @@ class NpuProfilingParser:
             if args.get('Task Type') == 'EVENT_WAIT_SQE':
                 enent_wait_res[stream_id] += dur
                 event_wait_sqe[stream_id].append([ts, ts + dur])
+            elif args.get('Task Type') in ('SDMA_SQE', 'PCIE_DMA_SQE'):
+                self.sdma_sqe[stream_id] += dur
+                self.sdma_num_cnt[stream_id] += 1
             elif args.get('Task Type') in ('AI_CORE', 'MIX_AIC', 'MIX_AIV', 'AI_CPU', 'AI_VECTOR_CORE', 'FFTS_PLUS'):
                 ai_core_res[stream_id] += dur
                 ai_core_dict[stream_id].append([ts, ts + dur])
