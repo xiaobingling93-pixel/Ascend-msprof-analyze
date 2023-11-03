@@ -55,7 +55,7 @@ class FileManager:
             raise RuntimeError(f"The file({base_name}) size exceeds the preset max value.")
         try:
             with open(file_path, "r") as json_file:
-                result_data = json.load(json_file)
+                result_data = json.loads(json_file.read())
         except Exception as e:
             raise RuntimeError(f"Failed to read the file: {base_name}") from e
         return result_data
@@ -93,7 +93,7 @@ class FileManager:
             with os.fdopen(
                 os.open(output_file, os.O_WRONLY | os.O_CREAT, cls.DATA_FILE_AUTHORITY), 'w'
             ) as file:
-                json.dump(data, file)
+                file.write(json.dumps(data))
         except Exception as e:
             raise RuntimeError(f"Can't create the file: {base_name}") from e
 

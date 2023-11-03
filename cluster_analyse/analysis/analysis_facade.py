@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from multiprocessing import Process
 from analysis.communication_analysis import CommunicationAnalysis
 from analysis.step_trace_time_analysis import StepTraceTimeAnalysis
 from analysis.communication_analysis import CommMatrixAnalysis
@@ -25,9 +26,12 @@ class AnalysisFacade:
         self.param = param
 
     def cluster_analyze(self):
+        # 多个profiler用多进程处理
+        process_list = []
         for analysis in self.analysis_module:
-            try:
-                analysis(self.param).run()
-            except Exception:
-                print(f"{analysis.__name__} failed.")
+            process = Process(target=analysis(self.param).run)
+            process.start()
+            process_list.append(process)
 
+        for process in process_list:
+            process.join()

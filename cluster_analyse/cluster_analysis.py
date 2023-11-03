@@ -28,6 +28,9 @@ class Interface:
         self.collection_path = PathManager.get_realpath(args.collection_path)
         self.data_map = {}
         self.communication_group = {}
+        self.collective_group_dict = {}
+        self.communication_ops = []
+        self.matrix_ops = []
 
     def run(self):
         PathManager.check_input_directory_path(self.collection_path)
@@ -35,22 +38,13 @@ class Interface:
         FileManager.create_output_dir(self.collection_path)
         data_map = PytorchDataPreprocessor(self.collection_path).get_data_map()
         if not data_map:
-            print("Can not get rank info or profiling data.")
+            print("[WARNING] Can not get rank info or profiling data.")
             return
-        try:
-            communication_group, collective_group_dict, communication_ops = \
-                CommunicationGroupGenerator(self.collection_path, data_map).generate()
-        except RuntimeError:
-            print("Can not get communication info from ranks")
-            communication_group = {}
-            communication_ops = []
-            collective_group_dict = {}
+        comm_data_dict = CommunicationGroupGenerator(self.collection_path, data_map).generate()
         params = {
             Constant.COLLECTION_PATH: self.collection_path,
             Constant.DATA_MAP: data_map,
-            Constant.COLLECTIVE_GROUP: collective_group_dict,
-            Constant.COMMUNICATION_OPS: communication_ops,
-            Constant.COMMUNICATION_GROUP: communication_group
+            Constant.COMM_DATA_DICT: comm_data_dict
         }
         AnalysisFacade(params).cluster_analyze()
 

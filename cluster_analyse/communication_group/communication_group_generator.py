@@ -15,6 +15,7 @@
 
 import os
 from copy import deepcopy
+from multiprocessing import Pool
 from collections import defaultdict
 from common_func.constant import Constant
 from common_func.file_manager import FileManager
@@ -30,10 +31,10 @@ class CommunicationGroupGenerator:
         self.collective_group_dict = defaultdict(set)
         self.p2p_group_dict = defaultdict(list)
         self.rank_comm_dir_dict = {}
-        self.rank_matrix_dir_dict = {}
         self.communication_ops = []
         self.p2p_comm_group = []
         self.p2p_link = []
+        self.matrix_ops = []
 
     def generate(self):
         self.load_communication_json()
@@ -42,28 +43,51 @@ class CommunicationGroupGenerator:
         self.generate_collective_communication_group()
         self.generate_p2p_communication_group()
         FileManager.create_json_file(self.collection_path, self.communication_group, self.COMMUNICATION_GROUP_JSON)
-        return self.communication_group, self.collective_group_dict, self.communication_ops
+        comm_data_dict = {
+           Constant.COLLECTIVE_GROUP: self.collective_group_dict,
+           Constant.COMMUNICATION_OPS: self.communication_ops,
+           Constant.MATRIX_OPS: self.matrix_ops,
+           Constant.COMMUNICATION_GROUP: self.communication_group
+        }
+        return comm_data_dict
 
     def analyze_communication_ops(self):
-        for rank_id, rank_id_dict in self.rank_comm_dir_dict.items():
-            for step_id, step_id_dict in rank_id_dict.items():
+        for rank_id, rank_id_comm_dict, rank_id_matrix_dict in self.rank_comm_dir_dict:
+            for step_id, step_id_dict in rank_id_comm_dict.items():
                 if not isinstance(step_id_dict, dict):
-                    print(f"rank{rank_id}'s communication.json has a wrong data struct.")
+                    print(f"[WARNING] rank{rank_id}'s communication.json has a wrong data struct.")
                     continue
-                self.set_p2p_link(rank_id, step_id)
+                self.set_p2p_link(rank_id, step_id, rank_id_matrix_dict)
                 self.get_collective_ops_name(rank_id, step_id_dict.get(Constant.COLLECTIVE))
                 for comm_op_type, comm_op_dict in step_id_dict.items():
                     self.add_communication_ops(rank_id, step_id, comm_op_type, comm_op_dict)
 
+    @staticmethod
+    def read_comm_json_func(params: tuple):
+        if len(params) < 3:
+            return -1, {}, {}
+        rank_id = params[0]
+        comm_json_path = params[1]
+        matrix_json_path = params[2]
+        comm_data = {}
+        matrix_data = {}
+        if os.path.exists(comm_json_path):
+            comm_data = FileManager.read_json_file(comm_json_path)
+        if os.path.exists(matrix_json_path):
+            matrix_data = FileManager.read_json_file(matrix_json_path)
+        return rank_id, comm_data, matrix_data
+
     def load_communication_json(self):
+        comm_op_dirs = []
         for rank_id, profiling_dir_path in self.data_map.items():
             comm_dir = os.path.join(profiling_dir_path, Constant.SINGLE_OUTPUT, Constant.COMM_JSON)
             matrix_dir = os.path.join(profiling_dir_path, Constant.SINGLE_OUTPUT, Constant.COMM_MATRIX_JSON)
             if comm_dir and matrix_dir:
-                self.rank_comm_dir_dict[rank_id] = FileManager.read_json_file(comm_dir)
-                self.rank_matrix_dir_dict[rank_id] = FileManager.read_json_file(matrix_dir)
+                comm_op_dirs.append((rank_id, comm_dir, matrix_dir))
             else:
-                print(f"rank {rank_id} does not have a valid communication.json or communication_matrix.json.")
+                print(f"[WARNING] Rank {rank_id} does not have a valid communication.json or communication_matrix.json.")
+        with Pool() as p:
+            self.rank_comm_dir_dict = p.map(self.read_comm_json_func, comm_op_dirs)
 
     def generate_collective_communication_group(self):
         self.communication_group[Constant.COLLECTIVE] = \
@@ -112,8 +136,9 @@ class CommunicationGroupGenerator:
             self.p2p_comm_group.append(union_set)
             self.p2p_link = [element for element in self.p2p_link if element not in rm_list]
 
-    def set_p2p_link(self, rank_id: int, step_id: str):
-        ops = self.rank_matrix_dir_dict.get(rank_id, {}).get(step_id, {})
+    def set_p2p_link(self, rank_id: int, step_id: str, rank_id_matrix_dict: dict):
+        ops = rank_id_matrix_dict.get(step_id, {})
+        self.add_matrix_ops(rank_id, step_id, ops)
         if not ops:
             print(f"[WARNING] rank{rank_id} {step_id} do not have communication matrix ops data.")
             return
@@ -124,7 +149,7 @@ class CommunicationGroupGenerator:
     def append_p2p_link(self, op_name, link_dict):
         for link in link_dict:
             if '-' not in link:
-                print(f"{op_name} has an invalid link key {link}!")
+                print(f"[WARNING] {op_name} has an invalid link key {link}!")
                 break
             src_rank = int(link.split('-')[0])
             dst_rank = int(link.split('-')[1])
@@ -154,6 +179,24 @@ class CommunicationGroupGenerator:
                 Constant.GROUP_NAME: group_name,
                 Constant.COMM_OP_INFO: comm_op_dict.get(comm_op)
             })
+
+    def add_matrix_ops(self, rank_id: int, step_id: str, step_id_dict: dict):
+        for comm_op_type, comm_dict in step_id_dict.items():
+            if comm_op_type != Constant.COLLECTIVE and comm_op_type != Constant.P2P:
+                print(f"[WARNING] Unknown communication operators type!")
+                continue
+            for op_name, op_link_info in comm_dict.items():
+                if op_name.startswith('Total'):
+                    continue
+                group_name = op_name.split('@')[-1]
+                self.matrix_ops.append({
+                    Constant.RANK_ID: rank_id,
+                    Constant.STEP_ID: step_id,
+                    Constant.COMM_OP_TYPE: comm_op_type,
+                    Constant.COMM_OP_NAME: op_name,
+                    Constant.GROUP_NAME: group_name,
+                    Constant.COMM_OP_INFO: op_link_info
+                })
 
 
 class UnionFind(object):
