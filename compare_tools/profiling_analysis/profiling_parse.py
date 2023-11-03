@@ -35,6 +35,10 @@ def generate_table_info(base_profiling_info, comp_profiling_info, table):
                          f'{base_profiling_info.vec_time:.3f}s({base_profiling_info.vec_num})'])
         comp_col.extend([f'{comp_profiling_info.cube_time:.3f}s({comp_profiling_info.cube_num})',
                          f'{comp_profiling_info.vec_time:.3f}s({comp_profiling_info.vec_num})'])
+    if base_profiling_info.other_time or comp_profiling_info.other_time:
+        headers.append('Other Time')
+        base_col.append(f'{base_profiling_info.other_time:.3f}s')
+        comp_col.append(f'{comp_profiling_info.other_time:.3f}s')
     if base_profiling_info.flash_attention_time_fwd or comp_profiling_info.flash_attention_time_fwd:
         headers.append('Flash Attention Time(Forward)')
         base_col.append(f'{base_profiling_info.flash_attention_time_fwd:.3f}s')
@@ -50,18 +54,26 @@ def generate_table_info(base_profiling_info, comp_profiling_info, table):
         headers.append('Mem Usage')
         base_col.append(f'{base_profiling_info.memory_used:.2f}G')
         comp_col.append(f'{comp_profiling_info.memory_used:.2f}G')
+    headers.extend(['Uncovered Communication Time'])
+    base_col.extend(
+        [f'{base_profiling_info.communication_not_overlapped: .3f}s'])
+    comp_col.extend(
+        [f'{comp_profiling_info.communication_not_overlapped: .3f}s'])
+    if base_profiling_info.sdma_time or comp_profiling_info.sdma_time:
+        headers.append('SDMA Time(Num)')
+        base_col.append(f'{base_profiling_info.sdma_time:.3f}s({base_profiling_info.sdma_num})')
+        comp_col.append(f'{comp_profiling_info.sdma_time:.3f}s({comp_profiling_info.sdma_num})')
     cue = ''
     if ((base_profiling_info.profiling_type == "NPU" and not base_profiling_info.minimal_profiling) or
             (comp_profiling_info.profiling_type == "NPU" and not comp_profiling_info.minimal_profiling)):
+            
         cue = '(Not minimal profiling)'
 
-    headers.extend(['Uncovered Communication Time', 'Free Time', 'E2E Time' + cue])
+    headers.extend(['Free Time', 'E2E Time' + cue])
     base_col.extend(
-        [f'{base_profiling_info.communication_not_overlapped: .3f}s', f'{base_profiling_info.scheduling_time:.3f}s',
-         f'{base_profiling_info.e2e_time:.3f}s'])
+        [f'{base_profiling_info.scheduling_time:.3f}s', f'{base_profiling_info.e2e_time:.3f}s'])
     comp_col.extend(
-        [f'{comp_profiling_info.communication_not_overlapped: .3f}s', f'{comp_profiling_info.scheduling_time:.3f}s',
-         f'{comp_profiling_info.e2e_time:.3f}s'])
+        [f'{comp_profiling_info.scheduling_time:.3f}s', f'{comp_profiling_info.e2e_time:.3f}s'])
     table.field_names = headers
     table.add_row(base_col)
     table.add_row(comp_col)

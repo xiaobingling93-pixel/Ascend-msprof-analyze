@@ -26,26 +26,33 @@ class OpTimeWarper:
     def __init__(
         self,
         cube_time: float = 0.0,
+        sdma_time: float = 0.0,
+        vec_time: float = 0.0,
         fa_time_fwd: float = 0.0,
         fa_time_bwd: float = 0.0,
         all_op_time: float = 0.0,
         compute_stream_dur: float = 0.0,
         cube_num: int = 0,
-        vec_num: int = 0
+        vec_num: int = 0,
+        sdma_num: int = 0
     ):
         self.cube_time = cube_time
+        self.sdma_time = sdma_time
+        self.vec_time = vec_time
         self.fa_time_fwd = fa_time_fwd
         self.fa_time_bwd = fa_time_bwd
         self.all_op_time = all_op_time
         self.compute_stream_dur = compute_stream_dur
         self.cube_num = cube_num
         self.vec_num = vec_num
+        self.sdma_num = sdma_num
 
 
 class GpuProfilingParser:
     NCCL_MARK = 'nccl'
     CUBE_MARK = 'gemm'
     FA_MARK_LIST = [['fmha', 'kernel'], ['flash', 'kernel']]
+    SDMA_MARK_LIST = ['htod', 'dtod', 'dtoh', 'memset (device)']
 
     def __init__(self, gpu_path):
         self.trace_events = FileReader.read_trace_file(gpu_path).get('traceEvents')
@@ -59,13 +66,22 @@ class GpuProfilingParser:
                 return True
         return False
 
+    def is_sdma_time(self, name: str):
+        for mark in self.SDMA_MARK_LIST:
+            if mark in name.lower():
+                return True
+        return False
+
     def update_op_list(self, op_list, marks):
         cube_time = 0.0
         all_op_time = 0.0
         fa_time_bwd = 0.0
         fa_time_fwd = 0.0
+        sdma_time = 0.0
+        vec_time = 0.0
         cube_num = 0
         vec_num = 0
+        sdma_num = 0
         compute_stream_dur = 0.0
         for event in self.trace_events:
             if not isinstance(event, dict):
@@ -78,6 +94,9 @@ class GpuProfilingParser:
             dur = event.get('dur')
             ts = event.get('ts')
             cat = event.get('cat', '')
+            if self.is_sdma_time(name):
+                sdma_time += float(dur)
+                sdma_num += 1
             if cat.lower() != 'kernel':
                 continue
             if self.NCCL_MARK in name.lower():
@@ -97,16 +116,20 @@ class GpuProfilingParser:
                 cube_time += float(dur)
             else:
                 vec_num += 1
+                vec_time += float(dur)
             all_op_time += float(dur)
             op_list.append([ts, name, cat, dur])
         time_wrapper = OpTimeWarper(
             cube_time=cube_time,
+            sdma_time=sdma_time,
+            vec_time=vec_time,
             fa_time_fwd=fa_time_fwd,
             fa_time_bwd=fa_time_bwd,
             all_op_time=all_op_time,
             compute_stream_dur=compute_stream_dur,
             cube_num=cube_num,
-            vec_num=vec_num
+            vec_num=vec_num,
+            sdma_num=sdma_num
         )
         return time_wrapper
 
@@ -122,15 +145,20 @@ class GpuProfilingParser:
         compute_stream_dur = time_wrapper.compute_stream_dur
         cube_num = time_wrapper.cube_num
         vec_num = time_wrapper.vec_num
+        sdma_num = time_wrapper.sdma_num
+        sdma_time = time_wrapper.sdma_time
+        vec_time = time_wrapper.vec_time
 
         self.profiling_info.compute_time = len([_ for _, value in marks.items() if value < 0]) / 10 ** 6
         self.profiling_info.communication_not_overlapped = len([_ for _, value in marks.items() if value > 0]) / 10 ** 6
         self.profiling_info.flash_attention_time_bwd = fa_time_bwd / 10 ** 6
         self.profiling_info.flash_attention_time_fwd = fa_time_fwd / 10 ** 6
         self.profiling_info.cube_time = cube_time / 10 ** 6
-        self.profiling_info.vec_time = (all_op_time - cube_time - fa_time_fwd - fa_time_bwd) / 10 ** 6
+        self.profiling_info.vec_time = self.profiling_info.compute_time - (cube_time + fa_time_fwd + fa_time_bwd) / 10 ** 6
         self.profiling_info.cube_num = cube_num
         self.profiling_info.vec_num = vec_num
+        self.profiling_info.sdma_num = sdma_num
+        self.profiling_info.sdma_time = sdma_time / 10 ** 6
         self.parse_e2e_time()
 
         self.profiling_info.scheduling_time = self.profiling_info.e2e_time - all_op_time / 10 ** 6 - \
