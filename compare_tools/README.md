@@ -111,7 +111,7 @@ python performance_compare.py [基准性能数据文件] [比对性能数据文�
 总体性能比对结果以打屏的形式呈现。
 #### 算子耗时
 ```
-包含cube算子耗时和vector算子耗时
+包含cube算子耗时和vector算子耗时以及other（AI CPU、DSA等其他非cube vector算子）耗时
 ```
 #### 计算流耗时
 ```
@@ -138,6 +138,13 @@ npu上的内存使用可以使用npu-smi查看
 profiling信息采集时打开profile_memory=True开关，即可从json文件中读出运行稳定后的memory信息
 ```
 #### E2E总耗时
+
+```
+拷贝类任务耗时
+```
+
+#### E2E总耗时
+
 ```
 计算流端到端耗时
 ```
