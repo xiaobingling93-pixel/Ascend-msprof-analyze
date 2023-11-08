@@ -137,7 +137,7 @@ npu上的内存使用可以使用npu-smi查看
 
 profiling信息采集时打开profile_memory=True开关，即可从json文件中读出运行稳定后的memory信息
 ```
-#### E2E总耗时
+#### SDMA耗时
 
 ```
 拷贝类任务耗时
