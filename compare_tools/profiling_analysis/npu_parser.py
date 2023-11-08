@@ -152,9 +152,9 @@ class NpuProfilingParser:
                 self.parallel_time = self.interval_intersection(cs_event_wait_sqe_list, cs_ai_core_list)
         self.profiling_info.compute_time = compute_time / 10 ** 6 if is_cluster else \
             ai_core_res[compute_stream[0]] / 10 ** 6
-        self.profiling_info.other_time = self.profiling_info.compute_time - self.profiling_info.cube_time - \
+        self.profiling_info.other_time = max(0, self.profiling_info.compute_time - self.profiling_info.cube_time - \
             self.profiling_info.flash_attention_time_fwd - self.profiling_info.flash_attention_time_bwd - \
-            self.profiling_info.vec_time
+            self.profiling_info.vec_time)
         self.profiling_info.e2e_time = ts_dur / 10 ** 6 if is_cluster else \
             (self.max_stream_ts - self.min_stream_ts) / 10 ** 6
         self.profiling_info.communication_not_overlapped = communication_time / 10 ** 6 \
@@ -195,6 +195,8 @@ class NpuProfilingParser:
         fa_time_bwd = 0.0
         cube_num = 0
         vec_num = 0
+        fa_num_bwd = 0
+        fa_num_fwd = 0
         if info.get('aic_mac_time(us)') is None or info.get('aiv_vec_time(us)') is None:
             self.profiling_info.hide_op_details = True
             return
@@ -207,8 +209,10 @@ class NpuProfilingParser:
             if self.FLASH_ATTENTION in op_type.lower():
                 if 'bwd' in op_type.lower() or 'grad' in op_type.lower():
                     fa_time_bwd += task_durations
+                    fa_num_bwd += 1
                 else:
                     fa_time_fwd += task_durations
+                    fa_num_fwd += 1
             elif aiv_vec_time > 0:
                 vec_time += task_durations
                 vec_num += 1
@@ -221,6 +225,9 @@ class NpuProfilingParser:
         self.profiling_info.flash_attention_time_fwd = fa_time_fwd / 10 ** 6
         self.profiling_info.cube_num = cube_num
         self.profiling_info.vec_num = vec_num
+        self.profiling_info.fa_num_bwd = fa_num_bwd
+        self.profiling_info.fa_num_fwd = fa_num_fwd
+
 
     def parse_mem_csv(self):
         if not self.npu_mem_file:

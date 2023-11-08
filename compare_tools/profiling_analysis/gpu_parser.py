@@ -34,7 +34,9 @@ class OpTimeWarper:
         compute_stream_dur: float = 0.0,
         cube_num: int = 0,
         vec_num: int = 0,
-        sdma_num: int = 0
+        sdma_num: int = 0,
+        fa_num_bwd: int = 0,
+        fa_num_fwd: int = 0
     ):
         self.cube_time = cube_time
         self.sdma_time = sdma_time
@@ -46,6 +48,8 @@ class OpTimeWarper:
         self.cube_num = cube_num
         self.vec_num = vec_num
         self.sdma_num = sdma_num
+        self.fa_num_bwd = fa_num_bwd
+        self.fa_num_fwd = fa_num_fwd
 
 
 class GpuProfilingParser:
@@ -82,6 +86,8 @@ class GpuProfilingParser:
         cube_num = 0
         vec_num = 0
         sdma_num = 0
+        fa_num_bwd = 0
+        fa_num_fwd = 0
         compute_stream_dur = 0.0
         for event in self.trace_events:
             if not isinstance(event, dict):
@@ -94,9 +100,11 @@ class GpuProfilingParser:
             dur = event.get('dur')
             ts = event.get('ts')
             cat = event.get('cat', '')
-            if self.is_sdma_time(name):
-                sdma_time += float(dur)
-                sdma_num += 1
+            if event.get('args') and event.get('args').get('stream') == self.compute_stream_id:
+                if self.is_sdma_time(name):
+                    sdma_time += float(dur)
+                    sdma_num += 1
+                    continue
             if cat.lower() != 'kernel':
                 continue
             if self.NCCL_MARK in name.lower():
@@ -109,8 +117,10 @@ class GpuProfilingParser:
             if self.is_flash_attention(name):
                 if 'bwd' in name.lower():
                     fa_time_bwd += float(dur)
+                    fa_num_bwd += 1
                 else:
                     fa_time_fwd += float(dur)
+                    fa_num_fwd += 1
             elif self.CUBE_MARK in name.lower():
                 cube_num += 1
                 cube_time += float(dur)
@@ -129,7 +139,9 @@ class GpuProfilingParser:
             compute_stream_dur=compute_stream_dur,
             cube_num=cube_num,
             vec_num=vec_num,
-            sdma_num=sdma_num
+            sdma_num=sdma_num,
+            fa_num_bwd=fa_num_bwd,
+            fa_num_fwd=fa_num_fwd
         )
         return time_wrapper
 
@@ -158,10 +170,12 @@ class GpuProfilingParser:
         self.profiling_info.cube_num = cube_num
         self.profiling_info.vec_num = vec_num
         self.profiling_info.sdma_num = sdma_num
+        self.profiling_info.fa_num_bwd = time_wrapper.fa_num_bwd
+        self.profiling_info.fa_num_fwd = time_wrapper.fa_num_fwd
         self.profiling_info.sdma_time = sdma_time / 10 ** 6
         self.parse_e2e_time()
 
-        self.profiling_info.scheduling_time = self.profiling_info.e2e_time - all_op_time / 10 ** 6 - \
+        self.profiling_info.scheduling_time = self.profiling_info.e2e_time - self.profiling_info.compute_time - \
                                               self.profiling_info.communication_not_overlapped
         if self.profiling_info.e2e_time < Constant.EPS:
             self.profiling_info.scheduling_ratio = 0.0
