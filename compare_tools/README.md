@@ -117,12 +117,27 @@ python performance_compare.py [基准性能数据文件] [比对性能数据文�
 | Other Time                      | AI CPU、DSA等其他非cube vector算子耗时。                     |
 | Flash Attention Time(Forward)   | Flash Attention算子前向耗时。                                |
 | Flash Attention Time(Backward)  | Flash Attention算子反向耗时。                                |
-| Computing Time                  | 计算流耗时，计算流所有event耗时总和。                        |
-| Mem Usage                       | 内存使用。gpu上的内存使用可以使用nvidia-smi查看，npu上的内存使用可以使用npu-smi查看，profiling信息采集时打开profile_memory=True开关，即可从json文件中读出运行稳定后的memory信息。 |
+| Computing Time                  | 计算流耗时，计算流所有event耗时总和。如果有多条并发计算，计算流耗时对重叠部分只会计算一次。 |
+| Mem Usage                       | 内存使用。gpu上的内存使用可以使用nvidia-smi查看，npu上的内存使用可以使用npu-smi查看，Profiling信息采集时打开profile_memory=True开关，mem usage显示的是memory_record里面的最大resevered值，一般来说是进程级内存。 |
 | Uncovered Communication Time    | 通信未掩盖耗时。                                             |
 | SDMA Time(Num)                  | 拷贝类任务耗时，Num表示计算的次数。                          |
-| Free Time                       | 调度耗时 = E2E耗时 - 算子耗时 - 通信不可掩盖耗时。           |
+| Free Time                       | 调度耗时 = E2E耗时 - 算子耗时 - 通信不可掩盖耗时。Free的定义为Device侧既不在通信又不在计算的时间，因此包含拷贝时间（SDMA Time）。 |
 | E2E Time(Not minimal profiling) | E2E总耗时，计算流端到端耗时。当存在Not minimal profiling时，表示该时间存在性能膨胀，会影响通信和调度耗时。 |
+
+可以采取最简性能数据采集的方式来减少E2E耗时的性能膨胀，示例代码如下：
+
+```python
+with torch_npu.profiler.profile(
+        activities=[torch_npu.profiler.ProfilerActivity.NPU],
+        schedule=torch_npu.profiler.schedule(wait=1, warmup=1, active=1, repeat=1, skip_first=10),
+        on_trace_ready=torch_npu.profiler.tensorboard_trace_handler("./result"),
+) as prof:
+        for step in range(steps):
+            train_one_step()
+            prof.step()
+```
+
+activities配置仅采集NPU数据，不配置experimental_config参数以及其他可选开关。
 
 ### 算子性能
 
