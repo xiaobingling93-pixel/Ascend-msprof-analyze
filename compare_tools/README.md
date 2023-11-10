@@ -8,8 +8,16 @@
 
 场景二：PyTorch训练工程在NPU上，不同版本之间存在性能差距，通过工具定位具体差异。
 
-
 ## 使用指导
+
+### 环境依赖
+
+使用本工具前需要安装openpyxl：
+
+```bash
+pip3 install openpyxl
+```
+
 ### 性能数据采集
 
 #### GPU性能数据采集
@@ -50,7 +58,6 @@ pytorch profiler数据目录结构如下：
 
 #### NPU性能数据采集
 通过Ascend PyTorch Profiler工具采集NPU的性能数据，采集参数配置跟GPU一致，参考链接：https://www.hiascend.com/document/detail/zh/canncommercial/63RC2/modeldevpt/ptmigr/ptmigr_0066.html
-将GPU的性能数据采集代码中torch.profiler替换成torch_npu.profiler
 
 ascend pytorch profiler数据目录结构如下：
 
