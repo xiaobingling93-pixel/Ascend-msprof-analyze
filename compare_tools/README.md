@@ -8,8 +8,16 @@
 
 场景二：PyTorch训练工程在NPU上，不同版本之间存在性能差距，通过工具定位具体差异。
 
-
 ## 使用指导
+
+### 环境依赖
+
+使用本工具前需要安装openpyxl：
+
+```bash
+pip3 install openpyxl
+```
+
 ### 性能数据采集
 
 #### GPU性能数据采集
@@ -50,7 +58,6 @@ pytorch profiler数据目录结构如下：
 
 #### NPU性能数据采集
 通过Ascend PyTorch Profiler工具采集NPU的性能数据，采集参数配置跟GPU一致，参考链接：https://www.hiascend.com/document/detail/zh/canncommercial/63RC2/modeldevpt/ptmigr/ptmigr_0066.html
-将GPU的性能数据采集代码中torch.profiler替换成torch_npu.profiler
 
 ascend pytorch profiler数据目录结构如下：
 
@@ -108,39 +115,37 @@ python performance_compare.py [基准性能数据文件] [比对性能数据文�
 ## 比对结果说明
 ### 总体性能
 
-总体性能比对结果以打屏的形式呈现。
-#### 算子耗时
-```
-包含cube算子耗时和vector算子耗时
-```
-#### 计算流耗时
-```
-计算流所有event耗时总和
-```
-#### 通信
-```
-通信未掩盖耗时
-```
-#### 调度耗时
-```
-调度耗时 = e2e耗时 - 算子耗时 - 通信不可掩盖耗时
-```
-#### 调度占比
-```
-调度占比 = 调度耗时/e2e耗时
-```
-#### 内存
-```
-gpu上的内存使用可以使用nvidia-smi查看
+总体性能比对结果以打屏的形式呈现。详细比对信息如下：
 
-npu上的内存使用可以使用npu-smi查看
+| 字段                            | 说明                                                         |
+| ------------------------------- | ------------------------------------------------------------ |
+| Cube Time(Num)                  | Cube算子总耗时，Num表示计算的次数。                          |
+| Vector Time(Num)                | Vector算子总耗时，Num表示计算的次数。                        |
+| Other Time                      | AI CPU、DSA等其他非cube vector算子耗时。                     |
+| Flash Attention Time(Forward)   | Flash Attention算子前向耗时。                                |
+| Flash Attention Time(Backward)  | Flash Attention算子反向耗时。                                |
+| Computing Time                  | 计算流耗时，计算流所有event耗时总和。如果有多条并发计算，计算流耗时对重叠部分只会计算一次。 |
+| Mem Usage                       | 内存使用。gpu上的内存使用可以使用nvidia-smi查看，npu上的内存使用可以使用npu-smi查看，Profiling信息采集时打开profile_memory=True开关，mem usage显示的是memory_record里面的最大resevered值，一般来说是进程级内存。 |
+| Uncovered Communication Time    | 通信未掩盖耗时。                                             |
+| SDMA Time(Num)                  | 拷贝类任务耗时，Num表示计算的次数。                          |
+| Free Time                       | 调度耗时 = E2E耗时 - 算子耗时 - 通信不可掩盖耗时。Free的定义为Device侧既不在通信又不在计算的时间，因此包含拷贝时间（SDMA Time）。 |
+| E2E Time(Not minimal profiling) | E2E总耗时，计算流端到端耗时。当存在Not minimal profiling时，表示该时间存在性能膨胀，会影响通信和调度耗时。 |
 
-profiling信息采集时打开profile_memory=True开关，即可从json文件中读出运行稳定后的memory信息
+可以采取最简性能数据采集的方式来减少E2E耗时的性能膨胀，示例代码如下：
+
+```python
+with torch_npu.profiler.profile(
+        activities=[torch_npu.profiler.ProfilerActivity.NPU],
+        schedule=torch_npu.profiler.schedule(wait=1, warmup=1, active=1, repeat=1, skip_first=10),
+        on_trace_ready=torch_npu.profiler.tensorboard_trace_handler("./result"),
+) as prof:
+        for step in range(steps):
+            train_one_step()
+            prof.step()
 ```
-#### E2E总耗时
-```
-计算流端到端耗时
-```
+
+activities配置仅采集NPU数据，不配置experimental_config参数以及其他可选开关。
+
 ### 算子性能
 
 算子性能比对结果在performance_comparison_result_*.xlsl中OperatorCompare的sheet页呈现。
