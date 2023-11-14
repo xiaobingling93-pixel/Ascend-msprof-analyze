@@ -48,6 +48,7 @@ class NpuInfoWrapper:
 
 class NpuProfilingParser:
     FLASH_ATTENTION = "flashattention"
+    ACLNNINPLACE_COPY = "aclnninplacecopy"
 
     def __init__(self, npu_step_time, npu_file_path):
         self.npu_json_file = npu_file_path.get('trace_view')
@@ -160,8 +161,8 @@ class NpuProfilingParser:
         self.profiling_info.communication_not_overlapped = communication_time / 10 ** 6 \
             if is_cluster else (event_wait_sqe_res[compute_stream[0]] - self.parallel_time) / 10 ** 6
         time_required = self.profiling_info.compute_time + self.profiling_info.communication_not_overlapped
-        self.profiling_info.sdma_time = sdma_time / 10 ** 6
-        self.profiling_info.sdma_num = sdma_num
+        self.profiling_info.sdma_time += sdma_time / 10 ** 6
+        self.profiling_info.sdma_num += sdma_num
         if self.npu_step_time:
             self.profiling_info.scheduling_time = self.npu_step_time - time_required
         else:
@@ -191,17 +192,20 @@ class NpuProfilingParser:
         info = pd.read_csv(self.npu_summary_file, index_col=None)
         cube_time = 0.0
         vec_time = 0.0
+        sdma_time = 0.0
         fa_time_fwd = 0.0
         fa_time_bwd = 0.0
         cube_num = 0
         vec_num = 0
         fa_num_bwd = 0
         fa_num_fwd = 0
+        sdma_num = 0
         if info.get('aic_mac_time(us)') is None or info.get('aiv_vec_time(us)') is None:
             self.profiling_info.hide_op_details = True
             return
         for i in range(len(info['Model ID'])):
             op_type = info.loc[i, 'Type']
+            name = info.loc[i, 'Name']
             aiv_vec_time = info.loc[i, 'aiv_vec_time(us)']
             if pd.isna(aiv_vec_time) or pd.isna(op_type):
                 continue
@@ -213,6 +217,9 @@ class NpuProfilingParser:
                 else:
                     fa_time_fwd += task_durations
                     fa_num_fwd += 1
+            elif name.lower().startswith(self.ACLNNINPLACE_COPY):
+                sdma_time += task_durations
+                sdma_num += 1
             elif aiv_vec_time > 0:
                 vec_time += task_durations
                 vec_num += 1
@@ -227,6 +234,8 @@ class NpuProfilingParser:
         self.profiling_info.vec_num = vec_num
         self.profiling_info.fa_num_bwd = fa_num_bwd
         self.profiling_info.fa_num_fwd = fa_num_fwd
+        self.profiling_info.sdma_time = sdma_time
+        self.profiling_info.sdma_num = sdma_num
 
 
     def parse_mem_csv(self):
