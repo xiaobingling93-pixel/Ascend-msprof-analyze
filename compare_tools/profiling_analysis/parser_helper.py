@@ -25,6 +25,7 @@ class ProfilingInfo:
         self.vec_time = 0.0
         self.cube_num = 0
         self.vec_num = 0
+        self.sdma_num = 0
         self.fa_num_fwd = 0
         self.fa_num_bwd = 0
         self.compute_time = 0.0
