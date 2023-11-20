@@ -111,4 +111,6 @@ pip3 install trace_processor-37.0-py3-none-any.whl
 python -m trace_processor --httpd path/to/xxx_merged.json 
 ```
 
-等待加载完毕，刷新[perfetto](https://ui.perfetto.dev/)界面，单击Use old version regardless，再单击`YES, use loaded trace`即可展示timeline。
+等待加载完毕，刷新[perfetto](https://ui.perfetto.dev/)界面，单击Use old version regardless，再单击`YES, use loaded trace`即可展示timeline（通过W放大、S缩小、A左移、D右移来查看timeline文件）。
+![输入图片说明](perfetto%E4%BD%BF%E7%94%A8%E6%8C%87%E5%AF%BC%E6%88%AA%E5%9B%BE1.png)
+![输入图片说明](perfetto%E4%BD%BF%E7%94%A8%E6%8C%87%E5%AF%BC%E6%88%AA%E5%9B%BE2.png)
