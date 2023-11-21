@@ -19,12 +19,13 @@ class IndexComparator:
             name_list = data.get("name", "").split("_")
             if len(name_list) >= 2:
                 base_data.append([name_list[1].lower(), float(data.get("dur", 0))])
+        columns = [Constant.OP_KEY, "count", "sum", "mean", "max", "min"]
         if not base_data:
-            base_data = pd.DataFrame(base_data, columns=Constant.COLUMNS)
+            base_data = pd.DataFrame(base_data, columns=columns)
         else:
             base_df = pd.DataFrame(base_data, columns=[Constant.OP_KEY, Constant.DEVICE_DUR])
             base_data = base_df.groupby(Constant.OP_KEY).agg(["count", "sum", "mean", "max", "min"]).reset_index()
-            base_data.columns = Constant.COLUMNS
+            base_data.columns = columns
         if self._args.base_profiling_path == self._args.comparison_profiling_path:
             comparison_data = []
         else:
@@ -35,10 +36,10 @@ class IndexComparator:
                 if len(name_list) >= 2:
                     comparison_data.append([name_list[1].lower(), float(data.get("dur", 0))])
         if not comparison_data:
-            comparison_data = pd.DataFrame(comparison_data, columns=Constant.COLUMNS)
+            comparison_data = pd.DataFrame(comparison_data, columns=columns)
         else:
             comparison_df = pd.DataFrame(comparison_data, columns=[Constant.OP_KEY, Constant.DEVICE_DUR])
             comparison_data = comparison_df.groupby(Constant.OP_KEY).agg(
                 ["count", "sum", "mean", "max", "min"]).reset_index()
-            comparison_data.columns = Constant.COLUMNS
-        return pd.merge(base_data, comparison_data, how="outer", on=Constant.OP_KEY)
+            comparison_data.columns = columns
+        return pd.merge(base_data, comparison_data, how="outer", on=Constant.OP_KEY).values.tolist()

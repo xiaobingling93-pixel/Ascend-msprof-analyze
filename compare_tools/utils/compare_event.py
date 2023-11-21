@@ -23,13 +23,10 @@ class KernelEvent:
         return self._event.get("args", {}).get("Task Type")
 
     @property
-    def compare_index(self) -> float:
-        return self.device_dur
-
-    def get_record(self) -> list:
+    def kernel_details(self):
         if self._device_type == Constant.GPU:
-            return [self.kernel_name, Constant.NA, self.device_dur]
-        return [self.kernel_name, f"{self.task_id}, {self.task_type}", self.device_dur]
+            return f"{self.kernel_name} [duration: {self.device_dur}]"
+        return f"{self.kernel_name}, {self.task_id}, {self.task_type} [duration: {self.device_dur}]\n"
 
 
 class MemoryEvent:
@@ -38,16 +35,19 @@ class MemoryEvent:
         self._name = name
 
     @property
-    def compare_index(self) -> float:
+    def size(self) -> float:
         return self._event.get(Constant.SIZE, 0)
 
-    def get_record(self) -> list:
-        if not self._event.get(Constant.ALLOCATION_TIME):
-            duration = Constant.NA
-        elif not self._event.get(Constant.RELEASE_TIME):
-            duration = Constant.NA
-        else:
-            duration = float(self._event.get(Constant.RELEASE_TIME)) - self._event.get(Constant.ALLOCATION_TIME, 0)
+    @property
+    def duration(self) -> float:
+        if not self._event.get(Constant.ALLOCATION_TIME) or not self._event.get(Constant.RELEASE_TIME):
+            return 0
+        return float(self._event.get(Constant.RELEASE_TIME)) - self._event.get(Constant.ALLOCATION_TIME, 0)
 
+    @property
+    def memory_details(self) -> str:
         name = self._event.get(Constant.NAME, "") if self._event.get(Constant.NAME, "") else self._name
-        return [name, duration, self._event.get(Constant.SIZE, 0)]
+        release_time = self._event.get(Constant.RELEASE_TIME)
+        allocation_time = self._event.get(Constant.ALLOCATION_TIME)
+        duration = float(release_time) - float(allocation_time) if release_time and allocation_time else None
+        return f"{name}, ({allocation_time}, {release_time}), [duration: {duration}], [size: {self.size}]\n"

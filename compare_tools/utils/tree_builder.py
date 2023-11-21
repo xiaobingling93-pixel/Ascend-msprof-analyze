@@ -23,10 +23,10 @@ class TreeBuilder:
 
     @classmethod
     def update_tree_node(
-        cls,
-        root_node: TorchOpNode,
-        flow_kernel_dict: Optional[Dict] = None,
-        memory_allocated_list: Optional[List] = None,
+            cls,
+            root_node: TorchOpNode,
+            flow_kernel_dict: Optional[Dict] = None,
+            memory_allocated_list: Optional[List] = None,
     ):
         def set_kernel_helper(node_queue, ts, kernel_num, kernel_list):
             while not node_queue.empty():
@@ -67,14 +67,7 @@ class TreeBuilder:
                     tree_node.set_memory_allocated(memory_allocated)
 
     @classmethod
-    def get_total_compare_event(cls, root_node: TorchOpNode, compare_type: str) -> list:
-        if compare_type == Constant.MEMORY_COMPARE:
-            return cls._get_total_memory(root_node)
-        elif compare_type == Constant.OPERATOR_COMPARE:
-            return cls._get_total_kernels(root_node)
-
-    @classmethod
-    def _get_total_kernels(cls, root_node: TorchOpNode) -> list:
+    def get_total_kernels(cls, root_node: TorchOpNode) -> list:
         result_list = []
         result_list.extend(root_node.kernel_list)
         node_queue = Queue()
@@ -88,7 +81,7 @@ class TreeBuilder:
         return result_list
 
     @classmethod
-    def _get_total_memory(cls, root_node: TorchOpNode) -> list:
+    def get_total_memory(cls, root_node: TorchOpNode) -> list:
         result_list = []
         result_list.extend(root_node.memory_allocated)
         node_queue = Queue()

@@ -44,6 +44,14 @@ class ArgsManager:
     def comparison_profiling(self):
         return self._comparison_profiling
 
+    @property
+    def base_profiling_path(self):
+        return self._args.base_profiling_path
+
+    @property
+    def comparison_profiling_path(self):
+        return self._args.comparison_profiling_path
+
     @classmethod
     def check_profiling_path(cls, file_path: str):
         PathManager.input_path_common_check(file_path)

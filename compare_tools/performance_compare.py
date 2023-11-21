@@ -49,8 +49,7 @@ def main():
         file_name = "performance_comparison_result_{}.xlsx".format(
             time.strftime("%Y%m%d%H%M%S", time.localtime(time.time())))
         result_file_path = PathManager.get_realpath(os.path.join(dir_path, file_name))
-
-        ComparisonGenerator(args).create_excel(result_file_path)
+        ComparisonGenerator(args).run(result_file_path)
         print(f"[INFO] The comparison result file has been generated: {result_file_path}")
 
 
