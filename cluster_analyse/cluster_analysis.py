@@ -24,8 +24,8 @@ from analysis.analysis_facade import AnalysisFacade
 
 
 class Interface:
-    def __init__(self, args: argparse.Namespace):
-        self.collection_path = PathManager.get_realpath(args.collection_path)
+    def __init__(self, params: dict):
+        self.collection_path = PathManager.get_realpath(params.get(Constant.COLLECTION_PATH))
         self.data_map = {}
         self.communication_group = {}
         self.collective_group_dict = {}
@@ -53,4 +53,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="cluster analysis module")
     parser.add_argument('-d', '--collection_path', type=str, required=True, help="profiling data path")
     args_parsed = parser.parse_args()
-    Interface(args_parsed).run()
+    parameter = {
+        Constant.COLLECTION_PATH: args_parsed.collection_path
+    }
+    Interface(parameter).run()
