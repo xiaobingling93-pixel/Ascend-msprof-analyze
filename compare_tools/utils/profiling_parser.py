@@ -95,17 +95,17 @@ class GPUProfilingParser(ProfilingParser):
             elif event.get("cat", "") in flow_cat and event.get("ph") == "f":
                 flow_end_dict[event.get("id")] = event
             elif event.get("cat", "").lower() == "kernel" and event.get("name", "").split("_")[0].lower() != "ncclkernel":
-                kernel_dict["{}-{}-{}".format(event.get("pid"), event.get("tid"), event.get("ts"))] = event
+                kernel_dict["{}-{}-{}".format(event.get("pid"), event.get("tid"), float(event.get("ts")))] = event
 
         for flow_id, start_flow in flow_start_dict.items():
             end_flow = flow_end_dict.get(flow_id)
             if end_flow is None:
                 continue
             kernel_event = kernel_dict.get(
-                "{}-{}-{}".format(end_flow.get("pid"), end_flow.get("tid"), end_flow.get("ts")))
+                "{}-{}-{}".format(end_flow.get("pid"), end_flow.get("tid"), float(end_flow.get("ts"))))
             if kernel_event is None:
                 continue
-            flow_kernel_dict.setdefault(start_flow.get("ts"), []).append(KernelEvent(kernel_event, Constant.GPU))
+            flow_kernel_dict.setdefault(float(start_flow.get("ts")), []).append(KernelEvent(kernel_event, Constant.GPU))
         self._kernel_dict = flow_kernel_dict
 
     def get_memory_list(self):
@@ -116,7 +116,7 @@ class GPUProfilingParser(ProfilingParser):
         for event in total_events:
             if event.get("name", "").lower() == "[memory]":
                 memory_events.append(event)
-        memory_events.sort(key=lambda x: x.get("ts", 0))
+        memory_events.sort(key=lambda x: float(x.get("ts", 0)))
         addr_dict = {}
         for memory_event in memory_events:
             args = memory_event.get("args", {})
@@ -128,11 +128,11 @@ class GPUProfilingParser(ProfilingParser):
                 if record:
                     self._memory_list.append(record)
                 addr_dict[args.get("Addr")] = {Constant.SIZE: allocate_bytes,
-                                               Constant.TS: memory_event.get("ts", 0),
-                                               Constant.ALLOCATION_TIME: memory_event.get("ts", 0)}
+                                               Constant.TS: float(memory_event.get("ts", 0)),
+                                               Constant.ALLOCATION_TIME: float(memory_event.get("ts", 0))}
             if allocate_bytes < 0 and record:
                 if abs(allocate_bytes) == record.get(Constant.SIZE):
-                    record[Constant.RELEASE_TIME] = memory_event.get("ts", 0)
+                    record[Constant.RELEASE_TIME] = float(memory_event.get("ts", 0))
                     self._memory_list.append(record)
                 del addr_dict[args.get("Addr")]
 
@@ -171,17 +171,17 @@ class NPUProfilingParser(ProfilingParser):
             elif event.get("cat", "") == flow_cat and event.get("ph") == "f":
                 flow_end_dict[event.get("id")] = event
             elif event.get("ph") == "X" and event.get("cat", "") != 'cpu_op':
-                kernel_dict["{}-{}-{}".format(event.get("pid"), event.get("tid"), event.get("ts"))] = event
+                kernel_dict["{}-{}-{}".format(event.get("pid"), event.get("tid"), float(event.get("ts")))] = event
 
         for flow_id, start_flow in flow_start_dict.items():
             end_flow = flow_end_dict.get(flow_id)
             if end_flow is None:
                 continue
             kernel_event = kernel_dict.get(
-                "{}-{}-{}".format(end_flow.get("pid"), end_flow.get("tid"), end_flow.get("ts")))
+                "{}-{}-{}".format(end_flow.get("pid"), end_flow.get("tid"), float(end_flow.get("ts"))))
             if kernel_event is None:
                 continue
-            flow_kernel_dict.setdefault(start_flow.get("ts"), []).append(KernelEvent(kernel_event, Constant.NPU))
+            flow_kernel_dict.setdefault(float(start_flow.get("ts")), []).append(KernelEvent(kernel_event, Constant.NPU))
         self._kernel_dict = flow_kernel_dict
 
     def get_memory_list(self):
@@ -205,7 +205,7 @@ class NPUProfilingParser(ProfilingParser):
                 match_dequeue_data = self._match_cann_memory_data(dequeue_data, ts_time)
                 if match_dequeue_data is not None:
                     correlation_id = match_dequeue_data.get("args", {}).get("correlation_id", "")
-                    ts = enqueue_dict.get(correlation_id, {}).get("ts", 0)
+                    ts = float(enqueue_dict.get(correlation_id, {}).get("ts", 0))
                     self._memory_list.append({Constant.SIZE: float(data.get(Constant.SIZE, 0)), Constant.TS: ts,
                                               Constant.NAME: data.get(Constant.NAME, ""),
                                               Constant.ALLOCATION_TIME: float(data.get(Constant.ALLOCATION_TIME, 0)),
@@ -223,11 +223,11 @@ class NPUProfilingParser(ProfilingParser):
         left = 0
         while right > left:
             mid = left + ceil((right - left) / 2)
-            if ts_time >= dequeue_data[mid].get("ts", 0):
+            if ts_time >= float(dequeue_data[mid].get("ts", 0)):
                 left = mid
             else:
                 right = mid - 1
-        end_time = dequeue_data[left].get("ts", 0) + dequeue_data[left].get("dur", 0)
+        end_time = float(dequeue_data[left].get("ts", 0)) + dequeue_data[left].get("dur", 0)
         return dequeue_data[left] if end_time > ts_time else None
 
     def get_communication_data(self):

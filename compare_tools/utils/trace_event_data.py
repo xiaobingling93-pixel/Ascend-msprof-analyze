@@ -17,11 +17,11 @@ class TraceEventData:
 
     @property
     def start_time(self) -> float:
-        return self._event.get("ts", 0)
+        return float(self._event.get("ts", 0))
 
     @property
     def end_time(self) -> float:
-        return self._event.get("ts", 0) + self._event.get("dur", 0)
+        return float(self._event.get("ts", 0)) + self._event.get("dur", 0)
 
     def is_m_mode(self) -> bool:
         return self._event.get("ph", "") == "M"

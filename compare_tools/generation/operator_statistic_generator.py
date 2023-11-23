@@ -1,4 +1,5 @@
 from generation.base_generator import BaseGenerator
+from utils.args_manager import ArgsManager
 from utils.common_func import calculate_diff_ratio
 from utils.constant import Constant
 from utils.tree_builder import TreeBuilder
@@ -23,7 +24,9 @@ class OperatorStatisticGenerator(BaseGenerator):
         for op_name, base_duration_list in base_op_dict.items():
             base_dur = sum(base_duration_list)
             comparison_duration_list = comparison_op_dict.pop(op_name, None)
-            if comparison_duration_list:
+            if ArgsManager().base_profiling_path == ArgsManager().comparison_profiling_path:
+                result_data.append([op_name, base_dur, len(base_duration_list)] + [None] * 4)
+            elif comparison_duration_list:
                 comparison_dur = sum(comparison_duration_list)
                 result_data.append(
                     [op_name, base_dur, len(base_duration_list), comparison_dur,
@@ -35,5 +38,6 @@ class OperatorStatisticGenerator(BaseGenerator):
             comparison_dur = sum(comparison_duration_list)
             result_data.append([op_name, 0, 0, comparison_dur, len(comparison_duration_list)] +
                                calculate_diff_ratio(0, comparison_dur))
-        result_data.sort(key=lambda x: x[-2], reverse=True)
+        if ArgsManager().base_profiling_path != ArgsManager().comparison_profiling_path:
+            result_data.sort(key=lambda x: x[-2], reverse=True)
         return result_data

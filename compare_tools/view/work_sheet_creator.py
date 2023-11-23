@@ -27,7 +27,10 @@ class WorkSheetCreator:
         if overhead:
             base_path = f"Base Profiling: {ArgsManager().base_profiling_path}"
             self._work_sheet.merge_range(overhead[0], base_path, header_format)
-            comparison_path = f"Comparison Profiling: {ArgsManager().comparison_profiling_path}"
+            if ArgsManager().base_profiling_path == ArgsManager().comparison_profiling_path:
+                comparison_path = "Same To Base Profiling"
+            else:
+                comparison_path = f"Comparison Profiling: {ArgsManager().comparison_profiling_path}"
             self._work_sheet.merge_range(overhead[1], comparison_path, header_format)
             self._row_id += 2
         for index, header in enumerate(headers):

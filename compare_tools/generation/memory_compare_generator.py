@@ -1,4 +1,5 @@
 from generation.base_generator import BaseGenerator
+from utils.args_manager import ArgsManager
 from utils.common_func import calculate_diff_ratio
 from utils.constant import Constant
 from utils.torch_op_node import TorchOpNode
@@ -26,7 +27,11 @@ class MemoryCompareGenerator(BaseGenerator):
         data = [None] * (len(self.data))
         for index, (base_op, comparison_op) in enumerate(self.data):
             base_row = get_row_info(base_op)
-            comparison_row = get_row_info(comparison_op)
-            diff_ratio = calculate_diff_ratio(base_row[-1], comparison_row[-1])
+            if ArgsManager().base_profiling_path == ArgsManager().comparison_profiling_path:
+                comparison_row = [None] * 5
+                diff_ratio = [None] * 2
+            else:
+                comparison_row = get_row_info(comparison_op)
+                diff_ratio = calculate_diff_ratio(base_row[-1], comparison_row[-1])
             data[index] = base_row + comparison_row + diff_ratio
         return data

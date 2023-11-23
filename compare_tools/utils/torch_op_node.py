@@ -15,11 +15,11 @@ class TorchOpNode:
 
     @property
     def start_time(self):
-        return self._event.get("ts", 0)
+        return float(self._event.get("ts", 0))
 
     @property
     def end_time(self):
-        return self._event.get("ts", 0) + self._event.get("dur", 0)
+        return float(self._event.get("ts", 0)) + self._event.get("dur", 0)
 
     @property
     def name(self):

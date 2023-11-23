@@ -9,11 +9,11 @@ class TreeBuilder:
     @classmethod
     def build_tree(cls, event_list: list) -> TorchOpNode:
         root_node = TorchOpNode()
-        event_list.sort(key=lambda x: x.get("ts", 0))
+        event_list.sort(key=lambda x: float(x.get("ts", 0)))
         last_node = root_node
         for event in event_list:
             while last_node:
-                if last_node == root_node or event.get("ts", 0) < last_node.end_time:
+                if last_node == root_node or float(event.get("ts", 0)) < last_node.end_time:
                     tree_node = TorchOpNode(event, last_node)
                     last_node.add_child_node(tree_node)
                     last_node = tree_node
