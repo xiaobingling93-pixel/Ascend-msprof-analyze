@@ -49,6 +49,7 @@ class NpuInfoWrapper:
 class NpuProfilingParser:
     FLASH_ATTENTION = "flashattention"
     ACLNNINPLACE_COPY = "aclnninplacecopy"
+    TENSORMOVE = "tensormove"
 
     def __init__(self, npu_step_time, npu_file_path):
         self.npu_json_file = npu_file_path.get('trace_view')
@@ -217,7 +218,7 @@ class NpuProfilingParser:
                 else:
                     fa_time_fwd += task_durations
                     fa_num_fwd += 1
-            elif name.lower().startswith(self.ACLNNINPLACE_COPY):
+            elif name.lower().startswith(self.ACLNNINPLACE_COPY) and self.TENSORMOVE in name.lower():
                 sdma_time += task_durations
                 sdma_num += 1
             elif aiv_vec_time > 0:
@@ -234,7 +235,7 @@ class NpuProfilingParser:
         self.profiling_info.vec_num = vec_num
         self.profiling_info.fa_num_bwd = fa_num_bwd
         self.profiling_info.fa_num_fwd = fa_num_fwd
-        self.profiling_info.sdma_time = sdma_time
+        self.profiling_info.sdma_time = sdma_time / 10 ** 6
         self.profiling_info.sdma_num = sdma_num
 
 
