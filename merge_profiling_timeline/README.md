@@ -1,15 +1,13 @@
-# Profiling merge timeline tool
+# 合并大json工具
 
-## 简介
-
-本工具支持合并Profiling的timeline数据，支持合并指定rank的timline、合并指定timeline中的item。
+merge_profiling_timeline（合并大json工具）支持合并Profiling的timeline数据，支持合并指定rank的timline、合并指定timeline中的item。
 
 
 ## 多timeline融合
 
-### 数据采集
+### 性能数据采集
 
-使用msprof采集数据，将采集到的所有节点的Profiling数据拷贝到当前环境同一目录下，以下假设数据在/home/test/cann_profiling下。
+使用msprof采集性能数据，将采集到的所有节点的性能数据拷贝到当前环境同一目录下，以下假设数据在/home/test/cann_profiling下。
 
 E2E Profiling数据目录结构示例如下：
 
