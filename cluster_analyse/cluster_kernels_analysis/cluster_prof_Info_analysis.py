@@ -31,6 +31,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from common_func.path_manager import PathManager
 
+
 MAX_READ_FILE_BYTES = 64 * 1024 * 1024
 
 
@@ -262,12 +263,11 @@ class StatisticalInfoToHtmlAnalyzer(OpSummaryAnalyzerBase):
 
 
 class DeliverableGenerator:
-    def __init__(self, args):
-        self.args = args
-        self.formProcess = FormDataProcessor(args.dir, 'op_summary*.csv')
+    def __init__(self, params):
+        self.dirs = params.get('dir')
         self.analyzers = []
         self.columns_to_keep = []
-        self.setAnalyzers(args)
+        self.setAnalyzers(params)
         self.setColumnsToKeep()
 
     def run(self):
@@ -280,19 +280,19 @@ class DeliverableGenerator:
         for analyzer in self.analyzers:
             analyzer.GenerateDeliverable(summary_data, rank_num)
 
-    def setAnalyzers(self, args):
+    def setAnalyzers(self, params):
         chip_type = self.formProcess.getChipType()
         # 判断该路径是不是软链接，并修改为绝对路径
-        if os.path.islink(args.dir):
-            print(f"The file: \"{args.dir}\" is link. Please check the path.")
+        if os.path.islink(params.get('dir')):
+            print(f"The file: \"{params.get('dir')}\" is link. Please check the path.")
             return
-        prof_path = os.path.realpath(args.dir)
+        prof_path = os.path.realpath(params.get('dir'))
         PathManager.input_path_common_check(prof_path)
-        if args.type == "all":
-            self.analyzers = [TimeToCsvAnalyzer(chip_type, prof_path), StatisticalInfoToHtmlAnalyzer(chip_type, args.top_n, prof_path)]
-        elif args.type == "html":
-            self.analyzers = [StatisticalInfoToHtmlAnalyzer(chip_type, args.top_n, prof_path)]
-        elif args.type == "csv":
+        if params.get('type') == "all":
+            self.analyzers = [TimeToCsvAnalyzer(chip_type, prof_path), StatisticalInfoToHtmlAnalyzer(chip_type, params.get("top_n"), prof_path)]
+        elif params.get('type') == "html":
+            self.analyzers = [StatisticalInfoToHtmlAnalyzer(chip_type, params.get("top_n"), prof_path)]
+        elif params.get('type') == "csv":
             self.analyzers = [TimeToCsvAnalyzer(chip_type, prof_path)]
         else:
             warnings.warn("参数错误，请输入 all html csv 这三种类型")  # 发出一个警告信息
@@ -313,8 +313,13 @@ def main():
     parser.add_argument("--top_n", "-n", default=10, help="how many operators to show", type=int)
     parser.add_argument("--type", "-t", default='html', help="compare ratio or aicore-time", type=str)
     args = parser.parse_args()
+    params = {
+        "dir": args.dir,
+        "top_n": args.top_n,
+        "type": args.type
+    }
 
-    deviverable_gen = DeliverableGenerator(args)
+    deviverable_gen = DeliverableGenerator(params)
     deviverable_gen.run()
 
 if __name__ == "__main__":

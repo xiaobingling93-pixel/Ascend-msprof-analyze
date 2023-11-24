@@ -109,9 +109,9 @@ class FileManager:
         suffix = os.path.splitext(file_path)
         base_name = os.path.join(file_path)
         if suffix == Constant.CSV_SUFFIX:
-            limit_size = Constant.MAX_JSON_SIZE
-        else:
             limit_size = Constant.MAX_CSV_SIZE
+        else:
+            limit_size = Constant.MAX_JSON_SIZE
         file_size = os.path.getsize(file_path)
         if file_size > limit_size:
             raise RuntimeError(f"The file({base_name}) size exceeds the preset max value.")

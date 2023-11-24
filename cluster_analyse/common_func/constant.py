@@ -22,6 +22,7 @@ class Constant(object):
     COMM_JSON = "communication.json"
     COMM_MATRIX_JSON = "communication_matrix.json"
     STEP_TIME_CSV = "step_trace_time.csv"
+    KERNEL_DETAILS_CSV = "kernel_details.csv"
 
     # file authority
     FILE_AUTHORITY = 0o640
