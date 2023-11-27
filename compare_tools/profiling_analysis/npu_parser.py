@@ -274,7 +274,7 @@ class NpuProfilingParser:
         args = dic.get('args')
         if args.get('Stream Id'):
             stream_id = args.get('Stream Id')
-            ts = dic.get('ts')
+            ts = float(dic.get('ts'))
             dur = dic.get('dur')
             if args.get('Task Type') == 'EVENT_WAIT_SQE':
                 enent_wait_res[stream_id] += dur
