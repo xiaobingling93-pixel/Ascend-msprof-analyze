@@ -12,28 +12,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-class Constant:
-    MAX_INPUT_MODE_LEN = 30
-    MAX_INPUT_ADVICE_LEN = 30
-
-    # mode list
-    COMPUTE = "compute"
-    TIMELINE = "timeline"
-    CLUSTER = "cluster"
-
-    # advice list
-    SLOW_RANK = "slow rank"
-    SLOW_LINK = "slow link"
-    KERNEL = "kernel"
-
-    # timeline
-    OPTIM = "optimizer"
-    TORCH_SCHE = "torch_sche"
-    CANN_SCHE = "cann_sche"
-    CANN_SCHE_THRESHOLD = 0.2 # schedule ratio
-
-    COLLECTION_PATH = "collection_path"
-    CLUSTER_ANALYSIS_OUTPUT = "cluster_analysis_output"
-    CLUSTER_STEP_TIME_CSV = "cluster_step_trace_time.csv"
-    CLUSTER_COMM_JSON = "cluster_communication.json"
