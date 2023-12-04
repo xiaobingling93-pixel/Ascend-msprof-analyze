@@ -27,12 +27,6 @@ class Constant:
     SLOW_LINK = "slow link"
     KERNEL = "kernel"
 
-    # timeline
-    OPTIM = "optimizer"
-    TORCH_SCHE = "torch_sche"
-    CANN_SCHE = "cann_sche"
-    CANN_SCHE_THRESHOLD = 0.2 # schedule ratio
-
     COLLECTION_PATH = "collection_path"
     CLUSTER_ANALYSIS_OUTPUT = "cluster_analysis_output"
     CLUSTER_STEP_TIME_CSV = "cluster_step_trace_time.csv"

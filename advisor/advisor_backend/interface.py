@@ -21,7 +21,6 @@ sys.path.append(
     os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "cluster_analyse"))
 from common_func_advisor.constant import Constant
 from advisor_backend.advice_factory.cluster_advice_factory import ClusterAdviceFactory
-from advisor_backend.advice_factory.timeline_advice_factory import TimelineAdviceFactory
 
 
 class Interface:
@@ -39,8 +38,7 @@ class Interface:
 
 class FactoryController:
     FACTORY_LIB = {
-        Constant.CLUSTER: ClusterAdviceFactory,
-        Constant.TIMELINE: TimelineAdviceFactory
+        Constant.CLUSTER: ClusterAdviceFactory
     }
 
     def __init__(self, collection_path: str):
