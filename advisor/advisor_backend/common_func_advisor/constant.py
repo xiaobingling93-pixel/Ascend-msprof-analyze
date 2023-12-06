@@ -32,6 +32,9 @@ class Constant:
     # compute
     NPU_FUSED = "npu_fused"
 
+    # timeline
+    OPTIM = "optimizer"
+
     COLLECTION_PATH = "collection_path"
     CLUSTER_ANALYSIS_OUTPUT = "cluster_analysis_output"
     CLUSTER_STEP_TIME_CSV = "cluster_step_trace_time.csv"
