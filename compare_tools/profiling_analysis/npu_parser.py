@@ -209,7 +209,7 @@ class NpuProfilingParser:
             name = info.loc[i, 'Name']
             aiv_vec_time = info.loc[i, 'aiv_vec_time(us)'] if info.get('aiv_vec_time(us)') is not None else None
             mac_time = info.loc[i, 'mac_time(us)'] if info.get('mac_time(us)') is not None else None
-            if (aiv_vec_time is None or mac_time is None) and pd.isna(op_type):
+            if pd.isna(aiv_vec_time) and pd.isna(mac_time):
                 continue
             task_durations = info.loc[i, 'Duration(us)']
             if self.FLASH_ATTENTION in op_type.lower():
