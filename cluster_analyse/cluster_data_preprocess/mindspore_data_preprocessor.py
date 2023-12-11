@@ -19,7 +19,7 @@ from common_func.file_manager import FileManager
 from common_func.path_manager import PathManager
 
 
-class PytorchDataPreprocessor:
+class MindsporeDataPreprocessor:
     PROFILER_INFO_HEAD = 'profiler_info_'
     PROFILER_INFO_EXTENSION = '.json'
 
