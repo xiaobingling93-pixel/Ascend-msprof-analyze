@@ -7,12 +7,12 @@ cluster_analyse（集群分析工具）是在集群场景下，通过此工具�
 我们要求至少是L1级别的数据。
 ```python
 experimental_config = torch_npu.profiler._ExperimentalConfig(
-    profiler_level=torch_npu.profiler.ProfilerLevel.**Level1**
+    profiler_level=torch_npu.profiler.ProfilerLevel.Level1
 )
 ```
 ### 确认数据是否可用
 
-打开采集到的某张卡数据(*ascend_pt结尾的文件夹)，可用的数据应该具备
+打开采集到的某张卡数据(*ascend_pt结尾的文件夹)，可用的数据应该具备：
 
 - **./profiler_info_x.json**,
 - **./ASCEND_PROFILER_OUTPUT/step_trace_time.csv**,
@@ -34,15 +34,15 @@ python3 cluster_analysis.py -d {cluster profiling data path}
 
 |           参数名        |                     说明                 |
 | ----------------------  | --------------------------------------- |
-| --collection_path (-d)  | profiling数据汇集目录，运行分析脚本之后会在该目录下自动创建cluster_analysis_output文件夹，保存分析数据。 |
+| --collection_path或-d  | 性能数据汇集目录，运行分析脚本之后会在该目录下自动创建cluster_analysis_output文件夹，保存分析数据。 |
 
 ## 交付件
 
 ### cluster_step_trace_time.csv
 
-A列： Step数，是采集profiling是设置的，一般来说集群profiling采集一个step足够，如果采集多个step，需要先筛选一下。
+A列： Step数，是采集性能数据时设置的，一般来说集群性能数据采集一个step足够，如果采集多个step，需要先筛选一下。
 
-B列： Type，主要分两种，rank和stage, 和后面的index强相关，可以理解为一个是单卡rank，一个是rank group(pp 并行的stage），如果type为stage，则后面D-K列信息为rank group下的最大值。
+B列： Type，主要分两种，rank和stage, 和后面的index强相关，可以理解为一个是单卡rank，一个是rank group（pp 并行的stage），如果type为stage，则后面D-K列信息为rank group下的最大值。
 
 C列：Index，与type相关，表示卡号。
 
@@ -62,8 +62,7 @@ J列：Bubble时间，指receive时间的总和。
 
 K列：Communication（Not Overlapped and Exclude Receive）指剔除recieve算子外的并且不被掩盖的通信时间。
 
-**Tips**：
-先筛选B列type为stage， 看stage间是否有问题，再筛选B列type为rank吗，看rank是否有问题，根据以下几点排查。
+**Tips**：先筛选B列type为stage， 看stage间是否有问题，再筛选B列type为rank，看rank是否有问题，根据以下几点排查。
 
 * 根据Computing的时间差异判断是否有慢卡，或者有负载不均衡的现象。
 
@@ -72,6 +71,8 @@ K列：Communication（Not Overlapped and Exclude Receive）指剔除recieve算�
 * 根据Communication（Not Overlapped and Exclude Receive）时间判断是否通信耗时占比过大。
 
 * 根据Bubble时间的占比和理论计算公式判断bubble设置是否合理，是否stage间有不均衡现象。
+
+以上时间理论上都应该处于持平状态，即最大值小于最小值5%，否则就可能出现慢卡。
 
 ### cluster_communication_matrix.json
 
