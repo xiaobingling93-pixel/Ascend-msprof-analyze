@@ -16,7 +16,7 @@ class ProfilingParser:
         self._memory_list = None
         self._communication_data = None
         self._communication_task_data = None
-    
+
     @property
     def file_path(self) -> str:
         return self._profiling_path
@@ -78,7 +78,7 @@ class GPUProfilingParser(ProfilingParser):
         json_data = FileReader.read_trace_file(self._json_path)
         total_events = json_data.get("traceEvents", [])
         for event in total_events:
-            if event.get("cat", "").lower() == "cpu_op" or event.get("cat", "").lower() == "user_annotation":
+            if event.get("cat", "").lower() in ("cpu_op", "user_annotation", "cuda_runtime", "Operator"):
                 torch_op_list.append(event)
         self._torch_op_data = torch_op_list
 
@@ -86,8 +86,8 @@ class GPUProfilingParser(ProfilingParser):
         flow_kernel_dict = {}
         json_data = FileReader.read_trace_file(self._json_path)
         total_events = json_data.get("traceEvents", [])
-        flow_cat = (self._args.gpu_flow_cat,) if self._args.gpu_flow_cat else ("async_gpu", "async_cpu_to_gpu", "ac2g")
-
+        flow_cat = (self._args.gpu_flow_cat,) if self._args.gpu_flow_cat else ("async_gpu", "async_cpu_to_gpu",
+                                                                               "ac2g", "async")
         flow_start_dict, flow_end_dict, kernel_dict = {}, {}, {}
         for event in total_events:
             if event.get("cat", "") in flow_cat and event.get("ph") == "s":
@@ -241,7 +241,7 @@ class NPUProfilingParser(ProfilingParser):
                     pid = trace_event.pid
                     break
             return pid
-        
+
         def get_tid_list(pid, tid_list, json_data):
             for data in json_data:
                 trace_event = TraceEventData(data)
@@ -251,7 +251,7 @@ class NPUProfilingParser(ProfilingParser):
                     continue
                 if trace_event.is_communication_op_thread():
                     tid_list.append(trace_event.tid)
-        
+
         def get_comm_data(pid, tid_list, json_data):
             for data in json_data:
                 trace_event = TraceEventData(data)

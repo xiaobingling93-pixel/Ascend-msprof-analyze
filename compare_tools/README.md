@@ -66,7 +66,7 @@ pytorch profiler数据目录结构如下：
 ```
 
 #### NPU性能数据采集
-通过Ascend PyTorch Profiler工具采集NPU的性能数据，采集参数配置跟GPU一致，参考链接：https://www.hiascend.com/document/detail/zh/canncommercial/63RC2/modeldevpt/ptmigr/ptmigr_0066.html
+通过Ascend PyTorch Profiler工具采集NPU的性能数据，采集参数配置跟GPU一致，参考链接：https://www.hiascend.com/document/detail/zh/canncommercial/70RC1/devtools/auxiliarydevtool/atlasprofiling_16_0008.html
 
 将GPU的性能数据采集代码中torch.profiler替换成torch_npu.profiler
 
