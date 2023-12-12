@@ -1,8 +1,6 @@
 # 性能比对工具
 
-## 简介
-
-性能比对工具支持比较GPU与NPU之间、NPU与NPU之间的性能差异，通过对训练耗时和内存占用的比对分析，定位到具体劣化的算子，帮助用户提升性能调优的效率。工具将训练耗时拆分为计算、通信、调度三大维度，并针对计算和通信分别进行算子级别的比对；将训练占用的总内存，拆分成算子级别的内存占用进行比对。
+compare_tools（性能比对工具）支持比较GPU与NPU之间、NPU与NPU之间的性能差异，通过对训练耗时和内存占用的比对分析，定位到具体劣化的算子，帮助用户提升性能调优的效率。工具将训练耗时拆分为计算、通信、调度三大维度，并针对计算和通信分别进行算子级别的比对；将训练占用的总内存，拆分成算子级别的内存占用进行比对。
 
 ## 使用场景
 
@@ -27,9 +25,9 @@ pip3 install numpy
 
 #### GPU性能数据采集
 
-通过PyTorch Profiler工具采集GPU的性能数据，参考链接：https://pytorch.org/docs/stable/profiler.html
+通过PyTorch Profiler工具采集GPU的性能数据，参考链接：[torch.profiler](https://pytorch.org/docs/stable/profiler.html)。
 
-采集样例代码参考1：
+采集样例代码参考一：
 
 ```Python
 with torch.profiler.profile(
@@ -43,7 +41,7 @@ with torch.profiler.profile(
         prof.step()
 ```
 
-采集样例代码参考2：
+采集样例代码参考二：
 
 ```Python
 prof = torch.profiler.profile(
@@ -60,15 +58,15 @@ for step in range(step_number):
 
 pytorch profiler数据目录结构如下：
 
-```
+```Python
 |- pytorch_profiling
     |- *.pt.trace.json
 ```
 
 #### NPU性能数据采集
-通过Ascend PyTorch Profiler工具采集NPU的性能数据，采集参数配置跟GPU一致，参考链接：https://www.hiascend.com/document/detail/zh/canncommercial/70RC1/devtools/auxiliarydevtool/atlasprofiling_16_0008.html
+通过Ascend PyTorch Profiler工具采集NPU的性能数据，采集参数配置跟GPU一致，参考链接：[Ascend PyTorch Profiler数据采集与分析](https://www.hiascend.com/document/detail/zh/canncommercial/70RC1/modeldevpt/ptmigr/AImpug_0067.html)。
 
-将GPU的性能数据采集代码中torch.profiler替换成torch_npu.profiler
+将GPU的性能数据采集代码中torch.profiler替换成torch_npu.profiler。
 
 ascend pytorch profiler数据目录结构如下：
 
@@ -93,13 +91,11 @@ cd att/profiler/compare_tools
 python performance_compare.py [基准性能数据文件] [比对性能数据文件] --output_path=./result_dir
 ```
 
-- 基准性能数据文件(必选)：若以GPU为基准，指定到以".pt.trace"结尾的json文件；若以NPU不同版本为基准，指定文件参考**比对性能数据文件
-  **。
-- 比对性能数据文件(必选)：可以指定以“ascend_pt”结尾的目录、ASCEND_PROFILER_OUTPUT目录或trace_view.json文件，指定trace_view.json无法显示算子的内存占用。
-- --output_path(可选)：性能比对结果存放的路径，默认保存在当前目录。
+- 基准性能数据文件（必选）：若以GPU为基准，指定到以".pt.trace"结尾的json文件；若以NPU不同版本为基准，指定文件参考**比对性能数据文件**。
+- 比对性能数据文件（必选）：可以指定以“ascend_pt”结尾的目录、ASCEND_PROFILER_OUTPUT目录或trace_view.json文件，指定trace_view.json无法显示算子的内存占用。
+- --output_path（可选）：性能比对结果存放的路径，默认保存在当前目录。
 
-工具将总体性能拆解为训练耗时和内存占用，其中训练耗时可拆分为算子、通信、调度三个维度，以打屏的形式输出总体指标，帮助用户定界劣化的方向。与此同时，工具还会生成performance_comparison_result_*
-.xlsl，展示每个算子在执行耗时、通信耗时、内存占用的优劣，可通过DIFF列大于0筛选出劣化算子。详细介绍请参见“**比对结果说明**”。
+工具将总体性能拆解为训练耗时和内存占用，其中训练耗时可拆分为算子、通信、调度三个维度，以打屏的形式输出总体指标，帮助用户定界劣化的方向。与此同时，工具还会生成performance_comparison_result_*.xlsl，展示每个算子在执行耗时、通信耗时、内存占用的优劣，可通过DIFF列大于0筛选出劣化算子。详细介绍请参见“**比对结果说明**”。
 
 #### 通用参数说明
 
@@ -120,12 +116,12 @@ python performance_compare.py [基准性能数据文件] [比对性能数据文�
 
 #### 算子性能比对特有参数说明
 
-| 参数名               | 说明                                                                                                                                         | 是否必选 |
-|-------------------|--------------------------------------------------------------------------------------------------------------------------------------------|------|
-| --gpu_flow_cat    | 配置GPU trace中cpu侧算子与device kernel的连线标识，当GPU的kernel均为空时设置。根据timeline的json文件在chrome://tracing上的Flow events的选项配置。使用示例：--gpu_flow_cat=async_gpu | 否    |
-| --use_input_shape | 开启算子精准匹配，默认关闭。使用示例：--use_input_shape                                                                                                       | 否    |
-| --max_kernel_num  | 设置CPU侧算子下发的最大kernel数量，当超过设定值时工具会自动往下找子算子，直至满足条件，默认仅比对最上层算子。使用示例：--max_kernel_num=10                                                        | 否    |
-| --op_name_map     | 设置GPU与NPU等价的算子名称的映射关系，以字典形式存入。使用示例：--op_name_map='{"Optimizer.step#SGD.step":"Optimizer.step#NpuFusedSGD.step"}'                           | 否    |
+| 参数名            | 说明                                                         | 是否必选 |
+| ----------------- | ------------------------------------------------------------ | -------- |
+| --gpu_flow_cat    | 配置GPU trace中cpu侧算子与device kernel的连线标识，当GPU的kernel均为空时设置。根据timeline的json文件在chrome://tracing上的Flow events的选项配置。使用示例：--gpu_flow_cat=async_gpu | 否       |
+| --use_input_shape | 开启算子精准匹配，默认关闭。使用示例：--use_input_shape      | 否       |
+| --max_kernel_num  | 设置CPU侧算子下发的最大kernel数量，当超过设定值时工具会自动往下找子算子，直至满足条件，默认仅比对最上层算子。使用示例：--max_kernel_num=10 | 否       |
+| --op_name_map     | 设置GPU与NPU等价的算子名称的映射关系，以字典形式存入。使用示例：--op_name_map='{"Optimizer.step#SGD.step":"Optimizer.step#NpuFusedSGD.step"}' | 否       |
 
 ## 比对结果说明
 
@@ -164,12 +160,11 @@ activities配置仅采集NPU数据，不配置experimental_config参数以及其
 
 ### 算子性能
 
-算子性能比对结果在performance_comparison_result_*.xlsl中OperatorCompare和OperatorCompare(TOP)的sheet页呈现。
+算子性能比对结果在performance_comparison_result_*.xlsl中OperatorCompare和OperatorCompare（TOP）的sheet页呈现。
 
-- OperatorCompare(TOP)：算子为粒度的统计呈现，按照算子在device上的总耗时与基准算子的差距值（Diff Duration(ms)列）进行逆序
-- OperatorCompare：算子比对的明细展示，可以查看每一个算子对应的kernel详情
-
-Diff Ratio: 比较算子在device上执行总耗时 / 基准算子在device上执行总耗时，红色代表劣化。
+- OperatorCompare(TOP)：算子为粒度的统计呈现，按照算子在device上的总耗时与基准算子的差距值（Diff Duration(ms)列）进行逆序。
+- OperatorCompare：算子比对的明细展示，可以查看每一个算子对应的kernel详情。
+- Diff Ratio：比较算子在device上执行总耗时 / 基准算子在device上执行总耗时，红色代表劣化。
 
 #### Device Duration(us)
 
@@ -181,22 +176,19 @@ Diff Ratio: 比较算子在device上执行总耗时 / 基准算子在device上�
 
 通信性能比对结果在performance_comparison_result_*.xlsl中CommunicationCompare的sheet页呈现。
 
-- 淡蓝色背景的记录行：通信算子的summary信息，包括通信算子名称、调用总次数、通信算子总耗时（单位：us）、通信算子平均耗时（单位：us）、通信算子最大耗时（单位：us）、通信算子最小耗时（单位：us）
-
--
-无背景色的记录行：通信算子的detail信息，仅支持NPU，包含了该通信算子下的所有Task信息，包括Task名称、Task调用次数、Task总耗时（单位：us）、Task平均耗时（单位：us）、Task最大耗时（单位：us）、Task最小耗时（单位：us）
-
+- 淡蓝色背景的记录行：通信算子的summary信息，包括通信算子名称、调用总次数、通信算子总耗时（单位：us）、通信算子平均耗时（单位：us）、通信算子最大耗时（单位：us）、通信算子最小耗时（单位：us）。
+- 无背景色的记录行：通信算子的detail信息，仅支持NPU，包含了该通信算子下的所有Task信息，包括Task名称、Task调用次数、Task总耗时（单位：us）、Task平均耗时（单位：us）、Task最大耗时（单位：us）、Task最小耗时（单位：us）。
 - Diff Ratio: 比较通信算子的总耗时 / 基准通信算子的总耗时，红色代表劣化。
 
 ### 算子内存
 
-算子内存比对结果在performance_comparison_result_**.xlsl中MemoryCompare和MemoryCompare(TOP)的sheet页呈现。
+算子内存比对结果在performance_comparison_result_*.xlsl中MemoryCompare和MemoryCompare（TOP）的sheet页呈现。
 
-- MemoryCompare(TOP)：算子为粒度的统计呈现，按照算子占用的总内存与基准算子的差距值(Diff Memory(MB))进行逆序
+- MemoryCompare(TOP)：算子为粒度的统计呈现，按照算子占用的总内存与基准算子的差距值(Diff Memory(MB))进行逆序。
 
-- MemoryCompare：算子内存比对的明细展示，可以查看每一个算子申请内存的详情
+- MemoryCompare：算子内存比对的明细展示，可以查看每一个算子申请内存的详情。
 
-Diff Ratio: 比较算子占用的总内存 / 基准算子占用的总内存，红色代表劣化
+- Diff Ratio: 比较算子占用的总内存 / 基准算子占用的总内存，红色代表劣化。
 
 #### Size(KB)
 
