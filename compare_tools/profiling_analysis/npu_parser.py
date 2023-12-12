@@ -49,6 +49,7 @@ class NpuInfoWrapper:
 class NpuProfilingParser:
     FLASH_ATTENTION = "flashattention"
     ACLNNINPLACE_COPY = "aclnninplacecopy"
+    TENSORMOVE = "tensormove"
 
     def __init__(self, npu_step_time, npu_file_path):
         self.npu_json_file = npu_file_path.get('trace_view')
@@ -200,14 +201,15 @@ class NpuProfilingParser:
         fa_num_bwd = 0
         fa_num_fwd = 0
         sdma_num = 0
-        if info.get('aic_mac_time(us)') is None or info.get('aiv_vec_time(us)') is None:
+        if info.get('mac_time(us)') is None and info.get('aiv_vec_time(us)') is None:
             self.profiling_info.hide_op_details = True
             return
         for i in range(len(info['Model ID'])):
             op_type = info.loc[i, 'Type']
             name = info.loc[i, 'Name']
-            aiv_vec_time = info.loc[i, 'aiv_vec_time(us)']
-            if pd.isna(aiv_vec_time) or pd.isna(op_type):
+            aiv_vec_time = info.loc[i, 'aiv_vec_time(us)'] if info.get('aiv_vec_time(us)') is not None else None
+            mac_time = info.loc[i, 'mac_time(us)'] if info.get('mac_time(us)') is not None else None
+            if pd.isna(aiv_vec_time) and pd.isna(mac_time):
                 continue
             task_durations = info.loc[i, 'Duration(us)']
             if self.FLASH_ATTENTION in op_type.lower():
@@ -217,15 +219,18 @@ class NpuProfilingParser:
                 else:
                     fa_time_fwd += task_durations
                     fa_num_fwd += 1
-            elif name.lower().startswith(self.ACLNNINPLACE_COPY):
+            elif name.lower().startswith(self.ACLNNINPLACE_COPY) and self.TENSORMOVE in name.lower():
                 sdma_time += task_durations
                 sdma_num += 1
-            elif aiv_vec_time > 0:
-                vec_time += task_durations
-                vec_num += 1
             else:
-                cube_time += task_durations
-                cube_num += 1
+                is_vec = (aiv_vec_time and aiv_vec_time > 0) or (mac_time is not None and mac_time == 0)
+                if is_vec:
+                    vec_time += task_durations
+                    vec_num += 1
+                else:
+                    cube_time += task_durations
+                    cube_num += 1
+
         self.profiling_info.cube_time = cube_time / 10 ** 6
         self.profiling_info.vec_time = vec_time / 10 ** 6
         self.profiling_info.flash_attention_time_bwd = fa_time_bwd / 10 ** 6
@@ -234,7 +239,7 @@ class NpuProfilingParser:
         self.profiling_info.vec_num = vec_num
         self.profiling_info.fa_num_bwd = fa_num_bwd
         self.profiling_info.fa_num_fwd = fa_num_fwd
-        self.profiling_info.sdma_time = sdma_time
+        self.profiling_info.sdma_time = sdma_time / 10 ** 6
         self.profiling_info.sdma_num = sdma_num
 
 
@@ -273,7 +278,7 @@ class NpuProfilingParser:
         args = dic.get('args')
         if args.get('Stream Id'):
             stream_id = args.get('Stream Id')
-            ts = dic.get('ts')
+            ts = float(dic.get('ts'))
             dur = dic.get('dur')
             if args.get('Task Type') == 'EVENT_WAIT_SQE':
                 enent_wait_res[stream_id] += dur
