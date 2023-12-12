@@ -7,7 +7,7 @@ merge_profiling_timeline（合并大json工具）支持合并Profiling的timelin
 
 ### 性能数据采集
 
-使用msprof采集性能数据，将采集到的所有节点的性能数据拷贝到当前环境同一目录下，以下假设数据在/home/test/cann_profiling下。
+使用Ascend PyTorch Profiler或者E2E性能采集工具采集性能数据，E2E profiling将被废弃，不建议使用。Ascend PyTorch Profiler采集方式参考：[Profiling数据采集](https://gitee.com/ascend/att/tree/master/profiler)。将采集到的所有节点的性能数据拷贝到当前环境同一目录下，以下假设数据在/home/test/cann_profiling下。
 
 E2E Profiling数据目录结构示例如下：
 

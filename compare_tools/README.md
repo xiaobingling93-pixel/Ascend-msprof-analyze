@@ -23,6 +23,8 @@ pip3 install numpy
 
 ### 性能数据采集
 
+使用本工具之前需要采集GPU或者NPU的性能数据，然后进行性能比对分析。
+
 #### GPU性能数据采集
 
 通过PyTorch Profiler工具采集GPU的性能数据，参考链接：[torch.profiler](https://pytorch.org/docs/stable/profiler.html)。
@@ -64,7 +66,7 @@ pytorch profiler数据目录结构如下：
 ```
 
 #### NPU性能数据采集
-通过Ascend PyTorch Profiler工具采集NPU的性能数据，采集参数配置跟GPU一致，参考链接：[Ascend PyTorch Profiler数据采集与分析](https://www.hiascend.com/document/detail/zh/canncommercial/70RC1/modeldevpt/ptmigr/AImpug_0067.html)。
+通过Ascend PyTorch Profiler工具（与PyTorch Profiler工具对标）采集NPU的性能数据，采集参数配置跟GPU一致，具体可以参考链接：[Profiling数据采集](https://gitee.com/ascend/att/tree/master/profiler)。
 
 将GPU的性能数据采集代码中torch.profiler替换成torch_npu.profiler。
 
