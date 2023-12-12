@@ -2,7 +2,7 @@
 cluster_analyse（集群分析工具）是在集群场景下，通过此工具来进行集群数据的分析，当前主要对基于通信域的迭代内耗时分析、通信时间分析以及通信矩阵分析为主， 从而定位慢卡、慢节点以及慢链路问题。
 
 ## 性能数据采集
-当前集群调优工具主要支持Ascend Pytorch Profiler采集方式下的集群数据。
+当前集群调优工具主要支持Ascend PyTorch Profiler采集方式下的集群数据。采集方式参考：[Profiling数据采集](https://gitee.com/ascend/att/tree/master/profiler)，此工具只需要通过Ascend PyTorch Porfiler工具采集NPU的性能数据即可。
 
 我们要求至少是L1级别的数据。
 ```python
