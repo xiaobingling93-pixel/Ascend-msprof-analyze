@@ -21,14 +21,19 @@ class ProfilingInfo:
     def __init__(self, profiling_type: str):
         self.profiling_type = profiling_type
         self.cube_time = 0.0
+        self.other_time = 0.0
         self.vec_time = 0.0
         self.cube_num = 0
         self.vec_num = 0
+        self.sdma_num = 0
+        self.fa_num_fwd = 0
+        self.fa_num_bwd = 0
         self.compute_time = 0.0
         self.communication_not_overlapped = 0.0
         self.scheduling_ratio = 0.0
         self.memory_used = 0.0
         self.e2e_time = 0.0
+        self.sdma_time = 0.0
         self.scheduling_time = 0.0
         self.flash_attention_time_bwd = 0.0
         self.flash_attention_time_fwd = 0.0

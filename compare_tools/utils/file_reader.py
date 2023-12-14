@@ -2,7 +2,7 @@ import csv
 import json
 import os
 
-from path_manager import PathManager
+from common_func.path_manager import PathManager
 from utils.constant import Constant
 
 
@@ -19,16 +19,16 @@ class FileReader:
             return []
         if file_size > Constant.MAX_FILE_SIZE:
             check_msg = input(
-                f"The file({file_path}) size exceeds the preset max value, do you continue reading the file? [y/n]")
+                f"The file({file_path}) size exceeds the preset max value. Continue reading the file? [y/n]")
             if check_msg.lower() != "y":
                 print(f"[WARNING] The user choose not to read the file: {file_path}")
                 return []
         try:
             with open(file_path, "rt") as file:
                 json_data = json.loads(file.read())
-        except Exception:
+        except Exception as e:
             msg = f"Can't read file: {file_path}"
-            raise RuntimeError(msg)
+            raise RuntimeError(msg) from e
         return json_data
 
     @classmethod
@@ -41,7 +41,7 @@ class FileReader:
             return []
         if file_size > Constant.MAX_FILE_SIZE:
             check_msg = input(
-                f"The file({file_path}) size exceeds the preset max value, do you continue reading the file? [y/n]")
+                f"The file({file_path}) size exceeds the preset max value. Continue reading the file? [y/n]")
             if check_msg.lower() != "y":
                 print(f"[WARNING] The user choose not to read the file: {file_path}")
                 return []
@@ -51,9 +51,9 @@ class FileReader:
                 reader = csv.DictReader(csv_file)
                 for row in reader:
                     result_data.append(row)
-        except Exception:
+        except Exception as e:
             msg = f"Failed to read the file: {file_path}"
-            raise RuntimeError(msg)
+            raise RuntimeError(msg) from e
         return result_data
 
     @classmethod

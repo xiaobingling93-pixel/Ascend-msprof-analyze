@@ -13,17 +13,50 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 from collections import Counter, defaultdict
 import pandas as pd
 
 import profiling_analysis.parser_helper as parser_helper
 from utils.file_reader import FileReader
+from utils.constant import Constant
+
+
+class OpTimeWarper:
+    def __init__(
+        self,
+        cube_time: float = 0.0,
+        sdma_time: float = 0.0,
+        vec_time: float = 0.0,
+        fa_time_fwd: float = 0.0,
+        fa_time_bwd: float = 0.0,
+        all_op_time: float = 0.0,
+        compute_stream_dur: float = 0.0,
+        cube_num: int = 0,
+        vec_num: int = 0,
+        sdma_num: int = 0,
+        fa_num_bwd: int = 0,
+        fa_num_fwd: int = 0
+    ):
+        self.cube_time = cube_time
+        self.sdma_time = sdma_time
+        self.vec_time = vec_time
+        self.fa_time_fwd = fa_time_fwd
+        self.fa_time_bwd = fa_time_bwd
+        self.all_op_time = all_op_time
+        self.compute_stream_dur = compute_stream_dur
+        self.cube_num = cube_num
+        self.vec_num = vec_num
+        self.sdma_num = sdma_num
+        self.fa_num_bwd = fa_num_bwd
+        self.fa_num_fwd = fa_num_fwd
 
 
 class GpuProfilingParser:
     NCCL_MARK = 'nccl'
     CUBE_MARK = 'gemm'
     FA_MARK_LIST = [['fmha', 'kernel'], ['flash', 'kernel']]
+    SDMA_MARK_LIST = ['htod', 'dtod', 'dtoh', 'memset (device)']
 
     def __init__(self, gpu_path):
         self.trace_events = FileReader.read_trace_file(gpu_path).get('traceEvents')
@@ -37,17 +70,25 @@ class GpuProfilingParser:
                 return True
         return False
 
-    def parse_events(self):
+    def is_sdma_time(self, name: str):
+        for mark in self.SDMA_MARK_LIST:
+            if mark in name.lower():
+                return True
+        return False
+
+    def update_op_list(self, op_list, marks):
         cube_time = 0.0
         all_op_time = 0.0
         fa_time_bwd = 0.0
         fa_time_fwd = 0.0
+        sdma_time = 0.0
+        vec_time = 0.0
         cube_num = 0
         vec_num = 0
-        op_list = []
+        sdma_num = 0
+        fa_num_bwd = 0
+        fa_num_fwd = 0
         compute_stream_dur = 0.0
-        marks = defaultdict(int)  # mark for compute communication_not_overlapped time
-
         for event in self.trace_events:
             if not isinstance(event, dict):
                 continue
@@ -59,6 +100,11 @@ class GpuProfilingParser:
             dur = event.get('dur')
             ts = event.get('ts')
             cat = event.get('cat', '')
+            if event.get('args') and event.get('args').get('stream') == self.compute_stream_id:
+                if self.is_sdma_time(name):
+                    sdma_time += float(dur)
+                    sdma_num += 1
+                    continue
             if cat.lower() != 'kernel':
                 continue
             if self.NCCL_MARK in name.lower():
@@ -71,30 +117,70 @@ class GpuProfilingParser:
             if self.is_flash_attention(name):
                 if 'bwd' in name.lower():
                     fa_time_bwd += float(dur)
+                    fa_num_bwd += 1
                 else:
                     fa_time_fwd += float(dur)
+                    fa_num_fwd += 1
             elif self.CUBE_MARK in name.lower():
                 cube_num += 1
                 cube_time += float(dur)
             else:
                 vec_num += 1
+                vec_time += float(dur)
             all_op_time += float(dur)
             op_list.append([ts, name, cat, dur])
-        op_dataframe = pd.DataFrame(op_list, columns=['time start', 'name', 'cat', 'dur'])
-        op_dataframe.to_csv('gpu_perf.csv', index=False)
+        time_wrapper = OpTimeWarper(
+            cube_time=cube_time,
+            sdma_time=sdma_time,
+            vec_time=vec_time,
+            fa_time_fwd=fa_time_fwd,
+            fa_time_bwd=fa_time_bwd,
+            all_op_time=all_op_time,
+            compute_stream_dur=compute_stream_dur,
+            cube_num=cube_num,
+            vec_num=vec_num,
+            sdma_num=sdma_num,
+            fa_num_bwd=fa_num_bwd,
+            fa_num_fwd=fa_num_fwd
+        )
+        return time_wrapper
+
+    def parse_events(self):
+        op_list = []
+        marks = defaultdict(int)  # mark for compute communication_not_overlapped time
+
+        time_wrapper = self.update_op_list(op_list, marks)
+        cube_time = time_wrapper.cube_time
+        fa_time_fwd = time_wrapper.fa_time_fwd
+        fa_time_bwd = time_wrapper.fa_time_bwd
+        all_op_time = time_wrapper.all_op_time
+        compute_stream_dur = time_wrapper.compute_stream_dur
+        cube_num = time_wrapper.cube_num
+        vec_num = time_wrapper.vec_num
+        sdma_num = time_wrapper.sdma_num
+        sdma_time = time_wrapper.sdma_time
+        vec_time = time_wrapper.vec_time
+
         self.profiling_info.compute_time = len([_ for _, value in marks.items() if value < 0]) / 10 ** 6
         self.profiling_info.communication_not_overlapped = len([_ for _, value in marks.items() if value > 0]) / 10 ** 6
         self.profiling_info.flash_attention_time_bwd = fa_time_bwd / 10 ** 6
         self.profiling_info.flash_attention_time_fwd = fa_time_fwd / 10 ** 6
         self.profiling_info.cube_time = cube_time / 10 ** 6
-        self.profiling_info.vec_time = (all_op_time - cube_time - fa_time_fwd - fa_time_bwd) / 10 ** 6
+        self.profiling_info.vec_time = self.profiling_info.compute_time - (cube_time + fa_time_fwd + fa_time_bwd) / 10 ** 6
         self.profiling_info.cube_num = cube_num
         self.profiling_info.vec_num = vec_num
+        self.profiling_info.sdma_num = sdma_num
+        self.profiling_info.fa_num_bwd = time_wrapper.fa_num_bwd
+        self.profiling_info.fa_num_fwd = time_wrapper.fa_num_fwd
+        self.profiling_info.sdma_time = sdma_time / 10 ** 6
         self.parse_e2e_time()
 
-        self.profiling_info.scheduling_time = self.profiling_info.e2e_time - all_op_time / 10 ** 6 - \
+        self.profiling_info.scheduling_time = self.profiling_info.e2e_time - self.profiling_info.compute_time - \
                                               self.profiling_info.communication_not_overlapped
-        self.profiling_info.scheduling_ratio = self.profiling_info.scheduling_time / self.profiling_info.e2e_time
+        if self.profiling_info.e2e_time < Constant.EPS:
+            self.profiling_info.scheduling_ratio = 0.0
+        else:
+            self.profiling_info.scheduling_ratio = self.profiling_info.scheduling_time / self.profiling_info.e2e_time
         self.parse_memory_reserved()
 
     def parse_e2e_time(self):

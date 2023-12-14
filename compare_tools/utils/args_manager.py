@@ -1,6 +1,6 @@
 import os.path
 
-from path_manager import PathManager
+from common_func.path_manager import PathManager
 from utils.constant import Constant
 from utils.file_reader import FileReader
 from utils.profiling_parser import GPUProfilingParser, NPUProfilingParser
@@ -43,6 +43,14 @@ class ArgsManager:
     @property
     def comparison_profiling(self):
         return self._comparison_profiling
+
+    @property
+    def base_profiling_path(self):
+        return self._args.base_profiling_path
+
+    @property
+    def comparison_profiling_path(self):
+        return self._args.comparison_profiling_path
 
     @classmethod
     def check_profiling_path(cls, file_path: str):

@@ -14,9 +14,9 @@
 # limitations under the License.
 
 import os
+from collections import defaultdict
 
 from common_func.constant import Constant
-from collections import defaultdict
 from common_func.file_manager import FileManager
 from prof_bean.step_trace_time_bean import StepTraceTimeBean
 
@@ -27,7 +27,7 @@ class StepTraceTimeAnalysis:
     def __init__(self, param: dict):
         self.collection_path = param.get(Constant.COLLECTION_PATH)
         self.data_map = param.get(Constant.DATA_MAP)
-        self.communication_group = param.get(Constant.COMMUNICATION_GROUP)
+        self.communication_group = param.get(Constant.COMM_DATA_DICT, {}).get(Constant.COMMUNICATION_GROUP)
         self.step_time_dict = {}
         self.step_data_list = []
 
@@ -50,7 +50,7 @@ class StepTraceTimeAnalysis:
 
     def dump_data(self):
         if not self.step_data_list:
-            print("Can't get step time info!")
+            print("[WARNING] Can't get step time info!")
         headers = self.get_headers()
         FileManager.create_csv_file(self.collection_path, self.step_data_list, self.CLUSTER_TRACE_TIME_CSV, headers)
 
@@ -60,7 +60,7 @@ class StepTraceTimeAnalysis:
             if step_time_file:
                 self.step_time_dict[rank_id] = FileManager.read_csv_file(step_time_file, StepTraceTimeBean)
             if not self.step_time_dict.get(rank_id):
-                print(f"rank {rank_id} does not have a valid step_trace_time.json.")
+                print(f"[WARNING] Rank {rank_id} does not have a valid step_trace_time.json.")
 
     def analyze_step_time(self):
         for rank_id, data_bean_list in self.step_time_dict.items():
@@ -71,7 +71,7 @@ class StepTraceTimeAnalysis:
             return
         step_group_dict = {}
         for data_list in self.step_data_list:
-            stage_group = 'None'
+            stage_group = tuple()
             for stage in stage_list:
                 if data_list[2] in stage:
                     stage_group = tuple(stage)

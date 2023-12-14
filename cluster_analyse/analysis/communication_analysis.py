@@ -13,11 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
+from collections import defaultdict
 from abc import abstractmethod
 
 from common_func.constant import Constant
-from collections import defaultdict
 from common_func.file_manager import FileManager
 
 
@@ -26,12 +25,13 @@ class BaseCommAnalysis:
     def __init__(self, param: dict):
         self.collection_path = param.get(Constant.COLLECTION_PATH)
         self.data_map = param.get(Constant.DATA_MAP)
-        self.collective_group_dict = param.get(Constant.COLLECTIVE_GROUP)
+        self.communication_ops = []
+        self.collective_group_dict = param.get(Constant.COMM_DATA_DICT, {}).get(Constant.COLLECTIVE_GROUP)
         self.comm_ops_struct = {}
 
     @staticmethod
     def compute_ratio(dividend: float, divisor: float):
-        if abs(divisor) < 1e-15:
+        if abs(divisor) < Constant.EPS:
             return 0
         else:
             return round(dividend / divisor, 4)
@@ -42,7 +42,7 @@ class BaseCommAnalysis:
 
     def dump_data(self):
         if not self.comm_ops_struct:
-            print("There is no final comm ops data generated")
+            print("[WARNING] There is no final comm ops data generated")
             return
         output_comm_data = {}
         for key in self.comm_ops_struct:
@@ -73,7 +73,7 @@ class CommunicationAnalysis(BaseCommAnalysis):
 
     def __init__(self, param: dict):
         super().__init__(param)
-        self.communication_ops = param.get(Constant.COMMUNICATION_OPS)
+        self.communication_ops = param.get(Constant.COMM_DATA_DICT, {}).get(Constant.COMMUNICATION_OPS)
 
     @staticmethod
     def combine_size_distribution(op_dict: dict, total_dict: dict):
@@ -149,7 +149,7 @@ class CommMatrixAnalysis(BaseCommAnalysis):
 
     def __init__(self, param: dict):
         super().__init__(param)
-        self.communication_ops = []
+        self.communication_ops = param.get(Constant.COMM_DATA_DICT, {}).get(Constant.MATRIX_OPS)
 
     @staticmethod
     def combine_link(link_info_dict: dict, single_link_dict: dict):
@@ -158,42 +158,9 @@ class CommMatrixAnalysis(BaseCommAnalysis):
         link_info_dict[Constant.TRANSIT_SIZE_MB] += single_link_dict.get(Constant.TRANSIT_SIZE_MB, 0)
 
     def run(self):
-        self.load_communication_matrix_data()
         self.split_op_by_group()
         self.combine_ops_total_info()
         self.dump_data()
-
-    def load_communication_matrix_data(self):
-        rank_comm_dict = {}
-        for rank_id, profiling_dir_path in self.data_map.items():
-            comm_dir = os.path.join(profiling_dir_path, Constant.SINGLE_OUTPUT, Constant.COMM_MATRIX_JSON)
-            rank_comm_dict[rank_id] = FileManager.read_json_file(comm_dir)
-            if not rank_comm_dict.get(rank_id):
-                print(f"Rank {rank_id} does not have a valid communication_matrix.json.")
-        self.construct_matrix_data(rank_comm_dict)
-
-    def construct_matrix_data(self, rank_comm_dict: dict):
-        for rank_id, rank_id_dict in rank_comm_dict.items():
-            for step_id, step_id_dict in rank_id_dict.items():
-                self.add_comm_ops(rank_id, step_id, step_id_dict)
-
-    def add_comm_ops(self, rank_id: int, step_id: int, step_id_dict: dict):
-        for comm_op_type, comm_dict in step_id_dict.items():
-            if comm_op_type != Constant.COLLECTIVE and comm_op_type != Constant.P2P:
-                print(f"Unknown communication opertors type!")
-                continue
-            for op_name, op_link_info in comm_dict.items():
-                if op_name.startswith('Total'):
-                    continue
-                group_name = op_name.split('@')[-1]
-                self.communication_ops.append({
-                    Constant.RANK_ID: rank_id,
-                    Constant.STEP_ID: step_id,
-                    Constant.COMM_OP_TYPE: comm_op_type,
-                    Constant.COMM_OP_NAME: op_name,
-                    Constant.GROUP_NAME: group_name,
-                    Constant.COMM_OP_INFO: op_link_info
-                })
 
     def compute_total_info(self, step_dict: dict):
         self.merge_same_links(step_dict)
@@ -203,7 +170,7 @@ class CommMatrixAnalysis(BaseCommAnalysis):
         def process_link_key():
             for link_key in rank_dict:
                 if '-' not in link_key:
-                    print(f"{op_name} has an invalid link key {link_key}!")
+                    print(f"[WARNING] {op_name} has an invalid link key {link_key}!")
                     break
                 src_rank = link_key.split('-')[0]
                 dst_rank = link_key.split('-')[1]
@@ -211,7 +178,7 @@ class CommMatrixAnalysis(BaseCommAnalysis):
                     if src_rank not in project_local_global_rank_map:
                         project_local_global_rank_map[src_rank] = rank_id
                     elif project_local_global_rank_map.get(src_rank) != rank_id:
-                        print(f"In the same communication group, local ranks projecting to global ranks repeat!")
+                        print(f"[WARNING] In the same communication group, local ranks projecting to global ranks repeat!")
                 self.combine_link(link_info[link_key], rank_dict[link_key])
 
         def convert_local_to_global_rank():
