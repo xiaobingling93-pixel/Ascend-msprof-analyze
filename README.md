@@ -87,4 +87,3 @@ Profiler配置接口详细介绍可以参考官方文档：[Ascend PyTorch Profi
 | [compare_tools（性能比对工具）](https://gitee.com/ascend/att/tree/master/profiler/compare_tools) | 提供NPU与GPU性能拆解功能以及算子、通信、内存性能的比对功能。 |
 | [cluster_analyse（集群分析工具）](https://gitee.com/ascend/att/tree/master/profiler/cluster_analyse) | 提供多机多卡的集群分析能力（基于通信域的通信分析和迭代耗时分析）, 当前需要配合Ascend Insight的集群分析功能使用。 |
 | [merge_profiling_timeline（合并大json工具）](https://gitee.com/ascend/att/tree/master/profiler/merge_profiling_timeline) | 融合多个Profiling的timeline在一个json文件中的功能。          |
-| [distribute_tools（集群场景脚本集合工具）](https://gitee.com/ascend/att/tree/master/profiler/distribute_tools) | 提供集群场景数据一键汇聚功能。                               |
