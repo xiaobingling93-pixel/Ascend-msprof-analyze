@@ -18,11 +18,13 @@ from advice_factory.advice_factory import AdviceFactory
 from common_func.path_manager import PathManager
 from common_func_advisor.constant import Constant
 from timeline_advice.optimizer_advice import OptimizerAdvice
+from timeline_advice.op_schedule_advice import OpScheduleAdvice
 
 
 class TimelineAdviceFactory(AdviceFactory):
     ADVICE_LIB = {
         Constant.OPTIM: OptimizerAdvice,
+        Constant.OP_SCHE: OpScheduleAdvice,
     }
 
     def __init__(self, collection_path: str):
