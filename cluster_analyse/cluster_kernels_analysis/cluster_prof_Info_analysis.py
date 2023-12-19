@@ -76,7 +76,7 @@ class FormDataProcessor:
                 print(f"文件 \"{f}\" 的路径或者是文件夹名没有按照要求，请确保存在[node*]这一级文件夹,具体操作指导见readme\n")
                 continue
             # 将数据添加到最终的数据框中
-            all_data = all_data._append(df, ignore_index=True)
+            all_data = pd.concat([all_data, df])
         return all_data
 
     def getChipType(self):
@@ -265,6 +265,7 @@ class StatisticalInfoToHtmlAnalyzer(OpSummaryAnalyzerBase):
 class DeliverableGenerator:
     def __init__(self, params):
         self.dirs = params.get('dir')
+        self.formProcess = FormDataProcessor(self.dirs, 'op_summary*.csv')
         self.analyzers = []
         self.columns_to_keep = []
         self.setAnalyzers(params)
