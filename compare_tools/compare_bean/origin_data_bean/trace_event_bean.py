@@ -1,0 +1,159 @@
+from decimal import Decimal
+
+from common_func.constant import Constant
+
+
+class TraceEventBean:
+
+    def __init__(self, event: dict):
+        self._event = event
+        self._pid = 0
+        self._tid = 0
+        self._ts = Decimal(0)
+        self._dur = 0.0
+        self._ph = ""
+        self._cat = ""
+        self._name = ""
+        self._args = {}
+        self.init()
+
+    @property
+    def pid(self) -> int:
+        return self._pid
+
+    @property
+    def tid(self) -> int:
+        return self._tid
+
+    @property
+    def dur(self) -> float:
+        return self._dur
+
+    @property
+    def start_time(self) -> Decimal:
+        return self._ts
+
+    @property
+    def end_time(self) -> Decimal:
+        return self._ts + Decimal(self._dur)
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def lower_name(self) -> str:
+        return self._name.lower()
+
+    @property
+    def lower_cat(self) -> str:
+        return self._cat.lower()
+
+    @property
+    def args(self) -> dict:
+        return self._args
+
+    @property
+    def id(self) -> str:
+        return self._event.get("id")
+
+    @property
+    def stream_id(self) -> int:
+        return self._args.get('Stream Id')
+
+    @property
+    def stream(self) -> int:
+        return self._args.get("stream")
+
+    @property
+    def task_type(self) -> int:
+        return self._args.get('Task Type')
+
+    @property
+    def device_id(self) -> int:
+        return self._args.get('Device Id', -1)
+
+    @property
+    def total_reserved(self):
+        return self._args.get('Total Reserved', 0)
+
+    @property
+    def corr_id(self) -> int:
+        return self._args.get('correlation_id')
+
+    @property
+    def process_name(self) -> int:
+        return self._args.get("name", "")
+
+    @property
+    def bytes_kb(self) -> int:
+        return self._args.get("Bytes", 0) / Constant.BYTE_TO_KB
+
+    @property
+    def addr(self) -> str:
+        return self._args.get("Addr")
+
+    @property
+    def event(self) -> dict:
+        return self._event
+
+    def is_m_mode(self) -> bool:
+        return self._ph == "M"
+
+    def is_x_mode(self) -> bool:
+        return self._ph == "X"
+
+    def is_flow_start(self) -> bool:
+        return self._ph == "s"
+
+    def is_flow_end(self) -> bool:
+        return self._ph == "f"
+
+    def is_process_meta(self) -> bool:
+        return self.is_m_mode() and self._name == "process_name"
+
+    def is_thread_meta(self) -> bool:
+        return self.is_m_mode() and self._name == "thread_name"
+
+    def is_communication_op_thread(self) -> bool:
+        return self._args.get("name", "").find("Communication") != -1
+
+    def is_hccl_process_name(self) -> bool:
+        return self.process_name == "HCCL"
+
+    def is_npu_process_name(self) -> bool:
+        return self.process_name == "Ascend Hardware"
+
+    def is_computing_event(self):
+        return self._name == "Computing"
+
+    def is_comm_not_overlap(self):
+        return self._name == 'Communication(Not Overlapped)'
+
+    def is_dict(self):
+        return isinstance(self._event, dict)
+
+    def is_kernel_cat(self):
+        return self.lower_cat == "kernel"
+
+    def is_nccl_name(self):
+        return "nccl" in self.lower_name
+
+    def is_nccl_kernel(self):
+        return self.is_kernel_cat() and self.is_nccl_name()
+
+    def is_kernel_except_nccl(self):
+        return self.is_kernel_cat() and not self.is_nccl_kernel()
+
+    def is_memory_event(self):
+        return self.lower_name == '[memory]' and self.device_id >= 0
+
+    def init(self):
+        self._pid = self._event.get("pid", 0)
+        self._tid = self._event.get("tid", 0)
+        self._ts = Decimal(str(self._event.get("ts", 0)))
+        self._dur = float(self._event.get("dur", 0))
+        self._ph = self._event.get("ph", "")
+        self._cat = self._event.get("cat", "")
+        self._name = self._event.get("name", "")
+        self._args = self._event.get("args", {})

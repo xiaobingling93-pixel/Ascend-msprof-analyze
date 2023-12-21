@@ -1,0 +1,64 @@
+from utils.constant import Constant
+
+
+class KernelEvent:
+    def __init__(self, event: dict, device_type: int):
+        self._event = event
+        self._device_type = device_type
+        self._device_dur = self._event.get("dur", 0.0)
+
+    @property
+    def kernel_name(self) -> str:
+        return self._event.get("name", "")
+
+    @property
+    def device_dur(self) -> float:
+        return self._device_dur
+
+    @property
+    def task_id(self) -> int:
+        return self._event.get("args", {}).get("Task Id")
+
+    @property
+    def task_type(self) -> str:
+        return self._event.get("args", {}).get("Task Type")
+
+    @property
+    def kernel_details(self):
+        if self._device_type == Constant.GPU:
+            return f"{self.kernel_name} [duration: {self.device_dur}]"
+        return f"{self.kernel_name}, {self.task_id}, {self.task_type} [duration: {self.device_dur}]\n"
+
+
+class MemoryEvent:
+    def __init__(self, event: dict, name: str):
+        self._event = event
+        self._name = name
+        self._size = 0.0
+        self._release_time = 0
+        self._allocation_time = 0
+        self._duration = 0.0
+        self.init()
+
+    @property
+    def size(self) -> float:
+        return self._size
+
+    @property
+    def duration(self) -> float:
+        return self._duration
+
+    @property
+    def memory_details(self) -> str:
+        name = self._event.get(Constant.NAME, "") or self._name
+        return f"{name}, ({self._allocation_time}, {self._release_time}), " \
+               f"[duration: {self._duration}], [size: {self._size}]\n"
+
+    def init(self):
+        self._size = self._event.get(Constant.SIZE, 0)
+        self._release_time = self._event.get(Constant.RELEASE_TIME)
+        self._allocation_time = self._event.get(Constant.ALLOCATION_TIME)
+        if not self._release_time or not self._allocation_time:
+            self._duration = 0.0
+        else:
+            self._duration = float(self._release_time - self._allocation_time)

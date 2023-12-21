@@ -1,6 +1,6 @@
 class Constant(object):
-    GPU = 0
-    NPU = 1
+    GPU = "GPU"
+    NPU = "NPU"
     NA = 'N/A'
     LIMIT_KERNEL = 3
     MAX_PATH_LENGTH = 4096
@@ -22,11 +22,13 @@ class Constant(object):
     DIR_AUTHORITY = 0o750
 
     PROFILING_TYPE = "profiling type"
-    ASCEND_OUTPUT_PATH = "ascend output"
+
     # path
     PROFILING_PATH = "profiling_path"
     TRACE_PATH = "trace_path"
     MEMORY_DATA_PATH = "memory_data_path"
+    ASCEND_OUTPUT_PATH = "ascend_output"
+    INFO_JSON_PATH = "info_path"
 
     # excel headers
     BASE_PROFILING = 'Base Profiling: '
@@ -43,6 +45,14 @@ class Constant(object):
     MEMORY_TOP_SHEET = "MemoryCompareStatistic"
     COMMUNICATION_SHEET = "CommunicationCompare"
 
+    # table name
+    OPERATOR_TABLE = "OperatorCompare"
+    MEMORY_TABLE = "MemoryCompare"
+    OPERATOR_TOP_TABLE = "OperatorCompareStatistic"
+    MEMORY_TOP_TABLE = "MemoryCompareStatistic"
+    COMMUNICATION_TABLE = "CommunicationCompare"
+    PERFORMANCE_TABLE = "Model Profiling Time Distribution"
+
     # memory
     SIZE = "Size(KB)"
     TS = "ts"
@@ -52,3 +62,11 @@ class Constant(object):
 
     OP_KEY = "op_name"
     DEVICE_DUR = "dur"
+
+    BASE_DATA = "base_data"
+    COMPARISON_DATA = "comparison_data"
+    OVERALL_METRICS = "overall_metrics"
+    TORCH_OP = "torch_op"
+    KERNEL_DICT = "kernel_dict"
+    MEMORY_LIST = "memory_list"
+    COMMUNICATION_DICT = "comm_dict"
