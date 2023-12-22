@@ -1,0 +1,26 @@
+[
+  {
+    "pid": 0,
+    "tid": 0,
+    "args": {
+      "Input Dims": [[1,1], [1,1]],
+      "name": 0
+    },
+    "ts": 0,
+    "dur": 1,
+    "ph": "M",
+    "name": "process_name"
+  },
+  {
+    "pid": 1,
+    "tid": 1,
+    "args": {
+      "Input Dims": [[1,1], [1,1]],
+      "name": 1
+    },
+    "ts": 1,
+    "dur": 1,
+    "ph": "M",
+    "name": "process_name"
+  }
+]
