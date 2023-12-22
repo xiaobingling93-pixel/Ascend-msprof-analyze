@@ -12,8 +12,7 @@ class FileReader:
     def read_trace_file(cls, file_path: str) -> any:
         PathManager.check_path_readable(file_path)
         if not os.path.isfile(file_path):
-            msg = f"File not exists: {file_path}"
-            raise RuntimeError(msg)
+            raise FileNotFoundError("File not exists.")
         file_size = os.path.getsize(file_path)
         if file_size <= 0:
             return []
@@ -32,10 +31,10 @@ class FileReader:
         return json_data
 
     @classmethod
-    def read_csv_file(cls, file_path: str) -> any:
+    def read_csv_file(cls, file_path: str, bean_class: any = None) -> any:
         PathManager.check_path_readable(file_path)
         if not os.path.isfile(file_path):
-            return []
+            raise FileNotFoundError("File not exists.")
         file_size = os.path.getsize(file_path)
         if file_size <= 0:
             return []
@@ -50,7 +49,8 @@ class FileReader:
             with open(file_path, newline="") as csv_file:
                 reader = csv.DictReader(csv_file)
                 for row in reader:
-                    result_data.append(row)
+                    row_data = bean_class(row) if bean_class else row
+                    result_data.append(row_data)
         except Exception as e:
             msg = f"Failed to read the file: {file_path}"
             raise RuntimeError(msg) from e

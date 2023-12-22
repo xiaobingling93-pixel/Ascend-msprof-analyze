@@ -13,6 +13,7 @@ class Constant(object):
     BLUE_COLOR = "00BFFF"
     US_TO_MS = 1000
     KB_TO_MB = 1024
+    INVALID_VALUE = -1
 
     # epsilon
     EPS = 1e-15
