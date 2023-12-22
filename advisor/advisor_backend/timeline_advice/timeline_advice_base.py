@@ -32,12 +32,18 @@ class TimelineAdviceBase(AdviceBase):
         ENQUEUE = 5
         DEQUEUE = 6
         HOST_TO_DEVICE = 7
+        SYNCHRONIZE = 8
 
     def __init__(self, collection_path: str):
         super().__init__(collection_path)
         self.trace_view_path = ""
         self.has_preparse = False
         self.preparse_data = defaultdict(list)
+        self.entry_map = {
+            'Computing': self.PREPARSE_TYPE.OVERLAP_CPT,
+            'Free': self.PREPARSE_TYPE.OVERLAP_FREE,
+            'AscendCL@aclrtSynchronizeDevice': self.PREPARSE_TYPE.SYNCHRONIZE
+        }
 
     def path_check(self):
         """
@@ -58,7 +64,6 @@ class TimelineAdviceBase(AdviceBase):
             return False
         print("[INFO] Start to analyse the target file: {}".format(self.trace_view_path))
         return True
-        
 
     @abstractmethod
     def run(self):
@@ -79,9 +84,16 @@ class TimelineAdviceBase(AdviceBase):
         if self.has_preparse:
             return
         json_reader = FileManager.read_json_file(self.trace_view_path)
+        if not isinstance(json_reader, list):
+            return
         for entry in json_reader:
             name = entry.get("name", None)
-            if name and name.startswith("Optimizer.step#") and name.endswith(".step"):
+            if not name:
+                continue
+            if name.startswith("Optimizer.step#") and name.endswith(".step"):
                 self.preparse_data[self.PREPARSE_TYPE.OPTIMIZER].append(entry)
-
+            elif name.startswith("ProfilerStep#"):
+                self.preparse_data[self.PREPARSE_TYPE.STEP].append(entry)
+            elif name in self.entry_map:
+                self.preparse_data[self.entry_map[name]].append(entry)
         self.has_preparse = True

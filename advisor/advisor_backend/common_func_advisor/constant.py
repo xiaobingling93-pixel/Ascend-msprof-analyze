@@ -18,6 +18,8 @@ from enum import Enum
 class Constant:
     MAX_INPUT_MODE_LEN = 30
     MAX_INPUT_ADVICE_LEN = 30
+    SMALL_OP_DUR_RATIO = 0.2
+    SMALL_OP_NUM_RATIO = 0.2
 
     # mode list
     COMPUTE = "compute"
@@ -34,6 +36,7 @@ class Constant:
 
     # timeline
     OPTIM = "optimizer"
+    OP_SCHE = "op_schedule"
 
     COLLECTION_PATH = "collection_path"
     CLUSTER_ANALYSIS_OUTPUT = "cluster_analysis_output"
