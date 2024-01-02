@@ -1,27 +1,28 @@
+from compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
+from utils.common_func import convert_to_float
 from utils.constant import Constant
 
 
 class KernelEvent:
-    def __init__(self, event: dict, device_type: int):
+    def __init__(self, event: TraceEventBean, device_type: int):
         self._event = event
         self._device_type = device_type
-        self._device_dur = self._event.get("dur", 0.0)
 
     @property
     def kernel_name(self) -> str:
-        return self._event.get("name", "")
+        return self._event.name
 
     @property
     def device_dur(self) -> float:
-        return self._device_dur
+        return self._event.dur
 
     @property
     def task_id(self) -> int:
-        return self._event.get("args", {}).get("Task Id")
+        return self._event.task_id
 
     @property
     def task_type(self) -> str:
-        return self._event.get("args", {}).get("Task Type")
+        return self._event.task_type
 
     @property
     def kernel_details(self):

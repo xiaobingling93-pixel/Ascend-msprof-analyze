@@ -1,3 +1,4 @@
+import sys
 from collections import defaultdict, Counter
 
 from compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
@@ -10,7 +11,6 @@ class GPUProfilingParser(BaseProfilingParser):
     CUBE_MARK = 'gemm'
     FA_MARK_LIST = [['fmha', 'kernel'], ['flash', 'kernel']]
     SDMA_MARK_LIST = ['htod', 'dtod', 'dtoh', 'memset (device)']
-    BWD = 'bwd'
     FLOW_CAT = ("async_gpu", "async_cpu_to_gpu", "ac2g", "async")
     TORCH_OP_CAT = ("cpu_op", "user_annotation", "cuda_runtime", "operator")
 
@@ -45,38 +45,34 @@ class GPUProfilingParser(BaseProfilingParser):
             record = addr_dict.get(memory_event.addr)
             if allocate_bytes > 0:
                 if record:
-                    self._result_data.memory_list.append(record)
+                    self._result_data.update_memory_list(record)
                 addr_dict[memory_event.addr] = {Constant.SIZE: allocate_bytes,
                                                 Constant.TS: memory_event.start_time,
                                                 Constant.ALLOCATION_TIME: memory_event.start_time}
             if allocate_bytes < 0 and record:
                 if abs(allocate_bytes) == record.get(Constant.SIZE):
                     record[Constant.RELEASE_TIME] = memory_event.start_time
-                    self._result_data.memory_list.append(record)
+                    self._result_data.update_memory_list(record)
                 del addr_dict[memory_event.addr]
+        for record in addr_dict.values():
+            self._result_data.update_memory_list(record)
 
     def _update_overall_metrics(self):
         self._calculate_performance_time()
-        self._result_data.overall_metrics.compute_time = len(
-            [_ for _, value in self._marks.items() if value < 0])
-        self._result_data.overall_metrics.communication_not_overlapped = len(
-            [_ for _, value in self._marks.items() if value > 0])
-        self._result_data.overall_metrics.vec_time = self._result_data.overall_metrics.compute_time - \
-                                                     self._result_data.overall_metrics.cube_time - \
-                                                     self._result_data.overall_metrics.fa_time_fwd - \
-                                                     self._result_data.overall_metrics.fa_time_bwd
-        self.__parse_e2e_time()
-        self._result_data.overall_metrics.scheduling_time = self._result_data.overall_metrics.e2e_time - \
-                                                            self._result_data.overall_metrics.compute_time - \
-                                                            self._result_data.overall_metrics.communication_not_overlapped
         self.__parse_memory_reserved()
+        self._result_data.overall_metrics.calculate_vec_time()
+        self._result_data.overall_metrics.calculate_schedule_time()
         self._result_data.overall_metrics.trans_time_to_s()
 
     def _calculate_performance_time(self):
+        min_ts = sys.float_info.max
+        max_ts = sys.float_info.min
         for event in self._trace_events:
+            if event.stream:
+                min_ts = min(event.start_time, min_ts)
+                max_ts = max(event.end_time, max_ts)
             if event.stream == self._compute_stream_id and self.__is_sdma_time(event.name):
-                self._result_data.overall_metrics.sdma_time += event.dur
-                self._result_data.overall_metrics.sdma_num += 1
+                self._result_data.overall_metrics.update_sdma_info(event.dur)
                 continue
             if not event.is_kernel_cat():
                 continue
@@ -84,6 +80,14 @@ class GPUProfilingParser(BaseProfilingParser):
             if event.is_nccl_name():
                 continue
             self.__add_compute_time(event)
+        self._result_data.overall_metrics.set_e2e_time(float(max_ts - min_ts))
+        self.__add_compute_and_overlap_time()
+
+    def __add_compute_and_overlap_time(self):
+        compute_time = len([_ for _, value in self._marks.items() if value < 0])
+        communication_not_overlapped = len([_ for _, value in self._marks.items() if value > 0])
+        self._result_data.overall_metrics.set_compute_time(compute_time)
+        self._result_data.overall_metrics.set_comm_not_overlap(communication_not_overlapped)
 
     def __add_marks(self, event: TraceEventBean):
         if event.is_nccl_name():
@@ -93,30 +97,22 @@ class GPUProfilingParser(BaseProfilingParser):
             for timestep in range(int(event.start_time + 1), int(event.end_time + 1)):
                 self._marks[str(timestep)] += -100  # mark this timestep in compute stream
 
-    def __add_fa_time(self, event: TraceEventBean):
-        if self.BWD in event.lower_name:
-            self._result_data.overall_metrics.fa_time_bwd += event.dur
-            self._result_data.overall_metrics.fa_num_bwd += 1
-        else:
-            self._result_data.overall_metrics.fa_time_fwd += event.dur
-            self._result_data.overall_metrics.fa_num_fwd += 1
-
     def __add_compute_time(self, event: TraceEventBean):
         if self.__is_flash_attention(event.name):
-            self.__add_fa_time(event)
+            if event.is_backward():
+                self._result_data.overall_metrics.update_fa_bwd_info(event.dur)
+            else:
+                self._result_data.overall_metrics.update_fa_fwd_info(event.dur)
         elif self.CUBE_MARK in event.lower_name:
-            self._result_data.overall_metrics.cube_num += 1
-            self._result_data.overall_metrics.cube_time += event.dur
+            self._result_data.overall_metrics.update_cube_info(event.dur)
         else:
-            self._result_data.overall_metrics.vec_num += 1
-            self._result_data.overall_metrics.vec_time += event.dur
+            self._result_data.overall_metrics.update_vec_info(event.dur)
 
     def _picking_communication_event(self, event: TraceEventBean):
         if event.is_nccl_kernel():
             name_list = event.lower_name.split("_")
-            if len(name_list) > 2:
-                self._result_data.communication_dict.setdefault(name_list[1], {}).setdefault("comm_list", []).append(
-                    event.dur)
+            if len(name_list) >= 2:
+                self._result_data.update_communication_dict(name_list[1], event.dur)
             return True
         return False
 
@@ -126,39 +122,21 @@ class GPUProfilingParser(BaseProfilingParser):
             return True
         return False
 
-    def _picking_torch_op_event(self, event: TraceEventBean):
-        if event.lower_cat in self.TORCH_OP_CAT:
-            self._result_data.torch_op_data.append(event.event)
-            return True
-        return False
+    def _is_torch_op_event(self, event: TraceEventBean):
+        return event.lower_cat in self.TORCH_OP_CAT
 
-    def _picking_kernel_event(self, event: TraceEventBean):
-        if event.is_kernel_except_nccl():
-            self._all_kernels[f"{event.pid}-{event.tid}-{event.start_time}"] = event
-            return True
-        return False
+    def _is_kernel_event(self, event: TraceEventBean):
+        return event.is_kernel_except_nccl()
 
-    def _picking_flow_event(self, event: TraceEventBean):
-        if event.lower_cat in self._flow_cat:
-            if event.is_flow_start():
-                self._flow_dict.setdefault(event.id, {})["start"] = event
-            elif event.is_flow_end():
-                self._flow_dict.setdefault(event.id, {})["end"] = event
-            return True
-        return False
-
-    def __parse_e2e_time(self):
-        compute_events_timeline = [event for event in self._trace_events if event.stream]
-        compute_events_timeline = sorted(compute_events_timeline, key=lambda event: event.start_time)
-        self._result_data.overall_metrics.e2e_time = (compute_events_timeline[-1].end_time - compute_events_timeline[
-            0].start_time)
+    def _is_flow_event(self, event: TraceEventBean):
+        return event.lower_cat in self._flow_cat
 
     def __parse_memory_reserved(self):
-        memories = [event.total_reserved for event in self._memory_events]
-        if not memories:
+        if not self._memory_events:
             print("[INFO] Gpu profiling data doesn't contain memory info.")
             return
-        self._result_data.overall_metrics.memory_used = max(memories) / 1024 ** 3
+        memory_used = max([event.total_reserved for event in self._memory_events]) / 1024 ** 3
+        self._result_data.overall_metrics.set_memory_used(memory_used)
 
     def _get_dispatch_func(self):
         func_list = []

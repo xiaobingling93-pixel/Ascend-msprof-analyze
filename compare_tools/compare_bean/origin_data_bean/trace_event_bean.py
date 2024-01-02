@@ -1,6 +1,7 @@
 from decimal import Decimal
 
-from common_func.constant import Constant
+from utils.common_func import convert_to_float, convert_to_decimal
+from utils.constant import Constant
 
 
 class TraceEventBean:
@@ -27,15 +28,15 @@ class TraceEventBean:
 
     @property
     def dur(self) -> float:
-        return self._dur
+        return convert_to_float(self._dur)
 
     @property
     def start_time(self) -> Decimal:
-        return self._ts
+        return convert_to_decimal(self._ts)
 
     @property
     def end_time(self) -> Decimal:
-        return self._ts + Decimal(self._dur)
+        return self.start_time + convert_to_decimal(self._dur)
 
     @property
     def name(self) -> str:
@@ -66,12 +67,19 @@ class TraceEventBean:
         return self._args.get("stream")
 
     @property
-    def task_type(self) -> int:
+    def task_type(self) -> str:
         return self._args.get('Task Type')
 
     @property
+    def task_id(self) -> int:
+        return self._args.get('Task Id')
+
+    @property
     def device_id(self) -> int:
-        return self._args.get('Device Id', -1)
+        try:
+            return int(self._args.get('Device Id', Constant.INVALID_VALUE))
+        except Exception:
+            return Constant.INVALID_VALUE
 
     @property
     def total_reserved(self):
@@ -109,6 +117,12 @@ class TraceEventBean:
     def is_flow_end(self) -> bool:
         return self._ph == "f"
 
+    def is_enqueue(self) -> bool:
+        return self.lower_cat == "enqueue"
+
+    def is_dequeue(self) -> bool:
+        return self.lower_cat == "dequeue"
+
     def is_process_meta(self) -> bool:
         return self.is_m_mode() and self._name == "process_name"
 
@@ -120,6 +134,9 @@ class TraceEventBean:
 
     def is_hccl_process_name(self) -> bool:
         return self.process_name == "HCCL"
+
+    def is_overlap_process_name(self) -> bool:
+        return self.process_name == "Overlap Analysis"
 
     def is_npu_process_name(self) -> bool:
         return self.process_name == "Ascend Hardware"
@@ -148,11 +165,27 @@ class TraceEventBean:
     def is_memory_event(self):
         return self.lower_name == '[memory]' and self.device_id >= 0
 
+    def is_compute_event(self):
+        return self.task_type in ('AI_CORE', 'MIX_AIC', 'MIX_AIV', 'AI_CPU', 'AI_VECTOR_CORE', 'FFTS_PLUS')
+
+    def is_sdma_event(self):
+        return self.task_type in ('SDMA_SQE', 'PCIE_DMA_SQE')
+
+    def is_event_wait(self):
+        return self.task_type == 'EVENT_WAIT_SQE'
+
+    def is_backward(self):
+        bwd_list = ["bwd", "backward"]
+        for bwd in bwd_list:
+            if bwd in self.lower_name:
+                return True
+        return False
+
     def init(self):
         self._pid = self._event.get("pid", 0)
         self._tid = self._event.get("tid", 0)
-        self._ts = Decimal(str(self._event.get("ts", 0)))
-        self._dur = float(self._event.get("dur", 0))
+        self._ts = self._event.get("ts", 0)
+        self._dur = self._event.get("dur", 0)
         self._ph = self._event.get("ph", "")
         self._cat = self._event.get("cat", "")
         self._name = self._event.get("name", "")
