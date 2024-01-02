@@ -4,7 +4,7 @@ from utils.constant import Constant
 
 
 class KernelEvent:
-    def __init__(self, event: TraceEventBean, device_type: int):
+    def __init__(self, event: TraceEventBean, device_type: str):
         self._event = event
         self._device_type = device_type
 
@@ -27,7 +27,7 @@ class KernelEvent:
     @property
     def kernel_details(self):
         if self._device_type == Constant.GPU:
-            return f"{self.kernel_name} [duration: {self.device_dur}]"
+            return f"{self.kernel_name} [duration: {self.device_dur}]\n"
         return f"{self.kernel_name}, {self.task_id}, {self.task_type} [duration: {self.device_dur}]\n"
 
 
