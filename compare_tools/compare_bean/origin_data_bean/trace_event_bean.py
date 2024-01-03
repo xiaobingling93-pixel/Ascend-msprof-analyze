@@ -154,13 +154,13 @@ class TraceEventBean:
         return self.lower_cat == "kernel"
 
     def is_nccl_name(self):
-        return "nccl" in self.lower_name
+        return self.lower_name.startswith("nccl")
 
     def is_nccl_kernel(self):
         return self.is_kernel_cat() and self.is_nccl_name()
 
     def is_kernel_except_nccl(self):
-        return self.is_kernel_cat() and not self.is_nccl_kernel()
+        return self.is_kernel_cat() and not self.is_nccl_name()
 
     def is_memory_event(self):
         return self.lower_name == '[memory]' and self.device_id >= 0
@@ -182,11 +182,12 @@ class TraceEventBean:
         return False
 
     def init(self):
-        self._pid = self._event.get("pid", 0)
-        self._tid = self._event.get("tid", 0)
-        self._ts = self._event.get("ts", 0)
-        self._dur = self._event.get("dur", 0)
-        self._ph = self._event.get("ph", "")
-        self._cat = self._event.get("cat", "")
-        self._name = self._event.get("name", "")
-        self._args = self._event.get("args", {})
+        if isinstance(self._event, dict):
+            self._pid = self._event.get("pid", 0)
+            self._tid = self._event.get("tid", 0)
+            self._ts = self._event.get("ts", 0)
+            self._dur = self._event.get("dur", 0)
+            self._ph = self._event.get("ph", "")
+            self._cat = self._event.get("cat", "")
+            self._name = self._event.get("name", "")
+            self._args = self._event.get("args", {})
