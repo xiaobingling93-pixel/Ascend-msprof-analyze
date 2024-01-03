@@ -1,0 +1,169 @@
+import unittest
+from unittest.mock import patch
+
+from profiling_parser.base_profiling_parser import BaseProfilingParser, ProfilingResult
+
+
+class ProfilingParser(BaseProfilingParser):
+    def __init__(self):
+        super().__init__({}, {})
+
+    def init(self, flow_dict, all_kernels):
+        self._profiling_type = "GPU"
+        self._trace_events = []
+        self._profiling_path = ""
+        self._json_path = ""
+        self._result_data = ProfilingResult("GPU")
+        self._flow_dict = flow_dict
+        self._all_kernels = all_kernels
+        self._dispatch_func = []
+        self._enable_profiling_compare = True
+        self._enable_operator_compare = True
+        self._enable_memory_compare = True
+        self._enable_communication_compare = True
+
+    def _update_memory_list(self):
+        pass
+
+    def _update_overall_metrics(self):
+        pass
+
+    def _picking_communication_event(self):
+        pass
+
+    def _is_kernel_event(self, event):
+        return True
+
+    def _is_flow_event(self, event):
+        return True
+
+    def _is_torch_op_event(self, event):
+        return True
+
+    def _get_dispatch_func(self):
+        pass
+
+
+class MockEvent:
+    def __init__(self, pid, tid, ts, ph="M"):
+        self.pid = pid
+        self.tid = tid
+        self.ts = ts
+        self.ph = ph
+        self.id = 1
+        self.event = None
+
+    @property
+    def name(self):
+        return "wait"
+
+    @property
+    def dur(self):
+        return 7
+
+    @property
+    def start_time(self):
+        return self.ts
+
+    def is_flow_start(self):
+        return self.ph == "s"
+
+    def is_flow_end(self):
+        return self.ph == "f"
+
+
+class TestBaseProfilingParser(unittest.TestCase):
+    flow_dict = {1: {"start": MockEvent(1, 2, 12), "end": MockEvent(2, 3, 21)},
+                 2: {"start": MockEvent(1, 2, 12), "end": MockEvent(2, 3, 22)},
+                 3: {}}
+    all_kernels = {"2-3-23": MockEvent(2, 3, 23), "2-3-21": MockEvent(2, 3, 21), "2-3-22": MockEvent(2, 3, 22)}
+
+    def test_picking_torch_op_event(self):
+        event = MockEvent(1, 2, 3)
+        with patch("profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"):
+            parser = ProfilingParser()
+            parser.init({}, {})
+            self.assertTrue(parser._picking_torch_op_event(event))
+
+    def test_picking_kernel_event(self):
+        event = MockEvent(1, 2, 3)
+        with patch("profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"):
+            parser = ProfilingParser()
+            parser.init({}, {})
+            self.assertTrue(parser._picking_kernel_event(event))
+
+    def test_picking_flow_event(self):
+        events = [MockEvent(1, 2, 3, "s"), MockEvent(1, 2, 3, "f")]
+        with patch("profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"):
+            parser = ProfilingParser()
+            parser.init({}, {})
+            for event in events:
+                self.assertTrue(parser._picking_flow_event(event))
+
+    def test_update_kernel_dict_when_valid_input(self):
+        with patch("profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"):
+            parser = ProfilingParser()
+            parser.init(self.flow_dict, self.all_kernels)
+            parser._update_kernel_dict()
+            self.assertEqual(len(parser._result_data.kernel_dict.get(12)), 2)
+
+    def test_update_kernel_dict_when_without_kernels_return_null(self):
+        with patch("profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"):
+            parser = ProfilingParser()
+            parser.init(self.flow_dict, {})
+            parser._update_kernel_dict()
+            self.assertEqual(len(parser._result_data.kernel_dict), 0)
+
+    def test_update_kernel_dict_when_without_flow_return_null(self):
+        with patch("profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"):
+            parser = ProfilingParser()
+            parser.init({}, self.all_kernels)
+            parser._update_kernel_dict()
+            self.assertEqual(len(parser._result_data.kernel_dict), 0)
+
+    def test_check_result_data(self):
+        with patch("profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"):
+            parser = ProfilingParser()
+            parser.init(self.flow_dict, self.all_kernels)
+            parser._check_result_data()
+
+    def test_load_data_when_valid_input(self):
+        with patch("profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"):
+            parser = ProfilingParser()
+            parser.init(self.flow_dict, self.all_kernels)
+            result_data = parser.load_data()
+            self.assertEqual(len(result_data.kernel_dict.get(12)), 2)
+
+    def test_read_trace_event_when_invalid_json_path(self):
+        with patch("profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"):
+            parser = ProfilingParser()
+            parser.init({}, {})
+            parser._read_trace_event()
+            self.assertEqual(parser._trace_events, [])
+
+
+class TestProfilingResult(unittest.TestCase):
+    def test_update_torch_op_data_when_valid_input(self):
+        res = ProfilingResult("GPU")
+        res.update_torch_op_data(1)
+        self.assertEqual(len(res.torch_op_data), 1)
+
+    def test_update_kernel_dict_when_valid_input(self):
+        res = ProfilingResult("GPU")
+        res.update_kernel_dict(2, MockEvent(1, 2, 3))
+        self.assertEqual(len(res.kernel_dict.get(2)), 1)
+
+    def test_update_memory_list_when_valid_input(self):
+        res = ProfilingResult("GPU")
+        res.update_memory_list(1)
+        self.assertEqual(len(res.memory_list), 1)
+
+    def test_update_communication_dict_when_valid_input(self):
+        res = ProfilingResult("GPU")
+        res.update_communication_dict("reduce", 9)
+        self.assertEqual(sum(res.communication_dict.get("reduce", {}).get("comm_list")), 9)
+
+    def test_update_comm_task_data_when_valid_input(self):
+        res = ProfilingResult("GPU")
+        res.update_comm_task_data("reduce", MockEvent(1, 1, 1))
+        self.assertEqual(sum(res.communication_dict.get("reduce", {}).get("comm_task", {}).get("wait")), 7)

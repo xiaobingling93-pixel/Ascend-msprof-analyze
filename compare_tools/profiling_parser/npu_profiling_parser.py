@@ -34,7 +34,7 @@ class NPUProfilingParser(BaseProfilingParser):
         self._dequeue_data = []
         self._overlap_analysis = []
         self._dispatch_func = self._get_dispatch_func()
-        self.__filter_meta_id()
+        self._filter_meta_id()
 
     def _get_dispatch_func(self):
         func_list = set()
@@ -150,7 +150,7 @@ class NPUProfilingParser(BaseProfilingParser):
     def _is_torch_op_event(self, event: TraceEventBean):
         return event.lower_cat == self.TORCH_OP_CAT
 
-    def __filter_meta_id(self):
+    def _filter_meta_id(self):
         for event in self._trace_events:
             if not event.is_process_meta():
                 continue
