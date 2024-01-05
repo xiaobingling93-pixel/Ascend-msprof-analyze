@@ -39,7 +39,7 @@ class ComputeAdviceBase(AdviceBase):
             if not os.path.exists(self.kernel_details_path):
                 print("[ERROR] kernel_details.csv is not exist in the Path: {}.".format(os.path.join(self.collection_path, "ASCEND_PROFILER_OUTPUT")))
                 return False
-        elif os.path.isfile(self.collection_path) and os.path.basename(self.collection_path).endswith(".csv"):
+        elif os.path.isfile(self.collection_path) and os.path.basename(self.collection_path) == "kernel_details.csv":
             self.kernel_details_path = self.collection_path
         else:
             print("[ERROR] Please input ascend_pt or kernel_details.csv")

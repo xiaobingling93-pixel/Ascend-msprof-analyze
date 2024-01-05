@@ -38,9 +38,9 @@ class NpuFusedAdvice(ComputeAdviceBase):
         filter_data = self.cur_data.get(self.cur_data.get("duration sum(us)", 0) > 0)
         op_num = len(filter_data.index)
         op_dur = filter_data["duration sum(us)"].sum()
-        self.cur_advice = "Advice:\n"
         if op_num > 0:
             index = 0
+            self.cur_advice = "Advice:\n"
             self.cur_bottleneck = f"The computing time of fusable op is {round(op_dur, 2)} ms."
             for _, row in filter_data.iterrows():
                 cur_op = "[" + ", ".join(row.loc["pattern"]) + "]"
