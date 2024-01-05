@@ -1,6 +1,7 @@
 import unittest
 
 from utils.file_reader import FileReader
+from utils.constant import Constant
 
 
 class TestFileReader(unittest.TestCase):
@@ -15,4 +16,4 @@ class TestFileReader(unittest.TestCase):
 
     def test_check_json_type(self):
         t = FileReader.check_json_type("resource/event_list.json")
-        self.assertEqual(t, 1)
+        self.assertEqual(t, Constant.NPU)
