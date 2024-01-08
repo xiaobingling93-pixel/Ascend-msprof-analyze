@@ -1,8 +1,22 @@
 from utils.constant import Constant
 
 
+class CellFormatType:
+    DEFAULT = {"font_name": "Arial", 'font_size': 11, 'align': 'left', 'valign': 'vcenter', 'border': True,
+               'num_format': '#,##0'}  # 数字显示整数，无背景色
+    DEFAULT_FLOAT = {"font_name": "Arial", 'font_size': 11, 'align': 'left', 'valign': 'vcenter', 'border': True,
+                     'num_format': '#,##0.00'}  # 保留2位小数，无背景色
+    DEFAULT_RATIO = {"font_name": "Arial", 'font_size': 11, 'align': 'left', 'valign': 'vcenter',
+                     'border': True, 'num_format': '0.00%'}  # 百分比显示，保留2位小数，无背景色
+    RED_RATIO = {"font_name": "Arial", 'font_size': 11, 'align': 'left', 'valign': 'vcenter',
+                 'border': True, 'num_format': '0.00%', "fg_color": Constant.RED_COLOR}  # 百分比显示，保留2位小数，单元格背景色为红色
+    BOLD_STR = {"font_name": "Arial", 'font_size': 11, 'align': 'left', 'valign': 'vcenter', 'border': True,
+                'bold': True}  # 字符串，无背景色，字体加粗
+    BLUE_BOLD = {"font_name": "Arial", 'font_size': 11, 'fg_color': Constant.BLUE_COLOR, 'align': 'left',
+                 'valign': 'vcenter', 'bold': True, 'border': True}  # 蓝色背景，加粗
+
+
 class ExcelConfig(object):
-    COL_IDS = "ABCDEFGHIJKLMNOPQRSTUVW"
     ORDER = "Order Id"
     OPERATOR_NAME = "Operator Name"
     INPUT_SHAPE = "Input Shape"
@@ -34,67 +48,79 @@ class ExcelConfig(object):
     MIN_DURATION = "Min Duration(us)"
 
     HEADERS = {
-        Constant.OPERATOR_SHEET: [ORDER, OPERATOR_NAME, INPUT_SHAPE, INPUT_TYPE, KERNEL_DETAILS, DEVICE_DURATION,
-                                  OPERATOR_NAME, INPUT_SHAPE, INPUT_TYPE, KERNEL_DETAILS, DEVICE_DURATION, DIFF_DUR,
-                                  DIFF_RATIO],
-        Constant.MEMORY_SHEET: [ORDER, OPERATOR_NAME, INPUT_SHAPE, INPUT_TYPE, MEMORY_DETAILS, SIZE, OPERATOR_NAME,
-                                INPUT_SHAPE, INPUT_TYPE, MEMORY_DETAILS, SIZE, DIFF_SIZE, DIFF_RATIO],
-        Constant.OPERATOR_TOP_SHEET: [TOP, OPERATOR_NAME, BASE_DEVICE_DURATION, BASE_OPERATOR_NUMBER,
-                                      COMPARISON_DEVICE_DURATION, COMPARISON_OPERATOR_NUMBER, DIFF_TIME, DIFF_RATIO],
-        Constant.MEMORY_TOP_SHEET: [TOP, OPERATOR_NAME, BASE_ALLOCATED_TIMES, BASE_ALLOCATED_MEMORY,
-                                    BASE_OPERATOR_NUMBER, COMPARISON_ALLOCATED_TIMES, COMPARISON_ALLOCATED_MEMORY,
-                                    COMPARISON_OPERATOR_NUMBER, DIFF_MEMORY, DIFF_RATIO],
-        Constant.COMMUNICATION_SHEET: [ORDER, COMM_OP_NAME, TASK_NAME, CALLS, TOTAL_DURATION, AVG_DURATION,
-                                       MAX_DURATION, MIN_DURATION, COMM_OP_NAME, TASK_NAME, CALLS, TOTAL_DURATION,
-                                       AVG_DURATION, MAX_DURATION, MIN_DURATION, DIFF_DUR, DIFF_RATIO]
+        Constant.OPERATOR_TABLE: [
+            {"name": ORDER, "type": CellFormatType.DEFAULT, "width": 10},
+            {"name": OPERATOR_NAME, "type": CellFormatType.BOLD_STR, "width": 30},
+            {"name": INPUT_SHAPE, "type": CellFormatType.DEFAULT, "width": 20},
+            {"name": INPUT_TYPE, "type": CellFormatType.DEFAULT, "width": 20},
+            {"name": KERNEL_DETAILS, "type": CellFormatType.DEFAULT, "width": 20},
+            {"name": DEVICE_DURATION, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": OPERATOR_NAME, "type": CellFormatType.BOLD_STR, "width": 30},
+            {"name": INPUT_SHAPE, "type": CellFormatType.DEFAULT, "width": 20},
+            {"name": INPUT_TYPE, "type": CellFormatType.DEFAULT, "width": 20},
+            {"name": KERNEL_DETAILS, "type": CellFormatType.DEFAULT, "width": 20},
+            {"name": DEVICE_DURATION, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": DIFF_DUR, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": DIFF_RATIO, "type": CellFormatType.DEFAULT_RATIO, "width": 20}
+        ],
+        Constant.MEMORY_TABLE: [
+            {"name": ORDER, "type": CellFormatType.DEFAULT, "width": 10},
+            {"name": OPERATOR_NAME, "type": CellFormatType.BOLD_STR, "width": 30},
+            {"name": INPUT_SHAPE, "type": CellFormatType.DEFAULT, "width": 20},
+            {"name": INPUT_TYPE, "type": CellFormatType.DEFAULT, "width": 20},
+            {"name": MEMORY_DETAILS, "type": CellFormatType.DEFAULT, "width": 20},
+            {"name": SIZE, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": OPERATOR_NAME, "type": CellFormatType.BOLD_STR, "width": 30},
+            {"name": INPUT_SHAPE, "type": CellFormatType.DEFAULT, "width": 20},
+            {"name": INPUT_TYPE, "type": CellFormatType.DEFAULT, "width": 20},
+            {"name": MEMORY_DETAILS, "type": CellFormatType.DEFAULT, "width": 20},
+            {"name": SIZE, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": DIFF_SIZE, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": DIFF_RATIO, "type": CellFormatType.DEFAULT_RATIO, "width": 20}
+        ],
+        Constant.OPERATOR_TOP_TABLE: [
+            {"name": TOP, "type": CellFormatType.DEFAULT, "width": 10},
+            {"name": OPERATOR_NAME, "type": CellFormatType.BOLD_STR, "width": 30},
+            {"name": BASE_DEVICE_DURATION, "type": CellFormatType.DEFAULT_FLOAT, "width": 25},
+            {"name": BASE_OPERATOR_NUMBER, "type": CellFormatType.DEFAULT, "width": 25},
+            {"name": COMPARISON_DEVICE_DURATION, "type": CellFormatType.DEFAULT_FLOAT, "width": 30},
+            {"name": COMPARISON_OPERATOR_NUMBER, "type": CellFormatType.DEFAULT, "width": 30},
+            {"name": DIFF_TIME, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": DIFF_RATIO, "type": CellFormatType.DEFAULT_RATIO, "width": 20}
+        ],
+        Constant.MEMORY_TOP_TABLE: [
+            {"name": TOP, "type": CellFormatType.DEFAULT, "width": 10},
+            {"name": OPERATOR_NAME, "type": CellFormatType.BOLD_STR, "width": 30},
+            {"name": BASE_ALLOCATED_TIMES, "type": CellFormatType.DEFAULT_FLOAT, "width": 25},
+            {"name": BASE_ALLOCATED_MEMORY, "type": CellFormatType.DEFAULT_FLOAT, "width": 30},
+            {"name": BASE_OPERATOR_NUMBER, "type": CellFormatType.DEFAULT, "width": 25},
+            {"name": COMPARISON_ALLOCATED_TIMES, "type": CellFormatType.DEFAULT_FLOAT, "width": 27},
+            {"name": COMPARISON_ALLOCATED_MEMORY, "type": CellFormatType.DEFAULT_FLOAT, "width": 33},
+            {"name": COMPARISON_OPERATOR_NUMBER, "type": CellFormatType.DEFAULT, "width": 25},
+            {"name": DIFF_MEMORY, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": DIFF_RATIO, "type": CellFormatType.DEFAULT_RATIO, "width": 20}
+        ],
+        Constant.COMMUNICATION_TABLE: [
+            {"name": ORDER, "type": CellFormatType.DEFAULT, "width": 10},
+            {"name": COMM_OP_NAME, "type": CellFormatType.BOLD_STR, "width": 25},
+            {"name": TASK_NAME, "type": CellFormatType.DEFAULT, "width": 20},
+            {"name": CALLS, "type": CellFormatType.DEFAULT, "width": 10},
+            {"name": TOTAL_DURATION, "type": CellFormatType.DEFAULT_FLOAT, "width": 17},
+            {"name": AVG_DURATION, "type": CellFormatType.DEFAULT_FLOAT, "width": 17},
+            {"name": MAX_DURATION, "type": CellFormatType.DEFAULT_FLOAT, "width": 17},
+            {"name": MIN_DURATION, "type": CellFormatType.DEFAULT_FLOAT, "width": 17},
+            {"name": COMM_OP_NAME, "type": CellFormatType.BOLD_STR, "width": 25},
+            {"name": TASK_NAME, "type": CellFormatType.DEFAULT, "width": 20},
+            {"name": CALLS, "type": CellFormatType.DEFAULT, "width": 10},
+            {"name": TOTAL_DURATION, "type": CellFormatType.DEFAULT_FLOAT, "width": 17},
+            {"name": AVG_DURATION, "type": CellFormatType.DEFAULT_FLOAT, "width": 17},
+            {"name": MAX_DURATION, "type": CellFormatType.DEFAULT_FLOAT, "width": 17},
+            {"name": MIN_DURATION, "type": CellFormatType.DEFAULT_FLOAT, "width": 17},
+            {"name": DIFF_DUR, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": DIFF_RATIO, "type": CellFormatType.DEFAULT_RATIO, "width": 20}
+        ]
     }
 
-    COLUMNS = {ORDER: 10, OPERATOR_NAME: 30, TOP: 10, BASE_OPERATOR_NUMBER: 25, BASE_DEVICE_DURATION: 25,
-               COMPARISON_OPERATOR_NUMBER: 30, COMPARISON_DEVICE_DURATION: 30, BASE_ALLOCATED_TIMES: 25,
-               BASE_ALLOCATED_MEMORY: 30, COMPARISON_ALLOCATED_TIMES: 27, COMPARISON_ALLOCATED_MEMORY: 33,
-               CALLS: 10, TOTAL_DURATION: 17, AVG_DURATION: 17, MAX_DURATION: 17, MIN_DURATION: 17, COMM_OP_NAME: 25}
-
-    OVERHEAD = {Constant.OPERATOR_SHEET: ["B1:F1", "G1:K1"], Constant.MEMORY_SHEET: ["B1:F1", "G1:K1"],
-                Constant.COMMUNICATION_SHEET: ["B1:H1", "I1:O1"], Constant.OPERATOR_TOP_SHEET: ["C1:D1", "E1:F1"],
-                Constant.MEMORY_TOP_SHEET: ["C1:E1", "F1:H1"]}
-
-    FORMAT = {"int": {"font_name": "Arial", 'font_size': 11, 'align': 'left', 'valign': 'vcenter', 'border': True,
-                      'num_format': '#,##0'},
-              "float": {"font_name": "Arial", 'font_size': 11, 'align': 'left', 'valign': 'vcenter', 'border': True,
-                        'num_format': '#,##0.00'},
-              "ratio": {"font_name": "Arial", 'font_size': 11, 'align': 'left', 'valign': 'vcenter',
-                        'border': True, 'num_format': '0.00%'},
-              "ratio_red": {"font_name": "Arial", 'font_size': 11, 'align': 'left', 'valign': 'vcenter',
-                            'border': True, 'num_format': '0.00%', "fg_color": Constant.RED_COLOR},
-              "str_bold": {"font_name": "Arial", 'font_size': 11, 'align': 'left', 'valign': 'vcenter', 'border': True,
-                           'bold': True}}
-
-    FIELD_TYPE_MAP = {ORDER: "int",
-                      OPERATOR_NAME: "str_bold",
-                      INPUT_SHAPE: "int",
-                      INPUT_TYPE: "str",
-                      KERNEL_DETAILS: "int",
-                      MEMORY_DETAILS: "int",
-                      DEVICE_DURATION: "float",
-                      DIFF_RATIO: "ratio",
-                      DIFF_DUR: "float",
-                      DIFF_SIZE: "float",
-                      SIZE: "float",
-                      TOP: "int",
-                      BASE_DEVICE_DURATION: "float",
-                      COMPARISON_DEVICE_DURATION: "float",
-                      BASE_OPERATOR_NUMBER: "int",
-                      COMPARISON_OPERATOR_NUMBER: "int",
-                      DIFF_TIME: "float",
-                      BASE_ALLOCATED_TIMES: "float",
-                      COMPARISON_ALLOCATED_TIMES: "float",
-                      BASE_ALLOCATED_MEMORY: "float",
-                      COMPARISON_ALLOCATED_MEMORY: "float",
-                      DIFF_MEMORY: "float",
-                      COMM_OP_NAME: "str_bold",
-                      TASK_NAME: "int",
-                      CALLS: "int",
-                      TOTAL_DURATION: "float",
-                      AVG_DURATION: "float",
-                      MAX_DURATION: "float",
-                      MIN_DURATION: "float"}
+    OVERHEAD = {Constant.OPERATOR_TABLE: ["B1:F1", "G1:K1"], Constant.MEMORY_TABLE: ["B1:F1", "G1:K1"],
+                Constant.COMMUNICATION_TABLE: ["B1:H1", "I1:O1"], Constant.OPERATOR_TOP_TABLE: ["C1:D1", "E1:F1"],
+                Constant.MEMORY_TOP_TABLE: ["C1:E1", "F1:H1"]}

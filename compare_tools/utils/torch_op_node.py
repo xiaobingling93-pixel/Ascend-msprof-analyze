@@ -1,11 +1,12 @@
 from math import ceil
 
-from utils.compare_event import MemoryEvent
+from compare_bean.origin_data_bean.compare_event import MemoryEvent
+from compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
 from utils.constant import Constant
 
 
 class TorchOpNode:
-    def __init__(self, event=None, parent_node=None):
+    def __init__(self, event=TraceEventBean, parent_node=None):
         self._event = event
         self._parent_node = parent_node
         self._child_nodes = []
@@ -15,31 +16,31 @@ class TorchOpNode:
 
     @property
     def start_time(self):
-        return float(self._event.get("ts", 0))
+        return self._event.start_time
 
     @property
     def end_time(self):
-        return float(self._event.get("ts", 0)) + self._event.get("dur", 0)
+        return self._event.end_time
 
     @property
     def name(self):
-        return str(self._event.get("name", Constant.NA))
+        return self._event.name
 
     @property
     def input_shape(self):
-        return str(self._event.get("args", {}).get("Input Dims", Constant.NA))
+        return str(self._event.args.get("Input Dims", Constant.NA))
 
     @property
     def origin_input_shape(self):
-        return self._event.get("args", {}).get("Input Dims", Constant.NA)
+        return self._event.args.get("Input Dims", Constant.NA)
 
     @property
     def input_type(self):
-        return str(self._event.get("args", {}).get("Input type", Constant.NA))
+        return str(self._event.args.get("Input type", Constant.NA))
 
     @property
     def call_stack(self):
-        return str(self._event.get("args", {}).get("Call stack", Constant.NA))
+        return str(self._event.args.get("Call stack", Constant.NA))
 
     @property
     def parent(self):
@@ -65,29 +66,20 @@ class TorchOpNode:
         self._child_nodes.append(child_node)
 
     def set_kernel_list(self, kernel_list: list):
+        if not kernel_list:
+            return
         self._kernel_list.extend(kernel_list)
+        kernel_num = len(kernel_list)
+        cur_node = self
+        while cur_node._parent_node:
+            cur_node._kernel_num += kernel_num
+            cur_node = cur_node._parent_node
 
-    def add_kernel_num(self, kernel_num: int):
-        self._kernel_num += kernel_num
-
-    def set_memory_allocated(self, memory_allocated: dict):
-        self._memory_allocated_list.append(MemoryEvent(memory_allocated, self.name))
+    def set_memory_allocated(self, memory_allocated: MemoryEvent):
+        self._memory_allocated_list.append(memory_allocated)
 
     def is_step_profiler(self) -> bool:
         return self.name.find("ProfilerStep#") != -1
 
     def get_op_info(self) -> list:
         return [self.name, self.input_shape, self.input_type, self.call_stack]
-
-    def match_child_node(self, ts_time: float) -> any:
-        if not self._child_nodes:
-            return None
-        right = len(self._child_nodes) - 1
-        left = 0
-        while right > left:
-            mid = left + ceil((right - left) / 2)
-            if ts_time >= self._child_nodes[mid].start_time:
-                left = mid
-            else:
-                right = mid - 1
-        return self._child_nodes[left] if self._child_nodes[left].end_time > ts_time else None

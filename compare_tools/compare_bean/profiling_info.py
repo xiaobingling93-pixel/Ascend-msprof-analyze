@@ -86,3 +86,6 @@ class ProfilingInfo:
 
     def set_memory_used(self, memory: float):
         self.memory_used = memory
+
+    def is_not_minimal_profiling(self) -> bool:
+        return self.profiling_type == Constant.NPU and not self.minimal_profiling

@@ -108,14 +108,6 @@ class GPUProfilingParser(BaseProfilingParser):
         else:
             self._result_data.overall_metrics.update_vec_info(event.dur)
 
-    def _picking_communication_event(self, event: TraceEventBean):
-        if event.is_nccl_kernel():
-            name_list = event.lower_name.split("_")
-            if len(name_list) >= 2:
-                self._result_data.update_communication_dict(name_list[1], event.dur)
-            return True
-        return False
-
     def _picking_memory_event(self, event: TraceEventBean):
         if event.is_memory_event():
             self._memory_events.append(event)
@@ -126,7 +118,7 @@ class GPUProfilingParser(BaseProfilingParser):
         return event.lower_cat in self.TORCH_OP_CAT
 
     def _is_kernel_event(self, event: TraceEventBean):
-        return event.is_kernel_except_nccl()
+        return event.is_kernel_cat()
 
     def _is_flow_event(self, event: TraceEventBean):
         return event.lower_cat in self._flow_cat
@@ -139,17 +131,17 @@ class GPUProfilingParser(BaseProfilingParser):
         self._result_data.overall_metrics.set_memory_used(memory_used)
 
     def _get_dispatch_func(self):
-        func_list = []
+        func_set = set()
         if self._enable_memory_compare or self._enable_operator_compare:
-            func_list.append(self._picking_torch_op_event)
-        if self._enable_operator_compare:
-            func_list.append(self._picking_kernel_event)
-            func_list.append(self._picking_flow_event)
-        if self._enable_memory_compare or self._enable_profiling_compare:
-            func_list.append(self._picking_memory_event)
+            func_set.add(self._picking_torch_op_event)
         if self._enable_communication_compare:
-            func_list.append(self._picking_communication_event)
-        return func_list
+            func_set.add(self._picking_kernel_event)
+        if self._enable_operator_compare or self._args.max_kernel_num:
+            func_set.add(self._picking_kernel_event)
+            func_set.add(self._picking_flow_event)
+        if self._enable_memory_compare or self._enable_profiling_compare:
+            func_set.add(self._picking_memory_event)
+        return list(func_set)
 
     def _infer_compute_stream_id(self):
         if not self._enable_profiling_compare:

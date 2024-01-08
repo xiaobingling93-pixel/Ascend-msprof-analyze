@@ -1,7 +1,7 @@
 from abc import abstractmethod, ABC
 from decimal import Decimal
 
-from compare_bean.origin_data_bean.compare_event import KernelEvent
+from compare_bean.origin_data_bean.compare_event import KernelEvent, MemoryEvent
 from compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
 from compare_bean.profiling_info import ProfilingInfo
 from utils.args_manager import ArgsManager
@@ -20,13 +20,14 @@ class ProfilingResult:
         self.overall_metrics = ProfilingInfo(profiling_type)
 
     def update_torch_op_data(self, event: TraceEventBean):
+        event.is_torch_op = True
         self.torch_op_data.append(event)
 
     def update_kernel_dict(self, start_time: Decimal, kernel_event: TraceEventBean):
         self.kernel_dict.setdefault(start_time, []).append(KernelEvent(kernel_event, self._profiling_type))
 
     def update_memory_list(self, memory_data: dict):
-        self.memory_list.append(memory_data)
+        self.memory_list.append(MemoryEvent(memory_data))
 
     def update_communication_dict(self, comm_name: str, comm_dur: float):
         self.communication_dict.setdefault(comm_name, {}).setdefault("comm_list", []).append(comm_dur)
@@ -53,6 +54,8 @@ class BaseProfilingParser(ABC):
         self._memory_events = []
         self._flow_dict = {}
         self._all_kernels = {}
+        self._comm_task_list = []
+        self._comm_list = []
         self._read_trace_event()
         self._cur_func_index = 0
 
@@ -63,10 +66,6 @@ class BaseProfilingParser(ABC):
     @abstractmethod
     def _update_overall_metrics(self):
         raise NotImplementedError("Function _update_overall_metrics need to be implemented.")
-
-    @abstractmethod
-    def _picking_communication_event(self, **kwargs):
-        raise NotImplementedError("Function _picking_communication_event need to be implemented.")
 
     @abstractmethod
     def _is_kernel_event(self, event: TraceEventBean):
@@ -94,9 +93,6 @@ class BaseProfilingParser(ABC):
             self._update_overall_metrics()
         self._check_result_data()
         return self._result_data
-
-    def _update_communication_dict(self):
-        pass
 
     def _dispatch_events(self):
         if not self._dispatch_func:
@@ -139,6 +135,9 @@ class BaseProfilingParser(ABC):
         return False
 
     def _update_kernel_dict(self):
+        if self._profiling_type == Constant.NPU:
+            for comm in self._comm_list:
+                self._all_kernels[f"{comm.pid}-{comm.tid}-{comm.start_time}"] = comm
         for flow_event in self._flow_dict.values():
             start_event = flow_event.get("start")
             end_event = flow_event.get("end")
@@ -148,6 +147,28 @@ class BaseProfilingParser(ABC):
             if not kernel_event:
                 continue
             self._result_data.update_kernel_dict(start_event.start_time, kernel_event)
+
+    def _update_communication_dict(self):
+        if self._profiling_type == Constant.GPU:
+            self._comm_list = list(filter(lambda x: x.is_nccl_name(), self._all_kernels.values()))
+        self._comm_list.sort(key=lambda x: x.start_time)
+        self._comm_task_list.sort(key=lambda x: x.start_time)
+        task_index = 0
+        for communication_op in self._comm_list:
+            name_list = communication_op.lower_name.split("_")
+            if len(name_list) < 2:
+                continue
+            comm_name = name_list[1]
+            self._result_data.update_communication_dict(comm_name, communication_op.dur)
+            while task_index < len(self._comm_task_list):
+                task_event = self._comm_task_list[task_index]
+                if task_event.start_time < communication_op.start_time:
+                    task_index += 1
+                    continue
+                if task_event.start_time > communication_op.end_time:
+                    break
+                self._result_data.update_comm_task_data(comm_name, task_event)
+                task_index += 1
 
     def _check_result_data(self):
         if self._enable_operator_compare or self._enable_memory_compare:

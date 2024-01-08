@@ -86,10 +86,6 @@ class TestTraceEventBean(unittest.TestCase):
         self.assertTrue(TraceEventBean({"name": "ncclkernel"}).is_nccl_name())
         self.assertFalse(TraceEventBean({"name": "add"}).is_nccl_name())
 
-    def test_is_nccl_kernel(self):
-        self.assertTrue(TraceEventBean({"cat": "Kernel", "name": "ncclkernel"}).is_nccl_kernel())
-        self.assertFalse(TraceEventBean({"name": "add"}).is_nccl_kernel())
-
     def test_is_kernel_except_nccl(self):
         self.assertTrue(TraceEventBean({"cat": "Kernel", "name": "add"}).is_kernel_except_nccl())
         self.assertFalse(TraceEventBean({"cat": "Kernel", "name": "ncclkernel"}).is_kernel_except_nccl())

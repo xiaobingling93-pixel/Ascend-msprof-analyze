@@ -3,21 +3,12 @@ import ast
 import datetime
 import os.path
 import sys
-import time
 
 sys.path.append(
     os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "cluster_analyse"))
 
-from generation.comparison_generator import ComparisonGenerator
+from generator.comparison_generator import ComparisonGenerator
 from utils.args_manager import ArgsManager
-from profiling_analysis.profiling_parse import prof_main
-from common_func.path_manager import PathManager
-
-
-def performance_compare(args):
-    if not args.enable_profiling_compare:
-        return
-    prof_main()
 
 
 def main():
@@ -37,20 +28,7 @@ def main():
     args = parser.parse_args()
 
     ArgsManager().init(args)
-
-    try:
-        performance_compare(args)
-    except Exception:
-        print("[WARNING] Profiling failed to analyze.")
-
-    if any([args.enable_operator_compare, args.enable_memory_compare, args.enable_communication_compare]):
-        print("[INFO] Start to compare performance data, please wait.")
-        dir_path = args.output_path if args.output_path else "./"
-        file_name = "performance_comparison_result_{}.xlsx".format(
-            time.strftime("%Y%m%d%H%M%S", time.localtime(time.time())))
-        result_file_path = PathManager.get_realpath(os.path.join(dir_path, file_name))
-        ComparisonGenerator(args).run(result_file_path)
-        print(f"[INFO] The comparison result file has been generated: {result_file_path}")
+    ComparisonGenerator().run()
 
 
 if __name__ == "__main__":

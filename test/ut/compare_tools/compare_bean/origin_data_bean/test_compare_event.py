@@ -20,5 +20,5 @@ class TestMemoryEvent(unittest.TestCase):
     event = {"Size(KB)": 512, "ts": 1, "Allocation Time(us)": 1, "Release Time(us)": 5, "Name": "aten::add"}
 
     def test_memory_details(self):
-        memory = MemoryEvent(self.event, "aten::empty")
+        memory = MemoryEvent(self.event)
         self.assertEqual(memory.memory_details, 'aten::add, (1, 5), [duration: 4.0], [size: 512]\n')

@@ -1,8 +1,7 @@
 import unittest
-import json
 
+from compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
 from utils.name_function import NameFunction
-from utils.tree_builder import TreeBuilder
 from utils.torch_op_node import TorchOpNode
 
 
@@ -23,8 +22,9 @@ class TestNameFunction(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
-        cls.node = TorchOpNode(event={"pid": 0, "tid": 0, "args": {"Input Dims": [[1, 1], [1, 1]], "name": 0},
-                                      "ts": 0, "dur": 1, "ph": "M", "name": "process_name"})
+        cls.node = TorchOpNode(event=TraceEventBean(
+            {"pid": 0, "tid": 0, "args": {"Input Dims": [[1, 1], [1, 1]], "name": 0}, "ts": 0, "dur": 1, "ph": "M",
+             "name": "process_name"}))
 
     def test_get_name(self):
         self.assertEqual(NameFunction.get_name(self.node), "process_name")

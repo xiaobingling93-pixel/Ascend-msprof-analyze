@@ -9,6 +9,12 @@ def calculate_diff_ratio(base_value: float, comparison_value: float):
     return [comparison_value - base_value, ratio]
 
 
+def update_order_id(data_list: list):
+    for index, data in enumerate(data_list):
+        if data:
+            data[0] = index + 1
+
+
 def convert_to_float(data: any) -> float:
     try:
         float_value = float(data)
