@@ -24,8 +24,6 @@ class NPUProfilingParser(BaseProfilingParser):
         self._kernel_detail_path = os.path.join(path_dict.get(Constant.ASCEND_OUTPUT_PATH, ""), "kernel_details.csv")
         self._info_json_path = path_dict.get(Constant.INFO_JSON_PATH, "")
         self._trace_events = [TraceEventBean(event) for event in self._trace_events]
-        self._comm_task_list = []
-        self._comm_list = []
         self._hccl_pid = None
         self._hccl_op_tid_list = []
         self._kernel_pid = None
@@ -46,7 +44,7 @@ class NPUProfilingParser(BaseProfilingParser):
         if self._enable_memory_compare:
             func_list.add(self._picking_task_queue_data)
         if self._enable_communication_compare:
-            func_list.add(self._picking_communication_event)
+            func_list.add(self._picking_hccl_event)
         if self._enable_profiling_compare:
             func_list.add(self._picking_overlap_analysis_data)
             func_list.add(self._picking_kernel_event)
@@ -75,10 +73,11 @@ class NPUProfilingParser(BaseProfilingParser):
                                                       Constant.NAME: data.name,
                                                       Constant.ALLOCATION_TIME: data.allocation_time,
                                                       Constant.RELEASE_TIME: data.release_time})
-            self._result_data.update_memory_list({Constant.SIZE: data.size,
-                                                  Constant.TS: data.allocation_time,
-                                                  Constant.ALLOCATION_TIME: data.allocation_time,
-                                                  Constant.RELEASE_TIME: data.release_time})
+            else:
+                self._result_data.update_memory_list({Constant.SIZE: data.size,
+                                                      Constant.TS: data.allocation_time,
+                                                      Constant.ALLOCATION_TIME: data.allocation_time,
+                                                      Constant.RELEASE_TIME: data.release_time})
 
     def __match_dequeue_data(self, ts_time: float) -> int:
         if not self._dequeue_data:
@@ -93,17 +92,6 @@ class NPUProfilingParser(BaseProfilingParser):
         return self._dequeue_data[left].corr_id if self._dequeue_data[left].start_time <= ts_time <= \
                                                    self._dequeue_data[left].end_time else Constant.INVALID_VALUE
 
-    def _update_communication_dict(self):
-        for task_event in self._comm_task_list:
-            for communication_op in self._comm_list:
-                if task_event.start_time < communication_op.start_time or \
-                        task_event.start_time > communication_op.end_time:
-                    continue
-                name_list = communication_op.lower_name.split("_")
-                if len(name_list) >= 2:
-                    self._result_data.update_comm_task_data(name_list[1], task_event)
-                break
-
     def _update_overall_metrics(self):
         self.__parse_info_json()
         self.__parse_mem_csv()
@@ -114,14 +102,11 @@ class NPUProfilingParser(BaseProfilingParser):
         self._result_data.overall_metrics.calculate_schedule_time()
         self._result_data.overall_metrics.trans_time_to_s()
 
-    def _picking_communication_event(self, event: TraceEventBean):
-        if event.pid != self._hccl_pid:
+    def _picking_hccl_event(self, event: TraceEventBean):
+        if event.pid != self._hccl_pid or not event.is_x_mode():
             return False
         if event.tid in self._hccl_op_tid_list:
-            name_list = event.lower_name.split("_")
-            if len(name_list) >= 2:
-                self._comm_list.append(event)
-                self._result_data.update_communication_dict(name_list[1], event.dur)
+            self._comm_list.append(event)
         else:
             self._comm_task_list.append(event)
         return True

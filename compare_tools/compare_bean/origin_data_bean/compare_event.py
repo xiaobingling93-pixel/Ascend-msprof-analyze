@@ -1,5 +1,6 @@
+from decimal import Decimal
+
 from compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
-from utils.common_func import convert_to_float
 from utils.constant import Constant
 
 
@@ -32,12 +33,13 @@ class KernelEvent:
 
 
 class MemoryEvent:
-    def __init__(self, event: dict, name: str):
+    def __init__(self, event: dict):
         self._event = event
-        self._name = name
+        self._name = ""
         self._size = 0.0
-        self._release_time = 0
-        self._allocation_time = 0
+        self._ts = Decimal(0)
+        self._release_time = Decimal(0)
+        self._allocation_time = Decimal(0)
         self._duration = 0.0
         self.init()
 
@@ -55,8 +57,20 @@ class MemoryEvent:
         return f"{name}, ({self._allocation_time}, {self._release_time}), " \
                f"[duration: {self._duration}], [size: {self._size}]\n"
 
+    @property
+    def is_torch_op(self) -> bool:
+        return False
+
+    @property
+    def start_time(self) -> Decimal:
+        return self._ts
+
+    def set_name(self, name: str):
+        self._name = name
+
     def init(self):
         self._size = self._event.get(Constant.SIZE, 0)
+        self._ts = self._event.get(Constant.TS, 0)
         self._release_time = self._event.get(Constant.RELEASE_TIME)
         self._allocation_time = self._event.get(Constant.ALLOCATION_TIME)
         if not self._release_time or not self._allocation_time:

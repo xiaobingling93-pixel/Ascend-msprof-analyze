@@ -60,12 +60,8 @@ class TestGpuProfilingParser(unittest.TestCase):
             res._memory_events = [TraceEventBean(event) for event in self.memory_events]
             res._result_data = ProfilingResult("GPU")
             res._update_memory_list()
-            result_data = [{'Size(KB)': 0.5, 'ts': Decimal('1'), 'Allocation Time(us)': Decimal('1'),
-                            'Release Time(us)': Decimal('2')},
-                           {'Size(KB)': 0.5, 'ts': Decimal('4'), 'Allocation Time(us)': Decimal('4'),
-                            'Release Time(us)': Decimal('5')},
-                           {'Allocation Time(us)': Decimal('0'), 'Size(KB)': 0.5, 'ts': Decimal('0')}]
-            self.assertEqual(res._result_data.memory_list, result_data)
+            self.assertEqual(len(res._result_data.memory_list), 3)
+            self.assertEqual(res._result_data.memory_list[0].memory_details, ", (1, 2), [duration: 1.0], [size: 0.5]\n")
 
     def test_calculate_performance_time_when_valid_input(self):
         with patch("profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"), \
@@ -90,19 +86,6 @@ class TestGpuProfilingParser(unittest.TestCase):
             self.assertEqual(res._result_data.overall_metrics.communication_not_overlapped, 2)
             self.assertEqual(res._result_data.overall_metrics.compute_time, 7)
 
-    def test_picking_communication_event_when_valid_input(self):
-        with patch("profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"), \
-                patch("profiling_parser.gpu_profiling_parser.GPUProfilingParser.__init__", return_value=None):
-            res = GPUProfilingParser({}, {})
-            res._result_data = ProfilingResult("GPU")
-            result = res._picking_communication_event(TraceEventBean(self.nccl_event))
-            self.assertTrue(result)
-            result = res._picking_communication_event(TraceEventBean(self.cube_event))
-            self.assertFalse(result)
-            result = res._picking_communication_event(TraceEventBean(self.other_event))
-            self.assertFalse(result)
-            self.assertEqual(res._result_data.communication_dict.get("reduce"), {'comm_list': [1.0]})
-
     def test_picking_memory_event_when_valid_input(self):
         with patch("profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"), \
                 patch("profiling_parser.gpu_profiling_parser.GPUProfilingParser.__init__", return_value=None):
@@ -125,8 +108,8 @@ class TestGpuProfilingParser(unittest.TestCase):
         self.assertFalse(result)
 
     def test_is_kernel_event_when_valid_input(self):
-        event_list1 = [{"cat": "kernel", "name": "matmul"}, {"cat": "kernel", "name": "hccl_reduce"}]
-        event_list2 = [{"cat": "kernel", "name": "nccl_reduce"}, {"cat": "cpu_op", "name": "aten::to"}]
+        event_list1 = [{"cat": "kernel", "name": "matmul"}, {"cat": "kernel", "name": "nccl_reduce"}]
+        event_list2 = [{"cat": "async", "name": "nccl_reduce"}, {"cat": "cpu_op", "name": "aten::to"}]
         with patch("profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"), \
                 patch("profiling_parser.gpu_profiling_parser.GPUProfilingParser.__init__", return_value=None):
             res = GPUProfilingParser({}, {})

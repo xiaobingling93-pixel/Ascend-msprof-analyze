@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import patch
 
+from compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
 from profiling_parser.base_profiling_parser import BaseProfilingParser, ProfilingResult
 
 
@@ -16,6 +17,8 @@ class ProfilingParser(BaseProfilingParser):
         self._result_data = ProfilingResult("GPU")
         self._flow_dict = flow_dict
         self._all_kernels = all_kernels
+        self._comm_list = []
+        self._comm_task_list = []
         self._dispatch_func = []
         self._enable_profiling_compare = True
         self._enable_operator_compare = True
@@ -71,12 +74,18 @@ class MockEvent:
     def is_flow_end(self):
         return self.ph == "f"
 
+    def is_nccl_name(self):
+        return False
+
 
 class TestBaseProfilingParser(unittest.TestCase):
     flow_dict = {1: {"start": MockEvent(1, 2, 12), "end": MockEvent(2, 3, 21)},
                  2: {"start": MockEvent(1, 2, 12), "end": MockEvent(2, 3, 22)},
                  3: {}}
     all_kernels = {"2-3-23": MockEvent(2, 3, 23), "2-3-21": MockEvent(2, 3, 21), "2-3-22": MockEvent(2, 3, 22)}
+    comm_events = [{"ph": "X", "name": "hccl_allreduce", "pid": 7, "tid": 3, "ts": 1, "dur": 2}]
+    task_events = [{"ph": "X", "name": "notify_wait", "pid": 7, "tid": 1, "ts": 2, "dur": 1},
+                   {"ph": "X", "name": "notify_wait", "pid": 7, "tid": 1, "ts": 5, "dur": 1}]
 
     def test_picking_torch_op_event(self):
         event = MockEvent(1, 2, 3)
@@ -141,11 +150,23 @@ class TestBaseProfilingParser(unittest.TestCase):
             parser._read_trace_event()
             self.assertEqual(parser._trace_events, [])
 
+    def test_update_communication_dict(self):
+        result = {'allreduce': {'comm_list': [2.0], 'comm_task': {'notify_wait': [1.0]}}}
+        with patch("profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"):
+            parser = ProfilingParser()
+            parser.init({}, {})
+            parser._comm_task_list = [TraceEventBean(event) for event in self.task_events]
+            parser._comm_list = [TraceEventBean(event) for event in self.comm_events]
+            parser._profiling_type = "NPU"
+            parser._result_data = ProfilingResult("NPU")
+            parser._update_communication_dict()
+            self.assertEqual(parser._result_data.communication_dict, result)
+
 
 class TestProfilingResult(unittest.TestCase):
     def test_update_torch_op_data_when_valid_input(self):
         res = ProfilingResult("GPU")
-        res.update_torch_op_data(1)
+        res.update_torch_op_data(MockEvent(1, 2, 3))
         self.assertEqual(len(res.torch_op_data), 1)
 
     def test_update_kernel_dict_when_valid_input(self):
@@ -155,7 +176,7 @@ class TestProfilingResult(unittest.TestCase):
 
     def test_update_memory_list_when_valid_input(self):
         res = ProfilingResult("GPU")
-        res.update_memory_list(1)
+        res.update_memory_list({})
         self.assertEqual(len(res.memory_list), 1)
 
     def test_update_communication_dict_when_valid_input(self):

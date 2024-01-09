@@ -1,26 +1,70 @@
+import os
 from collections import deque
+from datetime import datetime
 
 import numpy as np
 
-from utils.args_manager import ArgsManager
+from comparator.communication_comparator import CommunicationComparator
+from comparator.operator_comparator import OperatorComparator
+from comparator.operator_statistic_comparator import OperatorStatisticComparator
+from compare_bean.communication_bean import CommunicationBean
+from compare_bean.memory_compare_bean import MemoryCompareBean
+from compare_bean.memory_statistic_bean import MemoryStatisticBean
+from compare_bean.operator_compare_bean import OperatorCompareBean
+from compare_bean.operator_statistic_bean import OperatorStatisticBean
+from generator.base_generator import BaseGenerator
+from profiling_parser.base_profiling_parser import ProfilingResult
+from utils.constant import Constant
 from utils.name_function import NameFunction
 from utils.torch_op_node import TorchOpNode
 from utils.tree_builder import TreeBuilder
+from view.excel_view import ExcelView
 
 
-class OpComparator:
-    def __init__(self, args: any):
-        self._args = args
-        self._args_manager = ArgsManager()
-        self._base_profiling = self._args_manager.base_profiling
-        self._comparison_profiling = self._args_manager.comparison_profiling
+class DetailPerformanceGenerator(BaseGenerator):
+    def __init__(self, profiling_data_dict: dict, args: any):
+        super().__init__(profiling_data_dict, args)
 
-    def compare(self) -> list:
-        base_ops = self._get_top_layer_ops(self._base_profiling)
-        if self._args.base_profiling_path == self._args.comparison_profiling_path:
-            comparison_ops = []
-        else:
-            comparison_ops = self._get_top_layer_ops(self._comparison_profiling)
+    def compare(self):
+        if self._args.enable_operator_compare or self._args.enable_memory_compare or \
+                self._args.enable_communication_compare:
+            print("[INFO] Start to compare performance detail data, please wait.")
+            comparator_list = self._create_comparator()
+            for comparator in comparator_list:
+                self._result_data.update(comparator.generate_data())
+
+    def generate_view(self):
+        if not self._result_data:
+            return
+        dir_path = self._args.output_path if self._args.output_path else "./"
+        file_name = "performance_comparison_result_{}.xlsx".format(datetime.utcnow().strftime("%Y%m%d%H%M%S"))
+        result_file_path = os.path.realpath(os.path.join(dir_path, file_name))
+        ExcelView(self._result_data, result_file_path, self._args).generate_view()
+        print(f"[INFO] The comparison result file has been generated: {result_file_path}")
+
+    def _create_comparator(self):
+        comparator_list = []
+        if self._args.enable_operator_compare or self._args.enable_memory_compare:
+            op_compare_result = self.match_torch_op()
+
+        if self._args.enable_communication_compare:
+            communication_data = {
+                Constant.BASE_DATA: self._profiling_data_dict.get(Constant.BASE_DATA).communication_dict,
+                Constant.COMPARISON_DATA: self._profiling_data_dict.get(Constant.COMPARISON_DATA).communication_dict}
+            comparator_list.append(CommunicationComparator(communication_data, CommunicationBean))
+
+        if self._args.enable_operator_compare:
+            comparator_list.append(OperatorComparator(op_compare_result, OperatorCompareBean))
+            comparator_list.append(OperatorStatisticComparator(op_compare_result, OperatorStatisticBean))
+
+        if self._args.enable_memory_compare:
+            comparator_list.append(OperatorComparator(op_compare_result, MemoryCompareBean))
+            comparator_list.append(OperatorStatisticComparator(op_compare_result, MemoryStatisticBean))
+        return comparator_list
+
+    def match_torch_op(self) -> list:
+        base_ops = self._get_top_layer_ops(self._profiling_data_dict.get(Constant.BASE_DATA))
+        comparison_ops = self._get_top_layer_ops(self._profiling_data_dict.get(Constant.COMPARISON_DATA))
         if not base_ops and not comparison_ops:
             return []
         name_func = NameFunction(self._args).get_name_func()
@@ -28,7 +72,6 @@ class OpComparator:
         if self._args.max_kernel_num is not None:
             compare_result_data = self._drill_down(compare_result_data, name_func)
         return compare_result_data
-
 
     @classmethod
     def _matching_op(cls, base_ops: list, comparison_ops: list, name_func: any) -> list:
@@ -83,23 +126,9 @@ class OpComparator:
                 result_data.append([None, comparison_ops[comparison_index]])
         return result_data
 
-    def _get_top_layer_ops(self, profiling_instance: any) -> any:
-        torch_op_data = profiling_instance.torch_op_data
-        if not torch_op_data:
-            print(f"[WARNING] Can't find any torch op in the file: {profiling_instance.json_path}")
-        root_node = TreeBuilder.build_tree(torch_op_data)
-
-        kernel_dict, memory_list = {}, []
-        if self._args.enable_operator_compare:
-            kernel_dict = profiling_instance.kernel_dict
-            if not kernel_dict:
-                print(f"[WARNING] Can't find any flow event in the file: {profiling_instance.json_path}")
-        if self._args.enable_memory_compare:
-            memory_list = profiling_instance.memory_list
-            if not memory_list:
-                print(f"[WARNING] Can't find any memory event in the file: {profiling_instance.file_path}")
-
-        TreeBuilder.update_tree_node(root_node, kernel_dict, memory_list)
+    def _get_top_layer_ops(self, profiling_data: ProfilingResult) -> any:
+        root_node = TreeBuilder.build_tree(profiling_data.torch_op_data, profiling_data.kernel_dict,
+                                           profiling_data.memory_list)
         level1_child_nodes = root_node.child_nodes
         result_data = []
         for level1_node in level1_child_nodes:

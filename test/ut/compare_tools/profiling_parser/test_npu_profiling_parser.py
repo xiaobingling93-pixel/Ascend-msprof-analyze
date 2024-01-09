@@ -34,14 +34,6 @@ class TestNPUProfilingParser(unittest.TestCase):
             OperatorMemoryBean({"Name": "cann::add", "Size(KB)": 512, "Allocation Time(us)": 2, "Release Time(us)": 4}),
             OperatorMemoryBean(
                 {"Name": "aten::add", "Size(KB)": 512, "Allocation Time(us)": 7, "Release Time(us)": 10})]
-        result = [{'Size(KB)': 512.0, 'ts': Decimal('1'), 'Allocation Time(us)': Decimal('1'),
-                   'Release Time(us)': Decimal('3')},
-                  {'Size(KB)': 512.0, 'ts': 0, 'Name': 'cann::add', 'Allocation Time(us)': Decimal('2'),
-                   'Release Time(us)': Decimal('4')},
-                  {'Size(KB)': 512.0, 'ts': Decimal('2'), 'Allocation Time(us)': Decimal('2'),
-                   'Release Time(us)': Decimal('4')},
-                  {'Size(KB)': 512.0, 'ts': Decimal('7'), 'Allocation Time(us)': Decimal('7'),
-                   'Release Time(us)': Decimal('10')}]
         with patch("profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"), \
                 patch("profiling_parser.npu_profiling_parser.NPUProfilingParser.__init__", return_value=None), \
                 patch("utils.file_reader.FileReader.read_csv_file", return_value=memory_data):
@@ -51,20 +43,10 @@ class TestNPUProfilingParser(unittest.TestCase):
             res._dequeue_data = [TraceEventBean(event) for event in self.dequeue_events]
             res._result_data = ProfilingResult("NPU")
             res._update_memory_list()
-            self.assertEqual(res._result_data.memory_list, result)
+            self.assertEqual(len(res._result_data.memory_list), 3)
+            self.assertEqual(res._result_data.memory_list[0].duration, 2)
 
-    def test_update_communication_dict(self):
-        result = {'allreduce': {'comm_task': {'notify_wait': [1.0]}}}
-        with patch("profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"), \
-                patch("profiling_parser.npu_profiling_parser.NPUProfilingParser.__init__", return_value=None):
-            res = NPUProfilingParser({}, {})
-            res._comm_task_list = [TraceEventBean(event) for event in self.task_events]
-            res._comm_list = [TraceEventBean(event) for event in self.comm_events]
-            res._result_data = ProfilingResult("NPU")
-            res._update_communication_dict()
-            self.assertEqual(res._result_data.communication_dict, result)
-
-    def test_picking_communication_event(self):
+    def test_picking_hccl_event(self):
         with patch("profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"), \
                 patch("profiling_parser.npu_profiling_parser.NPUProfilingParser.__init__", return_value=None):
             res = NPUProfilingParser({}, {})
@@ -74,8 +56,7 @@ class TestNPUProfilingParser(unittest.TestCase):
             res._comm_task_list = []
             res._result_data = ProfilingResult("NPU")
             for event in self.comm_events + self.task_events + self.dequeue_events:
-                res._picking_communication_event(TraceEventBean(event))
-            self.assertEqual(res._result_data.communication_dict, {'allreduce': {'comm_list': [2.0]}})
+                res._picking_hccl_event(TraceEventBean(event))
             self.assertEqual(len(res._comm_task_list), 2)
             self.assertEqual(len(res._comm_list), 1)
 

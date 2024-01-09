@@ -1,9 +1,9 @@
 import os.path
+import re
 
 from common_func.path_manager import PathManager
 from utils.constant import Constant
 from utils.file_reader import FileReader
-from utils.profiling_parser import GPUProfilingParser, NPUProfilingParser
 
 
 class Singleton(object):
@@ -19,30 +19,23 @@ class Singleton(object):
 
 @Singleton
 class ArgsManager:
-    PARSER_DICT = {Constant.NPU: NPUProfilingParser, Constant.GPU: GPUProfilingParser}
 
     def __init__(self):
         self._args = None
-        self._base_profiling_type = None
-        self._comparison_profiling_type = None
-        self._base_profiling = None
-        self._comparison_profiling = None
+        self._base_path_dict = {}
+        self._comparison_path_dict = {}
+
+    @property
+    def args(self):
+        return self._args
 
     @property
     def base_profiling_type(self):
-        return self._base_profiling_type
+        return self._base_path_dict.get(Constant.PROFILING_TYPE)
 
     @property
     def comparison_profiling_type(self):
-        return self._comparison_profiling_type
-
-    @property
-    def base_profiling(self):
-        return self._base_profiling
-
-    @property
-    def comparison_profiling(self):
-        return self._comparison_profiling
+        return self._comparison_path_dict.get(Constant.PROFILING_TYPE)
 
     @property
     def base_profiling_path(self):
@@ -50,7 +43,31 @@ class ArgsManager:
 
     @property
     def comparison_profiling_path(self):
-        return self._args.comparison_profiling_path
+        return self._args.comparison_profiling_path_dict
+
+    @property
+    def base_path_dict(self):
+        return self._base_path_dict
+
+    @property
+    def comparison_path_dict(self):
+        return self._comparison_path_dict
+
+    @property
+    def enable_profiling_compare(self):
+        return self._args.enable_profiling_compare
+
+    @property
+    def enable_operator_compare(self):
+        return self._args.enable_operator_compare
+
+    @property
+    def enable_memory_compare(self):
+        return self._args.enable_memory_compare
+
+    @property
+    def enable_communication_compare(self):
+        return self._args.enable_communication_compare
 
     @classmethod
     def check_profiling_path(cls, file_path: str):
@@ -77,13 +94,16 @@ class ArgsManager:
         ascend_output = os.path.join(file_path, "ASCEND_PROFILER_OUTPUT")
         profiler_output = ascend_output if os.path.isdir(ascend_output) else file_path
         json_path = os.path.join(profiler_output, "trace_view.json")
-        memory_path = os.path.join(profiler_output, "operator_memory.csv")
         if not os.path.isfile(json_path):
             msg = f"Invalid profiling path: {file_path}"
             raise RuntimeError(msg)
-        memory_path = memory_path if os.path.isfile(memory_path) else None
-        return {Constant.PROFILING_TYPE: Constant.NPU, Constant.PROFILING_PATH: file_path,
-                Constant.TRACE_PATH: json_path, Constant.MEMORY_DATA_PATH: memory_path}
+        path_dict = {Constant.PROFILING_TYPE: Constant.NPU, Constant.PROFILING_PATH: file_path,
+                     Constant.TRACE_PATH: json_path, Constant.ASCEND_OUTPUT_PATH: profiler_output}
+        sub_dirs = os.listdir(file_path)
+        for dir_name in sub_dirs:
+            if dir_name == "profiler_info.json" or re.match(r"profiler_info_[0-9]+\.json", dir_name):
+                path_dict.update({Constant.INFO_JSON_PATH: os.path.join(file_path, dir_name)})
+        return path_dict
 
     def init(self, args: any):
         self._args = args
@@ -106,24 +126,10 @@ class ArgsManager:
 
         base_profiling_path = PathManager.get_realpath(self._args.base_profiling_path)
         self.check_profiling_path(base_profiling_path)
-        base_profiling_dict = self.parse_profiling_path(base_profiling_path)
+        self._base_path_dict = self.parse_profiling_path(base_profiling_path)
         comparison_profiling_path = PathManager.get_realpath(self._args.comparison_profiling_path)
         self.check_profiling_path(comparison_profiling_path)
-        comparison_profiling_dict = self.parse_profiling_path(comparison_profiling_path)
+        self._comparison_path_dict = self.parse_profiling_path(comparison_profiling_path)
 
         if self._args.output_path:
             self.check_output_path(PathManager.get_realpath(self._args.output_path))
-
-        Constant.BASE_PROFILING = Constant.BASE_PROFILING + self._args.base_profiling_path
-        self._base_profiling_type = base_profiling_dict.get(Constant.PROFILING_TYPE)
-        self._base_profiling = self.PARSER_DICT.get(self._base_profiling_type)(self._args, base_profiling_dict)
-
-        if base_profiling_path == comparison_profiling_path:
-            Constant.COMPARISON_PROFILING = "Same To Base Profiling"
-            self._comparison_profiling_type = self._base_profiling_type
-            self._comparison_profiling = self._base_profiling
-        else:
-            Constant.COMPARISON_PROFILING = Constant.COMPARISON_PROFILING + self._args.comparison_profiling_path
-            self._comparison_profiling_type = comparison_profiling_dict.get(Constant.PROFILING_TYPE)
-            self._comparison_profiling = self.PARSER_DICT.get(self._comparison_profiling_type)(self._args,
-                                                                                               comparison_profiling_dict)

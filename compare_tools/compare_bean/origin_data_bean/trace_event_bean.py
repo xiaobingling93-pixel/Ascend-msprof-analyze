@@ -16,6 +16,7 @@ class TraceEventBean:
         self._cat = ""
         self._name = ""
         self._args = {}
+        self._is_torch_op = False
         self.init()
 
     @property
@@ -105,6 +106,14 @@ class TraceEventBean:
     def event(self) -> dict:
         return self._event
 
+    @property
+    def is_torch_op(self) -> bool:
+        return self._is_torch_op
+
+    @is_torch_op.setter
+    def is_torch_op(self, value: bool):
+        self._is_torch_op = value
+
     def is_m_mode(self) -> bool:
         return self._ph == "M"
 
@@ -155,9 +164,6 @@ class TraceEventBean:
 
     def is_nccl_name(self):
         return self.lower_name.startswith("nccl")
-
-    def is_nccl_kernel(self):
-        return self.is_kernel_cat() and self.is_nccl_name()
 
     def is_kernel_except_nccl(self):
         return self.is_kernel_cat() and not self.is_nccl_name()

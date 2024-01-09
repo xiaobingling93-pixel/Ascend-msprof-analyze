@@ -1,70 +1,30 @@
 from queue import Queue
-from typing import Optional, Dict, List
 
-from utils.constant import Constant
 from utils.torch_op_node import TorchOpNode
 
 
 class TreeBuilder:
     @classmethod
-    def build_tree(cls, event_list: list) -> TorchOpNode:
+    def build_tree(cls, event_list: list, kernel_dict: dict, memory_list: list) -> TorchOpNode:
         root_node = TorchOpNode()
-        event_list.sort(key=lambda x: float(x.get("ts", 0)))
+        event_list.extend(memory_list)
+        event_list.sort(key=lambda x: x.start_time)
         last_node = root_node
         for event in event_list:
             while last_node:
-                if last_node == root_node or float(event.get("ts", 0)) < last_node.end_time:
+                if last_node != root_node and event.start_time > last_node.end_time:
+                    last_node = last_node.parent
+                    continue
+                if event.is_torch_op:
                     tree_node = TorchOpNode(event, last_node)
                     last_node.add_child_node(tree_node)
                     last_node = tree_node
-                    break
-                last_node = last_node.parent
+                    tree_node.set_kernel_list(kernel_dict.get(event.start_time, []))
+                else:
+                    event.set_name(last_node.name)
+                    last_node.set_memory_allocated(event)
+                break
         return root_node
-
-    @classmethod
-    def update_tree_node(
-            cls,
-            root_node: TorchOpNode,
-            flow_kernel_dict: Optional[Dict] = None,
-            memory_allocated_list: Optional[List] = None,
-    ):
-        def set_kernel_helper(node_queue, ts, kernel_num, kernel_list):
-            while not node_queue.empty():
-                tree_node = node_queue.get()
-                tree_node.add_kernel_num(kernel_num)
-                matched_child_node = tree_node.match_child_node(ts)
-                if matched_child_node:
-                    node_queue.put(matched_child_node)
-                else:
-                    tree_node.set_kernel_list(kernel_list)
-
-        flow_kernel_dict = flow_kernel_dict if flow_kernel_dict else {}
-        memory_allocated_list = memory_allocated_list if memory_allocated_list else []
-
-        if flow_kernel_dict:
-            for ts, kernel_list in flow_kernel_dict.items():
-                matched_child_node = root_node.match_child_node(ts)
-                if not matched_child_node:
-                    return
-                kernel_num = len(kernel_list)
-                node_queue = Queue()
-                node_queue.put(matched_child_node)
-                set_kernel_helper(node_queue, ts, kernel_num, kernel_list)
-
-        for memory_allocated in memory_allocated_list:
-            ts = memory_allocated.get(Constant.TS)
-            matched_child_node = root_node.match_child_node(ts)
-            if not matched_child_node:
-                continue
-            node_queue = Queue()
-            node_queue.put(matched_child_node)
-            while not node_queue.empty():
-                tree_node = node_queue.get()
-                matched_child_node = tree_node.match_child_node(ts)
-                if matched_child_node:
-                    node_queue.put(matched_child_node)
-                else:
-                    tree_node.set_memory_allocated(memory_allocated)
 
     @classmethod
     def get_total_kernels(cls, root_node: TorchOpNode) -> list:
