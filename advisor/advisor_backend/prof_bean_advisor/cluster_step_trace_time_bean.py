@@ -26,15 +26,6 @@ class ClusterStepTraceTimeBean:
         self._data = data
 
     @property
-    def row(self) -> list:
-        row = []
-        for field_name in self._data.keys():
-            if field_name == self.STEP:
-                continue
-            row.append(float(self._data.get(field_name, )))
-        return row
-
-    @property
     def step(self) -> str:
         return self._data.get(self.STEP, '')
 
