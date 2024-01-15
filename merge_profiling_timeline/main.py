@@ -137,7 +137,7 @@ def merge_timeline_custom(args):
     timeline_files = natural_sort(os.listdir(args.input))
     timeline_files_dict = {}
     for idx, timeline_file in enumerate(timeline_files):
-        timeline_files_dict[idx] = (os.path.join(args.input, timeline_file),0)
+        timeline_files_dict[idx] = os.path.join(args.input, timeline_file)
     # 合并部分profiling items
     process_list = args.items.split(",") if args.items else None
     merge_timeline_events(timeline_files_dict, process_list)
@@ -183,8 +183,8 @@ def merge_timeline_events(timeline_file_dict, process_list):
                 continue
 
             # convert tid to int
-            if isinstance(event.get("tid"), str):
-                event["tid"] = int(''.join(x for x in event["tid"] if x.isdigit()))
+            if not isinstance(event['tid'], int):
+                print(f"[WARNNING] {event['tid']} is not int type")
 
             # 进程名加上rank_id区分不同rank
             if event.get("name") == "process_name" and event.get("ph") == "M":
@@ -204,7 +204,8 @@ def merge_timeline_events(timeline_file_dict, process_list):
         print(f"File {out_path} existed before and is now overwritten.")
         os.remove(out_path)
     try:
-        with open(out_path, 'w') as f:
+        # 设置文件权限为640，安全考虑
+        with os.fdopen(os.open(out_path, os.O_WRONLY | os.O_CREAT, 0o640), 'w') as f:
             json.dump(new_events, f)
     except FileNotFoundError:
         print(f"Param -o (output path) is not exists, please check it.")
