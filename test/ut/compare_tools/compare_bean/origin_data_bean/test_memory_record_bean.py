@@ -1,6 +1,6 @@
 import unittest
 
-from compare_bean.origin_data_bean.memory_record_bean import MemoryRecordBean
+from compare_backend.compare_bean.origin_data_bean.memory_record_bean import MemoryRecordBean
 
 
 class TestMemoryRecordBean(unittest.TestCase):

@@ -1,6 +1,6 @@
 import unittest
 
-from view.screen_view import ScreenView
+from compare_backend.view.screen_view import ScreenView
 
 
 class TestScreenView(unittest.TestCase):

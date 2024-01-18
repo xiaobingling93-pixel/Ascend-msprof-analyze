@@ -7,8 +7,7 @@ import sys
 sys.path.append(
     os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "cluster_analyse"))
 
-from generator.comparison_generator import ComparisonGenerator
-from utils.args_manager import ArgsManager
+from compare_backend.comparison_generator import ComparisonGenerator
 
 
 def main():
@@ -27,8 +26,7 @@ def main():
     parser.add_argument("--gpu_flow_cat", type=str, default='', help="gpu flow event的分类标识")
     args = parser.parse_args()
 
-    ArgsManager().init(args)
-    ComparisonGenerator().run()
+    ComparisonGenerator(args).run()
 
 
 if __name__ == "__main__":

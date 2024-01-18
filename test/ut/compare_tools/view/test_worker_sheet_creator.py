@@ -4,8 +4,8 @@ import unittest
 import pandas as pd
 from xlsxwriter import Workbook
 
-from utils.excel_config import ExcelConfig
-from view.work_sheet_creator import WorkSheetCreator
+from compare_backend.utils.excel_config import ExcelConfig
+from compare_backend.view.work_sheet_creator import WorkSheetCreator
 
 
 class TestWorkerSheetCreator(unittest.TestCase):

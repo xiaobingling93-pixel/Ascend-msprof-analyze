@@ -1,7 +1,7 @@
 import unittest
 
-from comparator.communication_comparator import CommunicationComparator
-from compare_bean.communication_bean import CommunicationBean
+from compare_backend.comparator.communication_comparator import CommunicationComparator
+from compare_backend.compare_bean.communication_bean import CommunicationBean
 
 
 class TestCommunicationComparator(unittest.TestCase):
