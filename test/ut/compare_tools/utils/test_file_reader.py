@@ -1,8 +1,7 @@
 import unittest
-from unittest.mock import patch
 
-from utils.file_reader import FileReader
-from utils.constant import Constant
+from compare_backend.utils.file_reader import FileReader
+from compare_backend.utils.constant import Constant
 
 
 class TestFileReader(unittest.TestCase):

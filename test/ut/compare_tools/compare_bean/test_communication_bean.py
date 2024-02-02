@@ -1,6 +1,6 @@
 import unittest
 
-from compare_bean.communication_bean import CommunicationBean
+from compare_backend.compare_bean.communication_bean import CommunicationBean
 
 
 class TestCommunicationBean(unittest.TestCase):

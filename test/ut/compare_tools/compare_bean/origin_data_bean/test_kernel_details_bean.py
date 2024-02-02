@@ -1,6 +1,6 @@
 import unittest
 
-from compare_bean.origin_data_bean.kernel_details_bean import KernelDetailsBean
+from compare_backend.compare_bean.origin_data_bean.kernel_details_bean import KernelDetailsBean
 
 
 class TestKernelDetailsBean(unittest.TestCase):

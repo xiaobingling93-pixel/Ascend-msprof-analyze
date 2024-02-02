@@ -12,10 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import os
-import sys
 from advice_factory.advice_factory import AdviceFactory
-from common_func.path_manager import PathManager
 from common_func_advisor.constant import Constant
 from timeline_advice.optimizer_advice import OptimizerAdvice
 from timeline_advice.op_schedule_advice import OpScheduleAdvice
@@ -30,15 +27,8 @@ class TimelineAdviceFactory(AdviceFactory):
     def __init__(self, collection_path: str):
         super().__init__(collection_path)
 
-    def path_check(self):
+    def run_advice(self, advice: str, kwargs: dict):
         """
-        check whether input path is valid
+        run advice to produce data
         """
-        PathManager.check_input_directory_path(self.collection_path)
-
-    def produce_advice(self, advice: str):
-        """
-        produce data for input mode and advice
-        """
-        self.advice_check(advice)
         return self.ADVICE_LIB.get(advice)(self.collection_path).run()
