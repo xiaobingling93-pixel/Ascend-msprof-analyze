@@ -10,7 +10,6 @@ class KernelClusterAdvice(ClusterAdviceBase):
     COLUMNS_TO_GROUP = ["Name", "Input Shapes", "Input Data Types", "Output Shapes"]
     COLUMNS_TO_CAL = ["Duration(us)"]
     CAL_FUN = ['mean', 'var', 'max', 'min', 'count', 'sum']
-    PROF_SUFFIX = "ascend_pt"
 
     def __init__(self, collection_path: str):
         super().__init__(collection_path)
@@ -21,12 +20,7 @@ class KernelClusterAdvice(ClusterAdviceBase):
         return self.calculate_data()
 
     def load_kernel_details_data(self):
-        prof_dirs = self.get_prof_dirs(self.collection_path)
-        if len(prof_dirs) == 0:
-            msg = "[ERROR] There is no profile in this collection path, terminate analysis."
-            raise RuntimeError(msg)
-
-        data_map = PytorchDataPreprocessor(prof_dirs).get_data_map()
+        data_map = PytorchDataPreprocessor(self.collection_path).get_data_map()
         self.all_kernel_data = pd.DataFrame()
         for rank_id, profiling_dir_path in data_map.items():
             kernel_file = os.path.join(profiling_dir_path, Constant.SINGLE_OUTPUT, Constant.KERNEL_DETAILS_CSV)
@@ -42,7 +36,7 @@ class KernelClusterAdvice(ClusterAdviceBase):
                 df = df_temp[columns_to_keep]
                 df.insert(loc=0, column='rank id', value=rank_id)
                 # 将数据添加到最终的数据框中
-                self.all_kernel_data = pd.concat([self.all_kernel_data, df], ignore_index=True)
+                self.all_kernel_data = self.all_kernel_data._append(df, ignore_index=True)
 
     def calculate_data(self):
         # 存储所有合并后的数据
@@ -52,11 +46,3 @@ class KernelClusterAdvice(ClusterAdviceBase):
         view_data = self.all_kernel_data.groupby(group_col).agg(calculate_dict).reset_index()
         view_data.columns = [''.join(col) if col[1] == "" else '_'.join(col) for col in view_data.columns]
         return view_data
-
-    def get_prof_dirs(self, collection_path):
-        prof_dirs = []
-        for prof_dir in os.listdir(collection_path):
-            if prof_dir.endswith(self.PROF_SUFFIX):
-                prof_dirs.append(os.path.join(collection_path, prof_dir))
-
-        return prof_dirs
