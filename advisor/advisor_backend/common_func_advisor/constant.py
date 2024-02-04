@@ -42,8 +42,11 @@ class Constant:
     # overall
     SUMMARY = "summary"
 
+    PT_PROF_SUFFIX = "ascend_pt"
+    ASCEND_PROFILER_OUTPUT = "ASCEND_PROFILER_OUTPUT"
     COLLECTION_PATH = "collection_path"
     CLUSTER_ANALYSIS_OUTPUT = "cluster_analysis_output"
+    KERNEL_DETAILS_CSV = "kernel_details.csv"
     CLUSTER_STEP_TIME_CSV = "cluster_step_trace_time.csv"
     CLUSTER_COMM_JSON = "cluster_communication.json"
 
