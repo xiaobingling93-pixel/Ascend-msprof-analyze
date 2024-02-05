@@ -24,7 +24,7 @@ from .op_perf import OpPerfFactory
 class Analyser:
     def __init__(self, path) -> None:
         self._path = path
-        
+
     def process(self):
         df = pd.read_csv(self._path)
         pool = multiprocessing.Pool(multiprocessing.cpu_count())

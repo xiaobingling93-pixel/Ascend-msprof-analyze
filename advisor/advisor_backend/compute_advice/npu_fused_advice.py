@@ -13,8 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
 from compute_advice.compute_advice_base import ComputeAdviceBase
 from compute_advice.npu_fused.analyser import Analyser
+from common_func_advisor.constant import Constant
 
 
 class NpuFusedAdvice(ComputeAdviceBase):
@@ -23,6 +26,10 @@ class NpuFusedAdvice(ComputeAdviceBase):
         self.cur_data = dict()
         self.cur_bottleneck = str()
         self.cur_advice = str()
+
+        if collection_path.endswith(Constant.PT_PROF_SUFFIX):
+            self.collection_path = os.path.join(collection_path,
+                                                Constant.ASCEND_PROFILER_OUTPUT, Constant.KERNEL_DETAILS_CSV)
 
     def run(self):
         if not self.path_check():
