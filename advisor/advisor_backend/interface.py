@@ -18,11 +18,14 @@ import sys
 sys.path.append(
     os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "advisor_backend"))
 sys.path.append(
+    os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "compare_tools"))
+sys.path.append(
     os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "cluster_analyse"))
 from common_func_advisor.constant import Constant
 from advisor_backend.advice_factory.cluster_advice_factory import ClusterAdviceFactory
 from advisor_backend.advice_factory.compute_advice_factory import ComputeAdviceFactory
 from advisor_backend.advice_factory.timeline_advice_factory import TimelineAdviceFactory
+from advisor_backend.advice_factory.overall_advice_factory import OverallAdviceFactory
 
 
 class Interface:
@@ -30,19 +33,20 @@ class Interface:
         self.collection_path = os.path.realpath(collection_path)
         self._factory_controller = FactoryController(collection_path)
 
-    def get_data(self: any, mode: str, advice: str, input_path=None):
+    def get_data(self: any, mode: str, advice: str, **kwargs):
         if len(mode) > Constant.MAX_INPUT_MODE_LEN or len(advice) > Constant.MAX_INPUT_ADVICE_LEN:
             msg = '[ERROR]Input Mode is illegal.'
             raise RuntimeError(msg)
-        factory = self._factory_controller.create_advice_factory(mode, input_path)
-        return factory.produce_advice(advice)
+        factory = self._factory_controller.create_advice_factory(mode, kwargs.get("input_path", ""))
+        return factory.produce_advice(advice, kwargs)
 
 
 class FactoryController:
     FACTORY_LIB = {
         Constant.CLUSTER: ClusterAdviceFactory,
         Constant.COMPUTE: ComputeAdviceFactory,
-        Constant.TIMELINE: TimelineAdviceFactory
+        Constant.TIMELINE: TimelineAdviceFactory,
+        Constant.OVERALL: OverallAdviceFactory
     }
 
     def __init__(self, collection_path: str):
@@ -50,10 +54,8 @@ class FactoryController:
         self.temp_input_path = None
 
     def create_advice_factory(self, mode: str, input_path: str):
-        if input_path:
-            return self.FACTORY_LIB.get(mode)(input_path)
-        else:
-            return self.FACTORY_LIB.get(mode)(self.collection_path)
+        collection_path = input_path if input_path else self.collection_path
+        return self.FACTORY_LIB.get(mode)(collection_path)
 
 
 if __name__ == "__main__":

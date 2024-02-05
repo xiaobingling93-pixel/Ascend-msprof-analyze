@@ -1,6 +1,6 @@
 import unittest
 
-from compare_bean.origin_data_bean.operator_memory_bean import OperatorMemoryBean
+from compare_backend.compare_bean.origin_data_bean.operator_memory_bean import OperatorMemoryBean
 
 
 class TestOperatorMemoryBean(unittest.TestCase):

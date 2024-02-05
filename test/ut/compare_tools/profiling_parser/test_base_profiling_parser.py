@@ -1,8 +1,8 @@
 import unittest
 from unittest.mock import patch
 
-from compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
-from profiling_parser.base_profiling_parser import BaseProfilingParser, ProfilingResult
+from compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
+from compare_backend.profiling_parser.base_profiling_parser import BaseProfilingParser, ProfilingResult
 
 
 class ProfilingParser(BaseProfilingParser):
@@ -89,62 +89,62 @@ class TestBaseProfilingParser(unittest.TestCase):
 
     def test_picking_torch_op_event(self):
         event = MockEvent(1, 2, 3)
-        with patch("profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"):
+        with patch("compare_backend.profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"):
             parser = ProfilingParser()
             parser.init({}, {})
             self.assertTrue(parser._picking_torch_op_event(event))
 
     def test_picking_kernel_event(self):
         event = MockEvent(1, 2, 3)
-        with patch("profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"):
+        with patch("compare_backend.profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"):
             parser = ProfilingParser()
             parser.init({}, {})
             self.assertTrue(parser._picking_kernel_event(event))
 
     def test_picking_flow_event(self):
         events = [MockEvent(1, 2, 3, "s"), MockEvent(1, 2, 3, "f")]
-        with patch("profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"):
+        with patch("compare_backend.profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"):
             parser = ProfilingParser()
             parser.init({}, {})
             for event in events:
                 self.assertTrue(parser._picking_flow_event(event))
 
     def test_update_kernel_dict_when_valid_input(self):
-        with patch("profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"):
+        with patch("compare_backend.profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"):
             parser = ProfilingParser()
             parser.init(self.flow_dict, self.all_kernels)
             parser._update_kernel_dict()
             self.assertEqual(len(parser._result_data.kernel_dict.get(12)), 2)
 
     def test_update_kernel_dict_when_without_kernels_return_null(self):
-        with patch("profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"):
+        with patch("compare_backend.profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"):
             parser = ProfilingParser()
             parser.init(self.flow_dict, {})
             parser._update_kernel_dict()
             self.assertEqual(len(parser._result_data.kernel_dict), 0)
 
     def test_update_kernel_dict_when_without_flow_return_null(self):
-        with patch("profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"):
+        with patch("compare_backend.profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"):
             parser = ProfilingParser()
             parser.init({}, self.all_kernels)
             parser._update_kernel_dict()
             self.assertEqual(len(parser._result_data.kernel_dict), 0)
 
     def test_check_result_data(self):
-        with patch("profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"):
+        with patch("compare_backend.profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"):
             parser = ProfilingParser()
             parser.init(self.flow_dict, self.all_kernels)
             parser._check_result_data()
 
     def test_load_data_when_valid_input(self):
-        with patch("profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"):
+        with patch("compare_backend.profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"):
             parser = ProfilingParser()
             parser.init(self.flow_dict, self.all_kernels)
             result_data = parser.load_data()
             self.assertEqual(len(result_data.kernel_dict.get(12)), 2)
 
     def test_read_trace_event_when_invalid_json_path(self):
-        with patch("profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"):
+        with patch("compare_backend.profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"):
             parser = ProfilingParser()
             parser.init({}, {})
             parser._read_trace_event()
@@ -152,7 +152,7 @@ class TestBaseProfilingParser(unittest.TestCase):
 
     def test_update_communication_dict(self):
         result = {'allreduce': {'comm_list': [2.0], 'comm_task': {'notify_wait': [1.0]}}}
-        with patch("profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"):
+        with patch("compare_backend.profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"):
             parser = ProfilingParser()
             parser.init({}, {})
             parser._comm_task_list = [TraceEventBean(event) for event in self.task_events]

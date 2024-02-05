@@ -1,6 +1,6 @@
 import unittest
 
-from comparator.operator_comparator import OperatorComparator
+from compare_backend.comparator.operator_comparator import OperatorComparator
 
 
 class MockBean:

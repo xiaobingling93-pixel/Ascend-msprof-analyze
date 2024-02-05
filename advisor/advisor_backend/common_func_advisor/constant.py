@@ -25,6 +25,7 @@ class Constant:
     COMPUTE = "compute"
     TIMELINE = "timeline"
     CLUSTER = "cluster"
+    OVERALL = "overall"
 
     # advice list
     SLOW_RANK = "slow rank"
@@ -37,6 +38,9 @@ class Constant:
     # timeline
     OPTIM = "optimizer"
     OP_SCHE = "op_schedule"
+
+    # overall
+    SUMMARY = "summary"
 
     PT_PROF_SUFFIX = "ascend_pt"
     COLLECTION_PATH = "collection_path"

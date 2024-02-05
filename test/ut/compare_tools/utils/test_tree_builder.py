@@ -1,10 +1,8 @@
 import unittest
-import json
 
-from compare_bean.origin_data_bean.compare_event import MemoryEvent
-from compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
-from utils.torch_op_node import TorchOpNode
-from utils.tree_builder import TreeBuilder
+from compare_backend.compare_bean.origin_data_bean.compare_event import MemoryEvent
+from compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
+from compare_backend.utils.tree_builder import TreeBuilder
 
 
 class TestUtils(unittest.TestCase):

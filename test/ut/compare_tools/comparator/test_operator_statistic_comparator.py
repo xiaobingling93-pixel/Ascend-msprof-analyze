@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch
 
-from comparator.operator_statistic_comparator import OperatorStatisticComparator
+from compare_backend.comparator.operator_statistic_comparator import OperatorStatisticComparator
 
 
 class MockBean:
@@ -23,8 +23,9 @@ class TestOperatorStatisticComparator(unittest.TestCase):
     def test_compare_when_valid_data(self):
         base_dict = {"add": [1], "matmul": [1]}
         comparison_dict = {"add": [1], "reduce": [1]}
-        with patch("comparator.operator_statistic_comparator.OperatorStatisticComparator._group_by_op_name",
-                   return_value=(base_dict, comparison_dict)):
+        with patch(
+                "compare_backend.comparator.operator_statistic_comparator.OperatorStatisticComparator._group_by_op_name",
+                return_value=(base_dict, comparison_dict)):
             comparator = OperatorStatisticComparator({1: 2}, MockBean)
             comparator._compare()
             self.assertEqual(comparator._rows, [[1, 1, 1], [2, 1, 0], [3, 0, 1]])
