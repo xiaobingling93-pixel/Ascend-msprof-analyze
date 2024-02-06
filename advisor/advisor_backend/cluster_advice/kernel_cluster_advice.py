@@ -2,6 +2,7 @@ import os
 import pandas as pd
 from common_func.path_manager import PathManager
 from common_func.constant import Constant
+from common_func_advisor.constant import Constant as AdvisorConstant
 from cluster_advice.cluster_advice_base import ClusterAdviceBase
 from cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
 
@@ -55,7 +56,7 @@ class KernelClusterAdvice(ClusterAdviceBase):
     def get_prof_dirs(self, collection_path):
         prof_dirs = []
         for prof_dir in os.listdir(collection_path):
-            if prof_dir.endswith(Constant.PT_PROF_SUFFIX):
+            if prof_dir.endswith(AdvisorConstant.PT_PROF_SUFFIX):
                 prof_dirs.append(os.path.join(collection_path, prof_dir))
 
         return prof_dirs
