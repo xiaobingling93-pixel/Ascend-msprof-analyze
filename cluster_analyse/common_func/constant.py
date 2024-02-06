@@ -53,6 +53,7 @@ class Constant(object):
     TRANSIT_SIZE_MB = "Transit Size(MB)"
     SIZE_DISTRIBUTION = "Size Distribution"
     WAIT_TIME_MS = "Wait Time(ms)"
+    OP_NAME = "Op Name"
     BANDWIDTH_GB_S = "Bandwidth(GB/s)"
     COMMUNICATION = "communication.json"
 
@@ -65,6 +66,7 @@ class Constant(object):
     COMMUNICATION_GROUP = "communication_group"
     TRANSPORT_TYPE = "Transport Type"
     COMM_DATA_DICT = "comm_data_dict"
+    ANALYSIS_MODE = "analysis_mode"
 
     # step time
     RANK = 'rank'

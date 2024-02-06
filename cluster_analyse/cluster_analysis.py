@@ -31,6 +31,7 @@ class Interface:
 
     def __init__(self, params: dict):
         self.collection_path = PathManager.get_realpath(params.get(Constant.COLLECTION_PATH))
+        self.analysis_mode = params.get(Constant.ANALYSIS_MODE)
         self.data_map = {}
         self.communication_group = {}
         self.collective_group_dict = {}
@@ -61,20 +62,24 @@ class Interface:
         if not data_map:
             print("[WARNING] Can not get rank info or profiling data.")
             return
-        comm_data_dict = CommunicationGroupGenerator(self.collection_path, data_map).generate()
         params = {
             Constant.COLLECTION_PATH: self.collection_path,
             Constant.DATA_MAP: data_map,
-            Constant.COMM_DATA_DICT: comm_data_dict
+            Constant.ANALYSIS_MODE: self.analysis_mode
         }
+        comm_data_dict = CommunicationGroupGenerator(params).generate()
+        params[Constant.COMM_DATA_DICT] = comm_data_dict
         AnalysisFacade(params).cluster_analyze()
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="cluster analysis module")
     parser.add_argument('-d', '--collection_path', type=str, required=True, help="profiling data path")
+    parser.add_argument('-m', '--mode', choices=['all', 'communication_time', 'communication_matrix'],
+                        default='all', help="different analysis mode")
     args_parsed = parser.parse_args()
     parameter = {
-        Constant.COLLECTION_PATH: args_parsed.collection_path
+        Constant.COLLECTION_PATH: args_parsed.collection_path,
+        Constant.ANALYSIS_MODE: args_parsed.mode
     }
     Interface(parameter).run()

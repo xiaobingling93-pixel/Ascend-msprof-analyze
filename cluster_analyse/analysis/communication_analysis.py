@@ -82,6 +82,8 @@ class CommunicationAnalysis(BaseCommAnalysis):
             total_dict[size][1] += size_info[1]
 
     def run(self):
+        if not self.communication_ops:
+            return
         self.split_op_by_group()
         self.combine_ops_total_info()
         self.dump_data()
@@ -146,6 +148,8 @@ class CommunicationAnalysis(BaseCommAnalysis):
 
 class CommMatrixAnalysis(BaseCommAnalysis):
     SAVED_JSON = "cluster_communication_matrix.json"
+    STAT_LIST = ['middle', 'top', 'bottom', 'total']
+    TOTAL = 'total'
 
     def __init__(self, param: dict):
         super().__init__(param)
@@ -154,10 +158,13 @@ class CommMatrixAnalysis(BaseCommAnalysis):
     @staticmethod
     def combine_link(link_info_dict: dict, single_link_dict: dict):
         link_info_dict[Constant.TRANSPORT_TYPE] = single_link_dict.get(Constant.TRANSPORT_TYPE)
+        link_info_dict[Constant.OP_NAME] = single_link_dict.get(Constant.OP_NAME, '')
         link_info_dict[Constant.TRANSIT_TIME_MS] += single_link_dict.get(Constant.TRANSIT_TIME_MS, 0)
         link_info_dict[Constant.TRANSIT_SIZE_MB] += single_link_dict.get(Constant.TRANSIT_SIZE_MB, 0)
 
     def run(self):
+        if not self.communication_ops:
+            return
         self.split_op_by_group()
         self.combine_ops_total_info()
         self.dump_data()
@@ -201,7 +208,8 @@ class CommMatrixAnalysis(BaseCommAnalysis):
             link_info = defaultdict(lambda: {
                 Constant.TRANSPORT_TYPE: '',
                 Constant.TRANSIT_TIME_MS: 0,
-                Constant.TRANSIT_SIZE_MB: 0
+                Constant.TRANSIT_SIZE_MB: 0,
+                Constant.OP_NAME: ''
             })
             for rank_id, rank_dict in op_dict.items():
                 process_link_key()
@@ -211,13 +219,25 @@ class CommMatrixAnalysis(BaseCommAnalysis):
         total_op_info = defaultdict(lambda: {
             Constant.TRANSPORT_TYPE: '',
             Constant.TRANSIT_TIME_MS: 0,
-            Constant.TRANSIT_SIZE_MB: 0
+            Constant.TRANSIT_SIZE_MB: 0,
+            Constant.OP_NAME: ''
         })
         for op_name, op_dict in step_dict.items():
-            for link_key, link_dict in op_dict.items():
-                self.combine_link(total_op_info[link_key], link_dict)
+            if self.check_add_op(op_name):
+                for link_key, link_dict in op_dict.items():
+                    self.combine_link(total_op_info[link_key], link_dict)
         for link_key, link_dict in total_op_info.items():
             link_dict[Constant.BANDWIDTH_GB_S] = \
                 self.compute_ratio(link_dict.get(Constant.TRANSIT_SIZE_MB, 0),
                                    link_dict.get(Constant.TRANSIT_TIME_MS, 0))
         step_dict[Constant.TOTAL_OP_INFO] = total_op_info
+
+    def check_add_op(self: any, op_name: str):
+        """
+        兼容2个版本，判断是否需要将此算子信息相加
+        """
+        for stat_name in self.STAT_LIST:
+            if stat_name in op_name:
+                if stat_name != self.TOTAL:
+                    return False
+            return True

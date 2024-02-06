@@ -24,9 +24,10 @@ from common_func.file_manager import FileManager
 class CommunicationGroupGenerator:
     COMMUNICATION_GROUP_JSON = "communication_group.json"
 
-    def __init__(self, collection_path: str, data_map: dict):
-        self.collection_path = collection_path
-        self.data_map = data_map
+    def __init__(self, params: dict):
+        self.collection_path = params.get(Constant.COLLECTION_PATH)
+        self.data_map = params.get(Constant.DATA_MAP)
+        self.analysis_mode = params.get(Constant.ANALYSIS_MODE)
         self.communication_group = {}
         self.collective_group_dict = defaultdict(set)
         self.p2p_group_dict = defaultdict(list)
@@ -57,13 +58,18 @@ class CommunicationGroupGenerator:
                 if not isinstance(step_id_dict, dict):
                     print(f"[WARNING] rank{rank_id}'s communication.json has a wrong data struct.")
                     continue
-                self.set_p2p_link(rank_id, step_id, rank_id_matrix_dict)
                 self.get_collective_ops_name(rank_id, step_id_dict.get(Constant.COLLECTIVE))
                 for comm_op_type, comm_op_dict in step_id_dict.items():
                     self.add_communication_ops(rank_id, step_id, comm_op_type, comm_op_dict)
 
-    @staticmethod
-    def read_comm_json_func(params: tuple):
+            for step_id, step_id_dict in rank_id_matrix_dict.items():
+                if not isinstance(step_id_dict, dict):
+                    print(f"[WARNING] rank{rank_id}'s communication_matrix.json has a wrong data struct.")
+                    continue
+                self.set_p2p_link(rank_id, step_id, rank_id_matrix_dict)
+                self.get_collective_ops_name(rank_id, step_id_dict.get(Constant.COLLECTIVE))
+
+    def read_comm_json_func(self: any, params: tuple):
         if len(params) < 3:
             return -1, {}, {}
         rank_id = params[0]
@@ -71,9 +77,9 @@ class CommunicationGroupGenerator:
         matrix_json_path = params[2]
         comm_data = {}
         matrix_data = {}
-        if os.path.exists(comm_json_path):
+        if os.path.exists(comm_json_path) and self.analysis_mode in ['all', 'communication_time']:
             comm_data = FileManager.read_json_file(comm_json_path)
-        if os.path.exists(matrix_json_path):
+        if os.path.exists(matrix_json_path) and self.analysis_mode in ['all', 'communication_matrix']:
             matrix_data = FileManager.read_json_file(matrix_json_path)
         return rank_id, comm_data, matrix_data
 

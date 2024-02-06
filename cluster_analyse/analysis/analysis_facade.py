@@ -14,6 +14,7 @@
 # limitations under the License.
 
 from multiprocessing import Process
+from common_func.constant import Constant
 from analysis.communication_analysis import CommunicationAnalysis
 from analysis.step_trace_time_analysis import StepTraceTimeAnalysis
 from analysis.communication_analysis import CommMatrixAnalysis
@@ -22,14 +23,14 @@ from analysis.communication_analysis import CommMatrixAnalysis
 class AnalysisFacade:
     analysis_module = {CommunicationAnalysis, StepTraceTimeAnalysis, CommMatrixAnalysis}
 
-    def __init__(self, param: dict):
-        self.param = param
+    def __init__(self, params: dict):
+        self.params = params
 
     def cluster_analyze(self):
         # 多个profiler用多进程处理
         process_list = []
         for analysis in self.analysis_module:
-            process = Process(target=analysis(self.param).run)
+            process = Process(target=analysis(self.params).run)
             process.start()
             process_list.append(process)
 
