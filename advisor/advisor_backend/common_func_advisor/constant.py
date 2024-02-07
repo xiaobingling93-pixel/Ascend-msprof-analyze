@@ -26,6 +26,7 @@ class Constant:
     TIMELINE = "timeline"
     CLUSTER = "cluster"
     OVERALL = "overall"
+    PIPELINE = "pipeline"
 
     # advice list
     SLOW_RANK = "slow rank"
@@ -49,6 +50,33 @@ class Constant:
     KERNEL_DETAILS_CSV = "kernel_details.csv"
     CLUSTER_STEP_TIME_CSV = "cluster_step_trace_time.csv"
     CLUSTER_COMM_JSON = "cluster_communication.json"
+
+    # pipline
+    OP_NAME = "name"
+    OP_TID = "tid"
+    PID = "pid"
+    TS = "ts"
+    DUR = "dur"
+    CAT = "cat"
+    ARGS = "args"
+    PH = "ph"
+    ID = "id"
+    PH_START = "s"
+    PH_BEGIN = "B"
+    PH_END = "E"
+    PH_META = "M"
+    PH_X = "X"
+    CNAME = "cname"
+    PROCESS_NAME = "process_name"
+    FRAMEWORK_NAME = "Python"
+    ASCEND_HARDWARE_NAME = "Ascend Hardware"
+    ASYNC_NPU = "async_npu"
+    STEP_PREFIX = "ProfilerStep#"
+    FP_ATEN_OP = "aten"
+    FP_C10D_OP = "c10d"
+    HCOM_OP_PREFIX = "hcom_"
+    BP_AUTOGRAD_OP = "autograd"
+    TRACE_VIEW_JSON = "trace_view.json"
 
     # pattern_dict key: pattern, value: pattern name
     PATTERN_DICT = {("Add", "DropOutDoMask", "Add"): "bias_dropout_add",
