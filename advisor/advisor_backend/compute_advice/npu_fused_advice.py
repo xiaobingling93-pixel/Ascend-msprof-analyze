@@ -14,22 +14,27 @@
 # limitations under the License.
 
 import os
+import pandas as pd
 
 from compute_advice.compute_advice_base import ComputeAdviceBase
-from compute_advice.npu_fused.analyser import Analyser
-from common_func_advisor.constant import Constant
+from compute_advice.npu_fused.csv_analyzer import CSVAnalyzer
+from compute_advice.npu_fused.json_analyzer import JSONAnalyzer
 
 
 class NpuFusedAdvice(ComputeAdviceBase):
+    ASCEND_PT = 'ascend_pt'
+    ASCEND_PROFILER_OUTPUT = 'ASCEND_PROFILER_OUTPUT'
+    KERNEL_DETAIL_FILE = "kernel_details.csv"
+    TRACE_VIEW_FILE = "trace_view.json"
+
     def __init__(self, collection_path: str):
         super().__init__(collection_path)
         self.cur_data = dict()
         self.cur_bottleneck = str()
         self.cur_advice = str()
-
-        if collection_path.endswith(Constant.PT_PROF_SUFFIX):
-            self.collection_path = os.path.join(collection_path,
-                                                Constant.ASCEND_PROFILER_OUTPUT, Constant.KERNEL_DETAILS_CSV)
+        self.kernel_details_path = ""
+        self.trace_view_path = ""
+        self.call_stack = None
 
     def run(self):
         if not self.path_check():
@@ -39,20 +44,29 @@ class NpuFusedAdvice(ComputeAdviceBase):
         return self.output_format_data
 
     def process(self):
-        analyser = Analyser(self.collection_path)
-        self.cur_data = analyser.process()
-        self.cur_data = self.cur_data.sort_values(by='duration sum(us)', ascending=False)
-        filter_data = self.cur_data.get(self.cur_data.get("duration sum(us)", 0) > 0)
-        op_num = len(filter_data.index)
+        csv_analyzer = CSVAnalyzer(self.kernel_details_path)
+        all_pattern_data = csv_analyzer.process()
+        all_pattern_data = all_pattern_data.sort_values(by='duration sum(us)', ascending=False)
+        filter_data = all_pattern_data.get(all_pattern_data.get("duration sum(us)", 0) > 0)
+        if not self.has_callstack():
+            print("[Warning] No call stack info found, advice will be incomplete")
+            self.cur_data = filter_data
+        else:
+            json_analyzer = JSONAnalyzer(self.trace_view_path)
+            custom_code = json_analyzer.get_custom_code(filter_data, "first_timestamp", "custom code")
+            self.cur_data = pd.concat([filter_data, custom_code], axis=1)
+        op_num = len(self.cur_data.index)
         op_dur = filter_data["duration sum(us)"].sum()
         if op_num > 0:
             index = 0
-            self.cur_advice = "Advice:\n"
+            self.cur_advice = f"Advice {index}:\n"
             self.cur_bottleneck = f"The computing time of fusable op is {round(op_dur, 2)} ms."
-            for _, row in filter_data.iterrows():
+            for _, row in self.cur_data.iterrows():
                 cur_op = "[" + ", ".join(row.loc["pattern"]) + "]"
                 npu_fused_op = row.loc["pattern_name"]
-                self.cur_advice += f"Replace {cur_op} with {npu_fused_op}."
+                self.cur_advice += f"Replace {cur_op} with {npu_fused_op}. "
+                if self.call_stack:
+                    self.cur_advice += f"This pattern first happened in: \n{row['custom code']}"
                 if index != op_num - 1:
                     self.cur_advice += "\n"
                 index += 1

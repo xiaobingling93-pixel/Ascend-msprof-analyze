@@ -32,7 +32,7 @@ class Constant:
     SLOW_RANK = "slow rank"
     SLOW_LINK = "slow link"
     KERNEL = "kernel"
-    
+
     # compute
     NPU_FUSED = "npu_fused"
 
@@ -103,4 +103,8 @@ class Constant:
                     ("Mul", "AsStrided", "Neg", "AsStrided", "ConcatD", "Mul", "Add"): "RotaryMul",
                     ("Mul", "Slice", "Neg", "Slice", "ConcatD", "Mul", "Add"): "RotaryMul",
                     ("MatMulV2", "Swish", "MatMulV2", "Mul", "MatMulV2"): "FFN",
-                    ("Transpose", "Transpose", "GatherElement", "Transpose"): "GatherElement"}
+                    ("Transpose", "Transpose", "GatherElement", "Transpose"): "GatherElement",
+                    ("Slice", "Slice", "Swish", "Mul"): "torch_npu.npu_swiglu",
+                    ("Cast", "Mul", "MaskedFill", "SoftmaxV2", "Cast"): "torch_npu.npu_scaled_masked_softmax",
+                    ("Mul", "Slice", "Neg", "Slice", "ConcatD", "Mul"): "torch_npu.npu_rotary_mul",
+                    ("Cast", "Square", "ReduceMeanD", "Add", "Rsqrt", "Mul", "Cast", "Mul"): "torch_npu.npu_rms_norm"}
