@@ -82,11 +82,11 @@ class SlowLinkAdvice(ClusterAdviceBase):
                 raise ValueError(msg) from e
             for comm_type, bw_dict in rank_dict.get(self.COMMUNICATION_BANDWIDTH_INFO, {}).items():
                 if comm_type == self.SDMA:
-                    self.rank_bw_dict[rank][self.SDMA_SIZE_MB] += bw_dict.get(self.TRANSIT_TIME)
-                    self.rank_bw_dict[rank][self.SDMA_TIME_MS] += bw_dict.get(self.TRANSIT_SIZE)
+                    self.rank_bw_dict[rank][self.SDMA_SIZE_MB] += bw_dict.get(self.TRANSIT_SIZE)
+                    self.rank_bw_dict[rank][self.SDMA_TIME_MS] += bw_dict.get(self.TRANSIT_TIME)
                 if comm_type == self.RDMA:
-                    self.rank_bw_dict[rank][self.RDMA_SIZE_MB] += bw_dict.get(self.TRANSIT_TIME)
-                    self.rank_bw_dict[rank][self.RDMA_TIME_MS] += bw_dict.get(self.TRANSIT_SIZE)
+                    self.rank_bw_dict[rank][self.RDMA_SIZE_MB] += bw_dict.get(self.TRANSIT_SIZE)
+                    self.rank_bw_dict[rank][self.RDMA_TIME_MS] += bw_dict.get(self.TRANSIT_TIME)
 
         for rank, rank_dict in self.rank_bw_dict.items():
             self.rank_bw_dict[rank][self.RDMA_BANDWIDTH] = self.compute_ratio(
