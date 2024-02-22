@@ -23,20 +23,28 @@ class WorkSheetCreator:
         self._write_data()
 
     def _write_headers(self):
-        header_format = self._work_book.add_format(CellFormatType.BLUE_BOLD)
+        base_header_format = self._work_book.add_format(CellFormatType.GREEN_BOLD)
+        com_header_format = self._work_book.add_format(CellFormatType.YELLOW_BOLD)
+        com_index_range = [-1, -1]
         overhead = self._data.get("overhead", [])
         if overhead:
             base_path = f"Base Profiling: {self._args.base_profiling_path}"
-            self._work_sheet.merge_range(overhead[0], base_path, header_format)
+            self._work_sheet.merge_range(overhead[0], base_path, base_header_format)
+            com_index_range = [self._col_ids.index(overhead[1].split(":")[0][0]),
+                               self._col_ids.index(overhead[1].split(":")[1][0])]
             comparison_path = f"Comparison Profiling: {self._args.comparison_profiling_path}"
-            self._work_sheet.merge_range(overhead[1], comparison_path, header_format)
+            self._work_sheet.merge_range(overhead[1], comparison_path, com_header_format)
             self._row_id += 2
         for index, header in enumerate(self._data.get("headers")):
+            if index in range(com_index_range[0], com_index_range[1] + 1):
+                header_format = com_header_format
+            else:
+                header_format = base_header_format
             col_id = self._col_ids[index]
             self._work_sheet.set_column(f"{col_id}:{col_id}", header.get("width"))
             self._work_sheet.write(f"{col_id}{self._row_id}", header.get("name"), header_format)
             self._field_format[index] = self._work_book.add_format(header.get("type"))
-            if header.get("name") == ExcelConfig.DIFF_RATIO:
+            if header.get("name") in (ExcelConfig.DIFF_RATIO, ExcelConfig.DIFF_TOTAL_RATIO):
                 self._diff_ratio_index = index
         self._row_id += 1
 

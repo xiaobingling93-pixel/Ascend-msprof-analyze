@@ -136,6 +136,9 @@ class GPUProfilingParser(BaseProfilingParser):
             func_set.add(self._picking_torch_op_event)
         if self._enable_communication_compare:
             func_set.add(self._picking_kernel_event)
+        if self._enable_operator_compare:
+            func_set.add(self._picking_python_function_event)
+            func_set .add(self._picking_fwdbwd_flow_event)
         if self._enable_operator_compare or self._args.max_kernel_num:
             func_set.add(self._picking_kernel_event)
             func_set.add(self._picking_flow_event)

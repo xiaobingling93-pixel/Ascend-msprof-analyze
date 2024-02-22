@@ -53,6 +53,8 @@ class Constant(object):
     MEMORY_TOP_TABLE = "MemoryCompareStatistic"
     COMMUNICATION_TABLE = "CommunicationCompare"
     PERFORMANCE_TABLE = "Model Profiling Time Distribution"
+    MODULE_TABLE = "ModuleCompare"
+    MODULE_TOP_TABLE = "ModuleCompareStatistic"
 
     # memory
     SIZE = "Size(KB)"
