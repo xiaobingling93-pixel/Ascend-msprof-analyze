@@ -1,23 +1,26 @@
 import os
 from collections import deque
 from datetime import datetime
-
-import numpy as np
+from queue import Queue
 
 from compare_backend.comparator.communication_comparator import CommunicationComparator
+from compare_backend.comparator.module_statistic_comparator import ModuleStatisticComparator
 from compare_backend.comparator.operator_comparator import OperatorComparator
 from compare_backend.comparator.operator_statistic_comparator import OperatorStatisticComparator
 from compare_backend.compare_bean.communication_bean import CommunicationBean
 from compare_backend.compare_bean.memory_compare_bean import MemoryCompareBean
 from compare_backend.compare_bean.memory_statistic_bean import MemoryStatisticBean
+from compare_backend.compare_bean.module_statistic_bean import ModuleStatisticBean
 from compare_backend.compare_bean.operator_compare_bean import OperatorCompareBean
 from compare_backend.compare_bean.operator_statistic_bean import OperatorStatisticBean
+from compare_backend.data_prepare.module_data_prepare import ModuleDataPrepare
+from compare_backend.data_prepare.operator_data_prepare import OperatorDataPrepare
 from compare_backend.generator.base_generator import BaseGenerator
-from compare_backend.profiling_parser.base_profiling_parser import ProfilingResult
+from compare_backend.utils.common_func import longest_common_subsequence_matching
 from compare_backend.utils.constant import Constant
+from compare_backend.utils.module_node import ModuleNode
 from compare_backend.utils.name_function import NameFunction
 from compare_backend.utils.torch_op_node import TorchOpNode
-from compare_backend.utils.tree_builder import TreeBuilder
 from compare_backend.view.excel_view import ExcelView
 
 
@@ -46,6 +49,8 @@ class DetailPerformanceGenerator(BaseGenerator):
         comparator_list = []
         if self._args.enable_operator_compare or self._args.enable_memory_compare:
             op_compare_result = self.match_torch_op()
+        if self._args.enable_operator_compare:
+            module_compare_result = self.match_nn_module()
 
         if self._args.enable_communication_compare:
             communication_data = {
@@ -56,87 +61,24 @@ class DetailPerformanceGenerator(BaseGenerator):
         if self._args.enable_operator_compare:
             comparator_list.append(OperatorComparator(op_compare_result, OperatorCompareBean))
             comparator_list.append(OperatorStatisticComparator(op_compare_result, OperatorStatisticBean))
-
+            if module_compare_result:
+                comparator_list.append(ModuleStatisticComparator(module_compare_result, ModuleStatisticBean))
         if self._args.enable_memory_compare:
             comparator_list.append(OperatorComparator(op_compare_result, MemoryCompareBean))
             comparator_list.append(OperatorStatisticComparator(op_compare_result, MemoryStatisticBean))
         return comparator_list
 
     def match_torch_op(self) -> list:
-        base_ops = self._get_top_layer_ops(self._profiling_data_dict.get(Constant.BASE_DATA))
-        comparison_ops = self._get_top_layer_ops(self._profiling_data_dict.get(Constant.COMPARISON_DATA))
+        base_ops = OperatorDataPrepare(self._profiling_data_dict.get(Constant.BASE_DATA)).get_top_layer_ops()
+        comparison_ops = OperatorDataPrepare(
+            self._profiling_data_dict.get(Constant.COMPARISON_DATA)).get_top_layer_ops()
         if not base_ops and not comparison_ops:
             return []
         name_func = NameFunction(self._args).get_name_func()
-        compare_result_data = self._matching_op(base_ops, comparison_ops, name_func)
+        op_compare_result = longest_common_subsequence_matching(base_ops, comparison_ops, name_func)
         if self._args.max_kernel_num is not None:
-            compare_result_data = self._drill_down(compare_result_data, name_func)
-        return compare_result_data
-
-    @classmethod
-    def _matching_op(cls, base_ops: list, comparison_ops: list, name_func: any) -> list:
-        if not comparison_ops:
-            result_data = [None] * len(base_ops)
-            for index, value in enumerate(base_ops):
-                result_data[index] = [value, None]
-            return result_data
-
-        result_data = []
-        comparison_len, base_len = len(comparison_ops), len(base_ops)
-        dp = [[0] * (base_len + 1) for _ in range(comparison_len + 1)]
-        for comparison_index in range(1, comparison_len + 1):
-            for base_index in range(1, base_len + 1):
-                if name_func(base_ops[base_index - 1]) == name_func(
-                        comparison_ops[comparison_index - 1]):
-                    dp[comparison_index][base_index] = dp[comparison_index - 1][base_index - 1] + 1
-                else:
-                    dp[comparison_index][base_index] = max(dp[comparison_index][base_index - 1],
-                                                           dp[comparison_index - 1][base_index])
-        matched_op = []
-        comparison_index, base_index = comparison_len, base_len
-        while comparison_index > 0 and base_index > 0:
-            if name_func(base_ops[base_index - 1]) == name_func(
-                    comparison_ops[comparison_index - 1]):
-                matched_op.append([comparison_index - 1, base_index - 1])
-                comparison_index -= 1
-                base_index -= 1
-                continue
-            if dp[comparison_index][base_index - 1] > dp[comparison_index - 1][base_index]:
-                base_index -= 1
-            else:
-                comparison_index -= 1
-        if not matched_op:
-            matched_base_index_list = []
-        else:
-            matched_op.reverse()
-            matched_op = np.array(matched_op)
-            matched_base_index_list = list(matched_op[:, 1])
-        curr_comparison_index = 0
-        for base_index, base_api_node in enumerate(base_ops):
-            if base_index not in matched_base_index_list:
-                result_data.append([base_api_node, None])
-                continue
-            matched_comparison_index = matched_op[matched_base_index_list.index(base_index), 0]
-            for comparison_index in range(curr_comparison_index, matched_comparison_index):
-                result_data.append([None, comparison_ops[comparison_index]])
-            result_data.append([base_api_node, comparison_ops[matched_comparison_index]])
-            curr_comparison_index = matched_comparison_index + 1
-        if curr_comparison_index < len(comparison_ops):
-            for comparison_index in range(curr_comparison_index, len(comparison_ops)):
-                result_data.append([None, comparison_ops[comparison_index]])
-        return result_data
-
-    def _get_top_layer_ops(self, profiling_data: ProfilingResult) -> any:
-        root_node = TreeBuilder.build_tree(profiling_data.torch_op_data, profiling_data.kernel_dict,
-                                           profiling_data.memory_list)
-        level1_child_nodes = root_node.child_nodes
-        result_data = []
-        for level1_node in level1_child_nodes:
-            if level1_node.is_step_profiler():
-                result_data.extend(level1_node.child_nodes)
-            else:
-                result_data.append(level1_node)
-        return result_data
+            op_compare_result = self._drill_down(op_compare_result, name_func)
+        return op_compare_result
 
     def _drill_down(self, compare_result_data: list, name_func: any) -> list:
         drill_down_result = []
@@ -152,9 +94,39 @@ class DetailPerformanceGenerator(BaseGenerator):
             if max(base_op.kernel_num, comparison_op.kernel_num) <= self._args.max_kernel_num:
                 drill_down_result.append(match_data)
                 continue
-            match_list = self._matching_op(base_op.child_nodes, comparison_op.child_nodes, name_func)
+            match_list = longest_common_subsequence_matching(base_op.child_nodes, comparison_op.child_nodes, name_func)
             match_list.reverse()
             for data in match_list:
                 op_deque.append(data)
 
         return drill_down_result
+
+    def match_nn_module(self) -> list:
+        module_compare_result = []
+        base_root_node = ModuleDataPrepare(self._profiling_data_dict.get(Constant.BASE_DATA)).build_module_tree()
+        comparison_root_node = ModuleDataPrepare(
+            self._profiling_data_dict.get(Constant.COMPARISON_DATA)).build_module_tree()
+        for index, base_node in enumerate(base_root_node):
+            comparison_node = comparison_root_node[index] if index < len(comparison_root_node) else None
+            module_compare_result.extend(self._matching_all_modules(base_node, comparison_node))
+        return module_compare_result
+
+    def _matching_all_modules(self, base_node: ModuleNode, comparison_node: ModuleNode):
+        all_matched_modules = []
+        matched_queue = Queue()
+        matched_queue.put([base_node, comparison_node])
+        while not matched_queue.empty():
+            matched_base_node, matched_comparison_node = matched_queue.get()
+            matched_node_list = self._matching_common_subsequence(matched_base_node, matched_comparison_node)
+            all_matched_modules.extend(matched_node_list)
+            for matched_node in matched_node_list:
+                matched_queue.put(matched_node)
+        return all_matched_modules
+
+    def _matching_common_subsequence(self, base_node: ModuleNode, comparison_node: ModuleNode):
+        base_modules = base_node.child_nodes if base_node else []
+        comparison_modules = comparison_node.child_nodes if comparison_node else []
+        if not base_modules and not comparison_modules:
+            return []
+        name_func = NameFunction(self._args).get_module_name
+        return longest_common_subsequence_matching(base_modules, comparison_modules, name_func)

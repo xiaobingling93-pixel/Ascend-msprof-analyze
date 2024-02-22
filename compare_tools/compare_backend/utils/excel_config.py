@@ -14,6 +14,10 @@ class CellFormatType:
                 'bold': True}  # 字符串，无背景色，字体加粗
     BLUE_BOLD = {"font_name": "Arial", 'font_size': 11, 'fg_color': Constant.BLUE_COLOR, 'align': 'left',
                  'valign': 'vcenter', 'bold': True, 'border': True}  # 蓝色背景，加粗
+    GREEN_BOLD = {"font_name": "Arial", 'font_size': 11, 'fg_color': Constant.GREEN_COLOR, 'align': 'left',
+                'valign': 'vcenter', 'bold': True, 'border': True}  # 绿色背景，加粗
+    YELLOW_BOLD = {"font_name": "Arial", 'font_size': 11, 'fg_color': Constant.YELLOW_COLOR, 'align': 'left',
+                   'valign': 'vcenter', 'bold': True, 'border': True}  # 黄色背景，加粗
 
 
 class ExcelConfig(object):
@@ -46,6 +50,19 @@ class ExcelConfig(object):
     AVG_DURATION = "Avg Duration(us)"
     MAX_DURATION = "Max Duration(us)"
     MIN_DURATION = "Min Duration(us)"
+    MODULE_CLASS = "Module Class"
+    MODULE_NAME = "Module Name"
+    HOST_SELF_TIME = "Host Self Time(ms)"
+    HOST_TOTAL_TIME = "Host Total Time(ms)"
+    DEVICE_SELF_TIME = "Device Self Time(ms)"
+    DEVICE_TOTAL_TIME = "Device Total Time(ms)"
+    DIFF_SELF_TIME = "Device Self Time Diff"
+    DIFF_TOTAL_RATIO = "Total Diff Ratio"
+    DIFF_TOTAL_TIME = "Device Total Time Diff"
+    NUMBER = "Number"
+    MODULE_LEVEL = "Module Level"
+    BASE_CALL_STACK = "Base Call Stack"
+    COMPARISON_CALL_STACK = "Comparison Call Stack"
 
     HEADERS = {
         Constant.OPERATOR_TABLE: [
@@ -118,9 +135,29 @@ class ExcelConfig(object):
             {"name": MIN_DURATION, "type": CellFormatType.DEFAULT_FLOAT, "width": 17},
             {"name": DIFF_DUR, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
             {"name": DIFF_RATIO, "type": CellFormatType.DEFAULT_RATIO, "width": 20}
+        ],
+        Constant.MODULE_TOP_TABLE: [
+            {"name": ORDER, "type": CellFormatType.DEFAULT, "width": 10},
+            {"name": MODULE_CLASS, "type": CellFormatType.DEFAULT, "width": 20},
+            {"name": MODULE_LEVEL, "type": CellFormatType.DEFAULT, "width": 15},
+            {"name": MODULE_NAME, "type": CellFormatType.DEFAULT, "width": 35},
+            {"name": OPERATOR_NAME, "type": CellFormatType.DEFAULT, "width": 25},
+            {"name": KERNEL_DETAILS, "type": CellFormatType.DEFAULT, "width": 20},
+            {"name": DEVICE_SELF_TIME, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": NUMBER, "type": CellFormatType.DEFAULT, "width": 10},
+            {"name": DEVICE_TOTAL_TIME, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": KERNEL_DETAILS, "type": CellFormatType.DEFAULT, "width": 20},
+            {"name": DEVICE_SELF_TIME, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": NUMBER, "type": CellFormatType.DEFAULT, "width": 10},
+            {"name": DEVICE_TOTAL_TIME, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": DIFF_TOTAL_TIME, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": DIFF_SELF_TIME, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": DIFF_TOTAL_RATIO, "type": CellFormatType.DEFAULT_RATIO, "width": 15},
+            {"name": BASE_CALL_STACK, "type": CellFormatType.DEFAULT, "width": 30},
+            {"name": COMPARISON_CALL_STACK, "type": CellFormatType.DEFAULT, "width": 30}
         ]
     }
 
     OVERHEAD = {Constant.OPERATOR_TABLE: ["B1:F1", "G1:K1"], Constant.MEMORY_TABLE: ["B1:F1", "G1:K1"],
                 Constant.COMMUNICATION_TABLE: ["B1:H1", "I1:O1"], Constant.OPERATOR_TOP_TABLE: ["C1:D1", "E1:F1"],
-                Constant.MEMORY_TOP_TABLE: ["C1:E1", "F1:H1"]}
+                Constant.MEMORY_TOP_TABLE: ["C1:E1", "F1:H1"], Constant.MODULE_TOP_TABLE: ["F1:I1", "J1:M1"]}

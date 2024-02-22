@@ -187,6 +187,21 @@ class TraceEventBean:
                 return True
         return False
 
+    def is_python_function(self):
+        return self.lower_cat == "python_function"
+
+    def is_optimizer(self):
+        return self.lower_name.startswith("optimizer")
+
+    def is_fwdbwd(self):
+        return self.lower_cat == "fwdbwd"
+
+    def is_step_profiler(self):
+        return self.name.find("ProfilerStep#") != -1
+
+    def reset_name(self, name):
+        self._name = name
+
     def init(self):
         if isinstance(self._event, dict):
             self._pid = self._event.get("pid", 0)
