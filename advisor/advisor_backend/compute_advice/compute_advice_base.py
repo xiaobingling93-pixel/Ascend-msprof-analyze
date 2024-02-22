@@ -22,12 +22,18 @@ from common_func.file_manager import FileManager
 
 
 class ComputeAdviceBase(AdviceBase):
+    ASCEND_PT = 'ascend_pt'
+    ASCEND_PROFILER_OUTPUT = 'ASCEND_PROFILER_OUTPUT'
+    KERNEL_DETAIL_FILE = "kernel_details.csv"
+    TRACE_VIEW_FILE = "trace_view.json"
+
     def __init__(self, collection_path: str):
         super().__init__(collection_path)
         self.kernel_details_path = ""
         self.has_preparse = False
         self.preparse_data = defaultdict(list)
         self.call_stack = None
+        self.trace_view_path = ""
 
     def path_check(self):
         """
@@ -55,7 +61,14 @@ class ComputeAdviceBase(AdviceBase):
     def has_callstack(self):
         if self.call_stack is not None:
             return self.call_stack
-        profiler_info_json_path = os.path.join(self.collection_path, "profiler_info.json")
+        profiler_info_json_path = ""
+        for file in os.listdir(self.collection_path):
+            if file.startswith("profiler_info"):
+                profiler_info_json_path = os.path.join(self.collection_path, file)
+                break
+        if not profiler_info_json_path:
+            self.call_stack = False
+            return self.call_stack
         self.trace_view_path = os.path.join(self.collection_path, self.ASCEND_PROFILER_OUTPUT, "trace_view.json")
         if not os.path.exists(profiler_info_json_path) or not os.path.exists(self.trace_view_path):
             self.call_stack = False

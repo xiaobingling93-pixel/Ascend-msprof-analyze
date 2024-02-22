@@ -14,6 +14,8 @@
 # limitations under the License.
 
 import os
+from abc import ABC
+
 import pandas as pd
 
 from compute_advice.compute_advice_base import ComputeAdviceBase
@@ -21,11 +23,7 @@ from compute_advice.npu_fused.csv_analyzer import CSVAnalyzer
 from compute_advice.npu_fused.json_analyzer import JSONAnalyzer
 
 
-class NpuFusedAdvice(ComputeAdviceBase):
-    ASCEND_PT = 'ascend_pt'
-    ASCEND_PROFILER_OUTPUT = 'ASCEND_PROFILER_OUTPUT'
-    KERNEL_DETAIL_FILE = "kernel_details.csv"
-    TRACE_VIEW_FILE = "trace_view.json"
+class NpuFusedAdvice(ComputeAdviceBase, ABC):
 
     def __init__(self, collection_path: str):
         super().__init__(collection_path)
@@ -33,7 +31,6 @@ class NpuFusedAdvice(ComputeAdviceBase):
         self.cur_bottleneck = str()
         self.cur_advice = str()
         self.kernel_details_path = ""
-        self.trace_view_path = ""
         self.call_stack = None
 
     def run(self):
@@ -59,14 +56,16 @@ class NpuFusedAdvice(ComputeAdviceBase):
         op_dur = filter_data["duration sum(us)"].sum()
         if op_num > 0:
             index = 0
-            self.cur_advice = f"Advice {index}:\n"
             self.cur_bottleneck = f"The computing time of fusable op is {round(op_dur, 2)} ms."
+            self.cur_advice = ""
             for _, row in self.cur_data.iterrows():
+                advice = f"Advice {index}:\n"
                 cur_op = "[" + ", ".join(row.loc["pattern"]) + "]"
                 npu_fused_op = row.loc["pattern_name"]
-                self.cur_advice += f"Replace {cur_op} with {npu_fused_op}. "
+                advice += f"Replace {cur_op} with {npu_fused_op}. "
                 if self.call_stack:
-                    self.cur_advice += f"This pattern first happened in: \n{row['custom code']}"
+                    advice += f"This pattern first happened in: \n{row['custom code']}"
                 if index != op_num - 1:
-                    self.cur_advice += "\n"
+                    advice += "\n"
                 index += 1
+                self.cur_advice += advice

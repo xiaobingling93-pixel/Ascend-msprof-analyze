@@ -88,6 +88,6 @@ class CSVAnalyzer:
                                       duration_sum, op_durations, index, first_time])
         if len(sublist_dict) == 0:
             pattern_name = Constant.PATTERN_DICT.get(expect_sub_list, "unknown")
-            repeated_sublists.append([pattern_name, expect_sub_list, 0, 0, 0, 0, 0])
+            repeated_sublists.append([pattern_name, expect_sub_list, 0, 0, 0, 0, 0, 0])
         # 返回所有重复的子列表
         return repeated_sublists
