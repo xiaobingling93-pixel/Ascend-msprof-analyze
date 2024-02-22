@@ -53,7 +53,7 @@ class TestComputeAdvice(unittest.TestCase):
                 }
             }
         }
-        with os.fdopen(os.open(f"{TestComputeAdvice.TMP_DIR}/profiler_info.json",
+        with os.fdopen(os.open(f"{TestComputeAdvice.TMP_DIR}/profiler_info_0.json",
                                os.O_WRONLY | os.O_CREAT, stat.S_IWUSR | stat.S_IRUSR), 'w') as fp:
             fp.write(json.dumps(info))
 
