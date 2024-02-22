@@ -17,25 +17,25 @@ class TestSlowLinkAdvice(unittest.TestCase):
             0: {
                 'RDMA time(ms)': 0,
                 'RDMA size(mb)': 0,
-                'SDMA time(ms)': 0.08536799999999997,
-                'SDMA size(mb)': 0.03629965625,
+                'SDMA time(ms)': 0.03629965625,
+                'SDMA size(mb)': 0.08536799999999997,
                 'RDMA bandwidth(GB/s)': 0,
-                'SDMA bandwidth(GB/s)': 0.4252
+                'SDMA bandwidth(GB/s)': 2.3518
             },
             1: {
                 'RDMA time(ms)': 0,
                 'RDMA size(mb)': 0,
-                'SDMA time(ms)': 0.13439200000000004,
-                'SDMA size(mb)': 0.05697939062500001,
+                'SDMA time(ms)': 0.05697939062500001,
+                'SDMA size(mb)': 0.13439200000000004,
                 'RDMA bandwidth(GB/s)': 0,
-                'SDMA bandwidth(GB/s)': 0.424
+                'SDMA bandwidth(GB/s)': 2.3586
             }
         }
         cls.expect_bottleneck = 'SDMA bandwidth(GB/s): \n' \
-            'The average is 0.425, ' \
-            'while the maximum  is 0.425GB/s and ' \
-            'the minimum is 0.424GB/s. ' \
-            'the difference is 0.001GB/s. \n'
+            'The average is 2.355, ' \
+            'while the maximum  is 2.359GB/s and ' \
+            'the minimum is 2.352GB/s. ' \
+            'the difference is 0.007GB/s. \n'
 
     def test_compute_ratio_abnormal(self):
         result = SlowLinkAdvice.compute_ratio(19.0, 0)
