@@ -33,7 +33,7 @@ class SlowLinkAdvice(ClusterAdviceBase):
     SDMA = "SDMA"
     RDMA = "RDMA"
 
-    def __init__(self, collection_path: str):
+    def __init__(self, collection_path: str, kwargs: dict = None):
         super().__init__(collection_path)
         self.rank_bw_dict = defaultdict(lambda: {
             self.RDMA_TIME_MS: 0,
