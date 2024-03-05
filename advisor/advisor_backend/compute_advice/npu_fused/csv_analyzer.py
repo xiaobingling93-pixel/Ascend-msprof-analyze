@@ -28,18 +28,10 @@ class CSVAnalyzer:
 
     def process(self):
         df = pd.read_csv(self._path, dtype={"Start Time(us)": str})
-
-
-        pool = multiprocessing.Pool(multiprocessing.cpu_count())
-        # 数据预解析
-        result = pool.map(self.update_op_row, df.iterrows())
-        pool.close()
-
-        preparse_df = pd.DataFrame(result)
         # 分析是否存在可融合的算子
-        op_type_list = preparse_df["Type"].tolist()
-        duration_list = preparse_df["Duration(us)"].tolist()
-        start_times = preparse_df["Start Time(us)"].tolist()
+        op_type_list = df["Type"].tolist()
+        duration_list = df["Duration(us)"].tolist()
+        start_times = df["Start Time(us)"].tolist()
         # 去除末尾的\t分隔符
         start_times = [start_time[:-1] for start_time in start_times]
         result_list = []
@@ -49,10 +41,6 @@ class CSVAnalyzer:
         data_frame.columns = ["pattern_name", "pattern", "len", "count", "duration sum(us)", "op durations(us)",
                               "index", "first_timestamp"]
         return data_frame
-
-    @staticmethod
-    def update_op_row(row):
-        return OpPerfFactory.build(row[1]).update()
 
     @staticmethod
     def find_all_sub_lists(op_type_list, duration_list, start_times, expect_sub_list):

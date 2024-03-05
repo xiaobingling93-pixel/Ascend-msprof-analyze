@@ -15,11 +15,13 @@
 from common_func_advisor.constant import Constant
 from advice_factory.advice_factory import AdviceFactory
 from compute_advice.npu_fused_advice import NpuFusedAdvice
+from compute_advice.npu_slow_advice import NpuSlowAdvice
 
 
 class ComputeAdviceFactory(AdviceFactory):
     ADVICE_LIB = {
         Constant.NPU_FUSED: NpuFusedAdvice,
+        Constant.NPU_SLOW: NpuSlowAdvice,
     }
 
     def __init__(self, collection_path: str):
