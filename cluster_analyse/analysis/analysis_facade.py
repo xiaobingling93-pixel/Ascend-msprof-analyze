@@ -14,14 +14,13 @@
 # limitations under the License.
 
 from multiprocessing import Process
-from common_func.constant import Constant
-from analysis.communication_analysis import CommunicationAnalysis
+from analysis.communication.comm_analysis_generator import CommunicationAnalysisGenerator
+from analysis.communication_matrix.comm_matrix_generator import CommMatrixAnalysisGenerator
 from analysis.step_trace_time_analysis import StepTraceTimeAnalysis
-from analysis.communication_analysis import CommMatrixAnalysis
 
 
 class AnalysisFacade:
-    analysis_module = {CommunicationAnalysis, StepTraceTimeAnalysis, CommMatrixAnalysis}
+    analysis_module = {CommunicationAnalysisGenerator, StepTraceTimeAnalysis, CommMatrixAnalysisGenerator}
 
     def __init__(self, params: dict):
         self.params = params
