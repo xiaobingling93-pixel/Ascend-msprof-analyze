@@ -1,3 +1,4 @@
+from compare_backend.utils.module_node import ModuleNode
 from compare_backend.utils.torch_op_node import TorchOpNode
 
 
@@ -41,3 +42,11 @@ class NameFunction:
             input_shape = ';\r\n'.join(data)
             return f'{self.args.op_name_map.get(op_node.name, op_node.name)}{input_shape}'
         return f'{self.args.op_name_map.get(op_node.name, op_node.name)}{op_node.input_shape}'
+
+    def get_module_name(self, module: ModuleNode) -> str:
+        if not self.args.op_name_map:
+            return module.module_name
+        module = module.module_name
+        for old_name, new_name in self.args.op_name_map.items():
+            module.replace(old_name, new_name)
+        return module

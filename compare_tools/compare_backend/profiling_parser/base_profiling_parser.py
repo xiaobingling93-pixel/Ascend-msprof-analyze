@@ -18,10 +18,18 @@ class ProfilingResult:
         self.memory_list = []
         self.communication_dict = {}
         self.overall_metrics = ProfilingInfo(profiling_type)
+        self.python_function_data = []
+        self.fwdbwd_dict = {}
 
     def update_torch_op_data(self, event: TraceEventBean):
         event.is_torch_op = True
         self.torch_op_data.append(event)
+
+    def update_python_function_data(self, event: TraceEventBean):
+        self.python_function_data.append(event)
+
+    def update_fwdbwd_data(self, flow_type: str, event: TraceEventBean):
+        self.fwdbwd_dict.setdefault(event.id, {})[flow_type] = event
 
     def update_kernel_dict(self, start_time: Decimal, kernel_event: TraceEventBean):
         self.kernel_dict.setdefault(start_time, []).append(KernelEvent(kernel_event, self._profiling_type))
@@ -53,6 +61,7 @@ class BaseProfilingParser(ABC):
         self._result_data = ProfilingResult(self._profiling_type)
         self._memory_events = []
         self._flow_dict = {}
+        self._fwdbwd_dict = {}
         self._all_kernels = {}
         self._comm_task_list = []
         self._comm_list = []
@@ -131,6 +140,21 @@ class BaseProfilingParser(ABC):
                 self._flow_dict.setdefault(event.id, {})["start"] = event
             elif event.is_flow_end():
                 self._flow_dict.setdefault(event.id, {})["end"] = event
+            return True
+        return False
+
+    def _picking_python_function_event(self, event: TraceEventBean):
+        if event.is_python_function():
+            self._result_data.update_python_function_data(event)
+            return True
+        return False
+
+    def _picking_fwdbwd_flow_event(self, event: TraceEventBean):
+        if event.is_fwdbwd():
+            if event.is_flow_start():
+                self._result_data.update_fwdbwd_data("start", event)
+            elif event.is_flow_end():
+                self._result_data.update_fwdbwd_data("end", event)
             return True
         return False
 

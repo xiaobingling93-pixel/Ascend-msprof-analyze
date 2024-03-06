@@ -41,6 +41,9 @@ class NPUProfilingParser(BaseProfilingParser):
         if self._enable_operator_compare or self._args.max_kernel_num:
             func_list.add(self._picking_kernel_event)
             func_list.add(self._picking_flow_event)
+        if self._enable_operator_compare:
+            func_list.add(self._picking_python_function_event)
+            func_list.add(self._picking_fwdbwd_flow_event)
         if self._enable_memory_compare:
             func_list.add(self._picking_task_queue_data)
         if self._enable_communication_compare:
@@ -235,7 +238,7 @@ class NPUProfilingParser(BaseProfilingParser):
                 sdma_dict.setdefault(stream_id, []).append(event.dur)
             elif event.is_compute_event():
                 ai_core_stream.add(stream_id)
-        compute_stream = event_wait_stream & ai_core_stream
+        compute_stream = event_wait_stream & ai_core_stream if event_wait_stream else ai_core_stream
         for stream in compute_stream:
             dur_list = sdma_dict.get(stream, [])
             self._result_data.overall_metrics.update_sdma_info(sum(dur_list), len(dur_list))

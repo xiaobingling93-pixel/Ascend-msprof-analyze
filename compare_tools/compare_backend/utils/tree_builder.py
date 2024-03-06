@@ -1,5 +1,7 @@
 from queue import Queue
 
+from compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
+from compare_backend.utils.module_node import ModuleNode
 from compare_backend.utils.torch_op_node import TorchOpNode
 
 
@@ -7,10 +9,12 @@ class TreeBuilder:
     @classmethod
     def build_tree(cls, event_list: list, kernel_dict: dict, memory_list: list) -> TorchOpNode:
         root_node = TorchOpNode()
-        event_list.extend(memory_list)
-        event_list.sort(key=lambda x: x.start_time)
+        all_event_list = []
+        all_event_list.extend(event_list)
+        all_event_list.extend(memory_list)
+        all_event_list.sort(key=lambda x: x.start_time)
         last_node = root_node
-        for event in event_list:
+        for event in all_event_list:
             while last_node:
                 if last_node != root_node and event.start_time > last_node.end_time:
                     last_node = last_node.parent
@@ -53,3 +57,26 @@ class TreeBuilder:
             for child_node in tree_node.child_nodes:
                 node_queue.put(child_node)
         return result_list
+
+    @classmethod
+    def build_module_tree(cls, event_list: list, kernel_dict: dict):
+        root_node = ModuleNode(TraceEventBean({}))
+        event_list.sort(key=lambda x: x.start_time)
+        last_node = root_node
+        for event in event_list:
+            while last_node:
+                if last_node != root_node and event.start_time > last_node.end_time:
+                    last_node = last_node.parent_node
+                    continue
+                if event.is_x_mode():
+                    tree_node = ModuleNode(event, last_node)
+                    last_node.update_child_nodes(tree_node)
+                    last_node = tree_node
+                    break
+                if last_node == root_node:
+                    break
+                kernel_list = kernel_dict.get(event.start_time, [])
+                if kernel_list:
+                    last_node.update_kernel_list(event.start_time, kernel_list)
+                break
+        return root_node

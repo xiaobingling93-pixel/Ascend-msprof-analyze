@@ -60,6 +60,10 @@ class TorchOpNode:
     def memory_allocated(self):
         return self._memory_allocated_list
 
+    @property
+    def device_dur(self):
+        return sum([kernel.device_dur for kernel in self._kernel_list])
+
     def add_child_node(self, child_node):
         self._child_nodes.append(child_node)
 
@@ -73,11 +77,16 @@ class TorchOpNode:
             cur_node._kernel_num += kernel_num
             cur_node = cur_node._parent_node
 
+    def update_kernel_list(self, kernel_list: list):
+        if not kernel_list:
+            return
+        self._kernel_list.extend(kernel_list)
+
     def set_memory_allocated(self, memory_allocated: MemoryEvent):
         self._memory_allocated_list.append(memory_allocated)
 
     def is_step_profiler(self) -> bool:
-        return self.name.find("ProfilerStep#") != -1
+        return self._event.is_step_profiler()
 
     def get_op_info(self) -> list:
         return [self.name, self.input_shape, self.input_type, self.call_stack]
