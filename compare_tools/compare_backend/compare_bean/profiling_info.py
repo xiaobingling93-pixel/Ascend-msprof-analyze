@@ -18,6 +18,7 @@ class ProfilingInfo:
         self.fa_num_bwd = 0
         self.compute_time = 0.0
         self.communication_not_overlapped = 0.0
+        self.wait_time = 0.0
         self.memory_used = 0.0
         self.e2e_time = 0.0
         self.sdma_time = 0.0
@@ -33,6 +34,7 @@ class ProfilingInfo:
         self.vec_time = self.vec_time / 10 ** 6
         self.compute_time = self.compute_time / 10 ** 6
         self.communication_not_overlapped = self.communication_not_overlapped / 10 ** 6
+        self.wait_time = self.wait_time / 10 ** 6
         self.e2e_time = self.e2e_time / 10 ** 6
         self.sdma_time = self.sdma_time / 10 ** 6
         self.scheduling_time = self.scheduling_time / 10 ** 6
@@ -83,6 +85,9 @@ class ProfilingInfo:
 
     def update_comm_not_overlap(self, time: float):
         self.communication_not_overlapped += time
+
+    def update_comm_not_overlap_wait_time(self, time: float):
+        self.wait_time = time
 
     def set_memory_used(self, memory: float):
         self.memory_used = memory
