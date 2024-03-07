@@ -162,17 +162,34 @@ activities配置仅采集NPU数据，不配置experimental_config参数以及其
 
 ### 算子性能
 
-算子性能比对结果在performance_comparison_result_*.xlsl中OperatorCompare和OperatorCompare（TOP）的sheet页呈现。
+算子性能比对结果在performance_comparison_result_*.xlsl中OperatorCompare和OperatorCompareStatistic的sheet页呈现。
 
 - OperatorCompare(TOP)：算子为粒度的统计呈现，按照算子在device上的总耗时与基准算子的差距值（Diff Duration(ms)列）进行逆序。
 - OperatorCompare：算子比对的明细展示，可以查看每一个算子对应的kernel详情。
 - Diff Ratio：比较算子在device上执行总耗时 / 基准算子在device上执行总耗时，红色代表劣化。
+- Device Duration(us)：该算子下发到device上执行的所有kernel耗时的总和。
 
-#### Device Duration(us)
+### nn.Module性能
 
-```
-该算子下发到device上执行的所有kernel耗时的总和
-```
+nn.Module是所有神经网络模块的基类，使用PyTorch构建神经网络需要继承nn.Module类来实现，性能比对工具支持nn.Module模块级的比对，帮助优化模型结构。
+
+当用户采集时开启with_stack开关，会上报python function事件，当比对的双方数据都存在python function的事件时，可进行模块级别的比对。
+
+nn.Module性能比对结果在performance_comparison_result_*.xlsl中ModuleCompareStatistic的sheet页呈现。
+
+- Module Class：Module名，如nn.Module: Linear。
+- Module Level：Module的层级。
+- Module Name：Module唯一标识名，如/ DynamicNet_0/ Linear_0。
+- Operator Name：框架侧算子名，如aten::add。字段为[ TOTAL ]代表该module的总体情况。
+- Kernel Detail：算子详细信息。
+- Device Self Time(ms)：该模块调用的算子（排除子模块）在device侧执行的总耗时，单位ms。
+- Number：该Module或算子被调用的次数。
+- Device Total Time(ms)：该模块调用的算子（包含子模块）在device侧执行的总耗时，单位ms。
+- Device Total Time Diff：GPU与NPU的Device Total Time(ms)差值。
+- Device Self Time Diff：GPU与NPU的Device Self Time(ms)差值。
+- Self Time Ratio：GPU与NPU的Device Self Time(ms)比值。
+- Base Call Stack：基准文件模块的调用栈。
+- Comparison Call Stack：比较文件模块的调用栈。
 
 ### 通信性能
 
@@ -184,7 +201,7 @@ activities配置仅采集NPU数据，不配置experimental_config参数以及其
 
 ### 算子内存
 
-算子内存比对结果在performance_comparison_result_*.xlsl中MemoryCompare和MemoryCompare（TOP）的sheet页呈现。
+算子内存比对结果在performance_comparison_result_*.xlsl中MemoryCompare和MemoryCompareStatistic的sheet页呈现。
 
 - MemoryCompare(TOP)：算子为粒度的统计呈现，按照算子占用的总内存与基准算子的差距值(Diff Memory(MB))进行逆序。
 
@@ -192,8 +209,4 @@ activities配置仅采集NPU数据，不配置experimental_config参数以及其
 
 - Diff Ratio: 比较算子占用的总内存 / 基准算子占用的总内存，红色代表劣化。
 
-#### Size(KB)
-
-```
-该算子占用的device内存大小，单位KB
-```
+- Size(KB)：该算子占用的device内存大小，单位KB。
