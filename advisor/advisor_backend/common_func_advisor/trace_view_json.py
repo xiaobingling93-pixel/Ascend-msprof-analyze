@@ -12,12 +12,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import os
 from abc import abstractmethod
 from dataclasses import dataclass
 from dataclasses import field
 from typing import Dict
 from typing import List
+
+import pandas as pd
 
 from common_func.file_manager import FileManager
 
@@ -89,9 +91,34 @@ class TraceViewJson:
         self.cann_dur_events: Dict[str, DurationEvent] = dict()
         self.ascend_hardware_dur_events: Dict[str, DurationEvent] = dict()
         self.torch_2_npu_flow_events: Dict[str, FlowEvent] = dict()
-
         traces = FileManager.read_json_file(path)
         self._load_obj(traces)
+    
+    def get_call_stack(self, data: pd.DataFrame, index_id: int, ts_col: str) -> str:
+        if ts_col not in data.columns.tolist():
+            print("[ERROR] No {} col found in data columns.".format(ts_col))
+            return ""
+        row = data.loc[index_id]
+        timestamp = row[ts_col]
+        flow_event = self.get_torch_2_npu_flow_event(timestamp)
+        if not flow_event.valid():
+            print("[ERROR] Get flow event failed for pattern {}.".format(row['pattern']))
+            return ""
+        flow_event_s_key = flow_event.s_point_ts
+        python_dur_events = self.get_python_dur_events_contain_ts(flow_event_s_key)
+        if not python_dur_events:
+            print("[ERROR] No python dur event found for pattern {}.".format(row['pattern']))
+            return ""
+        # 保持新老版本callstack兼容性
+        if python_dur_events[0].args.get("Call stack"):
+            # 旧版本
+            call_stack_list = python_dur_events[0].args.get("Call stack").split(";")
+        else:
+            python_dur_events.sort(key=lambda e: e.ts)
+            # 新版本
+            call_stack_list = [event.name for event in python_dur_events if event.cat == "python_function"]
+        call_stack = "\n".join(call_stack_list)
+        return call_stack
 
     def get_torch_2_npu_flow_event(self, end_time) -> FlowEvent:
         if not self.torch_2_npu_flow_events or not self.torch_2_npu_flow_events.get(end_time):
