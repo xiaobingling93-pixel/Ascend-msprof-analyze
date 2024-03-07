@@ -108,6 +108,8 @@ class DetailPerformanceGenerator(BaseGenerator):
             self._profiling_data_dict.get(Constant.COMPARISON_DATA)).build_module_tree()
         for index, base_node in enumerate(base_root_node):
             comparison_node = comparison_root_node[index] if index < len(comparison_root_node) else None
+            if not base_node or not comparison_node:
+                continue
             module_compare_result.extend(self._matching_all_modules(base_node, comparison_node))
         return module_compare_result
 
