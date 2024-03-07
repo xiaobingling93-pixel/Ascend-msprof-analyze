@@ -37,9 +37,12 @@ class OverallPerformanceComparator(BaseComparator):
             self._headers.append('Mem Usage')
             base_col.append(f'{base_profiling_info.memory_used:.2f}G')
             comp_col.append(f'{comp_profiling_info.memory_used:.2f}G')
-        self._headers.extend(['Uncovered Communication Time'])
-        base_col.extend([f'{base_profiling_info.communication_not_overlapped: .3f}s'])
-        comp_col.extend([f'{comp_profiling_info.communication_not_overlapped: .3f}s'])
+        self._headers.extend(['Uncovered Communication Time(Wait Time)'])
+        if base_profiling_info.wait_time:
+            base_col.extend([f'{base_profiling_info.communication_not_overlapped: .3f}s({base_profiling_info.wait_time:.3f}s'])
+        else:
+            base_col.extend([f'{base_profiling_info.communication_not_overlapped: .3f}s( / )'])
+        comp_col.extend([f'{comp_profiling_info.communication_not_overlapped: .3f}s({comp_profiling_info.wait_time:.3f}s)'])
         if base_profiling_info.sdma_time or comp_profiling_info.sdma_time:
             self._headers.append('SDMA Time(Num)')
             base_col.append(f'{base_profiling_info.sdma_time:.3f}s({base_profiling_info.sdma_num})')
