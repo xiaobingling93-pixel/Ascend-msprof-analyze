@@ -111,7 +111,7 @@ class NPUProfilingParser(BaseProfilingParser):
     def _picking_notify_wait_event_and_not_overlap_event(self):
         self.notify_event_cache = []
         self._not_overlaped_commu_event = []
-        for event in self._commu_task_list:
+        for event in self._comm_task_list:
             if event.name == 'Notify_Wait' and event.args.get('rdma_type', 0) != 'RDMA_PAYLOAD_CHECK' \
                     and event.args.get('rdma_type', 0) != 'RDMA_PAYLOAD_ACK':
                 self.notify_event_cache.append(event)
