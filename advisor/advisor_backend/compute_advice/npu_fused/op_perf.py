@@ -23,9 +23,9 @@ from common_func_advisor.constant import PerfColor
 class OpPerfFactory:
     @classmethod
     def build(cls, op_row: Dict):
-        if op_row.get(Constant.TITLE.TASK_TYPE) in (CoreType.AIV, CoreType.MIX_AIV):
+        if op_row.get(Constant.TITLE.TASK_TYPE) == CoreType.AIV:
             return VecOpPerf(op_row)
-        elif op_row.get(Constant.TITLE.TASK_TYPE) in (CoreType.AIC, CoreType.MIX_AIC):
+        elif op_row.get(Constant.TITLE.TASK_TYPE) == CoreType.AIC:
             return CubeOpPerf(op_row)
         else:
             return OpPerf(op_row)
