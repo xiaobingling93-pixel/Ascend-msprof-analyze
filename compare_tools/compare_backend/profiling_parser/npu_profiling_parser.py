@@ -129,7 +129,7 @@ class NPUProfilingParser(BaseProfilingParser):
                 notify_wait_event_dict[notify_event.tid] = [notify_event]
         total_time = 0
         for commu_event in self._not_overlaped_commu_event:
-            wait_time_list = []
+            wait_time_list = [0]
             commu_event_start_time = float(commu_event.start_time)
             commu_event_end_time = float(commu_event.start_time) + commu_event.dur
 
