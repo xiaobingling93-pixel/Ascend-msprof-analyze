@@ -7,7 +7,6 @@ import unittest
 
 from advisor_backend.interface import Interface
 from advisor_backend.compute_advice.npu_slow_advice import NpuSlowAdvice
-from advisor_backend.common_func_advisor.trace_view_json import TraceViewJson
 
 
 class TestNpuSlowAdvice(unittest.TestCase):
@@ -109,17 +108,17 @@ class TestNpuSlowAdvice(unittest.TestCase):
                       'aiv_time(us)', 'aiv_total_cycles', 'aiv_vec_fp32_ratio', 'aiv_vec_fp16_ratio',
                       'aiv_vec_int32_ratio',
                       'aiv_vec_misc_ratio', 'aiv_cube_fops', 'aiv_vector_fops']
-        # red: size=0.0492 MB, throughput=2.32 GB/s, task_duration=21.2us
+        # RED: size=0.0492 MB, throughput=2.32 GB/s, task_duration=21.2us
         csv_row1 = [1, 4294967295, 1265, 16, 'Slice1', 'Slice', 'AI_VECTOR_CORE', "1699529623106750\t", 21.2, 261.56, 9,
                     0,
                     '4,1025', 'INT64', 'FORMAT_ND', '4,1025', 'INT32', 'FORMAT_ND', 'N/A',
                     0, 0, 0, 0, 0, 0,
                     1.77, 29508, 0, 0, 0.0062, 0, 0, 5856]
         # YELLOW: size=0.0492 MB, throughput=984 GB/s, task_duration=0.05us
-        csv_row2 = [1, 4294967295, 1265, 16, 'Slice2', 'Slice', 'MIX_AIV', "1699529623106751\t", 0.05, 261.56, 9,
+        csv_row2 = [1, 4294967295, 1265, 16, 'Slice2', 'Slice', 'AI_VECTOR_CORE', "1699529623106751\t", 0.05, 261.56, 9,
                     0,
                     '4,1025', 'INT64', 'FORMAT_ND', '4,1025', 'INT32', 'FORMAT_ND', 'N/A',
-                    2.3, 28888, 0.4, 0.1, 0.1, 0.7,
+                    0, 0, 0, 0, 0, 0,
                     1.77, 29508, 0, 0, 0.0062, 0, 0, 5856]
         # WHITE: AI_CPU
         csv_row3 = [1, 4294967295, 1265, 16, 'Swish1', 'Swish', 'AI_CPU', "1699529623106752\t", 3.14, 261.56, 9,
@@ -136,16 +135,28 @@ class TestNpuSlowAdvice(unittest.TestCase):
         csv_row5 = [1, 4294967295, 1265, 16, 'Add1', 'Add', 'AI_CORE', "1699529623106754\t", 3.14, 261.56, 9, 0,
                     '4,1025', 'INT64', 'FORMAT_ND', '4,1025', 'INT32', 'FORMAT_ND', 'N/A',
                     2.3, 28888, 0.2, 0.1, 0.1, 0.7,
-                    1.77, 29508, 0, 0, 0.0062, 0, 0, 5856]
+                    0, 0, 0, 0, 0, 0, 0, 0]
         # GREEN: aic_mac_ratio=0.85
-        csv_row6 = [1, 4294967295, 1265, 16, 'Add1', 'Add', 'MIX_AIC', "1699529623106754\t", 3.14, 261.56, 9, 0,
+        csv_row6 = [1, 4294967295, 1265, 16, 'Add1', 'Add', 'AI_CORE', "1699529623106754\t", 3.14, 261.56, 9, 0,
                     '4,1025', 'INT64', 'FORMAT_ND', '4,1025', 'INT32', 'FORMAT_ND', 'N/A',
                     2.3, 38888, 0.85, 0.1, 0.1, 0.7,
-                    1.77, 29508, 0, 0, 0.0062, 0, 0, 5856]
+                    0, 0, 0, 0, 0, 0, 0, 0]
         # YELLOW: aic_mac_ratio=0.64
-        csv_row7 = [1, 4294967295, 1265, 16, 'Add1', 'Add', 'MIX_AIC', "1699529623106754\t", 3.14, 261.56, 9, 0,
+        csv_row7 = [1, 4294967295, 1265, 16, 'Add1', 'Add', 'AI_CORE', "1699529623106754\t", 3.14, 261.56, 9, 0,
                     '4,1025', 'INT64', 'FORMAT_ND', '4,1025', 'INT32', 'FORMAT_ND', 'N/A',
                     2.3, 48888, 0.64, 0.1, 0.1, 0.7,
+                    0, 0, 0, 0, 0, 0, 0, 0]
+        # WHITE: MIX_AIC
+        csv_row8 = [1, 4294967295, 1265, 16, 'Slice2', 'Slice', 'MIX_AIC', "1699529623106751\t", 0.05, 261.56, 9,
+                    0,
+                    '4,1025', 'INT64', 'FORMAT_ND', '4,1025', 'INT32', 'FORMAT_ND', 'N/A',
+                    2.3, 28888, 0.4, 0.1, 0.1, 0.7,
+                    1.77, 29508, 0, 0, 0.0062, 0, 0, 5856]
+        # WHITE: MIX_AIV
+        csv_row9 = [1, 4294967295, 1265, 16, 'Slice2', 'Slice', 'MIX_AIV', "1699529623106751\t", 0.05, 261.56, 9,
+                    0,
+                    '4,1025', 'INT64', 'FORMAT_ND', '4,1025', 'INT32', 'FORMAT_ND', 'N/A',
+                    2.3, 28888, 0.4, 0.1, 0.1, 0.7,
                     1.77, 29508, 0, 0, 0.0062, 0, 0, 5856]
         with os.fdopen(os.open(f"{TestNpuSlowAdvice.OUTPUT_DIR}/kernel_details.csv",
                                os.O_WRONLY | os.O_CREAT, stat.S_IWUSR | stat.S_IRUSR), 'w') as fp:
@@ -158,6 +169,8 @@ class TestNpuSlowAdvice(unittest.TestCase):
             csv_writer.writerow(csv_row5)
             csv_writer.writerow(csv_row6)
             csv_writer.writerow(csv_row7)
+            csv_writer.writerow(csv_row8)
+            csv_writer.writerow(csv_row9)
 
     def test_run_should_return_empty_when_ascend_pt_path_not_exist(self):
         interface = Interface("")
@@ -174,7 +187,7 @@ class TestNpuSlowAdvice(unittest.TestCase):
         interface = Interface(self.ASCEND_PT_DIR)
         data = interface.get_data('compute', 'npu_slow')
         call_stack = NpuSlowAdvice(self.ASCEND_PT_DIR).get_call_stack(data, index_id=0, ts_col="Start Time(us)")
-        self.assertEqual(7, len(data))
+        self.assertEqual(9, len(data))
         self.assertEqual("", call_stack)
 
     def test_run_should_return_7_data_with_call_stack_when_new_trace_view_exists(self):
@@ -186,7 +199,7 @@ class TestNpuSlowAdvice(unittest.TestCase):
         slow_op_data = data[data["color"] == "RED"]
         NpuSlowAdvice.save_to_excel(data, file_path=os.path.join(self.ASCEND_PT_DIR, "slow_op.xlsx"))
         call_stack = NpuSlowAdvice(self.ASCEND_PT_DIR).get_call_stack(data, index_id=0, ts_col="Start Time(us)")
-        self.assertEqual(7, len(data))
+        self.assertEqual(9, len(data))
         self.assertEqual(2, len(slow_op_data))
         print(call_stack)
         call_stack_res = "/root/torch/module.py\n" \
@@ -202,7 +215,7 @@ class TestNpuSlowAdvice(unittest.TestCase):
         slow_op_data = data[data["color"] == "RED"]
         NpuSlowAdvice.save_to_excel(data, file_path=os.path.join(self.ASCEND_PT_DIR, "slow_op.xlsx"))
         call_stack = NpuSlowAdvice(self.ASCEND_PT_DIR).get_call_stack(data, index_id=0, ts_col="Start Time(us)")
-        self.assertEqual(7, len(data))
+        self.assertEqual(9, len(data))
         self.assertEqual(2, len(slow_op_data))
         print(call_stack)
         call_stack_res = "/root/test/slice.py(116)\n\r\n" \
