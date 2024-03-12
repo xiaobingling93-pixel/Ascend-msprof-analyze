@@ -59,10 +59,10 @@ class DetailPerformanceGenerator(BaseGenerator):
             comparator_list.append(CommunicationComparator(communication_data, CommunicationBean))
 
         if self._args.enable_operator_compare:
-            comparator_list.append(OperatorComparator(op_compare_result, OperatorCompareBean))
-            comparator_list.append(OperatorStatisticComparator(op_compare_result, OperatorStatisticBean))
             if module_compare_result:
                 comparator_list.append(ModuleStatisticComparator(module_compare_result, ModuleStatisticBean))
+            comparator_list.append(OperatorComparator(op_compare_result, OperatorCompareBean))
+            comparator_list.append(OperatorStatisticComparator(op_compare_result, OperatorStatisticBean))
         if self._args.enable_memory_compare:
             comparator_list.append(OperatorComparator(op_compare_result, MemoryCompareBean))
             comparator_list.append(OperatorStatisticComparator(op_compare_result, MemoryStatisticBean))

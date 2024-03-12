@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from collections import OrderedDict
 from multiprocessing import Process
 
 
@@ -7,7 +8,7 @@ class BaseGenerator(Process, ABC):
         super(BaseGenerator, self).__init__()
         self._profiling_data_dict = profiling_data_dict
         self._args = args
-        self._result_data = {}
+        self._result_data = OrderedDict()
 
     def run(self):
         self.compare()
