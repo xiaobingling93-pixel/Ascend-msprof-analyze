@@ -77,7 +77,8 @@ class CommunicationDBGroup(BaseCommunicationGroup):
             for step, data_list in time_data.items():
                 for data in data_list:
                     self.compute_collective_group(data, rank_id, self.communication_time_info)
-                for data in bandwidth_data[step]:
+            for step, data_list in bandwidth_data.items():
+                for data in data_list:
                     self.compute_collective_group(data, rank_id, self.communication_bandwidth_info)
             for step, data_list in matrix_data.items():
                 self.add_p2p_and_rank(rank_id, step, matrix_data)
