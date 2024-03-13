@@ -53,6 +53,7 @@ class StepTraceTimeAnalysis:
     def dump_data(self):
         if not self.step_data_list:
             print("[WARNING] Can't get step time info!")
+            return
         if self.data_type == Constant.TEXT:
             headers = self.get_headers()
             FileManager.create_csv_file(self.collection_path, self.step_data_list, self.CLUSTER_TRACE_TIME_CSV, headers)
@@ -70,19 +71,20 @@ class StepTraceTimeAnalysis:
         for rank_id, profiling_dir_path in self.data_map.items():
             if self.data_type == Constant.TEXT:
                 step_time_file = os.path.join(profiling_dir_path, Constant.SINGLE_OUTPUT, Constant.STEP_TIME_CSV)
-                if step_time_file:
+                if os.path.exists(step_time_file):
                     self.step_time_dict[rank_id] = FileManager.read_csv_file(step_time_file, StepTraceTimeBean)
             else:
                 step_time_file = os.path.join(profiling_dir_path, Constant.SINGLE_OUTPUT,
                                               Constant.DB_COMMUNICATION_ANALYZER)
-                if step_time_file and DBManager.check_tables_in_db(step_time_file, Constant.TABLE_STEP_TRACE):
+                if (os.path.exists(step_time_file) and
+                        DBManager.check_tables_in_db(step_time_file, Constant.TABLE_STEP_TRACE)):
                     conn, cursor = DBManager.create_connect_db(step_time_file)
                     sql = "select * from {0}".format(Constant.TABLE_STEP_TRACE)
                     data = DBManager.fetch_all_data(cursor, sql, is_dict=False)
                     self.step_time_dict[rank_id] = data
                     DBManager.destroy_db_connect(conn, cursor)
             if not self.step_time_dict.get(rank_id):
-                print(f"[WARNING] Rank {rank_id} does not have a valid step_trace_time.json.")
+                print(f"[WARNING] Rank {rank_id} does not have a valid step_trace_time data in {self.data_type} file.")
 
     def analyze_step_time(self):
         for rank_id, data_bean_list in self.step_time_dict.items():
