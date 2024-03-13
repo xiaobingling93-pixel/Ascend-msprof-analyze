@@ -1,0 +1,60 @@
+from xlsxwriter import Workbook
+
+from compare_backend.utils.excel_config import ExcelConfig, CellFormatType
+
+
+class WorkSheetCreator:
+    def __init__(self, work_book: Workbook, sheet_name: str, data: dict, args: any):
+        self._work_book = work_book
+        self._sheet_name = sheet_name
+        self._data = data
+        self._args = args
+        self._work_sheet = None
+        self._row_id = 1
+        self._field_format = {}
+        self._diff_ratio_index = None
+        self._col_ids = "ABCDEFGHIJKLMNOPQRSTUVW"
+
+    def create_sheet(self):
+        if not self._data.get("rows", []):
+            return
+        self._work_sheet = self._work_book.add_worksheet(self._sheet_name)
+        self._write_headers()
+        self._write_data()
+
+    def _write_headers(self):
+        base_header_format = self._work_book.add_format(CellFormatType.GREEN_BOLD)
+        com_header_format = self._work_book.add_format(CellFormatType.YELLOW_BOLD)
+        com_index_range = [-1, -1]
+        overhead = self._data.get("overhead", [])
+        if overhead:
+            base_path = f"Base Profiling: {self._args.base_profiling_path}"
+            self._work_sheet.merge_range(overhead[0], base_path, base_header_format)
+            com_index_range = [self._col_ids.index(overhead[1].split(":")[0][0]),
+                               self._col_ids.index(overhead[1].split(":")[1][0])]
+            comparison_path = f"Comparison Profiling: {self._args.comparison_profiling_path}"
+            self._work_sheet.merge_range(overhead[1], comparison_path, com_header_format)
+            self._row_id += 2
+        for index, header in enumerate(self._data.get("headers")):
+            if index in range(com_index_range[0], com_index_range[1] + 1):
+                header_format = com_header_format
+            else:
+                header_format = base_header_format
+            col_id = self._col_ids[index]
+            self._work_sheet.set_column(f"{col_id}:{col_id}", header.get("width"))
+            self._work_sheet.write(f"{col_id}{self._row_id}", header.get("name"), header_format)
+            self._field_format[index] = self._work_book.add_format(header.get("type"))
+            if header.get("name") in (ExcelConfig.DIFF_RATIO, ExcelConfig.DIFF_TOTAL_RATIO):
+                self._diff_ratio_index = index
+        self._row_id += 1
+
+    def _write_data(self):
+        red_ratio_format = self._work_book.add_format(CellFormatType.RED_RATIO)
+        for data in self._data.get("rows"):
+            for index, cell_data in enumerate(data):
+                cell_format = self._field_format.get(index)
+                if index == self._diff_ratio_index and cell_data and cell_data > 1:
+                    cell_format = red_ratio_format
+                    cell_data = "INF" if cell_data == float('inf') else cell_data
+                self._work_sheet.write(f"{self._col_ids[index]}{self._row_id}", cell_data, cell_format)
+            self._row_id += 1

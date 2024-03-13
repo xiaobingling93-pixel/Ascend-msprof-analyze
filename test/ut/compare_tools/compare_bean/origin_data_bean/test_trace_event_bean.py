@@ -1,6 +1,6 @@
 import unittest
 
-from compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
+from compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
 
 
 class TestTraceEventBean(unittest.TestCase):

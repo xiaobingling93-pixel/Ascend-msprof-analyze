@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import argparse
+import glob
 import os
 
 from cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
@@ -28,14 +29,36 @@ from analysis.analysis_facade import AnalysisFacade
 class Interface:
     ASCEND_PT = "ascend_pt"
     ASCEND_MS = "ascend_ms"
+    DB_RESULT_INFO = "*.db"
+    ALL_RESULT_INFO = "*.*"
 
     def __init__(self, params: dict):
         self.collection_path = PathManager.get_realpath(params.get(Constant.COLLECTION_PATH))
+        self.analysis_mode = params.get(Constant.ANALYSIS_MODE)
         self.data_map = {}
         self.communication_group = {}
         self.collective_group_dict = {}
         self.communication_ops = []
         self.matrix_ops = []
+
+    def check_db_or_other_files(self, data_map: dict) -> tuple:
+        type_db_count = 0
+        type_text_count = 0
+        for _, folder_path in data_map.items():
+            folder_path = os.path.join(folder_path, Constant.SINGLE_OUTPUT)
+            db_files = glob.glob(os.path.join(folder_path, self.DB_RESULT_INFO))
+            all_files = glob.glob(os.path.join(folder_path, self.ALL_RESULT_INFO))
+            if all_files and db_files and len(all_files) != len(db_files):
+                return False, None
+            if db_files:
+                type_db_count += 1
+            else:
+                type_text_count += 1
+        if type_db_count == len(data_map):
+            return True, Constant.DB
+        if type_text_count == len(data_map):
+            return True, Constant.TEXT
+        return False, None
 
     def allocate_prof_data(self):
         ascend_pt_dirs = []
@@ -50,7 +73,7 @@ class Interface:
         ms_data_map = MindsporeDataPreprocessor(ascend_ms_dirs).get_data_map()
         if pt_data_map and ms_data_map:
             print("[ERROR] Can not analyze pytorch and mindspore meantime.")
-            return[]
+            return []
         return pt_data_map if pt_data_map else ms_data_map
 
     def run(self):
@@ -61,20 +84,29 @@ class Interface:
         if not data_map:
             print("[WARNING] Can not get rank info or profiling data.")
             return
-        comm_data_dict = CommunicationGroupGenerator(self.collection_path, data_map).generate()
+        is_valid, data_type = self.check_db_or_other_files(data_map)
+        if not is_valid:
+            print("[WARNING] The current folder contains both DB and other files. Please check.")
+            return
         params = {
             Constant.COLLECTION_PATH: self.collection_path,
             Constant.DATA_MAP: data_map,
-            Constant.COMM_DATA_DICT: comm_data_dict
+            Constant.ANALYSIS_MODE: self.analysis_mode,
+            Constant.DATA_TYPE: data_type
         }
+        comm_data_dict = CommunicationGroupGenerator(params).generate()
+        params[Constant.COMM_DATA_DICT] = comm_data_dict
         AnalysisFacade(params).cluster_analyze()
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="cluster analysis module")
     parser.add_argument('-d', '--collection_path', type=str, required=True, help="profiling data path")
+    parser.add_argument('-m', '--mode', choices=['all', 'communication_time', 'communication_matrix'],
+                        default='all', help="different analysis mode")
     args_parsed = parser.parse_args()
     parameter = {
-        Constant.COLLECTION_PATH: args_parsed.collection_path
+        Constant.COLLECTION_PATH: args_parsed.collection_path,
+        Constant.ANALYSIS_MODE: args_parsed.mode
     }
     Interface(parameter).run()

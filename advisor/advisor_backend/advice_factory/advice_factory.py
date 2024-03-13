@@ -12,26 +12,34 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import os
-from abc import abstractmethod
+
+from common_func.path_manager import PathManager
 
 
 class AdviceFactory:
     def __init__(self, collection_path: str):
         self.collection_path = os.path.realpath(collection_path)
 
-    @abstractmethod
+    @staticmethod
+    def run_advice(self, advice: str, kwargs: dict):
+        """
+        run advice to produce data
+        """
+
+    def produce_advice(self, advice: str, kwargs: dict):
+        """
+        produce data for input mode and advice
+        """
+        self.path_check()
+        self.advice_check(advice)
+        return self.run_advice(advice, kwargs)
+
     def path_check(self):
         """
         check whether input path is valid
         """
-
-    @abstractmethod
-    def produce_advice(self):
-        """
-        produce data for input mode and advice
-        """
+        PathManager.input_path_common_check(self.collection_path)
 
     def advice_check(self, advice: str):
         """

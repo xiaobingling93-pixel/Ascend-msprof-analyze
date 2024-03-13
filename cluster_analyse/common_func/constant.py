@@ -30,6 +30,7 @@ class Constant(object):
     MAX_JSON_SIZE = 1024 * 1024 * 1024 * 10
     MAX_CSV_SIZE = 1024 * 1024 * 1024 * 5
     MAX_PATH_LENGTH = 4096
+    MAX_READ_DB_FILE_BYTES = 1024 * 1024 * 1024 * 8
 
     # communication
     P2P = "p2p"
@@ -53,6 +54,7 @@ class Constant(object):
     TRANSIT_SIZE_MB = "Transit Size(MB)"
     SIZE_DISTRIBUTION = "Size Distribution"
     WAIT_TIME_MS = "Wait Time(ms)"
+    OP_NAME = "Op Name"
     BANDWIDTH_GB_S = "Bandwidth(GB/s)"
     COMMUNICATION = "communication.json"
 
@@ -65,10 +67,12 @@ class Constant(object):
     COMMUNICATION_GROUP = "communication_group"
     TRANSPORT_TYPE = "Transport Type"
     COMM_DATA_DICT = "comm_data_dict"
+    DATA_TYPE = "data_type"
+    ANALYSIS_MODE = "analysis_mode"
 
     # step time
-    RANK = 'rank'
-    STAGE = 'stage'
+    RANK = "rank"
+    STAGE = "stage"
 
     # epsilon
     EPS = 1e-15
@@ -76,3 +80,17 @@ class Constant(object):
     # file suffix
     JSON_SUFFIX = ".json"
     CSV_SUFFIX = ".csv"
+
+    # result files type
+    TEXT = "text"
+    DB = "db"
+
+    # db name
+    DB_COMMUNICATION_ANALYZER = "analysis.db"
+    DB_CLUSTER_COMMUNICATION_ANALYZER = "cluster_analysis.db"
+
+    # db tables
+    TABLE_COMM_ANALYZER_BANDWIDTH = "CommAnalyzerBandwidth"
+    TABLE_COMM_ANALYZER_TIME = "CommAnalyzerTime"
+    TABLE_COMM_ANALYZER_MATRIX = "CommAnalyzerMatrix"
+    TABLE_STEP_TRACE = "StepTraceTime"

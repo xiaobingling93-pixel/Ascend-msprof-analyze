@@ -18,14 +18,22 @@ from collections import defaultdict
 import os
 
 from advice_base import AdviceBase
+from common_func.file_manager import FileManager
 
 
 class ComputeAdviceBase(AdviceBase):
+    ASCEND_PT = 'ascend_pt'
+    ASCEND_PROFILER_OUTPUT = 'ASCEND_PROFILER_OUTPUT'
+    KERNEL_DETAIL_FILE = "kernel_details.csv"
+    TRACE_VIEW_FILE = "trace_view.json"
+
     def __init__(self, collection_path: str):
         super().__init__(collection_path)
         self.kernel_details_path = ""
         self.has_preparse = False
         self.preparse_data = defaultdict(list)
+        self.call_stack = None
+        self.trace_view_path = ""
 
     def path_check(self):
         """
@@ -35,9 +43,11 @@ class ComputeAdviceBase(AdviceBase):
             print("[ERROR] Path: {} is not exist.".format(self.collection_path))
             return False
         if os.path.isdir(self.collection_path) and self.collection_path.endswith("ascend_pt"):
-            self.kernel_details_path = os.path.join(self.collection_path, "ASCEND_PROFILER_OUTPUT", "kernel_details.csv")
+            self.kernel_details_path = os.path.join(self.collection_path, "ASCEND_PROFILER_OUTPUT",
+                                                    "kernel_details.csv")
             if not os.path.exists(self.kernel_details_path):
-                print("[ERROR] kernel_details.csv is not exist in the Path: {}.".format(os.path.join(self.collection_path, "ASCEND_PROFILER_OUTPUT")))
+                print("[ERROR] kernel_details.csv is not exist in the Path: {}.".format(
+                    os.path.join(self.collection_path, "ASCEND_PROFILER_OUTPUT")))
                 return False
         elif os.path.isfile(self.collection_path) and os.path.basename(self.collection_path) == "kernel_details.csv":
             self.kernel_details_path = self.collection_path
@@ -47,6 +57,33 @@ class ComputeAdviceBase(AdviceBase):
         print("[INFO] Start to analyse the target file: {}".format(self.kernel_details_path))
         self.preparse()
         return True
+
+    def has_callstack(self):
+        if self.call_stack is not None:
+            return self.call_stack
+        profiler_info_json_path = ""
+        for file in os.listdir(self.collection_path):
+            if file.startswith("profiler_info"):
+                profiler_info_json_path = os.path.join(self.collection_path, file)
+                break
+        if not profiler_info_json_path:
+            self.call_stack = False
+            return self.call_stack
+        self.trace_view_path = os.path.join(self.collection_path, self.ASCEND_PROFILER_OUTPUT, "trace_view.json")
+        if not os.path.exists(profiler_info_json_path) or not os.path.exists(self.trace_view_path):
+            self.call_stack = False
+            return self.call_stack
+        info = FileManager.read_json_file(profiler_info_json_path)
+        if not info.get("config") or not info.get("config").get("common_config") \
+                or not info.get("config").get("common_config").get("with_stack"):
+            self.call_stack = False
+            return self.call_stack
+        activities = info.get("config").get("common_config").get("activities")
+        if not activities or "ProfilerActivity.CPU" not in activities:
+            self.call_stack = False
+            return self.call_stack
+        self.call_stack = info.get("config").get("common_config").get("with_stack")
+        return self.call_stack
 
     @abstractmethod
     def run(self):
