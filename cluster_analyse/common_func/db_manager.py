@@ -35,7 +35,7 @@ class DBManager:
         """
         create and connect database
         """
-        if check_db_path_valid(db_path):
+        if check_db_path_valid(db_path, is_create=True):
             try:
                 conn = sqlite3.connect(db_path)
             except sqlite3.Error as err:
@@ -100,7 +100,7 @@ class DBManager:
 
     @classmethod
     def check_tables_in_db(cls, db_path: any, *tables: any) -> bool:
-        if check_db_path_valid(db_path, True):
+        if check_db_path_valid(db_path):
             conn, curs = cls.create_connect_db(db_path)
             if not (conn and curs):
                 return False
@@ -114,7 +114,7 @@ class DBManager:
         return False
 
     @classmethod
-    def create_tables(cls, db_path: any, *tables: any) -> bool:
+    def create_tables(cls, db_path: any, *tables: any):
         conn, curs = cls.create_connect_db(db_path)
         for table_name in tables:
             if not cls.judge_table_exists(curs, table_name):

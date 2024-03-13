@@ -32,6 +32,9 @@ class CommunicationAnalysisDB:
         self.dump_data()
 
     def dump_data(self):
+        if not self.res_comm_time and not self.res_comm_bandwidth:
+            print("[WARNING] There is no final communication data generated")
+            return
         output_path = os.path.join(self.collection_path, Constant.CLUSTER_ANALYSIS_OUTPUT)
         result_db = os.path.join(output_path, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER)
         DBManager.create_tables(result_db, self.COMMUNICATION_TIME_TABLE, self.COMMUNICATION_BANDWIDTH_TABLE)
@@ -66,7 +69,7 @@ class CommunicationAnalysisDB:
             if data[TableConstant.TYPE] == Constant.P2P:
                 rank_tuple = Constant.P2P
             else:
-                rank_tuple = tuple(self.collective_group_dict.get(data[TableConstant.GROUP_NAME]))
+                rank_tuple = tuple(self.collective_group_dict.get(data[TableConstant.GROUP_NAME], []))
             res_dict.setdefault(rank_tuple, {}).setdefault(data[TableConstant.STEP], []).append(data)
 
     def compute_total_info(self):

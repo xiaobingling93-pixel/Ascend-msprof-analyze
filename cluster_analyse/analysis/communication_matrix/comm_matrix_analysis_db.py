@@ -24,6 +24,9 @@ class CommMatrixAnalysisDB:
         self.dump_data()
 
     def dump_data(self):
+        if not self.res_comm_matrix:
+            print("[WARNING] There is no final communication_matrix data generated")
+            return
         output_path = os.path.join(self.collection_path, Constant.CLUSTER_ANALYSIS_OUTPUT)
         result_db = os.path.join(output_path, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER)
         DBManager.create_tables(result_db, self.COMMUNICATION_MATRIX_TABLE)
@@ -128,6 +131,6 @@ class CommMatrixAnalysisDB:
             if data[TableConstant.STEP] == Constant.P2P:
                 rank_tuple = Constant.P2P
             else:
-                rank_tuple = tuple(self.collective_group_dict.get(data[TableConstant.GROUP_NAME]))
+                rank_tuple = tuple(self.collective_group_dict.get(data[TableConstant.GROUP_NAME], []))
             self.comm_matrix_struct.setdefault(rank_tuple, {}).setdefault(data[TableConstant.STEP], {}). \
                 setdefault(op_name, []).append(data)
