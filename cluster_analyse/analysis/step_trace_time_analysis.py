@@ -14,8 +14,8 @@
 # limitations under the License.
 
 import os
-from collections import defaultdict
 
+from common_func.db_manager import DBManager
 from common_func.constant import Constant
 from common_func.file_manager import FileManager
 from prof_bean.step_trace_time_bean import StepTraceTimeBean
@@ -23,6 +23,7 @@ from prof_bean.step_trace_time_bean import StepTraceTimeBean
 
 class StepTraceTimeAnalysis:
     CLUSTER_TRACE_TIME_CSV = "cluster_step_trace_time.csv"
+    CLUSTER_TRACE_TIME_TABLE = "ClusterStepTraceTime"
 
     def __init__(self, param: dict):
         self.collection_path = param.get(Constant.COLLECTION_PATH)
@@ -30,6 +31,7 @@ class StepTraceTimeAnalysis:
         self.communication_group = param.get(Constant.COMM_DATA_DICT, {}).get(Constant.COMMUNICATION_GROUP)
         self.step_time_dict = {}
         self.step_data_list = []
+        self.data_type = param.get(Constant.DATA_TYPE)
 
     @staticmethod
     def get_max_data_row(data_group_list: list):
@@ -51,21 +53,44 @@ class StepTraceTimeAnalysis:
     def dump_data(self):
         if not self.step_data_list:
             print("[WARNING] Can't get step time info!")
-        headers = self.get_headers()
-        FileManager.create_csv_file(self.collection_path, self.step_data_list, self.CLUSTER_TRACE_TIME_CSV, headers)
+        if self.data_type == Constant.TEXT:
+            headers = self.get_headers()
+            FileManager.create_csv_file(self.collection_path, self.step_data_list, self.CLUSTER_TRACE_TIME_CSV, headers)
+        else:
+            output_path = os.path.join(self.collection_path, Constant.CLUSTER_ANALYSIS_OUTPUT)
+            result_db = os.path.join(output_path, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER)
+            DBManager.create_tables(result_db, self.CLUSTER_TRACE_TIME_TABLE)
+            conn, cursor = DBManager.create_connect_db(result_db)
+            sql = "insert into {} values ({value})".format(self.CLUSTER_TRACE_TIME_TABLE,
+                                                           value="?," * (len(self.step_data_list[0]) - 1) + "?")
+            DBManager.executemany_sql(conn, sql, self.step_data_list)
+            DBManager.destroy_db_connect(conn, cursor)
 
     def load_step_trace_time_data(self):
         for rank_id, profiling_dir_path in self.data_map.items():
-            step_time_file = os.path.join(profiling_dir_path, Constant.SINGLE_OUTPUT, Constant.STEP_TIME_CSV)
-            if step_time_file:
-                self.step_time_dict[rank_id] = FileManager.read_csv_file(step_time_file, StepTraceTimeBean)
+            if self.data_type == Constant.TEXT:
+                step_time_file = os.path.join(profiling_dir_path, Constant.SINGLE_OUTPUT, Constant.STEP_TIME_CSV)
+                if step_time_file:
+                    self.step_time_dict[rank_id] = FileManager.read_csv_file(step_time_file, StepTraceTimeBean)
+            else:
+                step_time_file = os.path.join(profiling_dir_path, Constant.SINGLE_OUTPUT,
+                                              Constant.DB_COMMUNICATION_ANALYZER)
+                if step_time_file and DBManager.check_tables_in_db(step_time_file, Constant.TABLE_STEP_TRACE):
+                    conn, cursor = DBManager.create_connect_db(step_time_file)
+                    sql = "select * from {0}".format(Constant.TABLE_STEP_TRACE)
+                    data = DBManager.fetch_all_data(cursor, sql, is_dict=False)
+                    self.step_time_dict[rank_id] = data
+                    DBManager.destroy_db_connect(conn, cursor)
             if not self.step_time_dict.get(rank_id):
                 print(f"[WARNING] Rank {rank_id} does not have a valid step_trace_time.json.")
 
     def analyze_step_time(self):
         for rank_id, data_bean_list in self.step_time_dict.items():
             for data_bean in data_bean_list:
-                self.step_data_list.append([data_bean.step, Constant.RANK, rank_id] + data_bean.row)
+                if self.data_type == Constant.TEXT:
+                    self.step_data_list.append([data_bean.step, Constant.RANK, rank_id] + data_bean.row)
+                else:
+                    self.step_data_list.append([data_bean[0], Constant.RANK, rank_id] + list(data_bean[1:]))
         stage_list = self.communication_group.get(Constant.P2P)
         if not stage_list:
             return
@@ -80,7 +105,11 @@ class StepTraceTimeAnalysis:
             step_group_dict.setdefault(key, []).append(data_list[3:])
 
         for key, data_group_list in step_group_dict.items():
-            self.step_data_list.append([key[0], Constant.STAGE, key[1]] + self.get_max_data_row(data_group_list))
+            if self.data_type == Constant.TEXT:
+                self.step_data_list.append([key[0], Constant.STAGE, key[1]] + self.get_max_data_row(data_group_list))
+            else:
+                index = "(" + ",".join(str(i) for i in key[1]) + ")"
+                self.step_data_list.append([key[0], Constant.STAGE, index] + self.get_max_data_row(data_group_list))
 
     def get_headers(self):
         if self.step_time_dict:

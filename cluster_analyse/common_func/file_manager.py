@@ -115,3 +115,13 @@ class FileManager:
         file_size = os.path.getsize(file_path)
         if file_size > limit_size:
             raise RuntimeError(f"The file({base_name}) size exceeds the preset max value.")
+
+
+def check_db_path_valid(path: str, is_create: bool = False, max_size: int = Constant.MAX_READ_DB_FILE_BYTES) -> bool:
+    if os.path.islink(path):
+        print(f'[ERROR] The db file path: {path} is link. Please check the path')
+        return False
+    if not is_create and os.path.exists(path) and os.path.getsize(path) > max_size:
+        print(f'[ERROR] The db file: {path} is too large to read. Please check the file')
+        return False
+    return True

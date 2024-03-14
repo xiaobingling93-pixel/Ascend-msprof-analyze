@@ -9,7 +9,7 @@ from compare_backend.utils.constant import Constant
 
 class GPUProfilingParser(BaseProfilingParser):
     CUBE_MARK = 'gemm'
-    FA_MARK_LIST = [['fmha', 'kernel'], ['flash', 'kernel']]
+    FA_MARK_LIST = [['fmha', 'kernel'], ['flash', 'kernel'], ['attention', 'kernel']]
     SDMA_MARK_LIST = ['htod', 'dtod', 'dtoh', 'memset (device)']
     FLOW_CAT = ("async_gpu", "async_cpu_to_gpu", "ac2g", "async")
     TORCH_OP_CAT = ("cpu_op", "user_annotation", "cuda_runtime", "operator")
@@ -138,7 +138,7 @@ class GPUProfilingParser(BaseProfilingParser):
             func_set.add(self._picking_kernel_event)
         if self._enable_operator_compare:
             func_set.add(self._picking_python_function_event)
-            func_set .add(self._picking_fwdbwd_flow_event)
+            func_set.add(self._picking_fwdbwd_flow_event)
         if self._enable_operator_compare or self._args.max_kernel_num:
             func_set.add(self._picking_kernel_event)
             func_set.add(self._picking_flow_event)
