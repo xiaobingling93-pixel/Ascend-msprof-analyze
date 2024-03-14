@@ -43,11 +43,11 @@ class BaseCommunicationGroup:
             else:
                 comm_dir = os.path.join(profiling_dir_path, Constant.SINGLE_OUTPUT, Constant.DB_COMMUNICATION_ANALYZER)
                 matrix_dir = comm_dir
-            if comm_dir and matrix_dir:
+            if os.path.exists(comm_dir) or os.path.exists(matrix_dir):
                 comm_op_dirs.append((rank_id, comm_dir, matrix_dir))
             else:
                 print(
-                    f"[WARNING] Rank {rank_id} does not have a valid communication.json or communication_matrix.json.")
+                    f"[WARNING] Rank {rank_id} does not have valid communication data and communication_matrix data.")
         with Pool() as p:
             self.rank_comm_dir_dict = p.map(self.read_communication_func, comm_op_dirs)
 

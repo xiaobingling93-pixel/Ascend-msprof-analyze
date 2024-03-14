@@ -23,17 +23,18 @@ class CommunicationDBGroup(BaseCommunicationGroup):
         time_data = {}
         bandwidth_data = {}
         matrix_data = {}
-        if DBManager.check_tables_in_db(db_path, Constant.TABLE_COMM_ANALYZER_TIME,
-                                        Constant.TABLE_COMM_ANALYZER_BANDWIDTH,
-                                        Constant.TABLE_COMM_ANALYZER_MATRIX):
+        if os.path.exists(db_path):
             conn, cursor = DBManager.create_connect_db(db_path)
             time_info_sql = "select * from {0}".format(Constant.TABLE_COMM_ANALYZER_TIME)
             bandwidth_info_sql = "select * from {0}".format(Constant.TABLE_COMM_ANALYZER_BANDWIDTH)
             matrix_info_sql = "select * from {0}".format(Constant.TABLE_COMM_ANALYZER_MATRIX)
-            if self.analysis_mode in ["all", "communication_time"]:
+            if (DBManager.check_tables_in_db(db_path, Constant.TABLE_COMM_ANALYZER_TIME,
+                                             Constant.TABLE_COMM_ANALYZER_BANDWIDTH)
+                    and self.analysis_mode in ["all", "communication_time"]):
                 time_data = DBManager.fetch_all_data(cursor, time_info_sql)
                 bandwidth_data = DBManager.fetch_all_data(cursor, bandwidth_info_sql)
-            if self.analysis_mode in ["all", "communication_matrix"]:
+            if (DBManager.check_tables_in_db(db_path, Constant.TABLE_COMM_ANALYZER_MATRIX)
+                    and self.analysis_mode in ["all", "communication_matrix"]):
                 matrix_data = DBManager.fetch_all_data(cursor, matrix_info_sql)
             DBManager.destroy_db_connect(conn, cursor)
         return rank_id, (self.data_group_by_step(time_data), self.data_group_by_step(bandwidth_data),
@@ -49,19 +50,21 @@ class CommunicationDBGroup(BaseCommunicationGroup):
     def dump_data(self):
         output_path = os.path.join(self.collection_path, Constant.CLUSTER_ANALYSIS_OUTPUT)
         result_db = os.path.join(output_path, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER)
-        DBManager.create_tables(result_db, self.COMMUNICATION_GROUP_TABLE)
         res = []
-        conn, cursor = DBManager.create_connect_db(result_db)
         for data_type, data_list in self.communication_group.items():
             for data in data_list:
                 rank_set = "(" + ",".join(str(i) for i in data) + ")"
                 data = [data_type, rank_set]
                 res.append(data)
         if res:
+            DBManager.create_tables(result_db, self.COMMUNICATION_GROUP_TABLE)
+            conn, cursor = DBManager.create_connect_db(result_db)
             sql = "insert into {} values ({value})".format(self.COMMUNICATION_GROUP_TABLE,
                                                            value="?," * (len(res[0]) - 1) + "?")
             DBManager.executemany_sql(conn, sql, res)
-        DBManager.destroy_db_connect(conn, cursor)
+            DBManager.destroy_db_connect(conn, cursor)
+        else:
+            print("[WARNING] The CommunicationGroup table won't be created because no data has been calculated.")
         comm_data_dict = {
             Constant.COLLECTIVE_GROUP: self.collective_group_dict,
             Constant.COMMUNICATION_TIME_INFO: self.communication_time_info,
