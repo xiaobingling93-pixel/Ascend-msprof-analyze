@@ -179,7 +179,7 @@ activities配置仅采集NPU数据，不配置experimental_config参数以及其
 
 ### nn.Module性能
 
-nn.Module是所有神经网络模块的基类，使用PyTorch构建神经网络需要继承nn.Module类来实现，性能比对工具支持nn.Module模块级的比对，帮助优化模型结构。
+nn.Module是所有神经网络模块的基类，使用PyTorch构建神经网络需要继承nn.Module类来实现，性能比对工具支持模块级的比对（包含优化器和nn.Module），帮助优化模型结构。
 
 当用户采集时开启with_stack开关，会上报python function事件，当比对的双方数据都存在python function的事件时，可进行模块级别的比对。
 
@@ -193,8 +193,8 @@ nn.Module性能比对结果在performance_comparison_result_*.xlsl中ModuleCompa
 - Device Self Time(ms)：该模块调用的算子（排除子模块）在device侧执行的总耗时，单位ms。
 - Number：该Module或算子被调用的次数。
 - Device Total Time(ms)：该模块调用的算子（包含子模块）在device侧执行的总耗时，单位ms。
-- Device Total Time Diff：GPU与NPU的Device Total Time(ms)差值。
-- Device Self Time Diff：GPU与NPU的Device Self Time(ms)差值。
+- Device Total Time Diff(ms)：GPU与NPU的Device Total Time(ms)差值。
+- Device Self Time Diff(ms)：GPU与NPU的Device Self Time(ms)差值。
 - Total Time Ratio：GPU与NPU的Device Total Time(ms)比值。
 - Base Call Stack：基准文件模块的调用栈。
 - Comparison Call Stack：比较文件模块的调用栈。
