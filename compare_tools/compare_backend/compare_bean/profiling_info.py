@@ -27,6 +27,7 @@ class ProfilingInfo:
         self.fa_time_fwd = 0.0
         self.minimal_profiling = False
         self.hide_op_details = False
+        self.is_level0 = False
 
     def trans_time_to_s(self):
         self.cube_time = self.cube_time / 10 ** 6

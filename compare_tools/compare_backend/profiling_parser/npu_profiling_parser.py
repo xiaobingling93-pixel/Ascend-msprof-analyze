@@ -127,9 +127,13 @@ class NPUProfilingParser(BaseProfilingParser):
                 notify_wait_event_dict[notify_event.tid].append(notify_event)
             else:
                 notify_wait_event_dict[notify_event.tid] = [notify_event]
+
+        if self._result_data.overall_metrics.is_level0:
+            return
+
         total_time = 0
         for commu_event in self._not_overlaped_commu_event:
-            wait_time_list = []
+            wait_time_list = [0]
             commu_event_start_time = float(commu_event.start_time)
             commu_event_end_time = float(commu_event.start_time) + commu_event.dur
 
@@ -225,9 +229,11 @@ class NPUProfilingParser(BaseProfilingParser):
         if not isinstance(json_data, dict) or not json_data:
             print('[WARNING] Invalid profiler info.')
             return
-        if self.ACTIVE_CPU in json_data.get('config', {}).get('common_config', {}).get('activities', []):
+        level = json_data.get('config', {}).get('experimental_config', {}).get('_profiler_level', '')
+        if self.LEVEL_0 != level:
             return
-        if self.LEVEL_0 != json_data.get('config', {}).get('experimental_config', {}).get('_profiler_level', ''):
+        self._result_data.overall_metrics.is_level0 = True
+        if self.ACTIVE_CPU in json_data.get('config', {}).get('common_config', {}).get('activities', []):
             return
         self._result_data.overall_metrics.minimal_profiling = True
 
