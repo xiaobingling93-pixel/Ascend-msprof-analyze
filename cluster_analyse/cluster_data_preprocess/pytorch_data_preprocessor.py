@@ -12,9 +12,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import glob
 from collections import defaultdict
 import os
+
+from common_func.constant import Constant
 from common_func.file_manager import FileManager
 from common_func.path_manager import PathManager
 
@@ -22,9 +24,14 @@ from common_func.path_manager import PathManager
 class PytorchDataPreprocessor:
     PROFILER_INFO_HEAD = 'profiler_info_'
     PROFILER_INFO_EXTENSION = '.json'
+    JSON_RESULT_INFO = "*.json"
+    CSV_RESULT_INFO = "*.csv"
 
     def __init__(self, path_list: str):
         self.path_list = path_list
+        self.db_count = 0
+        self.text_count = 0
+        self.valid_data_flag = True
 
     def get_data_map(self) -> dict:
         rank_id_map = defaultdict(list)
@@ -32,6 +39,21 @@ class PytorchDataPreprocessor:
             rank_id = self.get_rank_id(dir_name)
             if rank_id < 0:
                 print('[Error]fail to get rankid or rankid invalid.')
+                continue
+            folder_path = os.path.join(dir_name, Constant.SINGLE_OUTPUT)
+            db_files = glob.glob(os.path.join(folder_path, Constant.DB_COMMUNICATION_ANALYZER))
+            text_files = (glob.glob(os.path.join(folder_path, self.JSON_RESULT_INFO)) +
+                          glob.glob(os.path.join(folder_path, self.CSV_RESULT_INFO)))
+            if text_files and db_files:
+                self.valid_data_flag = False
+                print(f"[ERROR] Rank {rank_id} has both db and text files")
+                continue
+            if db_files:
+                self.db_count += 1
+            elif text_files:
+                self.text_count += 1
+            else:
+                print(f"[WARNING] Rank {rank_id} has no valid files")
                 continue
             rank_id_map[rank_id].append(dir_name)
 
@@ -55,3 +77,14 @@ class PytorchDataPreprocessor:
                     rank_id = -1
                 return rank_id
         return -1
+
+    def get_data_type(self):
+        if self.valid_data_flag:
+            if self.db_count != 0 and self.text_count != 0:
+                return None
+            if self.db_count != 0:
+                return Constant.DB
+            if self.text_count != 0:
+                return True, Constant.TEXT
+        else:
+            return None
