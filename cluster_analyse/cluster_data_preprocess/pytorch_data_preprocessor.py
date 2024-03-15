@@ -31,7 +31,6 @@ class PytorchDataPreprocessor:
         self.path_list = path_list
         self.db_count = 0
         self.text_count = 0
-        self.valid_data_flag = True
 
     def get_data_map(self) -> dict:
         rank_id_map = defaultdict(list)
@@ -45,9 +44,9 @@ class PytorchDataPreprocessor:
             text_files = (glob.glob(os.path.join(folder_path, self.JSON_RESULT_INFO)) +
                           glob.glob(os.path.join(folder_path, self.CSV_RESULT_INFO)))
             if text_files and db_files:
-                self.valid_data_flag = False
                 print(f"[ERROR] Rank {rank_id} has both db and text files")
-                continue
+                self.db_count, self.text_count = 1, 1
+                break
             if db_files:
                 self.db_count += 1
             elif text_files:
@@ -79,12 +78,10 @@ class PytorchDataPreprocessor:
         return -1
 
     def get_data_type(self):
-        if self.valid_data_flag:
-            if self.db_count != 0 and self.text_count != 0:
-                return None
-            if self.db_count != 0:
-                return Constant.DB
-            if self.text_count != 0:
-                return True, Constant.TEXT
-        else:
-            return None
+        if self.db_count != 0 and self.text_count != 0:
+            return Constant.INVALID
+        if self.db_count != 0:
+            return Constant.DB
+        if self.text_count != 0:
+            return Constant.TEXT
+        return Constant.INVALID
