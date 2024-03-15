@@ -14,7 +14,6 @@
 # limitations under the License.
 
 import argparse
-import glob
 import os
 
 from cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
@@ -29,8 +28,6 @@ from analysis.analysis_facade import AnalysisFacade
 class Interface:
     ASCEND_PT = "ascend_pt"
     ASCEND_MS = "ascend_ms"
-    DB_RESULT_INFO = "*.db"
-    ALL_RESULT_INFO = "*.*"
 
     def __init__(self, params: dict):
         self.collection_path = PathManager.get_realpath(params.get(Constant.COLLECTION_PATH))
@@ -41,25 +38,6 @@ class Interface:
         self.communication_ops = []
         self.matrix_ops = []
 
-    def check_db_or_other_files(self, data_map: dict) -> tuple:
-        type_db_count = 0
-        type_text_count = 0
-        for _, folder_path in data_map.items():
-            folder_path = os.path.join(folder_path, Constant.SINGLE_OUTPUT)
-            db_files = glob.glob(os.path.join(folder_path, self.DB_RESULT_INFO))
-            all_files = glob.glob(os.path.join(folder_path, self.ALL_RESULT_INFO))
-            if all_files and db_files and len(all_files) != len(db_files):
-                return False, None
-            if db_files:
-                type_db_count += 1
-            else:
-                type_text_count += 1
-        if type_db_count == len(data_map):
-            return True, Constant.DB
-        if type_text_count == len(data_map):
-            return True, Constant.TEXT
-        return False, None
-
     def allocate_prof_data(self):
         ascend_pt_dirs = []
         ascend_ms_dirs = []
@@ -69,24 +47,25 @@ class Interface:
                     ascend_pt_dirs.append(os.path.join(root, dir_name))
                 if dir_name.endswith(self.ASCEND_MS):
                     ascend_ms_dirs.append(os.path.join(root, dir_name))
-        pt_data_map = PytorchDataPreprocessor(ascend_pt_dirs).get_data_map()
+        pytorch_processor = PytorchDataPreprocessor(ascend_pt_dirs)
+        pt_data_map = pytorch_processor.get_data_map()
+        data_type = pytorch_processor.get_data_type()
         ms_data_map = MindsporeDataPreprocessor(ascend_ms_dirs).get_data_map()
         if pt_data_map and ms_data_map:
             print("[ERROR] Can not analyze pytorch and mindspore meantime.")
             return []
-        return pt_data_map if pt_data_map else ms_data_map
+        return (pt_data_map, data_type) if pt_data_map else (ms_data_map, Constant.TEXT)
 
     def run(self):
         PathManager.check_input_directory_path(self.collection_path)
         PathManager.check_path_owner_consistent(self.collection_path)
         FileManager.create_output_dir(self.collection_path)
-        data_map = self.allocate_prof_data()
+        data_map, data_type = self.allocate_prof_data()
         if not data_map:
             print("[WARNING] Can not get rank info or profiling data.")
             return
-        is_valid, data_type = self.check_db_or_other_files(data_map)
-        if not is_valid:
-            print("[WARNING] The current folder contains both DB and other files. Please check.")
+        if data_type == Constant.INVALID:
+            print("[ERROR] The current folder contains both DB and other files. Please check.")
             return
         params = {
             Constant.COLLECTION_PATH: self.collection_path,

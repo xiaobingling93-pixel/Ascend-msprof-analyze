@@ -84,6 +84,7 @@ class Constant(object):
     # result files type
     TEXT = "text"
     DB = "db"
+    INVALID = "invalid"
 
     # db name
     DB_COMMUNICATION_ANALYZER = "analysis.db"
