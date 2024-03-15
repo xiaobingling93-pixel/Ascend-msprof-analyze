@@ -64,7 +64,7 @@ class Interface:
         if not data_map:
             print("[WARNING] Can not get rank info or profiling data.")
             return
-        if not data_type:
+        if data_type == Constant.INVALID:
             print("[ERROR] The current folder contains both DB and other files. Please check.")
             return
         params = {
