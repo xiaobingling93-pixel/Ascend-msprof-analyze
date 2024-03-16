@@ -57,6 +57,9 @@ class Constant(object):
     OP_NAME = "Op Name"
     BANDWIDTH_GB_S = "Bandwidth(GB/s)"
     COMMUNICATION = "communication.json"
+    ELAPSE_TIME_MS = "Elapse Time(ms)"
+    IDLE_TIME_MS = "Idle Time(ms)"
+    LARGE_PACKET_RATIO = "Large Packet Ratio"
 
     # params
     DATA_MAP = "data_map"
