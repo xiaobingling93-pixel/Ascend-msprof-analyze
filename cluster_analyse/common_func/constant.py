@@ -98,3 +98,8 @@ class Constant(object):
     TABLE_COMM_ANALYZER_TIME = "CommAnalyzerTime"
     TABLE_COMM_ANALYZER_MATRIX = "CommAnalyzerMatrix"
     TABLE_STEP_TRACE = "StepTraceTime"
+
+    # data config key
+    CONFIG = "config"
+    EXPER_CONFIG = "experimental_config"
+    EXPORT_TYPE = "_export_type"

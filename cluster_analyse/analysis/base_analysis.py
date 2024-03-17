@@ -1,16 +1,19 @@
 from abc import abstractmethod
 from common_func.constant import Constant
+from utils.data_transfer_adapter import DataTransferAdapter
 from common_func.file_manager import FileManager
 
 
-class BaseAnalysisJson:
+class BaseAnalysis:
 
     def __init__(self, param: dict):
         self.collection_path = param.get(Constant.COLLECTION_PATH)
         self.data_map = param.get(Constant.DATA_MAP)
+        self.data_type = param.get(Constant.DATA_TYPE)
         self.communication_ops = []
         self.collective_group_dict = param.get(Constant.COMM_DATA_DICT, {}).get(Constant.COLLECTIVE_GROUP)
         self.comm_ops_struct = {}
+        self.adapter = DataTransferAdapter()
 
     @staticmethod
     def compute_ratio(dividend: float, divisor: float):
@@ -40,6 +43,16 @@ class BaseAnalysisJson:
         if not self.comm_ops_struct:
             print("[WARNING] There is no final comm ops data generated")
             return
+        if self.data_type == Constant.TEXT:
+            self.dump_json()
+        else:
+            self.dump_db()
+
+    @abstractmethod
+    def dump_db(self):
+        pass
+
+    def dump_json(self):
         output_comm_data = {}
         for key in self.comm_ops_struct:
             output_comm_data[str(key)] = self.comm_ops_struct.get(key)

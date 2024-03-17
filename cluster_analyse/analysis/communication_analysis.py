@@ -1,11 +1,15 @@
+import os
 from collections import defaultdict
 
-from analysis.base_analysis_json import BaseAnalysisJson
+from analysis.base_analysis import BaseAnalysis
 from common_func.constant import Constant
+from common_func.db_manager import DBManager
 
 
-class CommunicationAnalysisJson(BaseAnalysisJson):
+class CommunicationAnalysis(BaseAnalysis):
     SAVED_JSON = "cluster_communication.json"
+    COMMUNICATION_BANDWIDTH_TABLE = "ClusterCommAnalyzerBandwidth"
+    COMMUNICATION_TIME_TABLE = "ClusterCommAnalyzerTime"
 
     def __init__(self, param: dict):
         super().__init__(param)
@@ -23,6 +27,23 @@ class CommunicationAnalysisJson(BaseAnalysisJson):
         self.split_op_by_group()
         self.combine_ops_total_info()
         self.dump_data()
+
+    def dump_db(self):
+        res_comm_time, res_comm_bandwidth = self.adapter.transfer_comm_from_json_to_db(self.comm_ops_struct)
+        output_path = os.path.join(self.collection_path, Constant.CLUSTER_ANALYSIS_OUTPUT)
+        result_db = os.path.join(output_path, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER)
+        DBManager.create_tables(result_db, self.COMMUNICATION_TIME_TABLE, self.COMMUNICATION_BANDWIDTH_TABLE)
+        conn, cursor = DBManager.create_connect_db(result_db)
+        self.execute(conn, res_comm_time, self.COMMUNICATION_TIME_TABLE)
+        self.execute(conn, res_comm_bandwidth, self.COMMUNICATION_BANDWIDTH_TABLE)
+        DBManager.destroy_db_connect(conn, cursor)
+
+    @staticmethod
+    def execute(conn, res_data, table_name):
+        if res_data:
+            res_value = [list(data.values()) for data in res_data]
+            sql = "insert into {} values ({value})".format(table_name, value="?," * (len(res_value[0]) - 1) + "?")
+            DBManager.executemany_sql(conn, sql, res_value)
 
     def compute_total_info(self, comm_ops: dict):
         if not comm_ops:

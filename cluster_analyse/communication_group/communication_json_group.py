@@ -28,13 +28,6 @@ class CommunicationJsonGroup(BaseCommunicationGroup):
 
     def dump_data(self):
         FileManager.create_json_file(self.collection_path, self.communication_group, self.COMMUNICATION_GROUP_JSON)
-        comm_data_dict = {
-           Constant.COLLECTIVE_GROUP: self.collective_group_dict,
-           Constant.COMMUNICATION_OPS: self.communication_ops,
-           Constant.MATRIX_OPS: self.matrix_ops,
-           Constant.COMMUNICATION_GROUP: self.communication_group
-        }
-        return comm_data_dict
 
     def read_communication_func(self: any, params: tuple):
         if len(params) < 3:

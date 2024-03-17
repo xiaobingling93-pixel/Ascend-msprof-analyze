@@ -1,6 +1,5 @@
 import os
 
-from common_func.data_transfer_adapter import DataTransferAdapter
 from common_func.db_manager import DBManager
 from common_func.constant import Constant
 from communication_group.base_communication_group import BaseCommunicationGroup
@@ -34,8 +33,8 @@ class CommunicationDBGroup(BaseCommunicationGroup):
                     and self.analysis_mode in ["all", "communication_matrix"]):
                 matrix_data = DBManager.fetch_all_data(cursor, matrix_info_sql)
             DBManager.destroy_db_connect(conn, cursor)
-        comm_data = DataTransferAdapter.transfer_comm_from_db_to_json(time_data, bandwidth_data)
-        comm_matrix_data = DataTransferAdapter.transfer_matrix_from_db_to_json(matrix_data)
+        comm_data = self.adapter.transfer_comm_from_db_to_json(time_data, bandwidth_data)
+        comm_matrix_data = self.adapter.transfer_matrix_from_db_to_json(matrix_data)
         return rank_id, comm_data, comm_matrix_data
 
     def dump_data(self):
@@ -56,11 +55,3 @@ class CommunicationDBGroup(BaseCommunicationGroup):
             DBManager.destroy_db_connect(conn, cursor)
         else:
             print("[WARNING] The CommunicationGroup table won't be created because no data has been calculated.")
-        comm_data_dict = {
-            Constant.COLLECTIVE_GROUP: self.collective_group_dict,
-            Constant.COMMUNICATION_OPS: self.communication_ops,
-            Constant.MATRIX_OPS: self.matrix_ops,
-            Constant.COMMUNICATION_GROUP: self.communication_group
-        }
-        return comm_data_dict
-
