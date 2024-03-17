@@ -20,6 +20,7 @@ from copy import deepcopy
 from multiprocessing import Pool
 
 from common_func.constant import Constant
+from utils.data_transfer_adapter import DataTransferAdapter
 
 
 class BaseCommunicationGroup:
@@ -35,6 +36,7 @@ class BaseCommunicationGroup:
         self.communication_group = {}
         self.communication_ops = []
         self.matrix_ops = []
+        self.adapter = DataTransferAdapter()
 
     def load_communication_data(self):
         comm_op_dirs = []
@@ -125,13 +127,23 @@ class BaseCommunicationGroup:
     def dump_data(self):
         pass
 
+    def collect_comm_data(self):
+        comm_data_dict = {
+            Constant.COLLECTIVE_GROUP: self.collective_group_dict,
+            Constant.COMMUNICATION_OPS: self.communication_ops,
+            Constant.MATRIX_OPS: self.matrix_ops,
+            Constant.COMMUNICATION_GROUP: self.communication_group
+        }
+        return comm_data_dict
+
     def generate(self):
         self.load_communication_data()
         self.analyze_communication_data()
         self.set_p2p_groups()
         self.generate_collective_communication_group()
         self.generate_p2p_communication_group()
-        return self.dump_data()
+        self.dump_data()
+        return self.collect_comm_data()
 
     def set_p2p_link(self, rank_id: int, step_id: str, rank_id_matrix_dict: dict):
         ops = rank_id_matrix_dict.get(step_id, {})
