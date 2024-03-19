@@ -1,227 +1,212 @@
-#! /usr/bin/python3
-# Copyright 2023 Huawei Technologies Co., Ltd
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 import subprocess
-import re
 import argparse
+import os
+import time
+import logging
 from datetime import datetime
 from datetime import timezone
-import time
-
-NPU_IDS = []
-RUNNING_PIDS = {}
-NPU_CPU_AFFINITY_DICT = {}
-SAVE_LOG_TO_FILE = False
-
-# binding core log file
-nowtime = datetime.now(tz=timezone.utc)
-BIND_CORE_RESULT_FILE = 'bind_core_' + \
-                        str(nowtime.year) + '_' + \
-                        str(nowtime.month) + '_' + \
-                        str(nowtime.day) + '_' + \
-                        str(nowtime.hour) + '_' + \
-                        str(nowtime.minute) + '_' + \
-                        str(nowtime.second) + '.txt'
 
 
-# print log to logfile
-def print_log_to_file(msg):
-    global SAVE_LOG_TO_FILE
-    if not SAVE_LOG_TO_FILE:
-        return
-    with open(file=BIND_CORE_RESULT_FILE, mode="a", encoding="utf-8") as f:
-        f.write(msg + '\n')
+class PathManager:
+    @classmethod
+    def create_file_safety(cls, path: str):
+        base_name = os.path.basename(path)
+        msg = f"Failed to create file: {base_name}"
+        if os.path.islink(path):
+            raise RuntimeError(msg)
+        if os.path.exists(path):
+            return
+        try:
+            os.close(os.open(path, os.O_WRONLY | os.O_CREAT, cls.DATA_FILE_AUTHORITY))
+        except Exception as err:
+            raise RuntimeError(msg) from err
 
 
-# launch training or inference process
-def launch_process(cmd):
-    global RUNNING_CMD_PID
-    print_log_to_file('[INFO] Start to execute cmd: {}'.format(cmd))
-    subprocess.Popen(cmd.split(), shell=False)
+class BindCoreManager():
+    DEFAULT_FIND_RUNNING_PID_TIMES = 5
+
+    def __init__(self):
+        self.npu_id_list = []
+        self.running_pid_on_npu = {}
+        self.find_running_pid_times = self.DEFAULT_FIND_RUNNING_PID_TIMES
+        self.npu_affinity_cpu_dict = {}
+        self.log_file = ''
+        self._init_log_file()
 
 
-# parse input cmd
-def args_parse():
-    global SAVE_LOG_TO_FILE
-    bind_wait_core_time = 0
-    parser = argparse.ArgumentParser(description='This is a sample program.')
-    parser.add_argument('-t', '--time', type=int, metavar='', nargs='+', help='Wait time before bind cores that you want to set. The unit is \'s\'')
-    parser.add_argument('-app', '--application', metavar='', nargs='+', help='Training or inference command that you want to run.')
-    parser.add_argument('-l', '--log', default=False, action='store_true', help='Switch to save running log to local file.')
-    args = parser.parse_args()
-    if args.application:
-        application_cmd = ' '.join(args.application)
-        launch_process(application_cmd)
-        time.sleep(10)
-    if args.time:
-        bind_wait_core_time = int(args.time[0])
-    if args.log:
-        SAVE_LOG_TO_FILE = True
+    def _init_log_file(self):
+        now_time = datetime.now(tz=timezone.utc)
+        time_stamp = str(now_time.year) + '_' + \
+                     str(now_time.month) + '_' + \
+                     str(now_time.day) + '_' + \
+                     str(now_time.hour) + '_' + \
+                     str(now_time.minute) + '_' + \
+                     str(now_time.second)
+        log_file_name = 'bind_core_' + time_stamp + '.log'
+        msg = f"Failed to create file: {log_file_name}"
+        try:
+            PathManager.create_file_safety(os.path.join(os.getcwd(), log_file_name))
+        except RuntimeError as err:
+            raise RuntimeError(msg) from err
+        self.log_file = log_file_name
+        logging.basicConfig(filename=self.log_file,
+                            level=logging.INFO,
+                            filemode='w',
+                            format='%(asctime)s-%(name)s-%(levelname)s-%(message)s')
 
-    # if time is set, wait for setting time before bind cores
-    if bind_wait_core_time != 0:
-        time.sleep(bind_wait_core_time)
+    def _get_all_npu_id(self) -> None:
+        get_npu_info_cmd = 'npu-smi info -l'
+        get_npu_info_process = subprocess.run(get_npu_info_cmd.split(), shell=False, capture_output=True)
+        get_npu_id_cmd = 'grep ID'
+        get_npu_id_process = subprocess.run(get_npu_id_cmd.split(), shell=False, input=get_npu_info_process.stdout, capture_output=True)
+        res = get_npu_id_process.stdout.decode('utf-8').split()
+        for i in res:
+            if i.isdigit():
+                self.npu_id_list.append(int(i))
+        logging.info(f'NPU total id list: {self.npu_id_list}')
 
+    def _get_npu_affinity(self) -> bool:
+        cpu_num = os.cpu_count()
+        cpu_num_for_each_npu = cpu_num // len(self.npu_id_list)
+        get_npu_topo_cmd = 'npu-smi info -t topo'
+        p = subprocess.run(get_npu_topo_cmd.split(), shell=False, capture_output=True)
+        res = p.stdout.decode('utf-8').split()
+        if not res:
+            print('[ERROR] Failed to run get npu affinity info, please check if driver version support cmd npu-smi info -t topo')
+            return False
 
-# get npu affinity
-def get_npu_affinity() -> bool:
-    global NPU_CPU_AFFINITY_DICT
-    global NPU_IDS
+        index = 0
+        for v in res:
+            if '-' in v:
+                affinity_cpus = []
+                cpu_lists = v.split(',')
+                for cpu_list in cpu_lists:
+                    cpus = cpu_list.split('-')
+                    if len(cpus) != 2:
+                        continue
+                    if int(cpus[1]) - int(cpus[0]) == cpu_num_for_each_npu - 1:
+                        cpus[1] = str(int(cpus[1]) + cpu_num_for_each_npu)
+                    affinity_cpus.append(cpus[0] + '-' + cpus[1])
+                if index < len(self.npu_id_list):
+                    self.npu_affinity_cpu_dict[self.npu_id_list[index]] = ','.join(affinity_cpu for affinity_cpu in affinity_cpus)
+                    index += 1
+                else:
+                    print('[ERROR] Get affinity_cpu_list for {} npus, more than real npu num: {}'.format(index + 1, len(self.npu_id_list)))
+                    return False
 
-    get_npu_topo_cmd = 'npu-smi info -t topo'
-    p = subprocess.run(get_npu_topo_cmd.split(), shell=False, capture_output=True)
-    res = p.stdout.decode('utf-8').strip().split()
-    if not res:
-        print('[ERROR] Failed to run get npu affinity info, please check if driver version support cmd npu-smi info -t topo')
-        return False
+        for k in self.npu_affinity_cpu_dict.keys():
+            logging.info(f'Affinity CPU list {self.npu_affinity_cpu_dict[k]} for NPU {k}')
+        return True
 
-    i = 0
-    for v in res:
-        if '-' in v:
-            NPU_CPU_AFFINITY_DICT[NPU_IDS[i]] = v
-            i += 1
-    for k in NPU_CPU_AFFINITY_DICT.keys():
-        print_log_to_file('[INFO] Affinity CPU list {} for NPU {}'.format(NPU_CPU_AFFINITY_DICT[k], k))
-    return True
+    def get_running_pid_on_npu(self) -> bool:
+        no_running_pids_on_npu_msg = '[INFO] Now there is no running process on all NPUs, stop bind cores'
+        logging.info('Begin to find running process on all NPUs')
+        # get running process on NPUs
+        for times in range(self.find_running_pid_times):
+            running_pid_on_npu = {}
+            for npu_id in self.npu_id_list:
+                get_npu_pids_cmd = 'npu-smi info -t proc-mem -i {} -c 0'.format(npu_id)
+                get_npu_pids_process = subprocess.run(get_npu_pids_cmd.split(), shell=False, capture_output=True)
+                res = get_npu_pids_process.stdout.decode('utf-8').split()
+                pid_list = []
+                for value in res:
+                    if value.startswith('id:'):
+                        pid = value.split(':')[1]
+                        pid_list.append(pid)
+                if pid_list:
+                    running_pid_on_npu[npu_id] = list(set(pid_list))
+            
+            if len(self.running_pid_on_npu.keys()) == len(running_pid_on_npu.keys()) and running_pid_on_npu:
+                self.running_pid_on_npu = running_pid_on_npu
+                break
 
+            self.running_pid_on_npu = running_pid_on_npu
+            time.sleep(5)
 
-# get total npu id
-def get_total_npu_id() -> bool:
-    global NPU_IDS
-    get_npu_info_cmd = 'npu-smi info -l'
-    get_npu_info_process = subprocess.run(get_npu_info_cmd.split(), shell=False, capture_output=True)
-    get_npu_ids_cmd = 'grep ID'
-    get_npu_ids_process = subprocess.run(get_npu_ids_cmd.split(), shell=False, input=get_npu_info_process.stdout, capture_output=True)
-    res = get_npu_ids_process.stdout.decode('utf-8').strip().split()
-    for i in res:
-        if i.isdigit():
-            NPU_IDS.append(int(i))
-    if not NPU_IDS:
-        print('[ERROR] Failed to get total NPU id list, please make sure there is NPU on this device')
-        return False
-    print_log_to_file('[INFO] NPU total id list: {}'.format(NPU_IDS))
-    return True
+        # delete repeat pid
+        for npu_id in self.npu_id_list:
+            if npu_id not in self.running_pid_on_npu:
+                continue
+            pids_on_npu = self.running_pid_on_npu[npu_id]
+            for pid in pids_on_npu:
+                for npu_id_with_pids, pids in self.running_pid_on_npu.items():
+                    if npu_id == npu_id_with_pids:
+                        continue
+                    if pid in pids:
+                        pids_on_npu.remove(pid)
 
+        if_running_process = False
+        for npu_id, pids in self.running_pid_on_npu.items():
+            if not pids:
+                logging.info(f'There is no running process on NPU {npu_id}')
+            else:
+                logging.info(f'Succeed to find running process {pids} on NPU {npu_id}')
+                if_running_process = True
+        if not if_running_process:
+            print(no_running_pids_on_npu_msg)
+        return if_running_process
 
-# get app pid on npu
-def get_pid_on_npu() -> bool:
-    global RUNNING_PIDS
-    global NPU_IDS
-    print_log_to_file('[INFO] Begin to find running process on all NPUs')
-    RUNNING_PIDS.clear()
-    # get process pid on NPUs, retry times : 5
-    for times in range(5):
-        for i in NPU_IDS:
-            get_npu_pids_cmd = 'npu-smi info -t proc-mem -i {} -c 0'.format(str(i))
-            p = subprocess.run(get_npu_pids_cmd.split(), shell=False, capture_output=True)
-            res = p.stdout.decode('utf-8').strip().split()
+    def get_npu_info(self) -> bool:
+        try:
+            self._get_all_npu_id()
+            if not self._get_npu_affinity():
+                return False
+        except subprocess.CalledProcessError:
+            return False
+        return True
 
-            if 'Process' in res:
-                for v in res:
-                    if v.startswith('id:'):
-                        pid_on_npu = v.split(':')[1]
-                        if i not in RUNNING_PIDS:
-                            RUNNING_PIDS[i] = [int(pid_on_npu)]
-                        else:
-                            RUNNING_PIDS[i].append(int(pid_on_npu))
+    def run_bind_core(self):
+        if not self.running_pid_on_npu:
+            return
+        for npu, pid_list in self.running_pid_on_npu.items():
+            if npu not in self.npu_affinity_cpu_dict.keys():
+                logging.warning(f'Cannot find affinity cpu for npu: {npu}')
+                continue
+            affinity_cpu = self.npu_affinity_cpu_dict.get(npu)
+            for pid in pid_list:
+                try:
+                    logging.info(f'Begin to bind cores for process {pid} on NPU {npu}')
+                    set_affinity_cpu_cmd = 'taskset -pc {} {}'.format(affinity_cpu, pid)
+                    p = subprocess.run(set_affinity_cpu_cmd.split(), shell=False, capture_output=True)
+                    logging.info(p.stdout.decode('utf-8'))
+                except subprocess.CalledProcessError:
+                    print('[ERROR] Failed to bind process {} on NPU {} with cpu cores list {}'.format(pid, npu, affinity_cpu))
+            
+                logging.info(f'Succeed to bind process {pid} on NPU {npu} with cpu cores list {affinity_cpu}')
 
-        if RUNNING_PIDS:
-            break
-        print_log_to_file('[WARNING] Found no running process on all NPUs, retry times: {}, wait for 5 s'.format(times + 1))
-        # wait 5 s for each time
-        time.sleep(5)
+    def args_parse(self):
+        parser = argparse.ArgumentParser(description='This is a affinity cpu core bind script.')
+        parser.add_argument('-t', '--time', type=int, metavar='', help='Wait time before bind cores that you want to set. The unit is \'s\'.')
+        parser.add_argument('-app', '--application', metavar='', nargs='+', help='Training or inference command that you want to run.')
+        args = parser.parse_args()
+        if args.application:
+            application_cmd = ' '.join(args.application)
+            self.launch_process(application_cmd)
+            time.sleep(2)
+        # if time is set, wait for setting time before bind cores
+        if args.time:
+            time.sleep(args.time)
 
-    # no running process on NPUs, stop
-    if not RUNNING_PIDS:
-        print_log_to_file('[INFO] Found no running process on all NPUs, stop bind cores')
-        print('[INFO] Now there is no running process on all NPUs, stop bind cores')
-        return False
-
-    # delete repeat pid
-    for i in NPU_IDS:
-        if i not in RUNNING_PIDS:
-            continue
-        pids_npu = RUNNING_PIDS[i]
-        for n, pid in RUNNING_PIDS.items():
-            if n != i and pid in pids_npu:
-                RUNNING_PIDS[n].remove(pid)
-
-    for k in RUNNING_PIDS.keys():
-        print_log_to_file('[INFO] Succeed to find running process {} on NPU {}'.format(RUNNING_PIDS[k], k))
-    return True
-
-
-# get device info
-def get_dev_info() -> bool:
-    if not get_total_npu_id():
-        return False
-    if not get_npu_affinity():
-        return False
-    return True
-
-
-# get process affinity
-def get_process_affinity(pid):
-    get_affinity_cpu_cmd = 'taskset -pc {} '.format(pid)
-    p = subprocess.run(get_affinity_cpu_cmd.split(), shell=False, capture_output=True)
-    res = p.stdout.decode('utf-8').strip().split()
-    return res[len(res) - 1]
-
-
-# run bind core
-def run_bind_core():
-    global NPU_IDS
-    global NPU_CPU_AFFINITY_DICT
-    for k, pid_list in RUNNING_PIDS.items():
-        cpu_list = NPU_CPU_AFFINITY_DICT[k].split('-')
-        start_cpu_id = cpu_list[0]
-        end_cpu_id = cpu_list[1]
-
-        for pid in pid_list:
-            get_child_pids_cmd = 'pstree {} -p -T'.format(pid)
-            p = subprocess.run(get_child_pids_cmd.split(), shell=False, capture_output=True)
-            res = p.stdout.decode('utf-8').strip().split()
-            for ele in res:
-                ele = re.sub(u"\\(|\\)", ",", ele)
-                ele_list = ele.split(',')
-                for sub_p in ele_list:
-                    if sub_p.isdigit():
-                        sub_p = int(sub_p)
-
-                        # if process has set to right affinity, continue
-                        current_affinity_cpu_list = get_process_affinity(sub_p)
-                        if not current_affinity_cpu_list:
-                            continue
-                        current_cpu_list = current_affinity_cpu_list.split('-')
-                        if current_cpu_list and current_cpu_list[0] == start_cpu_id and current_cpu_list[1] == end_cpu_id:
-                            continue
-                        print_log_to_file('[INFO] Begin to bind cores for process {} on NPU {}'.format(str(sub_p), k))
-                        set_affinity_cpu_cmd = 'taskset -pc {}-{} {}'.format(int(start_cpu_id), int(end_cpu_id), sub_p)
-                        p = subprocess.run(set_affinity_cpu_cmd.split(), shell=False, capture_output=True)
-                        print_log_to_file(p.stdout.decode('utf-8'))
-
-                        print_log_to_file('[INFO] Succeed to bind process {} on NPU {} with cpu cores list {}'.format(str(sub_p), k, NPU_CPU_AFFINITY_DICT[k]))
+    def launch_process(self, cmd: list):
+        logging.info(f'Start to execute cmd: {cmd}')
+        try:
+            subprocess.Popen(cmd.split(), shell=False)
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(f'Failed to run cmd: {cmd}') from e
 
 
 if __name__ == '__main__':
-    print("[INFO] Begin to run bind-cores script...")
-    args_parse()
-    if not get_dev_info():
+    print('[INFO] Begin to run bind-cores script...')
+    bind_core_manager = BindCoreManager()
+    bind_core_manager.args_parse()
+
+    if not bind_core_manager.get_npu_info():
+        print('[ERROR] Failed to get current npus info')
         exit()
 
-    while True:
-        if not get_pid_on_npu():
-            exit()
-        run_bind_core()
+    if not bind_core_manager.get_running_pid_on_npu():
+        exit()
+    bind_core_manager.run_bind_core()
+    print('[INFO] End to run bind-cores script, the log is saved in {}'.format(bind_core_manager.log_file))
+
+
