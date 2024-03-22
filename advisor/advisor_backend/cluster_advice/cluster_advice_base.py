@@ -46,7 +46,8 @@ class ClusterAdviceBase(AdviceBase):
 
     def cluster_analyze(self):
         parameter = {
-            Constant.COLLECTION_PATH: self.collection_path
+            Constant.COLLECTION_PATH: self.collection_path,
+            Constant.ANALYSIS_MODE: "all"
         }
         try:
             Interface(parameter).run()
