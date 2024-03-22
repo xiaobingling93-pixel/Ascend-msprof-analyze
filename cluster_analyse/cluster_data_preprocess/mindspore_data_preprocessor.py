@@ -14,17 +14,14 @@
 # limitations under the License.
 
 from collections import defaultdict
-import os
-from common_func.file_manager import FileManager
-from common_func.path_manager import PathManager
+
+from cluster_data_preprocess.data_preprocessor import DataPreprocessor
 
 
-class MindsporeDataPreprocessor:
-    PROFILER_INFO_HEAD = 'profiler_info_'
-    PROFILER_INFO_EXTENSION = '.json'
+class MindsporeDataPreprocessor(DataPreprocessor):
 
-    def __init__(self, path_list: str):
-        self.path_list = path_list
+    def __init__(self, path_list: list):
+        super().__init__(path_list)
 
     def get_data_map(self) -> dict:
         rank_id_map = defaultdict(list)
@@ -35,23 +32,10 @@ class MindsporeDataPreprocessor:
                 continue
             rank_id_map[rank_id].append(dir_name)
 
-        ret_dict = dict()
         try:
             for (rank_id, dir_list) in rank_id_map.items():
                 dir_list.sort(key=lambda x: x.split('_')[-3])
-                ret_dict[rank_id] = dir_list[0]
+                self.data_map[rank_id] = dir_list[0]
         except Exception as e:
             raise RuntimeError("Found invalid directory name!") from e
-        return ret_dict
-
-    def get_rank_id(self, dir_name: str) -> int:
-        files = os.listdir(dir_name)
-        for file_name in files:
-            if file_name.startswith(self.PROFILER_INFO_HEAD) and file_name.endswith(self.PROFILER_INFO_EXTENSION):
-                rank_id_str = file_name[len(self.PROFILER_INFO_HEAD): -1 * len(self.PROFILER_INFO_EXTENSION)]
-                try:
-                    rank_id = int(rank_id_str)
-                except ValueError:
-                    rank_id = -1
-                return rank_id
-        return -1
+        return self.data_map

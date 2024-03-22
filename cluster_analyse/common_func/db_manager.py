@@ -117,11 +117,13 @@ class DBManager:
     def create_tables(cls, db_path: any, *tables: any):
         conn, curs = cls.create_connect_db(db_path)
         for table_name in tables:
-            if not cls.judge_table_exists(curs, table_name):
-                table_map = "{0}Map".format(table_name)
-                header_with_type = cls.sql_generate_table(table_map)
-                sql = "CREATE TABLE IF NOT EXISTS " + table_name + header_with_type
-                cls.execute_sql(conn, sql)
+            if cls.judge_table_exists(curs, table_name):
+                drop_sql = "drop table {0}".format(table_name)
+                cls.execute_sql(conn, drop_sql)
+            table_map = "{0}Map".format(table_name)
+            header_with_type = cls.sql_generate_table(table_map)
+            sql = "CREATE TABLE IF NOT EXISTS " + table_name + header_with_type
+            cls.execute_sql(conn, sql)
 
     @staticmethod
     def execute_sql(conn: any, sql: str, params: any = None) -> bool:
