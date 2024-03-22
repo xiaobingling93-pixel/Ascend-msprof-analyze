@@ -26,7 +26,7 @@ class SlowRankAdvice(ClusterAdviceBase):
     RATIO_THRESHOLD = 0.05
     BOTTLENECK_LIST = ['Computing', 'Communication', "Free"]
 
-    def __init__(self, collection_path: str):
+    def __init__(self, collection_path: str, kwargs: dict = None):
         super().__init__(collection_path)
 
     def load_step_time(self):

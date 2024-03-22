@@ -12,7 +12,7 @@ class KernelClusterAdvice(ClusterAdviceBase):
     COLUMNS_TO_CAL = ["Duration(us)"]
     CAL_FUN = ['mean', 'var', 'max', 'min', 'count', 'sum']
 
-    def __init__(self, collection_path: str):
+    def __init__(self, collection_path: str, kwargs: dict = None):
         super().__init__(collection_path)
         self.all_kernel_data = pd.DataFrame()
 
