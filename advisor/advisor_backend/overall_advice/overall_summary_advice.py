@@ -27,7 +27,7 @@ class OverallSummaryAdvice(AdviceBase):
     }
     time_name_map = {
         "Computing Time": "computing",
-        "Uncovered Communication Time": "communication",
+        "Uncovered Communication Time(Wait Time)": "communication",
         "Free Time": "free",
         'Cube Time(Num)': 'Cube Time',
         'Vector Time(Num)': 'Vector Time',
@@ -39,7 +39,7 @@ class OverallSummaryAdvice(AdviceBase):
     performance_time_dict = {
         "Computing Time": ['Cube Time(Num)', 'Vector Time(Num)', 'Flash Attention Time(Forward)(Num)',
                            'Flash Attention Time(Backward)(Num)', 'Other Time'],
-        "Uncovered Communication Time": [],
+        "Uncovered Communication Time(Wait Time)": [],
         "Free Time": ['SDMA Time(Num)']
     }
 
@@ -112,6 +112,7 @@ class OverallSummaryAdvice(AdviceBase):
             if time_value == Constant.INVALID_VALUE:
                 continue
             duration, _ = self.split_duration_and_num(time_value)
+            time_category = time_category.split("(")[0]
             time_category_dict[time_category] = duration
             self.get_sub_category_time(time_category, time_list, duration)
         self.cur_data["overall_data"] = time_category_dict
