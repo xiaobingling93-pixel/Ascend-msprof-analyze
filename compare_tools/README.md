@@ -32,11 +32,11 @@ pip3 install numpy
 采集样例代码参考一：
 
 ```Python
-with torch.profiler.profile(
+with torch_npu.profiler.profile(
         profile_memory=True,  # 内存数据采集的开关
         record_shapes=True,  # 算子input shape信息采集的开关
-        schedule=torch.profiler.schedule(wait=10, warmup=0, active=1, repeat=1),
-        on_trace_ready=torch.profiler.tensorboard_trace_handler("./result_dir")
+        schedule=torch_npu.profiler.schedule(wait=10, warmup=0, active=1, repeat=1),
+        on_trace_ready=torch_npu.profiler.tensorboard_trace_handler("./result_dir")
 ) as prof:
     for step in ranges(step_number):
         train_one_step()
@@ -46,10 +46,10 @@ with torch.profiler.profile(
 采集样例代码参考二：
 
 ```Python
-prof = torch.profiler.profile(
+prof = torch_npu.profiler.profile(
     profile_memory=True,  # 内存数据采集的开关
     record_shapes=True,  # 算子input shape信息采集的开关
-    on_trace_ready=torch.profiler.tensorboard_trace_handler("./result_dir"))
+    on_trace_ready=torch_npu.profiler.tensorboard_trace_handler("./result_dir"))
 for step in range(step_number):
     if step == 11:
         prof.start()
