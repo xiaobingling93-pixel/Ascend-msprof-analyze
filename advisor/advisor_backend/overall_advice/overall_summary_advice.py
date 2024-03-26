@@ -146,7 +146,7 @@ class OverallSummaryAdvice(AdviceBase):
         overall_data = self.cur_data.get("overall_data")
         if not overall_data:
             return
-        e2e_time = sum([data for data in overall_data.values()])
+        e2e_time = '%.3f' % sum([data for data in overall_data.values()])
         overall_bottleneck = f"The Model E2E Time is {e2e_time}s.\n"
         comparison_bottleneck = ""
         for time_type, time_value in overall_data.items():
@@ -161,7 +161,9 @@ class OverallSummaryAdvice(AdviceBase):
             if not self._has_base_collection:
                 continue
             # add comparison bottleneck
-            base_duration, _ = self.split_duration_and_num(self.get_time_value(time_type, self._base_data))
+            time_type_origin = "Uncovered Communication Time(Wait Time)" \
+                if time_type == "Uncovered Communication Time" else time_type
+            base_duration, _ = self.split_duration_and_num(self.get_time_value(time_type_origin, self._base_data))
             if time_value > base_duration:
                 ratio = "{:.2%}".format(self.calculate_ratio(time_value - base_duration, base_duration))
                 comparison_bottleneck += f"{time_type} exceeds the benchmark by {ratio}\n"
