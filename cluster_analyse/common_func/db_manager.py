@@ -116,6 +116,8 @@ class DBManager:
     @classmethod
     def create_tables(cls, db_path: any, *tables: any):
         conn, curs = cls.create_connect_db(db_path)
+        if not (conn and curs):
+            return
         for table_name in tables:
             if cls.judge_table_exists(curs, table_name):
                 drop_sql = "drop table {0}".format(table_name)
@@ -124,6 +126,7 @@ class DBManager:
             header_with_type = cls.sql_generate_table(table_map)
             sql = "CREATE TABLE IF NOT EXISTS " + table_name + header_with_type
             cls.execute_sql(conn, sql)
+        cls.destroy_db_connect(conn, curs)
 
     @staticmethod
     def execute_sql(conn: any, sql: str, params: any = None) -> bool:
