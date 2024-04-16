@@ -12,7 +12,7 @@ class GPUProfilingParser(BaseProfilingParser):
     FA_MARK_LIST = [['fmha', 'kernel'], ['flash', 'kernel'], ['attention', 'kernel']]
     SDMA_MARK_LIST = ['htod', 'dtod', 'dtoh', 'memset (device)']
     FLOW_CAT = ("async_gpu", "async_cpu_to_gpu", "ac2g", "async")
-    TORCH_OP_CAT = ("cpu_op", "user_annotation", "cuda_runtime", "operator")
+    TORCH_OP_CAT = ("cpu_op", "user_annotation", "cuda_runtime", "operator", "runtime")
 
     def __init__(self, args: any, path_dict: dict):
         super().__init__(args, path_dict)
