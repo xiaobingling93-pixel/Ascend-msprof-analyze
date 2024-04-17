@@ -254,6 +254,11 @@ class NPUProfilingParser(BaseProfilingParser):
                     self._result_data.overall_metrics.update_fa_bwd_info(kernel.duration)
                 else:
                     self._result_data.overall_metrics.update_fa_fwd_info(kernel.duration)
+            elif kernel.is_conv():
+                if kernel.is_conv_bwd():
+                    self._result_data.overall_metrics.update_conv_bwd_info(kernel.duration)
+                else:
+                    self._result_data.overall_metrics.update_conv_fwd_info(kernel.duration)
             elif kernel.is_cube():
                 self._result_data.overall_metrics.update_cube_info(kernel.duration)
             elif kernel.is_sdma():
