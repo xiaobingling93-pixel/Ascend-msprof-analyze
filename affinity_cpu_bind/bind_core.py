@@ -8,6 +8,8 @@ from datetime import timezone
 
 
 class PathManager:
+    DATA_FILE_AUTHORITY = 0o640
+
     @classmethod
     def create_file_safety(cls, path: str):
         base_name = os.path.basename(path)
