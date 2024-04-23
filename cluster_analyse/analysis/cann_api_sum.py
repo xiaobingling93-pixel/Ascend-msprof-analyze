@@ -13,16 +13,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from analysis.base_analysis import BaseAnalysis
+from analysis.base_analysis import BaseRecipeAnalysis
 
-class AclApiSum(BaseAnalysis):
-    
+class CannApiSum(BaseRecipeAnalysis):
+    def __init__(self, params):
+        super().__init__(params)
+        print("CannApiSum init.")
+
     @staticmethod
     def _mapper_func():
         pass
     
     def mapper_func(self, context):
-        pass
+        return context.map(
+            self._mapper_func,
+            self._get_rank_db(),
+            xx
+            )
     
     def reducer_func(self, mapper_res):
+        pass
+    
+    def run(self, context):
+        super().run(context)
+        
+        mapper_res = self.mapper_func(context)
+        self.reducer_func(mapper_res)
+        
+        self.save_notebook()
+        self.save_analysis_file()
+    
+
+    def save_notebook(self):
+        pass
+    
+    def save_analysis_file(self):
         pass

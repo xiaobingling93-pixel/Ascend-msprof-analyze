@@ -103,3 +103,11 @@ class Constant(object):
     CONFIG = "config"
     EXPER_CONFIG = "experimental_config"
     EXPORT_TYPE = "_export_type"
+
+    # recipe config
+    RECIPE_NAME = "recipe_name"
+    RECIPE_CLASS = "recipe_class"
+    PARALLEL_MODE = "parallel_mode"
+    
+    SINGLE_MODE = "single"
+    CONCURRENT_MODE = "concurrent"

@@ -18,10 +18,10 @@ import inspect
 import sys
 
 from common_func.constant import Constant
-from analysis.base_analysis import BaseAnalysis
+from analysis.base_analysis import BaseRecipeAnalysis
 
 def is_analysis_class(obj):
-    return inspect.isclass(obj) and issubclass(obj, BaseAnalysis)
+    return inspect.isclass(obj) and issubclass(obj, BaseRecipeAnalysis) and obj != BaseRecipeAnalysis
 
 def get_class_from_name(analysis_name : str):
     sys.path.append(Constant.ANALYSIS_PATH)
@@ -31,7 +31,8 @@ def get_class_from_name(analysis_name : str):
         module = importlib.import_module(analysis_path)
     except Exception as e:
         print(f"[ERROR] {analysis_path} not find:{e}")
+    
     specific_analysis = inspect.getmembers(module, is_analysis_class)
     if not specific_analysis:
         print(f"[ERROR] {analysis_name} not found.")
-    return specific_analysis[1]
+    return specific_analysis[0]
