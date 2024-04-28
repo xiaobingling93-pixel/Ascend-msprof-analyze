@@ -1,3 +1,4 @@
+import re
 from math import ceil
 
 from compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
@@ -13,6 +14,7 @@ class ModuleNode:
         self._parent_node = parent_node
         self._child_nodes = []
         self._module_name = f"{parent_node.module_name}/{event.name}" if parent_node else event.name
+        self._module_level = parent_node.module_level + 1 if parent_node else 1
         self._kernel_self_list = []
         self._kernel_total_list = []
         self._call_stack = f"{parent_node.call_stack};\n{event.name}" if parent_node and parent_node.call_stack \
@@ -23,6 +25,15 @@ class ModuleNode:
     @property
     def module_name(self):
         return self._module_name
+
+    @property
+    def module_class(self):
+        pattern = re.compile('_[0-9]+$')
+        return pattern.sub('', self.name.split("/")[-1])
+
+    @property
+    def module_level(self):
+        return self._module_level
 
     @property
     def name(self):
