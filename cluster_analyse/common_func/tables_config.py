@@ -58,6 +58,7 @@ class TablesConfig:
             ("free", "NUMERIC, null"),
             ("stage", "NUMERIC, null"),
             ("bubble", "NUMERIC, null"),
-            ("communication_not_overlapped_and_exclude_receive", "NUMERIC, null")
+            ("communication_not_overlapped_and_exclude_receive", "NUMERIC, null"),
+            ("preparing", "NUMERIC, null")
         ]
     }
