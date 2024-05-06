@@ -76,3 +76,5 @@ class Constant(object):
 
     #compare type
     OVERALL_COMPARE = "overall"
+
+    BWD_LIST = ["bwd", "backward", "back"]
