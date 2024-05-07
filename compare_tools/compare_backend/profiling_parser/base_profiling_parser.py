@@ -4,7 +4,6 @@ from decimal import Decimal
 from compare_backend.compare_bean.origin_data_bean.compare_event import KernelEvent, MemoryEvent
 from compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
 from compare_backend.compare_bean.profiling_info import ProfilingInfo
-from compare_backend.utils.args_manager import ArgsManager
 from compare_backend.utils.constant import Constant
 from compare_backend.utils.file_reader import FileReader
 
@@ -53,10 +52,10 @@ class BaseProfilingParser(ABC):
         self._profiling_path = path_dict.get(Constant.PROFILING_PATH)
         self._json_path = path_dict.get(Constant.TRACE_PATH)
         self._trace_events = [] if self._profiling_path == Constant.NPU else {}
-        self._enable_profiling_compare = ArgsManager().enable_profiling_compare
-        self._enable_operator_compare = ArgsManager().enable_operator_compare
-        self._enable_memory_compare = ArgsManager().enable_memory_compare
-        self._enable_communication_compare = ArgsManager().enable_communication_compare
+        self._enable_profiling_compare = args.enable_profiling_compare
+        self._enable_operator_compare = args.enable_operator_compare
+        self._enable_memory_compare = args.enable_memory_compare
+        self._enable_communication_compare = args.enable_communication_compare
         self._dispatch_func = self._get_dispatch_func()
         self._result_data = ProfilingResult(self._profiling_type)
         self._memory_events = []

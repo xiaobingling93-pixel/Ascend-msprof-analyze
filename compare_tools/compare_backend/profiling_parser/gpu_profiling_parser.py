@@ -3,7 +3,6 @@ from collections import defaultdict, Counter
 
 from compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
 from compare_backend.profiling_parser.base_profiling_parser import BaseProfilingParser
-from compare_backend.utils.args_manager import ArgsManager
 from compare_backend.utils.constant import Constant
 
 
@@ -17,7 +16,7 @@ class GPUProfilingParser(BaseProfilingParser):
     def __init__(self, args: any, path_dict: dict):
         super().__init__(args, path_dict)
         self._trace_events = [TraceEventBean(event) for event in self._trace_events.get("traceEvents", [])]
-        self._flow_cat = (ArgsManager().args.gpu_flow_cat,) if ArgsManager().args.gpu_flow_cat else self.FLOW_CAT
+        self._flow_cat = (args.gpu_flow_cat,) if args.gpu_flow_cat else self.FLOW_CAT
         self._compute_stream_id = self._infer_compute_stream_id()
         self._marks = defaultdict(int)
         self._aten_index = 0
