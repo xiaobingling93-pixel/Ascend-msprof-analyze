@@ -34,7 +34,7 @@ def get_analysis_args(analysis_class, analysis_args):
 def parse_recipe_params(analysis_name, analysis_args):
     analysis_class = analysis_loader.get_class_from_name(analysis_name)
     if not analysis_class:
-        print("[ERROR] unknown analysis.")
+        print("[ERROR] undefined analysis.")
         return None
     
     args_parsed = get_analysis_args(analysis_class, analysis_args)
@@ -84,12 +84,12 @@ class Interface:
         PathManager.check_path_owner_consistent(self.collection_path)
         FileManager.create_output_dir(self.collection_path)
         data_map, data_type = self.allocate_prof_data()
-        # if not data_map:
-        #     print("[WARNING] Can not get rank info or profiling data.")
-        #     return
-        # if data_type == Constant.INVALID:
-        #     print("[ERROR] The current folder contains both DB and other files. Please check.")
-        #     return
+        if not data_map:
+            print("[WARNING] Can not get rank info or profiling data.")
+            return
+        if data_type == Constant.INVALID:
+            print("[ERROR] The current folder contains both DB and other files. Please check.")
+            return
         if self.analysis_mode == "recipe":
             params = {
                 Constant.COLLECTION_PATH: self.collection_path,
@@ -114,18 +114,13 @@ class Interface:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="cluster analysis module")
     parser.add_argument('-d', '--collection_path', type=str, required=True, help="profiling data path")
-    parser.add_argument('-m', '--mode', choices=['all', 'communication_time', 'communication_matrix', 'recipe'],
+    parser.add_argument('-m', '--mode', choices=Constant.ALL_FEATURE_LIST,
                         default='all', help="different analysis mode")
-    #TODO 扩充mode的内容，把当前确定的mode类型改成不限定，all替换成default，以函数的形式实现
     args_parsed, args_remained = parser.parse_known_args()
     parameter = {
         Constant.COLLECTION_PATH: args_parsed.collection_path,
         Constant.ANALYSIS_MODE: args_parsed.mode
     }
-    if args_parsed.mode == 'recipe':
-        if not args_remained:
-            print("[ERROR] No recipe analysis specified.")
-        else:
-            parameter.update(parse_recipe_params(args_remained[0], args_remained[1:]))
-    # print(parameter)
+    if args_parsed.mode not in Constant.COMM_FEATURE_LIST:
+        parameter.update(parse_recipe_params(args_parsed.mode, args_remained))
     Interface(parameter).run()

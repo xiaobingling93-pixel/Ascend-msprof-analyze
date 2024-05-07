@@ -1,4 +1,4 @@
-# Copyright (c) 2023, Huawei Technologies Co., Ltd.
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0  (the "License");
@@ -39,11 +39,10 @@ class AnalysisFacade:
             process.join()
     
     def recipe_analyze(self):
-        print("recipe analysis launched.")
+        print("[INFO] Recipe analysis launched.")
         try:
             with Context.create_context(self.params.get(Constant.PARALLEL_MODE)) as context:
                 with self.params.get(Constant.RECIPE_CLASS)(self.params) as recipe:
                     recipe.run(context)
-                    return recipe
         except Exception as e:
-            print("[ERROR] recipe analysis launched failed.")
+            print("[ERROR] Recipe analysis launched failed.")

@@ -1,4 +1,4 @@
-# Copyright (c) 2023, Huawei Technologies Co., Ltd.
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0  (the "License");
@@ -14,21 +14,28 @@
 # limitations under the License.
 
 from analysis.base_analysis import BaseRecipeAnalysis
-
+from common_func.constant import Constant
+from cluster_statistics_export.cann_api_sum_export import CannApiSumExport
 class CannApiSum(BaseRecipeAnalysis):
     def __init__(self, params):
         super().__init__(params)
-        print("CannApiSum init.")
+        print("[INFO] CannApiSum init.")
 
     @staticmethod
-    def _mapper_func():
-        pass
+    def _mapper_func(db_path, params):
+        df = CannApiSumExport(db_path, params.get(Constant.RECIPE_NAME)).read_export_db()
+        
+        if df is None or df.empty:
+            print("[WARNING] There is no stats data.")
+            return None
+        
+        return df
     
     def mapper_func(self, context):
         return context.map(
             self._mapper_func,
             self._get_rank_db(),
-            xx
+            params=self._params
             )
     
     def reducer_func(self, mapper_res):

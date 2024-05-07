@@ -1,3 +1,18 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from abc import abstractmethod
 from common_func.constant import Constant
 from utils.data_transfer_adapter import DataTransferAdapter
@@ -81,15 +96,18 @@ class BaseAnalysis:
 class BaseRecipeAnalysis:
     def __init__(self, params):
         self._params = params
-        self._collection_dir = params.get(Constant.COLLECTION_PATH)
-        self._data_map = params.get(Constant.DATA_MAP)
-        self._recipe_name = params.get(Constant.RECIPE_NAME)
-        self._mode = params.get(Constant.PARALLEL_MODE)
+        self._collection_dir = params.get(Constant.COLLECTION_PATH, "")
+        self._data_map = params.get(Constant.DATA_MAP, {})
+        self._recipe_name = params.get(Constant.RECIPE_NAME, "")
+        self._mode = params.get(Constant.PARALLEL_MODE, "")
         self._analysis_dict = {}
 
     def __enter__(self):
         return self
     
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self._params is not None and exc_type is not None:
+            print(f"[ERROR] Failed to exit analysis: {exc_val}")
     def run(self, context):
         self._analysis_dict = {
             "Mode": self.get_mode(),

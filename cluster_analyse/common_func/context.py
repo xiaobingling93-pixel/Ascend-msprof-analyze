@@ -1,4 +1,4 @@
-# Copyright (c) 2023, Huawei Technologies Co., Ltd.
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0  (the "License");
@@ -27,8 +27,8 @@ class Context(object):
     @classmethod
     def create_context(cls, mode=Constant.CONCURRENT_MODE):
         if cls.ctx_map is None:
-            keys = [Constant.SINGLE_MODE, Constant.CONCURRENT_MODE]
-            values = [SingleContext, ConcurrentContext]
+            keys = [Constant.CONCURRENT_MODE]
+            values = [ConcurrentContext]
             cls.ctx_map = dict(zip(keys, values))
 
         if mode not in cls.ctx_map:
@@ -42,28 +42,16 @@ class Context(object):
     def __enter__(self):
         return self
 
-    def __exit__(self):
-        pass
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+        if exc_type is not None:
+            print(f"[ERROR] Failed to exit context: {exc_val}")
 
     def launch(self, func, *args, **kwargs):
         raise NotImplementedError
 
     def map(self, func, *iterables, **kwargs):
         raise NotImplementedError
-
-
-class SingleContext(Context):
-    
-    def __init__(self):
-        self._mode = Constant.SINGLE_MODE
-        super().__init__()
-    def launch(self, func, *args, **kwargs):
-        return func(*args, **kwargs)
-
-    def map(self, func, *iterables, **kwargs):
-        partial_func = partial(func, **kwargs)
-        return list(map(partial(self.launch, partial_func), *iterables))
-
 
 class ConcurrentContext(Context):
 
@@ -77,9 +65,6 @@ class ConcurrentContext(Context):
         if self._executor is None:
             raise RuntimeError("executor is None")
         return self
-
-    def __exit__(self):
-        self.close()
 
     def close(self):
         if self._custom:
