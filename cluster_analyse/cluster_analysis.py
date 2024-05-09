@@ -22,8 +22,28 @@ from communication_group.communication_group_generator import CommunicationGroup
 from common_func.constant import Constant
 from common_func.file_manager import FileManager
 from common_func.path_manager import PathManager
+from common_func import analysis_loader
 from analysis.analysis_facade import AnalysisFacade
 
+
+def get_analysis_args(analysis_class, analysis_args):
+    parser = argparse.ArgumentParser(description="custom analysis args")
+    parser.add_argument("--parallel_mode", type=str, help="context mode", default="concurrent")
+    return parser.parse_args(analysis_args)
+
+def parse_recipe_params(analysis_name, analysis_args):
+    analysis_class = analysis_loader.get_class_from_name(analysis_name)
+    if not analysis_class:
+        print("[ERROR] undefined analysis.")
+        return None
+    
+    args_parsed = get_analysis_args(analysis_class, analysis_args)
+    recipe_params = {
+        Constant.RECIPE_NAME: analysis_class[0],
+        Constant.RECIPE_CLASS: analysis_class[1],
+        Constant.PARALLEL_MODE: args_parsed.parallel_mode
+    }
+    return recipe_params
 
 class Interface:
     ASCEND_PT = "ascend_pt"
@@ -37,6 +57,9 @@ class Interface:
         self.collective_group_dict = {}
         self.communication_ops = []
         self.matrix_ops = []
+        self.recipe_name = params.get(Constant.RECIPE_NAME)
+        self.recipe_class = params.get(Constant.RECIPE_CLASS)
+        self.recipe_parallel_mode = params.get(Constant.PARALLEL_MODE)
 
     def allocate_prof_data(self):
         ascend_pt_dirs = []
@@ -67,25 +90,37 @@ class Interface:
         if data_type == Constant.INVALID:
             print("[ERROR] The current folder contains both DB and other files. Please check.")
             return
-        params = {
-            Constant.COLLECTION_PATH: self.collection_path,
-            Constant.DATA_MAP: data_map,
-            Constant.ANALYSIS_MODE: self.analysis_mode,
-            Constant.DATA_TYPE: data_type
-        }
-        comm_data_dict = CommunicationGroupGenerator(params).generate()
-        params[Constant.COMM_DATA_DICT] = comm_data_dict
-        AnalysisFacade(params).cluster_analyze()
+        if self.analysis_mode == "recipe":
+            params = {
+                Constant.COLLECTION_PATH: self.collection_path,
+                Constant.DATA_MAP: data_map,
+                Constant.RECIPE_NAME: self.recipe_name,
+                Constant.RECIPE_CLASS: self.recipe_class,
+                Constant.PARALLEL_MODE: self.recipe_parallel_mode
+            }
+            AnalysisFacade(params).recipe_analyze()
+        else:
+            params = {
+                Constant.COLLECTION_PATH: self.collection_path,
+                Constant.DATA_MAP: data_map,
+                Constant.ANALYSIS_MODE: self.analysis_mode,
+                Constant.DATA_TYPE: data_type
+            }
+            comm_data_dict = CommunicationGroupGenerator(params).generate()
+            params[Constant.COMM_DATA_DICT] = comm_data_dict
+            AnalysisFacade(params).cluster_analyze()
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="cluster analysis module")
     parser.add_argument('-d', '--collection_path', type=str, required=True, help="profiling data path")
-    parser.add_argument('-m', '--mode', choices=['all', 'communication_time', 'communication_matrix'],
+    parser.add_argument('-m', '--mode', choices=Constant.ALL_FEATURE_LIST,
                         default='all', help="different analysis mode")
-    args_parsed = parser.parse_args()
+    args_parsed, args_remained = parser.parse_known_args()
     parameter = {
         Constant.COLLECTION_PATH: args_parsed.collection_path,
         Constant.ANALYSIS_MODE: args_parsed.mode
     }
+    if args_parsed.mode not in Constant.COMM_FEATURE_LIST:
+        parameter.update(parse_recipe_params(args_parsed.mode, args_remained))
     Interface(parameter).run()

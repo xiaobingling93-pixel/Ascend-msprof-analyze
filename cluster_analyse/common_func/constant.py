@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 
 class Constant(object):
     # dir name
@@ -103,3 +104,15 @@ class Constant(object):
     CONFIG = "config"
     EXPER_CONFIG = "experimental_config"
     EXPORT_TYPE = "_export_type"
+
+    # recipe config
+    RECIPE_NAME = "recipe_name"
+    RECIPE_CLASS = "recipe_class"
+    PARALLEL_MODE = "parallel_mode"
+    CLUSTER_CUSTOM_ANALYSE_PATH = os.path.abspath(os.path.dirname(__file__))
+    ANALYSIS_PATH = os.path.join(CLUSTER_CUSTOM_ANALYSE_PATH, 'analysis')
+    
+    CONCURRENT_MODE = "concurrent"
+    
+    COMM_FEATURE_LIST = ['all', 'communication_time', 'communication_matrix']
+    ALL_FEATURE_LIST = ['all', 'communication_time', 'communication_matrix', 'cann_api_sum']
