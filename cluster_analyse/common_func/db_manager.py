@@ -128,6 +128,22 @@ class DBManager:
             cls.execute_sql(conn, sql)
         cls.destroy_db_connect(conn, curs)
 
+    @classmethod
+    def get_table_column_count(cls, db_path: any, table: any) -> int:
+        conn, curs = cls.create_connect_db(db_path)
+        if not (conn and curs):
+            return 0
+        sql = "SELECT COUNT(*) FROM pragma_table_info('{}')".format(table)
+        res = 0
+        try:
+            curs.execute(sql)
+            res = curs.fetchone()[0]
+        except sqlite3.Error as err:
+            print("[ERROR] {}".format(err))
+        finally:
+            cls.destroy_db_connect(conn, curs)
+        return res
+
     @staticmethod
     def execute_sql(conn: any, sql: str, params: any = None) -> bool:
         """
