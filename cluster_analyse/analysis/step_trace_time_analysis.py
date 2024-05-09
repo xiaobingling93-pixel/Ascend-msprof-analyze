@@ -61,6 +61,11 @@ class StepTraceTimeAnalysis:
             output_path = os.path.join(self.collection_path, Constant.CLUSTER_ANALYSIS_OUTPUT)
             result_db = os.path.join(output_path, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER)
             DBManager.create_tables(result_db, self.CLUSTER_TRACE_TIME_TABLE)
+            column_len = DBManager.get_table_column_count(result_db, self.CLUSTER_TRACE_TIME_TABLE)
+            data_len = len(self.step_data_list[0])
+            if data_len < column_len:
+                for data in self.step_data_list:
+                    data.extend([0] * (column_len - data_len))
             conn, cursor = DBManager.create_connect_db(result_db)
             sql = "insert into {} values ({value})".format(self.CLUSTER_TRACE_TIME_TABLE,
                                                            value="?," * (len(self.step_data_list[0]) - 1) + "?")
