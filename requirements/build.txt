@@ -1,0 +1,12 @@
+click
+tabulate
+networkx
+jinja2
+PyYaml
+tqdm
+prettytable
+ijson
+requests
+xlsxwriter
+sqlalchemy
+urllib3<2.0
