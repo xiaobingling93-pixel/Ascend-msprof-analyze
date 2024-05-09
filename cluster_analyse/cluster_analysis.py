@@ -25,6 +25,9 @@ from common_func.path_manager import PathManager
 from common_func import analysis_loader
 from analysis.analysis_facade import AnalysisFacade
 
+COMM_FEATURE_LIST = ['all', 'communication_time', 'communication_matrix']
+ALL_FEATURE_LIST = ['all', 'communication_time', 'communication_matrix', 'cann_api_sum']
+
 
 def get_analysis_args(analysis_class, analysis_args):
     parser = argparse.ArgumentParser(description="custom analysis args")
@@ -48,6 +51,7 @@ def parse_recipe_params(analysis_name, analysis_args):
 class Interface:
     ASCEND_PT = "ascend_pt"
     ASCEND_MS = "ascend_ms"
+
 
     def __init__(self, params: dict):
         self.collection_path = PathManager.get_realpath(params.get(Constant.COLLECTION_PATH))
@@ -90,7 +94,7 @@ class Interface:
         if data_type == Constant.INVALID:
             print("[ERROR] The current folder contains both DB and other files. Please check.")
             return
-        if self.analysis_mode == "recipe":
+        if self.analysis_mode not in COMM_FEATURE_LIST:
             params = {
                 Constant.COLLECTION_PATH: self.collection_path,
                 Constant.DATA_MAP: data_map,
@@ -114,13 +118,13 @@ class Interface:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="cluster analysis module")
     parser.add_argument('-d', '--collection_path', type=str, required=True, help="profiling data path")
-    parser.add_argument('-m', '--mode', choices=Constant.ALL_FEATURE_LIST,
+    parser.add_argument('-m', '--mode', choices=ALL_FEATURE_LIST,
                         default='all', help="different analysis mode")
     args_parsed, args_remained = parser.parse_known_args()
     parameter = {
         Constant.COLLECTION_PATH: args_parsed.collection_path,
         Constant.ANALYSIS_MODE: args_parsed.mode
     }
-    if args_parsed.mode not in Constant.COMM_FEATURE_LIST:
+    if args_parsed.mode not in COMM_FEATURE_LIST:
         parameter.update(parse_recipe_params(args_parsed.mode, args_remained))
     Interface(parameter).run()
