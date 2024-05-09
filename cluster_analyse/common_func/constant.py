@@ -113,6 +113,3 @@ class Constant(object):
     ANALYSIS_PATH = os.path.join(CLUSTER_CUSTOM_ANALYSE_PATH, 'analysis')
     
     CONCURRENT_MODE = "concurrent"
-    
-    COMM_FEATURE_LIST = ['all', 'communication_time', 'communication_matrix']
-    ALL_FEATURE_LIST = ['all', 'communication_time', 'communication_matrix', 'cann_api_sum']
