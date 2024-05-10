@@ -15,6 +15,7 @@
 import click
 import os
 import sys
+import ast
 
 sys.path.append(
     os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "cluster_analyse"))
@@ -37,7 +38,7 @@ from compare_backend.comparison_generator import ComparisonGenerator
 @click.option('--enable_communication_compare', is_flag=True)
 @click.option('--output_path', '-o', 'output_path', type=click.Path())
 @click.option('--max_kernel_num', 'max_kernel_num', type=int, help="The number of kernels per torch op is limited.")
-@click.option('--op_name_map', type=dict, default={},
+@click.option('--op_name_map', type=ast.literal_eval, default={},
               help="The mapping of operator names equivalent to GPUs and NPUs in the form of dictionaries.",
               required=False)
 @click.option('--use_input_shape', is_flag=True)
