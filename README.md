@@ -1,14 +1,14 @@
 # 性能工具
 
-ATT工具针对训练&大模型场景，提供端到端调优工具：用户采集到性能数据后，由ATT工具提供统计、分析以及相关的调优建议。
+ATT工具针对训练&大模型场景，提供端到端性能调优工具：用户采集到性能数据后，由ATT性能工具提供统计、分析以及相关的调优建议。
 
-### NPU Profiling数据采集
+## NPU性能数据采集
 
-目前ATT工具主要支持Ascend PyTorch Profiler接口的性能数据采集，请参考官方文档：[Ascend PyTorch Profiler数据采集与分析](https://www.hiascend.com/document/detail/zh/canncommercial/70RC1/modeldevpt/ptmigr/AImpug_0067.html)。
+目前ATT工具主要支持Ascend PyTorch Profiler接口的性能数据采集，请参考官方文档：[Ascend PyTorch Profiler数据采集与分析](https://www.hiascend.com/document/detail/zh/canncommercial/80RC1/devaids/auxiliarydevtool/atlasprofiling_16_0006.html)。
 
-Ascend PyTorch Profiler接口支持AscendPyTorch 5.0.RC2或更高版本，支持的PyThon和CANN软件版本配套关系请参见《CANN软件安装指南》中的“[安装PyTorch](https://www.hiascend.com/document/detail/zh/canncommercial/63RC2/envdeployment/instg/instg_000041.html)”。
+Ascend PyTorch Profiler接口支持AscendPyTorch 5.0.RC2或更高版本，支持的PyThon和CANN软件版本配套关系请参见“[安装PyTorch框架](https://www.hiascend.com/document/detail/zh/Pytorch/60RC1/configandinstg/instg/insg_0006.html)”。
 
-#### 采集方式一：通过with语句进行采集
+### 采集方式一：通过with语句进行采集
 
 ```python
 import torch_npu
@@ -35,7 +35,7 @@ with torch_npu.profiler.profile(
       prof.step()
 ```
 
-#### 采集方式二：start，stop方式进行采集
+### 采集方式二：start，stop方式进行采集
 
 ```python
 import torch_npu
@@ -64,7 +64,7 @@ for epoch, data in enumerate(dataloader):
         prof.stop()
 ```
 
-#### NPU性能数据目录结构
+### NPU性能数据目录结构
 
 ascend pytorch profiler数据目录结构如下：
 
@@ -79,7 +79,97 @@ ascend pytorch profiler数据目录结构如下：
     |- * _ascend_pt
 ```
 
-### 子功能介绍
+## 工具安装
+
+性能工具的安装方式包括：**下载whl包安装**和**源代码编译安装**。
+
+#### 下载whl包安装
+
+1. whl包获取。
+
+   请通过下表链接下载profiler工具whl包。
+
+   | profiler版本 | 发布日期   | 下载链接                                                     | 校验码                                                       |
+   | ------------ | ---------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+   | 1.0          | 2024-05-10 | [msprof_analyze-1.0-py3-none-any.whl](https://ptdbg.obs.myhuaweicloud.com/profiler/package/1.0/msprof_analyze-1.0-py3-none-any.whl) | bcded626f639cea32ba814f88cbc563b48609d2c832a9f9b12c455c0626137ed |
+
+   
+
+2. whl包校验。
+
+   1. 根据以上下载链接下载whl包到Linux安装环境。
+
+   2. 进入whl包所在目录，执行如下命令。
+
+      ```
+      sha256sum {name}.whl
+      ```
+
+      {name}为whl包名称。
+
+      若回显呈现对应版本whl包一致的**校验码**，则表示下载了正确的性能工具whl安装包。示例如下：
+
+      ```
+      sha256sum msprof_analyze-1.0-py3-none-any.whl
+      xx *msprof_analyze-1.0-py3-none-any.whl
+      ```
+
+3. whl包安装。
+
+   执行如下命令进行安装。
+
+   ```
+   pip3 install ./msprof_analyze-{version}-py3-none-any.whl
+   ```
+
+   若为覆盖安装，请在命令行末尾增加“--force-reinstall”参数强制安装，例如：
+
+   ```
+   pip3 install ./msprof_analyze-{version}-py3-none-any.whl --force-reinstall
+   ```
+
+   提示如下信息则表示安装成功。
+
+   ```
+   Successfully installed msprof_analyze-{version}
+   ```
+
+#### 源代码编译安装
+
+1. 安装依赖。
+
+   编译前需要安装wheel。
+
+   ```bash
+   pip3 install wheel
+   ```
+
+2. 下载源码。
+
+   ```bash
+   git clone https://gitee.com/ascend/att.git
+   ```
+
+3. 编译whl包。
+
+   ```bash
+   cd att/profiler
+   python3 setup.py bdist_wheel
+   ```
+
+   以上命令执行完成后在att/profiler/dist目录下生成性能工具whl安装包`msprof_analyze-{version}-py3-none-any.whl`。
+
+4. 安装。
+
+   执行如下命令进行性能工具安装。
+
+   ```bash
+   cd dist
+   pip3 install ./msprof_analyze-{version}-py3-none-any.whl --force-reinstall
+   ```
+
+## 工具使用
+
 | 工具名称                                                     | 说明                                                         |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | [compare_tools（性能比对工具）](https://gitee.com/ascend/att/tree/master/profiler/compare_tools) | 提供NPU与GPU性能拆解功能以及算子、通信、内存性能的比对功能。 |
