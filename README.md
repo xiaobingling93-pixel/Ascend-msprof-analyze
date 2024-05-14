@@ -91,7 +91,7 @@ ascend pytorch profiler数据目录结构如下：
 
    | profiler版本 | 发布日期   | 下载链接                                                     | 校验码                                                       |
    | ------------ | ---------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
-   | 1.0          | 2024-05-10 | [msprof_analyze-1.0-py3-none-any.whl](https://ptdbg.obs.myhuaweicloud.com/profiler/package/1.0/msprof_analyze-1.0-py3-none-any.whl) | bcded626f639cea32ba814f88cbc563b48609d2c832a9f9b12c455c0626137ed |
+   | 1.0          | 2024-05-10 | [msprof_analyze-1.0-py3-none-any.whl](https://ptdbg.obs.myhuaweicloud.com/profiler/package/1.0/msprof_analyze-1.0-py3-none-any.whl) | 95b2f41c8c8e8afe4887b738c8cababcb4f412e1874483b6adae4a025fcbb7d4 |
 
    
 
