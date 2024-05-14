@@ -1,6 +1,6 @@
 # 性能分析工具
 
-性能分析工具是将Ascend PyTorch Profiler采集的性能数据进行分析，并输出性能调优建议的工具 。使用方式如下：
+性能分析工具是将Ascend PyTorch Profiler采集的性能数据进行分析，并输出性能调优建议的工具 。
 
 下列以Windows环境下执行为例介绍。
 
@@ -14,7 +14,7 @@
 
 2. 在环境下安装ATT工具。
 
-   ```
+   ```bash
    git clone https://gitee.com/ascend/att.git
    ```
 
