@@ -116,7 +116,7 @@ class BaseRecipeAnalysis:
 
     def _get_rank_db(self):
         db_paths = [os.path.join(rank_path,
-                                 Constant.CLUSTER_ANALYSIS_OUTPUT,
+                                 Constant.SINGLE_OUTPUT,
                                  f"ascend_pytorch_profiler_{rank_id}.db") 
                     for rank_id, rank_path in self._data_map.items()]
         return db_paths

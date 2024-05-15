@@ -24,11 +24,7 @@ WITH
             count (*) AS num,
             avg(endNs - startNs) AS avg_duration,
             min(endNs - startNs) AS min_duration,
-            median(endNs - startNs) AS median_duration,
-            max(endNs - startNs) AS max_duration,
-            stdev(endNs - startNs) AS stddev,
-            lower_quartile(endNs - startNs) AS q1,
-            upper_quartile(endNs - startNs) AS q3
+            max(endNs - startNs) AS max_duration
         FROM
             CANN_API
         GROUP BY name
@@ -38,22 +34,19 @@ WITH
         FROM summary
     )
 SELECT
-    round(summary.duration * 100.0 / totals.total, 2) AS "duration_ratio: %",
+    ids.value AS "API Name",
+    round(summary.duration * 100.0 / (SELECT total FROM totals), 2) AS "duration_ratio: %",
     summary.duration AS "Total Time: ns",
     summary.num AS "Total Count",
     round(summary.avg_duration, 1) AS "Average: ns",
-    summary.min_duration, 1 AS "Min: ns",
-    round(summary.median_duration, 1) AS "Med: ns",
-    summary.max_duration, 1 AS "Max: ns",
-    round(summary.stddev, 1) AS "StdDev: ns"
-    summary.q1 AS "Q1"
-    summary.q3 AS "Q3"
+    round(summary.min_duration, 1) AS "Min: ns",
+    round(summary.max_duration, 1) AS "Max: ns"
 FROM
     summary
 LEFT JOIN
     STRING_IDS AS ids
     ON ids.id == summary.name
-ORDER BY 2 DESC
+ORDER BY 2 DESC;
     """
 class CannApiSumExport(StatsExport):
     

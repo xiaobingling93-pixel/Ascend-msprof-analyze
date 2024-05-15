@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
 from analysis.base_analysis import BaseRecipeAnalysis
 from common_func.constant import Constant
 from cluster_statistics_export.cann_api_sum_export import CannApiSumExport
@@ -23,12 +25,12 @@ class CannApiSum(BaseRecipeAnalysis):
 
     @staticmethod
     def _mapper_func(db_path, params):
+        print(f"[INFO] Current pid: {os.getpid()}, db_path: {db_path}")
         df = CannApiSumExport(db_path, params.get(Constant.RECIPE_NAME)).read_export_db()
         
         if df is None or df.empty:
             print("[WARNING] There is no stats data.")
             return None
-        
         return df
     
     def mapper_func(self, context):
@@ -39,7 +41,9 @@ class CannApiSum(BaseRecipeAnalysis):
             )
     
     def reducer_func(self, mapper_res):
-        pass
+        filtered_res = self._filter_data(mapper_res)
+        filtered_res = sorted(filtered_res, key=lambda x: x[0])
+        
     
     def run(self, context):
         super().run(context)

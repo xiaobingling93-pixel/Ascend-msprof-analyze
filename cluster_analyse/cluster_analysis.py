@@ -32,6 +32,7 @@ ALL_FEATURE_LIST = ['all', 'communication_time', 'communication_matrix', 'cann_a
 def get_analysis_args(analysis_class, analysis_args):
     parser = argparse.ArgumentParser(description="custom analysis args")
     parser.add_argument("--parallel_mode", type=str, help="context mode", default="concurrent")
+    parser.add_argument("--output_type", type=str, help="output type", default="db")
     return parser.parse_args(analysis_args)
 
 def parse_recipe_params(analysis_name, analysis_args):
