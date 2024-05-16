@@ -19,31 +19,30 @@ QUERY = """
 WITH
     summary as (
         SELECT
-            COMPUTE_TASK_INFO.Tname,
+            COMPUTE_TASK_INFO.optype,
             TASK.startNs,
             TASK.endNs,
-            sum(endNs - startNs) AS duration,
+            sum(TASK.endNs - TASK.startNs) AS duration,
             count (*) AS num,
-            avg(endNs - startNs) AS avg_duration,
-            min(endNs - startNs) AS min_duration,
-            median(endNs - startNs) AS median_duration,
-            max(endNs - startNs) AS max_duration,
-            stdev(endNs - startNs) AS stddev,
-            lower_quartile(endNs - startNs) AS q1,
-            upper_quartile(endNs - startNs) AS q3
+            avg(TASK.endNs - TASK.startNs) AS avg_duration,
+            min(TASK.endNs - TASK.startNs) AS min_duration,
+            median(TASK.endNs - startNs) AS median_duration,
+            max(TASK.endNs - TASK.startNs) AS max_duration,
+            stdev(TASK.endNs - TASK.startNs) AS stddev,
+            lower_quartile(TASK.endNs - TASK.startNs) AS q1,
+            upper_quartile(TASK.endNs - TASK.startNs) AS q3
         FROM
             COMPUTE_TASK_INFO
-            
-        LEFT JOIN TASK
+        GROUP BY optype
+        LEFT JOIN TASK 
              ON COMPUTE_TASK_INFO.global == TASK.global
-             
-        GROUP BY name
     ),
     totals AS (
         SELECT sum(duration) AS total
         FROM summary
     )
 SELECT
+    STRING_IDS.value AS "OP Name"
     round(summary.duration * 100.0 / totals.total, 2) AS "duration_ratio: %",
     summary.duration AS "Total Time: ns",
     summary.num AS "Total Count",
@@ -51,8 +50,8 @@ SELECT
     summary.min_duration, 1 AS "Min: ns",
     round(summary.median_duration, 1) AS "Med: ns",
     summary.max_duration, 1 AS "Max: ns",
-    round(summary.stddev, 1) AS "StdDev: ns"
-    summary.q1 AS "Q1"
+    round(summary.stddev, 1) AS "StdDev: ns",
+    summary.q1 AS "Q1",
     summary.q3 AS "Q3"
 FROM
     summary
