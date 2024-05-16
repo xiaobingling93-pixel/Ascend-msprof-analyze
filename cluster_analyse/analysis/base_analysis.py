@@ -13,11 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+import pandas as pd
 from abc import abstractmethod
+
 from common_func.constant import Constant
 from utils.data_transfer_adapter import DataTransferAdapter
 from common_func.file_manager import FileManager
-import os
+from common_func.db_manager import DBManager
 
 
 class BaseAnalysis:
@@ -100,6 +103,7 @@ class BaseRecipeAnalysis:
         self._data_map = params.get(Constant.DATA_MAP, {})
         self._recipe_name = params.get(Constant.RECIPE_NAME, "")
         self._mode = params.get(Constant.PARALLEL_MODE, "")
+        self._export_type = params.get(Constant.EXPORT_TYPE, "")
         self._analysis_dict = {}
 
     def __enter__(self):
@@ -115,9 +119,9 @@ class BaseRecipeAnalysis:
         }
 
     def _get_rank_db(self):
-        db_paths = [os.path.join(rank_path,
+        db_paths = [(rank_id, os.path.join(rank_path,
                                  Constant.SINGLE_OUTPUT,
-                                 f"ascend_pytorch_profiler_{rank_id}.db") 
+                                 f"ascend_pytorch_profiler_{rank_id}.db"))
                     for rank_id, rank_path in self._data_map.items()]
         return db_paths
 
@@ -126,3 +130,19 @@ class BaseRecipeAnalysis:
     
     def get_recipe_name(self):
         return self._recipe_name
+    
+    def dump_db(self, file_name, table_name, data):
+        output_path = os.path.join(self._collection_dir, Constant.CLUSTER_ANALYSIS_OUTPUT)
+        result_db = os.path.join(output_path, file_name)
+        conn, cursor = DBManager.create_connect_db(result_db)
+        if isinstance(data, pd.DataFrame):
+            data.to_sql(table_name, conn, if_exists='replace', index=False)
+        else:
+            DBManager.create_tables(result_db, table_name)
+            sql = "insert into {} values ({value})".format(table_name, value="?," * (len(data[0]) - 1) + "?")
+            DBManager.executemany_sql(conn, sql, data)
+        DBManager.destroy_db_connect(conn, cursor)
+
+    @staticmethod
+    def _filter_data(mapper_data):
+        return [(rank, data) for rank, data in mapper_data if data is not None and len(data) != 0]

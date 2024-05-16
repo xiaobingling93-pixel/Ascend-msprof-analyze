@@ -16,12 +16,12 @@
 import pandas as pd
 
 from common_func.db_manager import DBManager
-
+from common_func.constant import Constant
 class StatsExport:
     
-    def __init__(self, db_path, recipe_name):
+    def __init__(self, db_path, analysis_class):
         self._db_path = db_path
-        self._recipe_name = recipe_name
+        self._analysis_class = analysis_class
         self._query = None
 
     def get_query(self):
@@ -32,7 +32,7 @@ class StatsExport:
         if query is None:
             print(f"[ERROR] query is None.")
             return
-        conn, cursor = DBManager.create_connect_db(self._db_path)
+        conn, cursor = DBManager.create_connect_db(self._db_path, Constant.ANALYSIS)
         data = pd.read_sql(query, conn)
         DBManager.destroy_db_connect(conn, cursor)
         return data

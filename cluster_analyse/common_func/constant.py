@@ -106,6 +106,7 @@ class Constant(object):
     EXPORT_TYPE = "_export_type"
 
     # recipe config
+    ANALYSIS = "analysis"
     RECIPE_NAME = "recipe_name"
     RECIPE_CLASS = "recipe_class"
     PARALLEL_MODE = "parallel_mode"

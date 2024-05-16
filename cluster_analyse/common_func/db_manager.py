@@ -20,7 +20,7 @@ from common_func.constant import Constant
 from common_func.empty_class import EmptyClass
 from common_func.file_manager import check_db_path_valid
 from common_func.tables_config import TablesConfig
-
+from common_func.sql_extention_func import SqlExtentionAggregateFunc
 
 class DBManager:
     """
@@ -31,7 +31,7 @@ class DBManager:
     MAX_ROW_COUNT = 100000000
 
     @staticmethod
-    def create_connect_db(db_path: str) -> tuple:
+    def create_connect_db(db_path: str, mode=None) -> tuple:
         """
         create and connect database
         """
@@ -42,6 +42,12 @@ class DBManager:
                 print(f"[ERROR] {err}")
                 return EmptyClass("empty conn"), EmptyClass("empty curs")
             try:
+                if mode == Constant.ANALYSIS:
+                    try:
+                        for func_name, params_count, class_name in SqlExtentionAggregateFunc:
+                            conn.create_aggregate(func_name, params_count, class_name)
+                    except sqlite3.Error as err:
+                        print(f"[ERROR] {err}")
                 if isinstance(conn, sqlite3.Connection):
                     curs = conn.cursor()
                     os.chmod(db_path, Constant.FILE_AUTHORITY)

@@ -25,7 +25,7 @@ def is_analysis_class(obj):
 
 def get_class_from_name(analysis_name : str):
     sys.path.append(Constant.ANALYSIS_PATH)
-    analysis_path = f"analysis.{analysis_name}"
+    analysis_path = f"analysis.{analysis_name}.{analysis_name}"
     module = None
     try:
         module = importlib.import_module(analysis_path)

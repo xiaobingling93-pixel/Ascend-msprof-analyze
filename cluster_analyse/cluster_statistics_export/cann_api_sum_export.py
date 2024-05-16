@@ -24,7 +24,11 @@ WITH
             count (*) AS num,
             avg(endNs - startNs) AS avg_duration,
             min(endNs - startNs) AS min_duration,
-            max(endNs - startNs) AS max_duration
+            median(endNs - startNs) AS med_duration,
+            max(endNs - startNs) AS max_duration,
+            stdev(endNs - startNs) AS stdev_duration,
+            lower_quartile(endNs - startNs) AS lower_quartile_duration,
+            upper_quartile(endNs - startNs) AS upper_quartile_duration
         FROM
             CANN_API
         GROUP BY name
@@ -34,13 +38,17 @@ WITH
         FROM summary
     )
 SELECT
-    ids.value AS "API Name",
-    round(summary.duration * 100.0 / (SELECT total FROM totals), 2) AS "duration_ratio: %",
-    summary.duration AS "Total Time: ns",
-    summary.num AS "Total Count",
-    round(summary.avg_duration, 1) AS "Average: ns",
-    round(summary.min_duration, 1) AS "Min: ns",
-    round(summary.max_duration, 1) AS "Max: ns"
+    ids.value AS "name",
+    round(summary.duration * 100.0 / (SELECT total FROM totals), 2) AS "durationRatio",
+    summary.duration AS "totalTimeNs",
+    summary.num AS "totalCount",
+    round(summary.avg_duration, 1) AS "averageNs",
+    round(summary.min_duration, 1) AS "minNs",
+    round(summary.med_duration, 1) AS "medNs",
+    round(summary.max_duration, 1) AS "maxNs",
+    round(summary.stdev_duration, 1) AS "stdevNs",
+    round(summary.lower_quartile_duration, 1) AS "Q1Ns",
+    round(summary.lower_quartile_duration, 1) AS "Q3Ns"
 FROM
     summary
 LEFT JOIN
