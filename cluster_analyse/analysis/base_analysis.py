@@ -105,7 +105,7 @@ class BaseRecipeAnalysis:
         self._mode = params.get(Constant.PARALLEL_MODE, "")
         self._export_type = params.get(Constant.EXPORT_TYPE, "")
         self._analysis_dict = {}
-
+        self._output_dir = None
     def __enter__(self):
         return self
     
@@ -131,17 +131,65 @@ class BaseRecipeAnalysis:
     def get_recipe_name(self):
         return self._recipe_name
     
-    def dump_db(self, file_name, table_name, data):
+    def dump_data(self, file_name, table_name, data, dump_type='db'):
         output_path = os.path.join(self._collection_dir, Constant.CLUSTER_ANALYSIS_OUTPUT)
-        result_db = os.path.join(output_path, file_name)
-        conn, cursor = DBManager.create_connect_db(result_db)
-        if isinstance(data, pd.DataFrame):
-            data.to_sql(table_name, conn, if_exists='replace', index=False)
+        if dump_type == 'db':
+            result_db = os.path.join(output_path, file_name)
+            conn, cursor = DBManager.create_connect_db(result_db)
+            if isinstance(data, pd.DataFrame):
+                data.to_sql(table_name, conn, if_exists='replace', index=True)
+            else:
+                DBManager.create_tables(result_db, table_name)
+                sql = "insert into {} values ({value})".format(table_name, value="?," * (len(data[0]) - 1) + "?")
+                DBManager.executemany_sql(conn, sql, data)
+            DBManager.destroy_db_connect(conn, cursor)
+        elif dump_type == 'csv':
+            result_csv = os.path.join(output_path, file_name)
+            if isinstance(data, pd.DataFrame):
+                data.to_csv(result_csv, index=True)
+            else:
+                print(f"[ERROR] Unknown dump data type: {type(data)}")
         else:
-            DBManager.create_tables(result_db, table_name)
-            sql = "insert into {} values ({value})".format(table_name, value="?," * (len(data[0]) - 1) + "?")
-            DBManager.executemany_sql(conn, sql, data)
-        DBManager.destroy_db_connect(conn, cursor)
+            print(f"[ERROR] Unknown dump type: {dump_type}")
+
+    def _create_output_dir_name(self, name):
+        i = 1
+        while os.path.exists(f"{name}-{i}"):
+            i += 1
+        return f"{name}-{i}
+    
+    def _create_unique_output_dir(self):
+        output_dir = os.path.join(self._collection_dir, self._recipe_name)
+        
+        if os.path.exists(output_dir):
+            return self._create_output_dir_name(output_dir)
+        return output_dir
+        
+    def _get_output_dir(self):
+        if self._output_dir is None:
+            self._output_dir = self._create_unique_output_dir()
+            os.makedirs(self._output_dir)
+        return self._output_dir
+    
+    def create_notebook(self, filename, notebook_template_dir=None, replace_dict=None):
+        if notebook_template_dir is None:
+            template_path = os.path.dirname(__file__)
+        else:
+            template_path = notebook_template_dir
+        output_path = os.path.join(self._get_output_dir(), notebook_name)
+        
+        if not os.path.exists(template_path):
+            print(f"[ERROR] {template_path} not found.")
+        
+        if replace_dict is None:
+            shutil.copy(template_path, output_path)
+        else:
+            with open(template_path, 'r') as f:
+                template_content = f.read()
+                for key, value in replace_dict.items():
+                    template_content = template_content.replace(str(key), str(value))
+            with open(output_path, 'w') as f:
+                f.write(template_content)
 
     @staticmethod
     def _filter_data(mapper_data):

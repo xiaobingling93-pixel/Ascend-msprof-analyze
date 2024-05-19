@@ -52,15 +52,15 @@ class CannApiSum(BaseRecipeAnalysis):
         if self._export_type == 'db':
             self.dump_db(Constant.DB_CLUSTER_COMMUNICATION_ANALYZER, "CANN_API_SUM_RANK", stats_res)
             self.dump_db(Constant.DB_CLUSTER_COMMUNICATION_ANALYZER, "CANN_API_SUM", self._analysis_dict)
-    
+        else:
+            self.save_notebook()
+            self.save_analysis_file()
+
     def run(self, context):
         super().run(context)
         
         mapper_res = self.mapper_func(context)
         self.reducer_func(mapper_res)
-        
-        self.save_notebook()
-        self.save_analysis_file()
 
     @staticmethod
     def _aggregate_stats(stats_res):
