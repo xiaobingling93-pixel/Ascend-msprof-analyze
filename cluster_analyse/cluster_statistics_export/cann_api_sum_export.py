@@ -44,11 +44,11 @@ SELECT
     summary.num AS "totalCount",
     round(summary.avg_duration, 1) AS "averageNs",
     round(summary.min_duration, 1) AS "minNs",
-    round(summary.med_duration, 1) AS "medNs",
-    round(summary.max_duration, 1) AS "maxNs",
-    round(summary.stdev_duration, 1) AS "stdevNs",
     round(summary.lower_quartile_duration, 1) AS "Q1Ns",
-    round(summary.lower_quartile_duration, 1) AS "Q3Ns"
+    round(summary.med_duration, 1) AS "medNs",
+    round(summary.upper_quartile_duration, 1) AS "Q3Ns",
+    round(summary.max_duration, 1) AS "maxNs",
+    round(summary.stdev_duration, 1) AS "stdevNs"
 FROM
     summary
 LEFT JOIN

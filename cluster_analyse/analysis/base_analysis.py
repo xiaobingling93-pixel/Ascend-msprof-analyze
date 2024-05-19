@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import os
+import shutil
 import pandas as pd
 from abc import abstractmethod
 
@@ -104,7 +105,6 @@ class BaseRecipeAnalysis:
         self._recipe_name = params.get(Constant.RECIPE_NAME, "")
         self._mode = params.get(Constant.PARALLEL_MODE, "")
         self._export_type = params.get(Constant.EXPORT_TYPE, "")
-        self._analysis_dict = {}
         self._output_dir = None
     def __enter__(self):
         return self
@@ -113,10 +113,7 @@ class BaseRecipeAnalysis:
         if self._params is not None and exc_type is not None:
             print(f"[ERROR] Failed to exit analysis: {exc_val}")
     def run(self, context):
-        self._analysis_dict = {
-            "Mode": self.get_mode(),
-            "RecipeName": self.get_recipe_name()
-        }
+        pass
 
     def _get_rank_db(self):
         db_paths = [(rank_id, os.path.join(rank_path,
@@ -131,35 +128,31 @@ class BaseRecipeAnalysis:
     def get_recipe_name(self):
         return self._recipe_name
     
-    def dump_data(self, file_name, table_name, data, dump_type='db'):
+    def dump_data(self, data, file_name, table_name=None, index=True):
         output_path = os.path.join(self._collection_dir, Constant.CLUSTER_ANALYSIS_OUTPUT)
-        if dump_type == 'db':
+        if table_name:
             result_db = os.path.join(output_path, file_name)
             conn, cursor = DBManager.create_connect_db(result_db)
             if isinstance(data, pd.DataFrame):
                 data.to_sql(table_name, conn, if_exists='replace', index=True)
             else:
-                DBManager.create_tables(result_db, table_name)
-                sql = "insert into {} values ({value})".format(table_name, value="?," * (len(data[0]) - 1) + "?")
-                DBManager.executemany_sql(conn, sql, data)
+                print(f"[ERROR] Unknown dump data type: {type(data)}")
             DBManager.destroy_db_connect(conn, cursor)
-        elif dump_type == 'csv':
+        else:
             result_csv = os.path.join(output_path, file_name)
             if isinstance(data, pd.DataFrame):
-                data.to_csv(result_csv, index=True)
+                data.to_csv(result_csv, index=index)
             else:
                 print(f"[ERROR] Unknown dump data type: {type(data)}")
-        else:
-            print(f"[ERROR] Unknown dump type: {dump_type}")
 
     def _create_output_dir_name(self, name):
         i = 1
         while os.path.exists(f"{name}-{i}"):
             i += 1
-        return f"{name}-{i}
+        return f"{name}-{i}"
     
     def _create_unique_output_dir(self):
-        output_dir = os.path.join(self._collection_dir, self._recipe_name)
+        output_dir = os.path.join(self._collection_dir, Constant.CLUSTER_ANALYSIS_OUTPUT, self._recipe_name)
         
         if os.path.exists(output_dir):
             return self._create_output_dir_name(output_dir)
@@ -176,21 +169,23 @@ class BaseRecipeAnalysis:
             template_path = os.path.dirname(__file__)
         else:
             template_path = notebook_template_dir
-        output_path = os.path.join(self._get_output_dir(), notebook_name)
-        
-        if not os.path.exists(template_path):
-            print(f"[ERROR] {template_path} not found.")
-        
+        output_path = os.path.join(self._get_output_dir(), filename)
+        template_file = os.path.join(template_path, self._base_dir, filename)
         if replace_dict is None:
-            shutil.copy(template_path, output_path)
+            shutil.copy(template_file, output_path)
         else:
-            with open(template_path, 'r') as f:
+            with open(template_file, 'r') as f:
                 template_content = f.read()
                 for key, value in replace_dict.items():
                     template_content = template_content.replace(str(key), str(value))
             with open(output_path, 'w') as f:
                 f.write(template_content)
+    def add_helper_file(self, helper_file):
+        helper_output_path = os.path.join(self._get_output_dir(), helper_file)
+        helper_file_path = os.path.join(os.path.dirname(__file__), helper_file)
 
+        if helper_file_path is not None:
+            shutil.copy(helper_file_path, helper_output_path)
     @staticmethod
     def _filter_data(mapper_data):
         return [(rank, data) for rank, data in mapper_data if data is not None and len(data) != 0]

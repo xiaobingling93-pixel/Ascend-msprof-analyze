@@ -52,6 +52,9 @@ class Context(object):
 
     def map(self, func, *iterables, **kwargs):
         raise NotImplementedError
+    
+    def wait(self, waitable):
+        raise NotImplementedError
 
 class ConcurrentContext(Context):
 
@@ -77,3 +80,6 @@ class ConcurrentContext(Context):
     def map(self, func, *iterables, **kwargs):
         partial_func = partial(func, **kwargs)
         return list(self._executor.map(partial_func, *iterables))
+    
+    def wait(self, waitable):
+        return waitable

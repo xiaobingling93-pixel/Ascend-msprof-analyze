@@ -89,7 +89,6 @@ class Interface:
     def run(self):
         PathManager.check_input_directory_path(self.collection_path)
         PathManager.check_path_owner_consistent(self.collection_path)
-        FileManager.create_output_dir(self.collection_path)
         data_map, data_type = self.allocate_prof_data()
         if not data_map:
             print("[WARNING] Can not get rank info or profiling data.")
@@ -98,6 +97,7 @@ class Interface:
             print("[ERROR] The current folder contains both DB and other files. Please check.")
             return
         if self.analysis_mode not in COMM_FEATURE_LIST:
+            FileManager.create_output_dir_non_overwrite(self.collection_path)
             params = {
                 Constant.COLLECTION_PATH: self.collection_path,
                 Constant.DATA_MAP: data_map,
@@ -108,6 +108,7 @@ class Interface:
             }
             AnalysisFacade(params).recipe_analyze()
         else:
+            FileManager.create_output_dir(self.collection_path)
             params = {
                 Constant.COLLECTION_PATH: self.collection_path,
                 Constant.DATA_MAP: data_map,

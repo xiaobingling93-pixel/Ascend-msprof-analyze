@@ -18,10 +18,12 @@ import pandas as pd
 
 from analysis.base_analysis import BaseRecipeAnalysis
 from common_func.constant import Constant
+from common_func.utils import stdev
 from cluster_statistics_export.cann_api_sum_export import CannApiSumExport
 class CannApiSum(BaseRecipeAnalysis):
     def __init__(self, params):
         super().__init__(params)
+        self._base_dir = os.path.basename(os.path.dirname(__file__))
         print("[INFO] CannApiSum init.")
 
     @staticmethod
@@ -35,11 +37,13 @@ class CannApiSum(BaseRecipeAnalysis):
         return data_map[0], df
     
     def mapper_func(self, context):
-        return context.map(
+        return context.wait(
+            context.map(
             self._mapper_func,
             self._get_rank_db(),
             analysis_class=self._recipe_name
             )
+        )
     
     def reducer_func(self, mapper_res):
         stats_res = self._filter_data(mapper_res)
@@ -48,17 +52,18 @@ class CannApiSum(BaseRecipeAnalysis):
             return
         stats_res = [df.assign(rank=rank) for rank, df in stats_res]
         stats_res = pd.concat(stats_res)
-        self._analysis_dict = self._aggregate_stats(stats_res)
-        if self._export_type == 'db':
-            self.dump_db(Constant.DB_CLUSTER_COMMUNICATION_ANALYZER, "CANN_API_SUM_RANK", stats_res)
-            self.dump_db(Constant.DB_CLUSTER_COMMUNICATION_ANALYZER, "CANN_API_SUM", self._analysis_dict)
-        else:
+        analysis_dict = self._aggregate_stats(stats_res)
+        if self._export_type == "db":
+            self.dump_data(stats_res, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER, "CannApiSumRank")
+            self.dump_data(analysis_dict, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER, "CannApiSum")
+        elif self._export_type == "notebook":
+            self.dump_data(stats_res, os.path.join(self._get_output_dir(), "rank_stats.csv"), index=False)
+            self.dump_data(analysis_dict, os.path.join(self._get_output_dir(), "all_stats.csv"))
             self.save_notebook()
-            self.save_analysis_file()
+        else:
+            print("[ERROR] Unknown export type.")
 
-    def run(self, context):
-        super().run(context)
-        
+    def run(self, context):     
         mapper_res = self.mapper_func(context)
         self.reducer_func(mapper_res)
 
@@ -76,7 +81,7 @@ class CannApiSum(BaseRecipeAnalysis):
         res["Q3"] = grouped["Q3Ns"].max()
         res["min"] = grouped["minNs"].min()
         res["max"] = grouped["maxNs"].max()
-        #res["Stdev"] = grouped["stdevNs"]
+        res["stdev"] = grouped.apply(lambda x: stdev(x, res))
         min_value = grouped["minNs"].min()
         res["minRank"] = grouped.apply(
             lambda x: ", ".join(
@@ -95,7 +100,4 @@ class CannApiSum(BaseRecipeAnalysis):
 
     def save_notebook(self):
         self.create_notebook("stats.ipynb")
-        self.add_notebook_file()
-    
-    def save_analysis_file(self):
-        pass
+        self.add_helper_file("cluster_display.py")
