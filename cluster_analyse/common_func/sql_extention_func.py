@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sqlite3
 import numpy as np
 
 
@@ -66,17 +65,9 @@ class StandardDeviation:
 
 
 # func_name, params_count, class
-SQL_EXTENTION_AGGREGATE_FUNC = [
+SqlExtentionAggregateFunc = [
     ('median', 1, Median),
     ('lower_quartile', 1, LowerQuartile),
     ('upper_quartile', 1, UpperQuartile),
     ('stdev', 1, StandardDeviation)
 ]
-
-
-def register_ext_aggerate_func(conn: sqlite3.Connection):
-    try:
-        for func_name, params_count, class_name in SQL_EXTENTION_AGGREGATE_FUNC:
-            conn.create_aggregate(func_name, params_count, class_name)
-    except sqlite3.Error as err:
-        print(f"[ERROR] {err}")

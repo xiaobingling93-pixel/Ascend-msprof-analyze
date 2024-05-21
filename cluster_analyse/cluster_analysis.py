@@ -32,6 +32,7 @@ ALL_FEATURE_LIST = ['all', 'communication_time', 'communication_matrix', 'cann_a
 def get_analysis_args(analysis_class, analysis_args):
     parser = argparse.ArgumentParser(description="custom analysis args")
     parser.add_argument("--parallel_mode", type=str, help="context mode", default="concurrent")
+    parser.add_argument("--export_type", type=str, help="export type", default="db")
     return parser.parse_args(analysis_args)
 
 def parse_recipe_params(analysis_name, analysis_args):
@@ -44,7 +45,8 @@ def parse_recipe_params(analysis_name, analysis_args):
     recipe_params = {
         Constant.RECIPE_NAME: analysis_class[0],
         Constant.RECIPE_CLASS: analysis_class[1],
-        Constant.PARALLEL_MODE: args_parsed.parallel_mode
+        Constant.PARALLEL_MODE: args_parsed.parallel_mode,
+        Constant.EXPORT_TYPE: args_parsed.export_type
     }
     return recipe_params
 
@@ -64,6 +66,7 @@ class Interface:
         self.recipe_name = params.get(Constant.RECIPE_NAME)
         self.recipe_class = params.get(Constant.RECIPE_CLASS)
         self.recipe_parallel_mode = params.get(Constant.PARALLEL_MODE)
+        self.export_type = params.get(Constant.EXPORT_TYPE)
 
     def allocate_prof_data(self):
         ascend_pt_dirs = []
@@ -86,7 +89,6 @@ class Interface:
     def run(self):
         PathManager.check_input_directory_path(self.collection_path)
         PathManager.check_path_owner_consistent(self.collection_path)
-        FileManager.create_output_dir(self.collection_path)
         data_map, data_type = self.allocate_prof_data()
         if not data_map:
             print("[WARNING] Can not get rank info or profiling data.")
@@ -95,15 +97,18 @@ class Interface:
             print("[ERROR] The current folder contains both DB and other files. Please check.")
             return
         if self.analysis_mode not in COMM_FEATURE_LIST:
+            FileManager.create_output_dir_non_overwrite(self.collection_path)
             params = {
                 Constant.COLLECTION_PATH: self.collection_path,
                 Constant.DATA_MAP: data_map,
                 Constant.RECIPE_NAME: self.recipe_name,
                 Constant.RECIPE_CLASS: self.recipe_class,
-                Constant.PARALLEL_MODE: self.recipe_parallel_mode
+                Constant.PARALLEL_MODE: self.recipe_parallel_mode,
+                Constant.EXPORT_TYPE: self.export_type
             }
             AnalysisFacade(params).recipe_analyze()
         else:
+            FileManager.create_output_dir(self.collection_path)
             params = {
                 Constant.COLLECTION_PATH: self.collection_path,
                 Constant.DATA_MAP: data_map,

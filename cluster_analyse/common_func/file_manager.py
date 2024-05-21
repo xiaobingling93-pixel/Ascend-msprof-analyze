@@ -105,6 +105,13 @@ class FileManager:
         PathManager.make_dir_safety(output_path)
 
     @classmethod
+    def create_output_dir_non_overwrite(cls, collection_path: str) -> None:
+        output_path = os.path.join(
+            collection_path, Constant.CLUSTER_ANALYSIS_OUTPUT)
+        if not os.path.exists(output_path):
+            PathManager.make_dir_safety(output_path)
+
+    @classmethod
     def check_file_size(cls, file_path):
         suffix = os.path.splitext(file_path)
         base_name = os.path.join(file_path)
