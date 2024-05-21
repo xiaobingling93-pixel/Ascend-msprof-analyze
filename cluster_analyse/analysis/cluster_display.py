@@ -20,9 +20,9 @@ from plotly.subplots import make_subplots
 
 def get_stats_cols(df):
     cols = df.columns.tolist()
-    q1 = "Q1" if "Q1" in cols else "Q1~"
-    q3 = "Q3" if "Q3" in cols else "Q3~"
-    med = "med" if "med" in cols else "med~"
+    q1 = "Q1(Us)" if "Q1(Us)" in cols else "Q1~"
+    q3 = "Q3(Us)" if "Q3(Us)" in cols else "Q3~"
+    med = "med(Us)" if "med(Us)" in cols else "med~"
     std = "stdev" if "stdev" in cols else "stdev~"
     return q1, q3, med, std
 

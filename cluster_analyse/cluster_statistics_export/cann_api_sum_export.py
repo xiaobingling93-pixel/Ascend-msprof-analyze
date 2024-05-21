@@ -48,7 +48,7 @@ SELECT
     round(summary.med_duration, 1) AS "medNs",
     round(summary.upper_quartile_duration, 1) AS "Q3Ns",
     round(summary.max_duration, 1) AS "maxNs",
-    round(summary.stdev_duration, 1) AS "stdevNs"
+    round(summary.stdev_duration, 1) AS "stdev"
 FROM
     summary
 LEFT JOIN

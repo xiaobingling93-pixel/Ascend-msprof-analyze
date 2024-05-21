@@ -22,6 +22,7 @@ from common_func.constant import Constant
 from utils.data_transfer_adapter import DataTransferAdapter
 from common_func.file_manager import FileManager
 from common_func.db_manager import DBManager
+from common_func.utils import convert_unit
 
 
 class BaseAnalysis:
@@ -141,6 +142,7 @@ class BaseRecipeAnalysis:
         else:
             result_csv = os.path.join(output_path, file_name)
             if isinstance(data, pd.DataFrame):
+                data = convert_unit(data, self.DB_UNIT, self.UNIT)
                 data.to_csv(result_csv, index=index)
             else:
                 print(f"[ERROR] Unknown dump data type: {type(data)}")

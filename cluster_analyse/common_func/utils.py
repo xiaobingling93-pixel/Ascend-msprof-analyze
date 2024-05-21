@@ -19,7 +19,13 @@ def stdev(df, aggregated):
     if len(df) <= 1:
         return df["stdevNs"].iloc[0]
     instance = aggregated["totalCount"].loc[df.name]
-    var_sum = np.dot(df["totalCount"] - 1, df["stdevNs"] ** 2)
-    deviation = df["averageNs"] - aggregated["average"].loc[df.name]
+    var_sum = np.dot(df["totalCount"] - 1, df["stdev"] ** 2)
+    deviation = df["averageNs"] - aggregated["averageNs"].loc[df.name]
     dev_sum = np.dot(df["totalCount"], deviation ** 2)
     return np.sqrt((var_sum + dev_sum) / (instance - 1))
+
+def convert_unit(df, src_unit, dst_unit):
+    df.loc[:, df.columns.str.endswith(src_unit)] = df.loc[:, df.columns.str.endswith(src_unit)].apply(lambda x: x / 1000.0)
+    df = df.rename(columns=lambda x: x.replace(src_unit, "".join(["(", dst_unit, ")"])))
+    return df
+    
