@@ -25,8 +25,8 @@ from common_func.path_manager import PathManager
 from common_func import analysis_loader
 from analysis.analysis_facade import AnalysisFacade
 
-COMM_FEATURE_LIST = ['all', 'communication_time', 'communication_matrix']
-ALL_FEATURE_LIST = ['all', 'communication_time', 'communication_matrix', 'cann_api_sum']
+COMM_FEATURE_LIST = ['all', 'communication_time', 'communication_matrix', 'host_info']
+ALL_FEATURE_LIST = ['all', 'communication_time', 'communication_matrix', 'host_info', 'cann_api_sum', 'hccl_sum']
 
 
 def get_analysis_args(analysis_class, analysis_args):

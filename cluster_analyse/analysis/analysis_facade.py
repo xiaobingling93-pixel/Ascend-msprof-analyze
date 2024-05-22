@@ -18,11 +18,12 @@ from multiprocessing import Process
 from analysis.communication_analysis import CommunicationAnalysis
 from analysis.comm_matrix_analysis import CommMatrixAnalysis
 from analysis.step_trace_time_analysis import StepTraceTimeAnalysis
+from analysis.host_info_analysis import HostInfoAnalysis
 from common_func.context import Context
 from common_func.constant import Constant
 
 class AnalysisFacade:
-    default_module = {CommunicationAnalysis, StepTraceTimeAnalysis, CommMatrixAnalysis}
+    default_module = {CommunicationAnalysis, StepTraceTimeAnalysis, CommMatrixAnalysis, HostInfoAnalysis}
 
     def __init__(self, params: dict):
         self.params = params

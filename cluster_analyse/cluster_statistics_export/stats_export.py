@@ -17,6 +17,7 @@ import pandas as pd
 
 from common_func.db_manager import DBManager
 from common_func.constant import Constant
+
 class StatsExport:
     
     def __init__(self, db_path, analysis_class):

@@ -20,13 +20,17 @@ from analysis.base_analysis import BaseRecipeAnalysis
 from common_func.constant import Constant
 from common_func.utils import stdev
 from cluster_statistics_export.cann_api_sum_export import CannApiSumExport
+
+
 class CannApiSum(BaseRecipeAnalysis):
-    UNIT = "Us"
-    DB_UNIT = "Ns"
+
     def __init__(self, params):
         super().__init__(params)
-        self._base_dir = os.path.basename(os.path.dirname(__file__))
         print("[INFO] CannApiSum init.")
+
+    @property
+    def base_dir(self):
+        return os.path.basename(os.path.dirname(__file__))
 
     @staticmethod
     def _mapper_func(data_map, analysis_class):
