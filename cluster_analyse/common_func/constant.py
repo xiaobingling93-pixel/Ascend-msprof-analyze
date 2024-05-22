@@ -99,6 +99,8 @@ class Constant(object):
     TABLE_COMM_ANALYZER_TIME = "CommAnalyzerTime"
     TABLE_COMM_ANALYZER_MATRIX = "CommAnalyzerMatrix"
     TABLE_STEP_TRACE = "StepTraceTime"
+    TABLE_HOST_INFO = "HostInfo"
+    TABLE_RANK_DEVICE_MAP = "RankDeviceMap"
 
     # data config key
     CONFIG = "config"

@@ -99,6 +99,10 @@ class BaseAnalysis:
 
 
 class BaseRecipeAnalysis:
+    
+    UNIT = "Us"
+    DB_UNIT = "Ns"
+
     def __init__(self, params):
         self._params = params
         self._collection_dir = params.get(Constant.COLLECTION_PATH, "")
@@ -107,14 +111,20 @@ class BaseRecipeAnalysis:
         self._mode = params.get(Constant.PARALLEL_MODE, "")
         self._export_type = params.get(Constant.EXPORT_TYPE, "")
         self._output_dir = None
+
     def __enter__(self):
         return self
     
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self._params is not None and exc_type is not None:
             print(f"[ERROR] Failed to exit analysis: {exc_val}")
+
     def run(self, context):
         pass
+
+    @property
+    def base_dir(self):
+        return os.path.basename(os.path.dirname(__file__))
 
     def _get_rank_db(self):
         db_paths = [(rank_id, os.path.join(rank_path,
@@ -172,7 +182,7 @@ class BaseRecipeAnalysis:
         else:
             template_path = notebook_template_dir
         output_path = os.path.join(self._get_output_dir(), filename)
-        template_file = os.path.join(template_path, self._base_dir, filename)
+        template_file = os.path.join(template_path, self.base_dir, filename)
         if replace_dict is None:
             shutil.copy(template_file, output_path)
         else:
@@ -182,12 +192,14 @@ class BaseRecipeAnalysis:
                     template_content = template_content.replace(str(key), str(value))
             with open(output_path, 'w') as f:
                 f.write(template_content)
+
     def add_helper_file(self, helper_file):
         helper_output_path = os.path.join(self._get_output_dir(), helper_file)
         helper_file_path = os.path.join(os.path.dirname(__file__), helper_file)
 
         if helper_file_path is not None:
             shutil.copy(helper_file_path, helper_output_path)
+
     @staticmethod
     def _filter_data(mapper_data):
         return [(rank, data) for rank, data in mapper_data if data is not None and len(data) != 0]

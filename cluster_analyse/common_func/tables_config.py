@@ -60,5 +60,14 @@ class TablesConfig:
             ("bubble", "NUMERIC, null"),
             ("communication_not_overlapped_and_exclude_receive", "NUMERIC, null"),
             ("preparing", "NUMERIC, null")
+        ],
+        "HostInfoMap": [
+            ("hostUid", "INTEGER, null"),
+            ("hostName", "TEXT, null")
+        ],
+        "RankDeviceMapMap": [
+            ("rankId", "INTEGER, null"),
+            ("deviceId", "INTEGER, null"),
+            ("hostUid", "INTEGER, null")
         ]
     }

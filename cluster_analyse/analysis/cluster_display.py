@@ -13,10 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import plotly.express as px
+import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 from ipywidgets import Dropdown, interact
-from plotly.subplots import make_subplots
+from IPython.display import display
+from ipywidgets import Dropdown, fixed, interact
+
 
 def get_stats_cols(df):
     cols = df.columns.tolist()
@@ -25,6 +28,7 @@ def get_stats_cols(df):
     med = "med(Us)" if "med(Us)" in cols else "med~"
     std = "stdev" if "stdev" in cols else "stdev~"
     return q1, q3, med, std
+
 
 def display_box(df, x=None, **layout_args):
     if x is None:
@@ -45,6 +49,7 @@ def display_box(df, x=None, **layout_args):
     fig.update_layout(**layout_args)
     fig.show()
     
+
 def display_stats_scatter(df, x=None, **layout_args):
     if x is None:
         x = df.columns[0]
@@ -62,6 +67,7 @@ def display_stats_scatter(df, x=None, **layout_args):
     fig.update_layout(**layout_args)
     fig.show()
     
+
 def display_table_per_rank(df):
     if df.empty:
         display(df)
@@ -82,6 +88,7 @@ def display_table_per_rank(df):
         display_table,
         name=dropdown
     )
+
 
 def display_stats_per_operation(df, x=None, box=True, scatter=True, table=True, **layout_args):
     if df.empty:
@@ -118,3 +125,98 @@ def display_stats_per_operation(df, x=None, box=True, scatter=True, table=True, 
         dropdown.value = operations[0]
     else:
         display_graphs(operations[0])
+
+
+def display_duration_boxplots(figs, stats_df: pd.DataFrame, orientation="v", title=None,
+                              x_title="Names", y_title="Time", legend_title="Legend"):
+    mean_ds = stats_df.get("Mean(Us)", None)
+    min_ds = stats_df.get("Min(Us)", None)
+    max_ds = stats_df.get("Max(Us)", None)
+    q1_ds = stats_df.get("Q1(Us)", None)
+    median_ds = stats_df.get('Median(Us)', None)
+    q3_ds = stats_df.get('Q3(Us)', None)
+    return display_boxplot(figs, stats_df.index, min_ds, q1_ds, median_ds, q3_ds, max_ds, mean_ds,
+                           orientation=orientation, title=title, x_title=x_title, y_title=y_title,
+                           legend_title=legend_title)
+
+
+def display_boxplot(figs, x_axis, min_ds, q1_ds, median_ds, q3_ds, max_ds, mean_ds, orientation="v",
+                    title=None, x_title=None, y_title="Time", legend_title="Legend"):
+    fig = go.Figure()
+    fig.add_trace(
+        go.Box(
+            x=x_axis,
+            lowerfence=min_ds,
+            q1=q1_ds,
+            median=median_ds,
+            q3=q3_ds,
+            upperfence=max_ds,
+            mean=mean_ds
+        )
+    )
+    fig.update_traces(orientation=orientation)
+    fig.update_layout(
+        xaxis_title=x_title, yaxis_title=y_title, legend_title=legend_title,
+        title=title, height=1024
+    )
+    fig.show()
+    if isinstance(figs, list):
+        figs.append(fig)
+    return fig
+
+
+def display_graph(figs, x_axis, y_axes, title=None,
+                  x_title=None, y_title=None, legend_title="Legend"):
+    data = None
+    if isinstance(y_axes, pd.DataFrame):
+        data = y_axes.set_index(x_axis)
+    elif isinstance(y_axes, dict):
+        data = pd.DataFrame(y_axes, index=x_axis)
+    elif isinstance(y_axes, pd.Series):
+        data = pd.DataFrame({"": y_axes}, index=x_axis)
+    elif isinstance(y_axes, np.ndarray):
+        data = pd.DataFrame({"": pd.Series(y_axes)}, index=x_axis)
+    else:
+        return
+
+    fig = data.plot.line()
+    fig.update_layout(
+        title=title, xaxis_title=x_title, yaxis_title=y_title, legend_title=legend_title
+    )
+    fig.show()
+    if isinstance(figs, list):
+        figs.append(fig)
+    return fig
+
+
+def display_stats_per_rank_groups_combobox(rank_stats_gdf):
+    names = list(rank_stats_gdf.groups.keys())
+    if len(names) > 1:
+        dropdown = Dropdown(
+            options=names, layout={"width": "max-content"}, value=names[1]
+        )
+        interact(
+            __display_stats_per_rank_group,
+            selected=dropdown,
+            rank_stats_gdf=fixed(rank_stats_gdf)
+        )
+        dropdown.value = names[0]
+    elif len(names) == 1:
+        __display_stats_per_rank_group(names[0], rank_stats_gdf)
+
+
+def __display_stats_per_rank_group(selected, rank_stats_gdf):
+    df = rank_stats_gdf.get_group(selected)
+    df = df.reset_index(drop=True)
+    df = df.set_index(df["Rank"])
+    display(df)
+
+    figs = []
+    display_duration_boxplots(figs, df, x_title="Ranks")
+    display_graph(
+        figs,
+        df.index,
+        df[["Q1(Us)", "Median(Us)", "Q3(Us)"]],
+        title="50% of Distribution",
+        x_title="Ranks"
+    )
