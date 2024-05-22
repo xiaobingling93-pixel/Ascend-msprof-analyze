@@ -68,10 +68,10 @@ class ComputeOpSum(BaseRecipeAnalysis):
         self.all_rank_stats = describe_duration(all_op_data.groupby(["OpType", "TaskType"])["Duration"])
 
         per_rank_stats2 = pd.concat(
-            describe_duration(df.groupby(["OpName", "TaskType", "InputShapes"])["Duration"]).assign(Rank=df["Rank"][0]) for df in mapper_res)
+            describe_duration(df.groupby(["OpType", "OpName", "TaskType", "InputShapes"])["Duration"]).assign(Rank=df["Rank"][0]) for df in mapper_res)
         per_rank_stats2.sort_values(by=["Rank"], inplace=True)
 
-        self.per_rank_stats2 = per_rank_stats2.nlargest(self.top_num, "Sum")
+        self.per_rank_stats2 = per_rank_stats2
 
     def run(self, context):
         super().run(context)
