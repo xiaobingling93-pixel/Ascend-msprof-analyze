@@ -1,0 +1,491 @@
+Elementwise: &Elementwise [ Relu, Pow, Add, Sub, Mul, Div, Abs, Ceil, Log, Sqrt, Exp, LeakyRelu ]
+
+GraphFusion:
+  - FlashAttentionFusionPass:
+      version: 1
+      nodes:
+          - node_1: [ BatchMatMulV2, BatchMatMul, MatMul, MatMulV2 ]
+          - node_2: [ Mul ]
+          - node_3: [ Softmax, SoftmaxV2 ]
+          - node_4: [ BatchMatMulV2, BatchMatMul, MatMul, MatMulV2 ]
+
+      edges:
+        - [ node_1, node_2 ]
+        - [ node_2, node_3 ]
+        - [ node_3, node_4 ]
+
+  - FlashAttentionFusionPass_V2:
+      version: 1
+      nodes:
+        - node_1: [ BatchMatMulV2, BatchMatMul, MatMul, MatMulV2 ]
+        - node_2: [ Mul ]
+        - node_3: [ TransData ]
+        - node_4: [ Softmax, SoftmaxV2 ]
+        - node_5: [ BatchMatMulV2, BatchMatMul, MatMul, MatMulV2 ]
+
+      edges:
+        - [ node_1, node_2 ]
+        - [ node_2, node_3 ]
+        - [ node_3, node_4 ]
+        - [ node_4, node_5 ]
+
+  - BMMStridedSliceDGeluFusionPass:
+      version: 1
+      nodes:
+        - node_1: [ BatchMatMulV2, BatchMatMul, MatMul, MatMulV2 ]
+        - node_2: [StridedSliceD]
+        - node_3: [Relu]
+      edges:
+        - [ node_1, node_2 ]
+        - [ node_2, node_3 ]
+
+  - BMMConfusionTransposeDFusionPass:
+      version: 1
+      nodes:
+        - node_1: [ BatchMatMulV2, BatchMatMul, MatMul, MatMulV2 ]
+        - node_2: [ ConfusionTransposeD ]
+        - node_3: [ Relu ]
+      edges:
+        - [ node_1, node_2 ]
+        - [ node_2, node_3 ]
+
+  - BMMConfusionTransposeDFusionPass_V2:
+      version: 1
+      nodes:
+        - node_1: [ BatchMatMulV2, BatchMatMul, MatMul, MatMulV2 ]
+        - node_2: [ ConfusionTransposeD ]
+      edges:
+        - [ node_1, node_2 ]
+
+  - Conv2DAddGroupNormFusionPass:
+      version: 0
+      struct: [ Conv2D, Add, GroupNorm ]
+
+  - RMSnormAddFusionPass:
+      version: 0
+      struct: [ RMSnorm, Add ]
+
+  - ConvToFullyConnectionFusionPass:
+      version: 0
+      struct: [ Conv ]
+
+  - ZConcatv2dFusionPass:
+      version: 0
+      struct: [ ConcatV2d, ConcatV2d ]
+
+  - BatchMatMulReduceMeanFusionPass:
+      version: 1
+      nodes:
+        - node_1: [ BatchMatMulV2, BatchMatMul, MatMul, MatMulV2 ]
+        - node_2: [ Add ]
+        - node_3: [ Relu ]
+        - node_4: [ ReduceMean ]
+      edges:
+        - [ node_1, node_2 ]
+        - [ node_2, node_3 ]
+        - [ node_3, node_4 ]
+
+  - PadDepthwiseConv2dFusionPass:
+      version: 0
+      struct: [ PadD, DepthwiseConv2D ]
+
+  - ConvBatchnormFusionPass:
+      version: 1
+      nodes:
+        - node_1: [ Conv2d, Conv3d, DepthwiseConv2d ]
+        - node_2: [ Batchnorm ]
+
+      edges:
+        - [ node_1, node_2 ]
+
+  - AConv2dMulFusion:
+      version: 1
+      nodes:
+        - node_1: [ Conv2d, Conv3d ]
+        - node_2: [ Mul ]
+
+      edges:
+        - [ node_1, node_2 ]
+
+  - TBEConvAddFusion:
+      version: 1
+      nodes:
+        - node_1: [ Conv2d, Conv3d ]
+        - node_2: [ Add ]
+
+      edges:
+        - [ node_1, node_2 ]
+
+  - ZBNupdateReluV2Conv2DBNreducePass:
+      version: 0
+      struct: [ BNTrainingUpdate, ReluV2, Conv2D, BNTrainingReduce ]
+
+  - ASplitConv2dConcatPass:
+      version: 1
+      nodes:
+        - node_1: [ MatMul, MatMulV2, BatchMatMul, BatchMatMulV2 ]
+        - node_2: [ Cast ]
+
+      edges:
+        - [ node_1, node_2 ]
+
+  - MatMulBiasAddFusionPass:
+      version: 1
+      nodes:
+        - node_1: [ MatMul, MatMulV2, BatchMatMul, BatchMatMulV2 ]
+        - node_2: [ BiasAdd, Add ]
+
+      edges:
+        - [ node_1, node_2 ]
+
+  - Conv2DbpInputBiasAddFusionPass:
+      version: 0
+      struct: [ Conv2DBackpropInput, BiasAdd ]
+
+  - BatchMatmulV2ReduceFusionPass:
+      version: 0
+      struct: [ BatchMatMulV2, ReduceSumD ]
+
+  - BatchMatmulV2ReduceFusionPass_V2:
+      version: 0
+      struct: [ BatchMatMulV2, Cast, ReduceSumD ]
+
+  - Conv3DbpInputBiasAddFusionPass:
+      version: 0
+      struct: [ Conv3DBackpropInputD, BiasAdd ]
+
+  - AFullyConnectionReshapePass:
+      version: 0
+      struct: [ FullyConnection, Reshape ]
+
+  - GemmTransFusionPass:
+      version: 0
+      struct: [ Transpose, Gemm ]
+
+  - Resnet50DbnDwFusionPass:
+      version: 0
+      struct: [ BNTrainingReduceGrad, Conv2DBackpropFilterD ]
+
+  - CastReluCastFusionPass:
+      version: 0
+      struct: [ Cast, Relu, Cast ]
+
+  - PadConv2dFusionPass:
+      version: 1
+      nodes:
+        - node_1: [ PadD, PadDV3 ]
+        - node_2: [ Conv2D ]
+
+      edges:
+        - [ node_1, node_2 ]
+
+  - Conv2DTransposeBatchnormFusionPass:
+      version: 1
+      nodes:
+        - node_1: [ Conv2dTranspose ]
+        - node_2: [ BatchNorm, BNInference ]
+
+      edges:
+        - [ node_1, node_2 ]
+
+  - AvgPoolV2GradFusionPass:
+      version: 0
+      struct: [ AvgPooV2lGrad ]
+
+  - DropOutDoMaskFusionPass:
+      version: 0
+      struct: [ DropOutDoMaskV3D ]
+
+  - ConvCastFusionPass:
+      version: 0
+      struct: [ Conv2D, Cast ]
+
+  - ConvCastFusionPass_V2:
+      version: 0
+      struct: [ Conv2D, TransData, Cast ]
+
+  - StridedSliceConcatFusionPass:
+      version: 1
+      nodes:
+        - node_1: [ StridedSliceD ]
+        - node_2: [ StridedSliceD ]
+        - node_3: [ ConcatD ]
+
+      edges:
+        - [ node_1, node_3 ]
+        - [ node_2, node_3 ]
+
+  - ConvCastFusionPass:
+      version: 0
+      struct: [ SplitV ]
+
+  - AInplaceAddFusionPass:
+      version: 0
+      struct: [ InplaceAdd ]
+
+  - AInplaceSubFusionPass:
+      version: 0
+      struct: [ InplaceSub ]
+
+  - AInplaceUpdateFusionPass:
+      version: 0
+      struct: [ InplaceUpdate ]
+
+UBFusion:
+  - TbeConv3dElemwisePass:
+      version: 1
+      nodes:
+        - node_1: [ Conv3D ]
+        - node_2: *Elementwise
+      edges:
+        - [ node_1, node_2 ]
+
+  - TbeConv3dDxElemwisePass:
+      version: 0
+      struct: [ Conv3dBackpropInput, AddN, LeakyReluGrad ]
+
+  - TbeConv3dDxElemwisePass_V2:
+      version: 0
+      struct: [ Conv3dBackpropInput, LeakyReluGrad ]
+
+  - MatMulDropoutDoMaskV3dFusionPass:
+      version: 0
+      struct: [ MatMul, Dropout_do_mask_v3_d, Add ]
+
+  - BatchMatMulDropoutDoMaskV3dFusionPass:
+      version: 0
+      struct: [ BatchMatMul, Dropout_do_mask_v3_d, Add ]
+
+  - MatmulReduceSumUbFusion:
+      version: 0
+      struct: [ BatchMatMul, ReduceSum ]
+
+  - TbeBatchMatMulElementWiseFusionPass:
+      version: 1
+      nodes:
+        - node_1: [ BatchMatMul, GEMM ]
+        - node_2: *Elementwise
+
+      edges:
+        - [ node_1, node_2 ]
+
+  - ATbeMatMulElemwiseFusionPass:
+      version: 1
+      nodes:
+        - node_1: [ MatMul, GEMM ]
+        - node_2: *Elementwise
+
+      edges:
+        - [ node_1, node_2 ]
+
+  - MatmulConfusiontransposeUbFusion:
+      version: 0
+      struct: [ MatMul, matmul_transpose ]
+
+  - TbeFullyconnectionElemwiseDequantFusionPass:
+      version: 1
+      nodes:
+        - node_1: [ BatchMatMul, MatMul, FullyConnection ]
+        - node_2: *Elementwise
+
+      edges:
+        - [ node_1, node_2 ]
+
+  - BatchMatmulConfusiontransposeUbFusion:
+      version: 0
+      struct: [ BatchMatMul, batchmatmul_transpose ]
+
+  - TbeConvSigmoidMulQuantFusionPass:
+      version: 1
+      nodes:
+        - node_1: [ Conv ]
+        - node_2: [ Sigmoid ]
+        - node_3: [ Mul ]
+        - node_4: [ Quant ]
+
+      edges:
+        - [ node_1, node_2 ]
+        - [ node_1, node_3 ]
+        - [ node_2, node_3 ]
+        - [ node_3, node_4 ]
+
+  - TbeConv2DReluv2Pass:
+      version: 0
+      struct: [ Conv2D, ReluV2 ]
+
+  - TbeConvDoubleInFusionPass:
+      version: 1
+      nodes:
+        - node_1: [ Conv2D ]
+        - node_2: *Elementwise
+        - node_3: *Elementwise
+      edges:
+        - [ node_1, node_2 ]
+        - [ node_2, node_3 ]
+
+  - TbeConv2dAddClipMulDivFusionPass:
+      version: 0
+      struct: [ Conv2D, Add, Clip, Mul, Div ]
+
+  - TbeConv2dAddClipMulDivFusionPass_V2:
+      version: 0
+      struct: [ Conv2D, Add, Clip, Mul ]
+
+  - TbeConv2dAddRelu6MulMulFusionPass:
+      version: 1
+      nodes:
+        - node_1: [ Conv2D, DepthwiseConv2D ]
+        - node_2: [ Add ]
+        - node_3: [ Relu6 ]
+        - node_4: [ Mul ]
+        - node_5: [ Mul ]
+
+      edges:
+        - [ node_1, node_2 ]
+        - [ node_2, node_3 ]
+        - [ node_3, node_4 ]
+        - [ node_4, node_5 ]
+
+  - ConvClipByValueFusionPass:
+      version: 1
+      nodes:
+        - node_1: [ Conv2D ]
+        - node_2: *Elementwise
+      edges:
+        - [ node_1, node_2 ]
+
+  - TbeAippConvReluMaxpoolingFusion:
+      version: 1
+      nodes:
+        - node_1: [ Conv2D ]
+        - node_2: *Elementwise
+        - node_3: [ MaxPool, MaxPoolv3 ]
+
+      edges:
+        - [ node_1, node_2 ]
+        - [ node_2, node_3 ]
+
+  - TbeReduceElemwiseFusionPass:
+      version: 1
+      nodes:
+        - node_1: *Elementwise
+        - node_2: [ CommReduce ]
+      edges:
+        - [ node_1, node_2 ]
+
+  - TbeReadSelectEltwiseFusionPass:
+      version: 1
+      nodes:
+        - node_1: [ ReadSelect ]
+        - node_2: *Elementwise
+
+      edges:
+        - [ node_1, node_2 ]
+
+  - TbeEltwiseWriteSelectFusionPass:
+      version: 1
+      nodes:
+        - node_1: *Elementwise
+        - node_2: [ write_select ]
+
+      edges:
+        - [ node_1, node_2 ]
+
+  - TbeEltwiseFusionPass:
+      version: 1
+      nodes:
+        - node_1: *Elementwise
+        - node_2: *Elementwise
+
+      edges:
+        - [ node_1, node_2 ]
+
+  - TbeConvBnreduceFusionPass:
+      version: 0
+      struct: [ Convolution, bn_reduce ]
+
+  - TbeBnupdateEltwiseFusionPass:
+      version: 1
+      nodes:
+        - node_1: [ bn_update ]
+        - node_2: *Elementwise
+      edges:
+        - [ node_1, node_2 ]
+
+  - TbeConv2DBackpropElemwiseFusionPass:
+      version: 1
+      nodes:
+        - node_1: [ Conv2DBackpropInputD, Conv2DTransposeD, Deconvolution ]
+        - node_2: [ Add, ReluGradV2 ]
+
+      edges:
+        - [ node_1, node_2 ]
+
+  - TbeDxElemwisePass:
+      version: 1
+      nodes:
+        - node_1: [ Conv2DBackpropInputD, Conv2DTransposeD, Deconvolution ]
+        - node_2: [ LeakyRelu, Prelu ]
+
+      edges:
+        - [ node_1, node_2 ]
+
+  - TbeConv2dBackpropRequantFusionPass:
+      version: 1
+      nodes:
+          - node_1: [ Conv2DBackpropInputD, Conv2DTransposeD, Deconvolution ]
+          - node_2: [ AscendRequant ]
+
+      edges:
+        - [ node_1, node_2 ]
+
+  - TbeDwTransdataFusionPass:
+      version: 1
+      nodes:
+        - node_1: [ Transdate ]
+        - node_2: [ Transdate ]
+        - node_3: [ Conv2DBackpropFilter ]
+
+      edges:
+        - [ node_1, node_3 ]
+        - [ node_2, node_3 ]
+
+  - TbeDxTransdataFusionPass:
+      version: 1
+      nodes:
+        - node_1: [ Transdate ]
+        - node_2: [ Transdate ]
+        - node_3: [ Conv2DBackpropInput ]
+
+      edges:
+        - [ node_1, node_3 ]
+        - [ node_2, node_3 ]
+
+  - TbeEltwiseCastFusionPass:
+      version: 1
+      nodes:
+        - node_1: [ Relu, Add, Mul, Sqrt ]
+        - node_2: [ Cast ]
+
+      edges:
+        - [ node_1, node_2 ]
+
+  - TbeEltwiseCastFusionPass_V2:
+      version: 1
+      nodes:
+        - node_1: [ Cast ]
+        - node_2: [ Relu, Add, Mul, Sqrt ]
+
+
+      edges:
+        - [ node_1, node_2 ]
+
+  - TbeConv2DBackpropDequantFusionPass:
+      version: 1
+      nodes:
+          - node_1: [ Conv2DBackpropInputD, Conv2DTransposeD, Deconvolution ]
+          - node_2: [ AscendDequant ]
+
+
+      edges:
+        - [ node_1, node_2 ]
