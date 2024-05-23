@@ -14,6 +14,8 @@
 # limitations under the License.
 
 import os
+import sys
+import traceback
 import shutil
 import pandas as pd
 from abc import abstractmethod
@@ -118,6 +120,7 @@ class BaseRecipeAnalysis:
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self._params is not None and exc_type is not None:
             print(f"[ERROR] Failed to exit analysis: {exc_val}")
+            traceback.print_exc(file=sys.stdout)
 
     def run(self, context):
         pass
