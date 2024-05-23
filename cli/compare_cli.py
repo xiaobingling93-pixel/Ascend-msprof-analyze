@@ -12,20 +12,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import ast
 import click
 import os
 import sys
-import ast
 
-sys.path.append(
-    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "cluster_analyse"))
-sys.path.append(
-    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "compare_tools"))
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from profiler.prof_common.analyze_dict import AnalyzeDict
 from profiler.prof_common.constant import Constant
-from compare_backend.comparison_generator import ComparisonGenerator
-
+from profiler.prof_common.analyze_dict import AnalyzeDict
+from profiler.compare_tools.compare_backend.comparison_generator import ComparisonGenerator
 
 @click.command(context_settings=Constant.CONTEXT_SETTINGS, name="compare",
                short_help='Compare the performance differences between GPUs and NPUs.')

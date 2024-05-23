@@ -12,16 +12,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import ast
 import click
 import os
 import sys
 
-sys.path.append(
-    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "cluster_analyse"))
-
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+from profiler.advisor.utils.tools import CONTEXT_SETTINGS, ClickAliasedGroup
+from profiler.advisor.utils.utils import debug_option
 from profiler.prof_common.constant import Constant
 from profiler.cluster_analyse.cluster_analysis import ALL_FEATURE_LIST
-from cluster_analysis import Interface
+from profiler.cluster_analyse.cluster_analysis import ClusterAnalysis
 
 
 @click.command(context_settings=Constant.CONTEXT_SETTINGS, name="cluster",
@@ -34,4 +35,4 @@ def cluster_cli(profiling_path, mode) -> None:
         Constant.COLLECTION_PATH: profiling_path,
         Constant.ANALYSIS_MODE: mode
     }
-    Interface(parameter).run()
+    ClusterAnalysis(parameter).run()
