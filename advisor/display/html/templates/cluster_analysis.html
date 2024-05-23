@@ -1,0 +1,49 @@
+<div class="collapsible">
+    <h2 class="collapsible-header">{{title|safe}}</h2>
+    <div class="collapsible-content">
+        <div class="collapsible">
+
+            {% if result.get("Description") %}
+            <div class="collapsible-header">Description</div>
+            <div class="collapsible-content">
+                <a>{{result.get("Description")|safe}}</a>
+            </div>
+            {% endif %}
+
+            {% if result.get("Suggestion") %}
+            <div class="collapsible-header">Suggestion</div>
+            <div class="collapsible-content">
+                <a>{{result.get("Suggestion")|safe}}</a>
+            </div>
+            {% endif %}
+
+            {% if result.get("details") %}
+            <div class="collapsible-header">details</div>
+            <div class="collapsible-content">
+                {% for item in result.get("details") %}
+                <table>
+                    <tr>
+                        {% for header in item.get("headers") %}
+                        <td>{{ header }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% for row in item.get("data") %}
+                    <tr>
+                        {% for element in row %}
+                        {% if element is number %}
+                        <td>{{ element|round(2) }}</td>
+                        {% else %}
+                        <td>{{ element }}</td>
+                        {% endif %}
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </table>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+        </div>
+
+    </div>
+</div>

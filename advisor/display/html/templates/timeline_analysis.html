@@ -1,0 +1,34 @@
+<div class="collapsible">
+    <h2 class="collapsible-header">{{title|safe}}</h2>
+    <div class="collapsible-content">
+        <div class="collapsible">
+            <div>
+                {% if result.get("img") %}
+                <div>
+                    <img src={{item.get("img")}} alt="Image">
+                </div>
+                {% endif %}
+
+                {% if result.get("current") %}
+                <div>
+                    <a>{{result.get("current")}}</a><br>
+                </div>
+                {% endif %}
+
+                {% if result.get("bottlenect") %}
+                <div>
+                    <a>{{result.get("bottlenect")}}</a><br>
+                </div>
+                {% endif %}
+
+                {% if result.get("advice") %}
+                <div>
+                    <a style="font-weight: bold" id="timeline_advice">Advice: </a><br>
+                    <a>{{result.get("advice")}}</a><br>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+</div>
