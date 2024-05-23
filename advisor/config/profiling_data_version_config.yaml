@@ -1,0 +1,80 @@
+versions:
+  - version: 8.0.0
+    dirs_pattern:
+      ^PROF_\d{6}_\d{17}_\w+$:
+        mindstudio_profiler_output:
+          [ op_summary, msprof ]
+    class_attr:
+      op_summary: OpSummary
+      msprof: Msprof
+    file_attr:
+      op_summary: ^op_summary_\d{14}\.csv$
+      msprof: ^msprof_\d{14}\.json$
+
+  - version: 7.0.0
+    dirs_pattern:
+      ^PROF_\d{6}_\d{17}_\w+$:
+        ^device_\d+$:
+          summary:
+            [ op_summary ]
+          timeline:
+            [ msprof, task_time ]
+        host:
+          sqlite:
+            [ ge_info ]
+    class_attr:
+      op_summary: OpSummary
+      task_time: TaskTime
+      msprof: Msprof
+      ge_info: GeInfo
+    file_attr:
+      op_summary: ^op_summary_\d+_\d+_\d{14}\.csv$
+      task_time: ^task_time_\d+_\d+_\d{14}\.json$
+      msprof: ^msprof_\d+_\d+_\d{14}\.json$
+      ge_info: ge_info.db
+
+  - version: 7.0.RC1
+    dirs_pattern:
+      ^PROF_\d{6}_\d{17}_\w+$:
+        ^device_\d+$:
+          summary:
+            [ op_summary ]
+          timeline:
+            [ msprof, task_time ]
+        host:
+          sqlite:
+            [ ge_info ]
+    class_attr:
+      op_summary: OpSummary
+      task_time: TaskTime
+      msprof: Msprof
+      ge_info: GeInfo
+    file_attr:
+      op_summary: ^op_summary_\d+_\d+_\d+_\d{14}\.csv$
+      task_time: ^task_time_\d+_\d+_\d+_\d{14}\.json$
+      msprof: ^msprof_\d+_\d+_\d+_\d{14}\.json$
+      ge_info: ge_info.db
+
+  - version: 6.3.RC2
+    dirs_pattern:
+      ^PROF_\d{6}_\d{17}_\w+$:
+        ^device_\d+$:
+          summary:
+            [ op_summary ]
+          timeline:
+            [ msprof, task_time ]
+        host:
+          sqlite:
+            [ ge_info ]
+    class_attr:
+      op_summary: OpSummary
+      task_time: TaskTime
+      msprof: Msprof
+      ge_info: GeInfo
+    file_attr:
+      op_summary: ^op_summary_\d+_\d+\.csv$
+      task_time: ^task_time_\d+_\d+\.json$
+      msprof: ^msprof_\d+_\d+\.json$
+      ge_info: ge_info.db
+
+
