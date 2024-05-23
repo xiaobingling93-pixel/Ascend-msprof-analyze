@@ -1,0 +1,163 @@
+import logging
+from typing import List
+
+from profiler.advisor.common import constant as const
+from profiler.advisor.common.timeline.event import TimelineEvent
+from profiler.advisor.dataset.timeline_event_dataset import TimelineEventDataset
+from profiler.advisor.result.result import OptimizeResult
+from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
+from profiler.advisor.utils.utils import get_analyze_processes, ParallelJob
+
+logger = logging.getLogger()
+
+
+class OpStackFinder:
+
+    def __init__(self):
+        self.n_processes = get_analyze_processes()
+        self._stack_record = []
+        self._task_id_record = {}
+        self.op_name = None
+        self.task_type = None
+        self.matched_index = set()
+
+    def get_api_stack_by_op(self, event_dataset: TimelineEventDataset, op_name: List[str] = None, task_type: str = None,
+                            disable_multiprocess=False):
+        """
+        :Param event_dataset: dataset of timeline event
+        :Param op_name: operator name, e.g. IndexPutV2
+        :Param task_type: operator task type, optionals are AI_CPU and AI_CORE
+        :Param disable_multiprocess: disable multiprocessing, avoid cost time of enable new process for light task
+        """
+        if not op_name:
+            op_name = []
+        if not isinstance(op_name, list):
+            op_name = [op_name]
+
+        self.op_name = ",".join(op_name)
+        self.task_type = task_type
+        op_name_list = event_dataset.task_op_names if not op_name else op_name
+
+        if self.n_processes <= 1 or disable_multiprocess:
+            self._query_stacks_multiprocess(event_dataset, op_name_list, task_type)
+        else:
+            event_num_per_process = int(len(op_name_list) / self.n_processes) + 1
+            parallel_analyzer = ParallelJob(
+                self._query_stacks_multiprocess,
+                [[event_dataset, op_name_list[i:i + event_num_per_process], task_type]
+                 for i in range(0, len(op_name_list), event_num_per_process)],
+                job_name="Analyzing operator stacks from timeline"
+            )
+            parallel_analyzer.start(self.n_processes)
+        self.query_stack(event_dataset)
+
+    def make_record(self, result: OptimizeResult):
+        """
+        make record for what and how to optimize
+        """
+        if not self._stack_record:
+            return
+
+        desc = f"Found {len(self._stack_record)} called stacks for"
+        if self.op_name and self.task_type:
+            desc += f" operators with name '{self.op_name}' with task type '{self.task_type}'"
+        elif self.op_name and not self.task_type:
+            desc += f" operators with name '{self.op_name}'"
+        elif self.task_type and not self.op_name:
+            desc += f" operators with task type '{self.task_type}'"
+        else:
+            desc += " all operators"
+
+        suggestion = f"Please use command 'ma-advisor analyze profiling' to analyze operators"
+        optimization_item = OptimizeItem(
+            "Operator stacks",
+            desc,
+            [suggestion]
+        )
+        result.add(OptimizeRecord(optimization_item))
+
+        record_title = ["Task ID", "op name", "op type", "code stacks"]
+        result.add_detail('operator stacks', headers=record_title)
+
+        for op_info in self._stack_record:
+            result.add_detail('operator stacks', detail=op_info)
+
+    def _get_api_stack_by_op(self, event_dataset: TimelineEventDataset, op_name: str, task_type: str):
+        for _, src_op_event in event_dataset.ops_with_task_type.items():
+
+            op_task_type = src_op_event.get(const.TASK_TYPE)
+            if not (src_op_event.name == op_name and op_task_type and op_task_type == task_type):
+                continue
+
+            torch_to_npu_key = f"s-{src_op_event.tid}-{src_op_event.ts}"
+            torch_to_npu_event = event_dataset.torch_to_npu.get(torch_to_npu_key) or event_dataset.torch_to_npu.get(
+                f"s-{src_op_event.ts}") or event_dataset.torch_to_npu.get(f"s-{src_op_event.ts.replace('.', '')}")
+
+            acl_to_npu_event = src_op_event.ts in event_dataset.acl_to_npu
+
+            if not torch_to_npu_event and not acl_to_npu_event:
+                continue
+
+            # query stack by torch_to_npu first, due to each operator had acl_to_npu incoming flow in cann6.3
+            if torch_to_npu_event:
+                dst_op_index = self._query_index_by_torch_to_npu(event_dataset, torch_to_npu_event)
+            else:
+                dst_op_index = self._query_index_by_acl_to_npu(acl_to_npu_event)
+
+            if not dst_op_index:
+                continue
+
+            task_id = src_op_event.task_id
+            if not task_id:
+                continue
+            self.matched_index.add(dst_op_index)
+            if dst_op_index not in self._task_id_record:
+                self._task_id_record[dst_op_index] = []
+            self._task_id_record[dst_op_index].append([task_id, op_name, task_type])
+
+    def _query_index_by_torch_to_npu(self, event_dataset, torch_to_npu_event):
+        dst_op_event_key = torch_to_npu_event.ts
+        dst_op_event = event_dataset.ops_with_stack.get(dst_op_event_key)
+
+        if not dst_op_event:
+            return const.TIMELINE_BACKWARD_NO_STACK_CODE
+
+        return dst_op_event.get("dataset_index")
+
+    def _query_index_by_acl_to_npu(self, acl_to_npu_event):
+        if acl_to_npu_event:
+            return const.TIMELINE_ACL_TO_NPU_NO_STACK_CODE
+
+    def _query_stacks_multiprocess(self, event_dataset, op_name_list, task_type):
+
+        for op_name in op_name_list:
+            if task_type is not None:
+                self._get_api_stack_by_op(event_dataset, op_name, task_type)
+            else:
+                self._get_api_stack_by_op(event_dataset, op_name, const.AI_CORE)
+                self._get_api_stack_by_op(event_dataset, op_name, const.AI_CPU)
+
+    def _format_stack_record(self):
+        stack_list = []
+        for task_id, stack_info in self._task_id_record.items():
+            stack_list.append([task_id, *stack_info])
+        return stack_list
+
+    def _query_stack_by_matched_index(self, index, event):
+        if index not in self.matched_index:
+            return None
+        event = TimelineEvent(event)
+        stack = event.args.get(const.CALL_STACKS)
+        stack = stack if stack else const.NO_STACK_REASON_MAP.get(const.TIMELINE_BACKWARD_NO_STACK_CODE)
+        for matched_op_info in self._task_id_record.get(index, []):
+            self._stack_record.append([*matched_op_info, stack])
+
+        for matched_op_info in self._task_id_record.get(const.TIMELINE_ACL_TO_NPU_NO_STACK_CODE, []):
+            self._stack_record.append([*matched_op_info,
+                                       const.NO_STACK_REASON_MAP.get(const.TIMELINE_ACL_TO_NPU_NO_STACK_CODE)])
+        return None
+
+    def query_stack(self, event_dataset: TimelineEventDataset):
+        if not event_dataset.dataset_len:
+            return
+        _ = event_dataset.parse_data_with_generator(self._query_stack_by_matched_index)
