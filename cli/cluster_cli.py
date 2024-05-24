@@ -22,7 +22,7 @@ from profiler.advisor.utils.tools import CONTEXT_SETTINGS, ClickAliasedGroup
 from profiler.advisor.utils.utils import debug_option
 from profiler.prof_common.constant import Constant
 from profiler.cluster_analyse.cluster_analysis import ALL_FEATURE_LIST
-from profiler.cluster_analyse.cluster_analysis import ClusterAnalysis
+from profiler.cluster_analyse.cluster_analysis import Interface
 
 
 @click.command(context_settings=Constant.CONTEXT_SETTINGS, name="cluster",
@@ -35,4 +35,4 @@ def cluster_cli(profiling_path, mode) -> None:
         Constant.COLLECTION_PATH: profiling_path,
         Constant.ANALYSIS_MODE: mode
     }
-    ClusterAnalysis(parameter).run()
+    Interface(parameter).run()
