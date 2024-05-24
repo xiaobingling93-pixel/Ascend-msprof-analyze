@@ -8,7 +8,7 @@ from profiler.cluster_analyse.common_func.file_manager import FileManager
 from profiler.advisor.common import constant as const
 from profiler.cluster_analyse.common_func.constant import Constant
 from collections import defaultdict
-from profiler.cluster_analyse.cluster_analysis import ClusterAnalysis
+from profiler.cluster_analyse.cluster_analysis import Interface
 from profiler.advisor.dataset.cluster.cluster_step_trace_time_bean import ClusterStepTraceTimeBean
 
 logger = logging.getLogger()
@@ -40,7 +40,7 @@ class ClusterDataset(Dataset):
         }
         print("[INFO] cluster analysis is in the process, please wait...")
         try:
-            ClusterAnalysis(parameter).run()
+            Interface(parameter).run()
         except Exception as e:
             raise ValueError(f"Cluster analyze backend failed:{e}") from e
 

@@ -6,4 +6,5 @@ class SupportedScopes:
     GRAPH = "graph"
     SLOW_RANK = "slow_rank"
     SLOW_LINK = "slow_link"
-    PORFILING_OPERATOR_ANALYSIS = "profiling_operator_analysis"
+    OVER_ALL = "over_all"
+    PROFILING_OPERATOR_ANALYSIS = "profiling_operator_analysis"
