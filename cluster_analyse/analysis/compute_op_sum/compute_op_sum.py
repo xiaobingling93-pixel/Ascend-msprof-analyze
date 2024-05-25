@@ -60,15 +60,20 @@ class ComputeOpSum(BaseRecipeAnalysis):
         )
     
     def reducer_func(self, mapper_res):
+        # get per rank stats by optype
         self.per_rank_stats_by_optype = pd.concat(
             describe_duration(df.groupby(["OpType", "TaskType"])["Duration"]).assign(Rank=df["Rank"][0]) for df in mapper_res)
-        self.per_rank_stats_by_optype.sort_values(by=["Rank"], inplace=True)
+        self.per_rank_stats_by_optype.sort_values(by=["SumNs"], inplace=True, ascending=False)
+
+        # get all rank stats by optype
         all_op_data = pd.concat(mapper_res)
         self.all_rank_stats = describe_duration(all_op_data.groupby(["OpType", "TaskType"])["Duration"])
+        self.all_rank_stats.sort_values(by=["SumNs"], inplace=True, ascending=False)
 
+        # get per rank stats by opname
         self.per_rank_stats_by_opname = pd.concat(
             describe_duration(df.groupby(["OpName", "OpType", "TaskType", "InputShapes"])["Duration"]).assign(Rank=df["Rank"][0]) for df in mapper_res)
-        self.per_rank_stats_by_opname.sort_values(by=["Rank"], inplace=True)
+        self.per_rank_stats_by_opname.sort_values(by=["SumNs"], inplace=True, ascending=False)
 
     def run(self, context):
         super().run(context)
