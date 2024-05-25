@@ -1,0 +1,29 @@
+<div class="collapsible">
+  <h2 class="collapsible-header">Abnormal Performance Operator</h2>
+  <div class="collapsible-content" style="overflow: scroll;">
+      <a style="font-weight: bold" id="timeline_api_instruction">{{table.get("title")}}
+      </a>
+    <table>
+        <tr>
+            {% for header in table.get("headers") %}
+                <td>{{ header }}</td>
+            {% endfor %}
+        </tr>
+        {% for row in table.get("rows") %}
+            <tr>
+                {% for element in row %}
+                {% if element is number %}
+                    <td>{{ element|round(2) }}</td>
+                {% else %}
+                    <td>{{ element }}</td>
+                {% endif %}
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </table>
+      {% if call_stack %}
+        <a style="font-weight: bold" id="call_back">call stack: </a><br>
+        <a>{{call_stack}}</a>
+      {% endif %}
+  </div>
+</div>

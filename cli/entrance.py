@@ -17,16 +17,21 @@
 import logging
 import click
 
-from profiler.cli.cluster_cli import cluster_cli
+from profiler.cli.analyze_cli import analyze_cli
+from profiler.cli.complete_cli import auto_complete_cli
 from profiler.cli.compare_cli import compare_cli
+from profiler.cli.cluster_cli import cluster_cli
+from profiler.advisor.version import print_version_callback, cli_version
 
 logger = logging.getLogger()
 CONTEXT_SETTINGS = dict(help_option_names=['-H', '-h', '--help'],
                         max_content_width=160)
 
 COMMAND_PRIORITY = {
-    "cluster": 1,
-    "compare": 2
+    "advisor": 1,
+    "compare": 2,
+    "cluster": 3,
+    "auto-completion": 4
 }
 
 
@@ -49,9 +54,14 @@ class SpecialHelpOrder(click.Group):
 
 
 @click.group(context_settings=CONTEXT_SETTINGS, cls=SpecialHelpOrder)
-def msprof_analyze_cli():
+@click.option('--version', '-V', '-v', is_flag=True,
+              callback=print_version_callback, expose_value=False,
+              is_eager=True, help=cli_version())
+def advisor_cli(**kwargs):
     pass
 
 
-msprof_analyze_cli.add_command(cluster_cli, name="cluster")
-msprof_analyze_cli.add_command(compare_cli, name="compare")
+advisor_cli.add_command(analyze_cli, name="advisor")
+advisor_cli.add_command(compare_cli, name="compare")
+advisor_cli.add_command(cluster_cli, name="cluster")
+advisor_cli.add_command(auto_complete_cli, name="auto-completion")
