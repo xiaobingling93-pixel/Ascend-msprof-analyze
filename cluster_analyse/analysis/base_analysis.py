@@ -105,6 +105,8 @@ class BaseRecipeAnalysis:
     UNIT = "Us"
     DB_UNIT = "Ns"
 
+    RANK_LIST = "rank_list"
+
     def __init__(self, params):
         self._params = params
         self._collection_dir = params.get(Constant.COLLECTION_PATH, "")
@@ -113,6 +115,7 @@ class BaseRecipeAnalysis:
         self._mode = params.get(Constant.PARALLEL_MODE, "")
         self._export_type = params.get(Constant.EXPORT_TYPE, "")
         self._output_dir = None
+        self._rank_list = params.get(self.RANK_LIST, 'all')
 
     def __enter__(self):
         return self
@@ -130,10 +133,16 @@ class BaseRecipeAnalysis:
         return os.path.basename(os.path.dirname(__file__))
 
     def _get_rank_db(self):
-        db_paths = [(rank_id, os.path.join(rank_path,
-                                 Constant.SINGLE_OUTPUT,
-                                 f"ascend_pytorch_profiler_{rank_id}.db"))
-                    for rank_id, rank_path in self._data_map.items()]
+        if self._rank_list == 'all':
+            rank_ids = list(self._data_map.keys())
+        else:
+            rank_ids = [rank_id for rank_id in self._data_map.keys() if rank_id in self._rank_list]
+        db_paths = []
+        for rank_id in rank_ids:
+            rank_path = self._data_map[rank_id]
+            db_path = os.path.join(rank_path, Constant.SINGLE_OUTPUT, f"ascend_pytorch_profiler_{rank_id}.db")
+            if os.path.exists(db_path):
+                db_paths.append((rank_id, db_path))
         return db_paths
 
     def get_mode(self):
@@ -206,3 +215,26 @@ class BaseRecipeAnalysis:
     @staticmethod
     def _filter_data(mapper_data):
         return [(rank, data) for rank, data in mapper_data if data is not None and len(data) != 0]
+
+    @classmethod
+    def add_parser_argument(cls, parser):
+        parser.add_argument("--rank_list", type=str, help="Rank id list", default='all')
+
+    @classmethod
+    def parse_argument(cls, args_parsed) -> dict:
+        if args_parsed.rank_list == 'all':
+            return {
+                cls.RANK_LIST: 'all'
+            }
+        else:
+            rank_str_list = args_parsed.rank_list.split(",")
+            rank_list = [int(rank) for rank in rank_str_list if rank.isdigit()]
+            return {
+                cls.RANK_LIST: rank_list
+            }
+    
+    @classmethod
+    def get_extra_argument(cls, params) -> dict:
+        return {
+            cls.RANK_LIST: params.get(cls.RANK_LIST, "all")
+        }
