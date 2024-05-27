@@ -1,6 +1,6 @@
-# 性能分析工具
+# advisor
 
-性能分析工具是将Ascend PyTorch Profiler采集的性能数据进行分析，并输出性能调优建议的工具 。
+msprof-analyze的advisor功能是将Ascend PyTorch Profiler或者msprof采集的PyThon场景性能数据进行分析，并输出性能调优建议（当前暂不支持对db格式文件分析）。
 
 ## 工具使用（命令行方式方式）
 
@@ -43,41 +43,44 @@
 
    分析结果打屏展示并生成html和csv文件。
 
-## 工具使用（API调用方式）
+## 工具使用（Jupyter Notebook方式）
 
-1. 参见《[性能工具](../README.md)》完成工具安装。建议安装最新版本。
+Jupyter Notebook使用方式如下：
 
-2. 创建advisor分析脚本。
+下列以Windows环境下执行为例介绍。
 
-   创建advisor分析脚本，例如advisor.py，示例代码如下：
-
-   ```Python
-   import json
-   from profiler.advisor import Interface
-   
-   interface = Interface(profiling_path=r"D:/xx/profiling_data/localhost.localdomain_161856_20240415094447199_ascend_pt")
-   result = interface.get_result("overall", "over_all")
-   ```
-
-   profiling_path：待分析性能数据文件所在路径。单卡场景需要指定到性能数据文件`*_ascend_pt`目录；多卡或集群场景需要指定到`*_ascend_pt`目录的父目录层级。
-
-   interface.get_result：配置性能分析参数，详见下方“**参数说明**”。
-
-   **参数说明**
-
-   | 参数        | 说明                                                         |
-   | ----------- | ------------------------------------------------------------ |
-   | overall     | 总体性能拆解。可取值"over_all"，参数示例"overall", "over_all"。 |
-   | cluster     | 慢卡慢链路识别。可取值"slow_rank"（慢卡）、slow_link（慢链路），参数示例"cluster", "slow_link"。 |
-   | schedule    | 融合算子的API和亲和优化器识别。可取值"timeline_fusion_ops"，参数示例"schedule", "timeline_fusion_ops"。 |
-   | computation | 动态Shape、AICPU算子、OP bound的识别。可取值"profiling_operator_analysis"，参数示例"computation", "profiling_operator_analysis"。 |
-
-3. 执行分析。
+1. 在环境下安装Jupyter Notebook工具。
 
    ```bash
-   python advisor.py
+   pip install jupyter notebook
    ```
 
-4. 查看结果。
+   Jupyter Notebook工具的具体安装和使用指导请至Jupyter Notebook工具官网查找。
 
-   分析结果打屏展示，输出内容根据不同的参数有所不同，主要包括"problems"下的问题总览、和"data"下的分析建议。
+2. 在环境下安装ATT工具。
+
+   ```
+   git clone https://gitee.com/ascend/att.git
+   ```
+
+   安装环境下保存Ascend PyTorch Profiler采集的性能数据。
+
+3. 进入att\profiler\advisor目录执行如下命令启动Jupyter Notebook工具。
+
+   ```bash
+   jupyter notebook
+   ```
+
+   执行成功则自动启动浏览器读取att\profiler\advisor目录，如下示例：
+
+   ![jupyter_report](./img/jupyter_report.PNG)
+
+   若在Linux环境下则回显打印URL地址，即是打开Jupyter Notebook工具页面的地址，需要复制URL，并使用浏览器访问（若为远端服务器则需要将域名“**localhost**”替换为远端服务器的IP），进入Jupyter Notebook工具页面。
+
+4. 每个.ipynb文件为一项性能数据分析任务，选择需要的.ipynb打开，并在*_path参数下拷贝保存Ascend PyTorch Profiler采集的性能数据的路径。如下示例：
+
+   ![advisor_result](./img/advisor_result.PNG)
+
+5. 单击运行按钮执行性能数据分析。
+
+   分析结果详细内容会在.ipynb页面下展示。
