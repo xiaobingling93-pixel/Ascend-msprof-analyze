@@ -23,7 +23,7 @@ tests_requires.extend(set(requires))
 with open('version.txt', 'r') as f:
     version = f.read().strip()
 
-root_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "../")
+root_path = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
 setup(
     name="msprof-analyze",
     version=version,
