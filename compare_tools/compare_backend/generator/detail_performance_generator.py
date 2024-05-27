@@ -52,7 +52,9 @@ class DetailPerformanceGenerator(BaseGenerator):
 
         op_compare_result = []
         if self._args.enable_operator_compare:
-            module_compare_result = self.match_nn_module()
+            module_compare_result = self.match_nn_module() if self._profiling_data_dict.get(
+                Constant.BASE_DATA).python_function_data and self._profiling_data_dict.get(
+                Constant.COMPARISON_DATA).python_function_data else []
             if not module_compare_result:
                 op_compare_result = self.match_torch_op()
 
