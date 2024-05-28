@@ -27,13 +27,16 @@ class HcclSum(BaseRecipeAnalysis):
     TABLE_PER_RANK_STATS = "HcclPerRankStats"
     TABLE_TOP_OP_STATS = "HcclTopOpStats"
 
+    TOP_NUM = "top_num"
+    DEFAULT_TOP_NUM = 15
+
     def __init__(self, params):
         super().__init__(params)
         print("[INFO] HcclSum init.")
         self.per_rank_stats = None
         self.all_rank_stats = None
         self.top_op_stats = None
-        self.top_num = params.get("top_num", 15)
+        self.top_num = params.get(self.TOP_NUM, self.DEFAULT_TOP_NUM)
 
     @property
     def base_dir(self):
@@ -61,6 +64,9 @@ class HcclSum(BaseRecipeAnalysis):
         )
     
     def reducer_func(self, mapper_res):
+        if not mapper_res:
+            print("[ERROR] Mapper data is None.")
+            return
         self.per_rank_stats = pd.concat(
             describe_duration(df.groupby("OpType")["Duration"]).assign(Rank=df["Rank"][0]) for df in mapper_res)
         self.per_rank_stats.sort_values(by=["Rank"], inplace=True)
@@ -98,3 +104,24 @@ class HcclSum(BaseRecipeAnalysis):
         self.dump_data(self.all_rank_stats, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER, self.TABLE_ALL_RANK_STATS)
         self.dump_data(self.per_rank_stats, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER, self.TABLE_PER_RANK_STATS)
         self.dump_data(self.top_op_stats, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER, self.TABLE_TOP_OP_STATS)
+
+    @classmethod
+    def add_parser_argument(cls, parser):
+        BaseRecipeAnalysis.add_parser_argument(parser)
+        parser.add_argument("--top_num", type=int, help="Duration cost top count", default=cls.DEFAULT_TOP_NUM)
+
+    @classmethod
+    def parse_argument(cls, args_parsed) -> dict:
+        argument_dict = BaseRecipeAnalysis.parse_argument(args_parsed)
+        argument_dict.update({
+            cls.TOP_NUM: args_parsed.top_num
+        })
+        return argument_dict
+    
+    @classmethod
+    def get_extra_argument(cls, params) -> dict:
+        argument_dict = BaseRecipeAnalysis.get_extra_argument(params)
+        argument_dict.update({
+            cls.TOP_NUM: params.get(cls.TOP_NUM, cls.DEFAULT_TOP_NUM)
+        })
+        return argument_dict

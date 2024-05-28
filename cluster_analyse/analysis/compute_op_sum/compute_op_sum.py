@@ -60,6 +60,9 @@ class ComputeOpSum(BaseRecipeAnalysis):
         )
     
     def reducer_func(self, mapper_res):
+        if not mapper_res:
+            print("[ERROR] Mapper data is None.")
+            return
         # get per rank stats by optype
         self.per_rank_stats_by_optype = pd.concat(
             describe_duration(df.groupby(["OpType", "TaskType"])["Duration"]).assign(Rank=df["Rank"][0]) for df in mapper_res)
