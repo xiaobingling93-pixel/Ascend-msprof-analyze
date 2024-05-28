@@ -24,16 +24,15 @@ from cluster_statistics_export.compute_op_sum_export import ComputeOpSumExport
 class ComputeOpSum(BaseRecipeAnalysis):
 
     TABLE_ALL_RANK_STATS = "ComputeOpAllRankStats"
-    TABLE_PER_RANK_STATS = "ComputeOpPerRankStats"
-    TABLE_PER_RANK_STATS2 = "ComputeOpPerRankStats2"
+    TABLE_PER_RANK_STATS_BY_OPTYPE = "ComputeOpPerRankStatsByOpType"
+    TABLE_PER_RANK_STATS_BY_OPNAME = "ComputeOpPerRankStatsByOpName"
 
     def __init__(self, params):
         super().__init__(params)
         print("[INFO] ComputeOpSum init.")
-        self.per_rank_stats = None
         self.all_rank_stats = None
-        self.per_rank_stats2 = None
-        self.top_num = params.get("top_num", 15)
+        self.per_rank_stats_by_optype = None
+        self.per_rank_stats_by_opname = None
 
     @property
     def base_dir(self):
@@ -61,17 +60,20 @@ class ComputeOpSum(BaseRecipeAnalysis):
         )
     
     def reducer_func(self, mapper_res):
-        self.per_rank_stats = pd.concat(
+        # get per rank stats by optype
+        self.per_rank_stats_by_optype = pd.concat(
             describe_duration(df.groupby(["OpType", "TaskType"])["Duration"]).assign(Rank=df["Rank"][0]) for df in mapper_res)
-        self.per_rank_stats.sort_values(by=["Rank"], inplace=True)
+        self.per_rank_stats_by_optype.sort_values(by=["SumNs"], inplace=True, ascending=False)
+
+        # get all rank stats by optype
         all_op_data = pd.concat(mapper_res)
         self.all_rank_stats = describe_duration(all_op_data.groupby(["OpType", "TaskType"])["Duration"])
+        self.all_rank_stats.sort_values(by=["SumNs"], inplace=True, ascending=False)
 
-        per_rank_stats2 = pd.concat(
-            describe_duration(df.groupby(["OpType", "OpName", "TaskType", "InputShapes"])["Duration"]).assign(Rank=df["Rank"][0]) for df in mapper_res)
-        per_rank_stats2.sort_values(by=["Rank"], inplace=True)
-
-        self.per_rank_stats2 = per_rank_stats2
+        # get per rank stats by opname
+        self.per_rank_stats_by_opname = pd.concat(
+            describe_duration(df.groupby(["OpName", "OpType", "TaskType", "InputShapes"])["Duration"]).assign(Rank=df["Rank"][0]) for df in mapper_res)
+        self.per_rank_stats_by_opname.sort_values(by=["SumNs"], inplace=True, ascending=False)
 
     def run(self, context):
         super().run(context)
@@ -87,12 +89,12 @@ class ComputeOpSum(BaseRecipeAnalysis):
         
     def save_notebook(self):
         self.dump_data(self.all_rank_stats, os.path.join(self._get_output_dir(), "all_stats.csv"))
-        self.dump_data(self.per_rank_stats, os.path.join(self._get_output_dir(), "rank_stats.csv"))
-        self.dump_data(self.per_rank_stats2, os.path.join(self._get_output_dir(), "rank_stats2.csv"))
+        self.dump_data(self.per_rank_stats_by_optype, os.path.join(self._get_output_dir(), "rank_stats_by_optype.csv"))
+        self.dump_data(self.per_rank_stats_by_opname, os.path.join(self._get_output_dir(), "rank_stats_by_opname.csv"))
         self.create_notebook("stats.ipynb")
         self.add_helper_file("cluster_display.py")
     
     def save_db(self):
         self.dump_data(self.all_rank_stats, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER, self.TABLE_ALL_RANK_STATS)
-        self.dump_data(self.per_rank_stats, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER, self.TABLE_PER_RANK_STATS)
-        self.dump_data(self.per_rank_stats2, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER, self.TABLE_PER_RANK_STATS2)
+        self.dump_data(self.per_rank_stats_by_optype, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER, self.TABLE_PER_RANK_STATS_BY_OPTYPE)
+        self.dump_data(self.per_rank_stats_by_opname, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER, self.TABLE_PER_RANK_STATS_BY_OPNAME)
