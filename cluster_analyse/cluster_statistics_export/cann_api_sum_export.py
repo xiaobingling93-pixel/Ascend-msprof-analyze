@@ -56,10 +56,10 @@ LEFT JOIN
     ON ids.id == summary.name
 ORDER BY 2 DESC;
     """
+
+
 class CannApiSumExport(StatsExport):
     
-
     def __init__(self, db_path, recipe_name):
         super().__init__(db_path, recipe_name)
         self._query = QUERY
-        print("[INFO] CannApiSumExport init.")

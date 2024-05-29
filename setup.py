@@ -33,7 +33,7 @@ setup(
     include_package_data=False,
     python_requires='>=3.7',
     install_requires=requires,
-    package_data={'': ['*.json', '*.ini', '*.txt', '*.yaml', '*.html']},
+    package_data={'': ['*.json', '*.ini', '*.txt', '*.yaml', '*.html', '*.ipynb']},
     tests_require=tests_requires,
     entry_points="""
         [console_scripts]
