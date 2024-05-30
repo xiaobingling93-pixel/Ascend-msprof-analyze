@@ -94,7 +94,7 @@ class SlowLinkAnalyzer(BaseAnalyzer):
         optimization_item = OptimizeItem(
             SlowLinkAnalyzer.SLOW_LINK_ANALYSIS,
             self.bottelneck,
-            [""]
+            self.suggestion
         )
         self.result.add(OptimizeRecord(optimization_item))
 

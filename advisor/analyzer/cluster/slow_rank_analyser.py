@@ -73,7 +73,7 @@ class SlowRankAnalyzer(BaseAnalyzer):
         optimization_item = OptimizeItem(
             SlowRankAnalyzer.SLOW_RANK_ANALYSIS,
             self.bottelneck,
-            [""]
+            self.suggestion
         )
         self.result.add(OptimizeRecord(optimization_item))
         for i, data in enumerate(self.format_datas["data"]):
