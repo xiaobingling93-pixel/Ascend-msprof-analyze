@@ -22,17 +22,19 @@ from profiler.advisor.utils.tools import CONTEXT_SETTINGS, ClickAliasedGroup
 from profiler.advisor.utils.utils import debug_option
 from profiler.prof_common.constant import Constant
 from profiler.cluster_analyse.cluster_analysis import ALL_FEATURE_LIST
-from profiler.cluster_analyse.cluster_analysis import Interface
+from profiler.cluster_analyse.cluster_analysis import cluster_analysis_main
 
 
-@click.command(context_settings=Constant.CONTEXT_SETTINGS, name="cluster",
+context_settings = dict(Constant.CONTEXT_SETTINGS)
+context_settings['ignore_unknown_options'] = True
+
+
+@click.command(context_settings=context_settings, name="cluster",
                short_help='Analyze cluster data to locate slow nodes and slow links.')
 @click.option('--profiling_path', '-d', type=click.Path(), required=True,
               help='path of the profiling data')
 @click.option('--mode', '-m', type=click.Choice(ALL_FEATURE_LIST), default='all')
-def cluster_cli(profiling_path, mode) -> None:
-    parameter = {
-        Constant.COLLECTION_PATH: profiling_path,
-        Constant.ANALYSIS_MODE: mode
-    }
-    Interface(parameter).run()
+@click.argument('args', nargs=-1)
+def cluster_cli(profiling_path, mode, args) -> None:
+    required_args = ('-d', profiling_path, '-m', mode)
+    cluster_analysis_main(required_args + args)

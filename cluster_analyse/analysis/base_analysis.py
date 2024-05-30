@@ -21,10 +21,10 @@ import pandas as pd
 from abc import abstractmethod
 
 from common_func.constant import Constant
-from utils.data_transfer_adapter import DataTransferAdapter
 from common_func.file_manager import FileManager
 from common_func.db_manager import DBManager
 from common_func.utils import convert_unit
+from utils.data_transfer_adapter import DataTransferAdapter
 
 
 class BaseAnalysis:
@@ -204,6 +204,7 @@ class BaseRecipeAnalysis:
                     template_content = template_content.replace(str(key), str(value))
             with open(output_path, 'w') as f:
                 f.write(template_content)
+        print(f"[INFO] Notebook export path is: {self._get_output_dir()}")
 
     def add_helper_file(self, helper_file):
         helper_output_path = os.path.join(self._get_output_dir(), helper_file)

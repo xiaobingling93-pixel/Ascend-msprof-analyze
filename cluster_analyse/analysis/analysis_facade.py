@@ -40,10 +40,11 @@ class AnalysisFacade:
             process.join()
     
     def recipe_analyze(self):
+        HostInfoAnalysis(self.params).run()
         print("[INFO] Recipe analysis launched.")
         try:
             with Context.create_context(self.params.get(Constant.PARALLEL_MODE)) as context:
                 with self.params.get(Constant.RECIPE_CLASS)(self.params) as recipe:
                     recipe.run(context)
         except Exception as e:
-            print("[ERROR] Recipe analysis launched failed.")
+            print("[ERROR] Recipe analysis launched failed, %s." % str(e))

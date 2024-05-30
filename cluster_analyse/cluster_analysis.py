@@ -107,6 +107,7 @@ class Interface:
             params = {
                 Constant.COLLECTION_PATH: self.collection_path,
                 Constant.DATA_MAP: data_map,
+                Constant.DATA_TYPE: data_type,
                 Constant.RECIPE_NAME: self.recipe_name,
                 Constant.RECIPE_CLASS: self.recipe_class,
                 Constant.PARALLEL_MODE: self.recipe_parallel_mode,
@@ -127,12 +128,12 @@ class Interface:
             AnalysisFacade(params).cluster_analyze()
 
 
-if __name__ == "__main__":
+def cluster_analysis_main(args=None):
     parser = argparse.ArgumentParser(description="cluster analysis module")
     parser.add_argument('-d', '--collection_path', type=str, required=True, help="profiling data path")
     parser.add_argument('-m', '--mode', choices=ALL_FEATURE_LIST,
                         default='all', help="different analysis mode")
-    args_parsed, args_remained = parser.parse_known_args()
+    args_parsed, args_remained = parser.parse_known_args(args=args)
     parameter = {
         Constant.COLLECTION_PATH: args_parsed.collection_path,
         Constant.ANALYSIS_MODE: args_parsed.mode
@@ -140,3 +141,7 @@ if __name__ == "__main__":
     if args_parsed.mode not in COMM_FEATURE_LIST:
         parameter.update(parse_recipe_params(args_parsed.mode, args_remained))
     Interface(parameter).run()
+
+
+if __name__ == "__main__":
+    cluster_analysis_main()

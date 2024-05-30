@@ -40,11 +40,10 @@ class ComputeOpSum(BaseRecipeAnalysis):
 
     @staticmethod
     def _mapper_func(data_map, analysis_class):
-        print(f"[INFO] Current pid: {os.getpid()}, db_path: {data_map[1]}")
         df = ComputeOpSumExport(data_map[1], analysis_class).read_export_db()
 
         if df is None or df.empty:
-            print("[WARNING] There is no stats data.")
+            print(f"[WARNING] There is no stats data in {data_map[1]}.")
             return None
 
         df["Rank"] = data_map[0]
@@ -60,6 +59,7 @@ class ComputeOpSum(BaseRecipeAnalysis):
         )
     
     def reducer_func(self, mapper_res):
+        mapper_res = list(filter(lambda df: df is not None, mapper_res))
         if not mapper_res:
             print("[ERROR] Mapper data is None.")
             return

@@ -41,9 +41,9 @@ LEFT JOIN
     ON INPUTSHAPES_IDS.id == COMPUTE_TASK_INFO.inputShapes
     """
 
+
 class ComputeOpSumExport(StatsExport):
     
     def __init__(self, db_path, recipe_name):
         super().__init__(db_path, recipe_name)
         self._query = QUERY
-        print("[INFO] ComputeOpSumExport init.")
