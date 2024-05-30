@@ -15,9 +15,21 @@ from profiler.cluster_analyse.cluster_data_preprocess.pytorch_data_preprocessor 
 logger = logging.getLogger()
 
 
+def is_contain_ascend_profiler_output(file_path):
+    normalized_path = os.path.normpath(file_path)
+    ascend_output = os.path.join(normalized_path, "ASCEND_PROFILER_OUTPUT")
+    return os.path.isdir(ascend_output)
+
+
 def _analyze(dimensions, **kwargs):
     result_list = []
     job_list = []
+
+    folder_path = kwargs.get("profiling_path")
+    if not is_contain_ascend_profiler_output(folder_path):
+        print(f"[ERROR] The data is not collected by PyTorch Adaptor mode or the data is not parsed. "
+              f"Invalid profiling path: {folder_path}")
+        return
 
     def is_cluster():
         profiling_path = kwargs.get("profiling_path")
@@ -81,8 +93,10 @@ def analyze_all(**kwargs) -> None:
     # 当前compare_tools必须输入两个profiling路径，att-advisor有等价功能支持输入一个Profiling路径，后续替换成对应实现
     if not kwargs.get("benchmark_profiling_path"):
         kwargs["benchmark_profiling_path"] = kwargs.get("profiling_path")
-
-    _analyze(Interface.all_dimension, **kwargs)
+    try:
+        _analyze(Interface.all_dimension, **kwargs)
+    except RuntimeError as e:
+        print(f"[ERROR] {e}")
 
 
 @analyze_cli.command(context_settings=CONTEXT_SETTINGS,
