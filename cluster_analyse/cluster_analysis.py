@@ -26,7 +26,8 @@ from common_func import analysis_loader
 from analysis.analysis_facade import AnalysisFacade
 
 COMM_FEATURE_LIST = ['all', 'communication_time', 'communication_matrix']
-ALL_FEATURE_LIST = ['all', 'communication_time', 'communication_matrix', 'cann_api_sum', 'hccl_sum', 'compute_op_sum']
+ALL_FEATURE_LIST = ['all', 'communication_time', 'communication_matrix', 'cann_api_sum', 'hccl_sum', 'compute_op_sum',
+                    'mstx_sum']
 
 
 def get_analysis_args(analysis_class, analysis_args):

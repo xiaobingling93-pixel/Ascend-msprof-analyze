@@ -83,6 +83,10 @@ class HcclSum(BaseRecipeAnalysis):
     
     def run(self, context):
         super().run(context)
+        if self.top_num <= 0:
+            print(f"[WARNING] HcclSum: top_num is set to a invalid value, "
+                  f"it will be reset to default value({self.DEFAULT_TOP_NUM}).")
+            self.top_num = self.DEFAULT_TOP_NUM
         mapper_res = self.mapper_func(context)
         self.reducer_func(mapper_res)
 

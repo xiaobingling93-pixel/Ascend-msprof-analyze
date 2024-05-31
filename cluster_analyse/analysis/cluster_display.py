@@ -16,8 +16,7 @@
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-from ipywidgets import Dropdown, interact
-from IPython.display import display
+from IPython.display import display, HTML
 from ipywidgets import Dropdown, fixed, interact
 
 
@@ -222,3 +221,19 @@ def __display_stats_per_rank_group(selected, rank_stats_gdf):
         title="50% of Distribution",
         x_title="Ranks"
     )
+
+
+def display_stats_optional_combobox(options, display_func, args, description="Option:"):
+    if len(options) > 1:
+        dropdown = Dropdown(
+            options=options, layout={"width": "max-content"}, value=options[1],
+            description=description
+        )
+        interact(
+            display_func,
+            selected=dropdown,
+            args=fixed(args)
+        )
+        dropdown.value = options[0]
+    elif len(options) == 1:
+        display_func(options[0], args)
