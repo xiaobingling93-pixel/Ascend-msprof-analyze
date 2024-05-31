@@ -25,11 +25,6 @@ def _analyze(dimensions, **kwargs):
     result_list = []
     job_list = []
 
-    folder_path = kwargs.get("profiling_path")
-    if not is_contain_ascend_profiler_output(folder_path):
-        print(f"[ERROR] The data is not collected by PyTorch Adaptor mode or the data is not parsed. "
-              f"Invalid profiling path: {folder_path}")
-        return
 
     def is_cluster():
         profiling_path = kwargs.get("profiling_path")
@@ -40,6 +35,12 @@ def _analyze(dimensions, **kwargs):
         return len(data_map) > 1
 
     is_cluster = is_cluster()
+    if not is_cluster:
+        folder_path = kwargs.get("profiling_path")
+        if not is_contain_ascend_profiler_output(folder_path):
+            print(f"[ERROR] The data is not collected by PyTorch Adaptor mode or the data is not parsed. "
+                  f"Invalid profiling path: {folder_path}")
+            return
 
     for dimension in dimensions:
         if not is_cluster and dimension == "cluster":
