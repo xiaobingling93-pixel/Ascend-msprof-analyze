@@ -196,6 +196,8 @@ class OverallSummaryAnalyzer(BaseAnalyzer):
         data_list = []
         data = []
         for key, value in self.cur_bottleneck.items():
+            if not value:
+                continue
             result += f'{key}: {value} \n'
             headers.append(key)
             data.append(value)
