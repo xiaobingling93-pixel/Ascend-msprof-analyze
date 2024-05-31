@@ -34,8 +34,8 @@ def _analyze(dimensions, **kwargs):
     def is_cluster():
         profiling_path = kwargs.get("profiling_path")
         path_list = [os.path.join(profiling_path, dir_name) for dir_name in os.listdir(profiling_path)]
-        dir_list = [path for path in path_list if os.path.isdir(path)]
-        data_processor = PytorchDataPreprocessor(dir_list)
+        ascend_pt_dirs = [path for path in path_list if os.path.isdir(path) and path.endwith("ascend_pt")]
+        data_processor = PytorchDataPreprocessor(ascend_pt_dirs)
         data_map = data_processor.get_data_map()
         return len(data_map) > 1
 
