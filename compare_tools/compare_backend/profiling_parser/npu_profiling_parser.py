@@ -100,6 +100,7 @@ class NPUProfilingParser(BaseProfilingParser):
         self.__parse_info_json()
         self.__parse_mem_csv()
         self.__parse_kernel_csv()
+        self.__parse_trace_view_json()
         self.__add_sdma_time()
         self.__add_overlap_analysis_time()
         self._picking_notify_wait_event_and_not_overlap_event()
@@ -237,6 +238,11 @@ class NPUProfilingParser(BaseProfilingParser):
             return
         self._result_data.overall_metrics.minimal_profiling = True
 
+    def __parse_trace_view_json(self):
+        for event in self._trace_events:
+            if event.is_lccl():
+                self._result_data.overall_metrics.update_lccl_info(event.dur)
+
     def __parse_kernel_csv(self):
         try:
             kernel_details = FileReader.read_csv_file(self._kernel_detail_path, KernelDetailsBean)
@@ -265,6 +271,8 @@ class NPUProfilingParser(BaseProfilingParser):
                 self._result_data.overall_metrics.update_sdma_info(kernel.duration)
             elif kernel.is_vector():
                 self._result_data.overall_metrics.update_vec_info(kernel.duration)
+            elif kernel.is_page_attention():
+                self._result_data.overall_metrics.update_pa_info(kernel.duration)
             else:
                 self._result_data.overall_metrics.update_cube_info(kernel.duration)
 

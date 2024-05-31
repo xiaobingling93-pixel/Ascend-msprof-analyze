@@ -76,6 +76,9 @@ class KernelDetailsBean:
         lower_op_type = self.op_type.lower()
         return any(bwd in lower_op_type for bwd in Constant.BWD_LIST)
 
+    def is_page_attention(self):
+        return "pagedattention" in self.op_type.lower()
+
     def init(self):
         self._op_type = self._data.get('Type', "")
         self._name = self._data.get('Name', "")
