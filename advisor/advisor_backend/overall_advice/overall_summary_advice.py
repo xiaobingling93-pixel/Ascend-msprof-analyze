@@ -21,9 +21,9 @@ from compare_interface.comparison_interface import ComparisonInterface
 
 class OverallSummaryAdvice(AdviceBase):
     advice_map = {
-        "Computing Time": "if you want more detailed advice please go to compute_perf_analysis.ipynb.",
-        "Uncovered Communication Time": "if you want more detailed advice please go to cluster_perf_analysis.ipynb.",
-        "Free Time": "if you want more detailed advice please go to timeline_perf_analysis.ipynb."
+        "Computing Time": "if you want more detailed advice please use msprof-analyze advisor computation.",
+        "Uncovered Communication Time": "if you want more detailed advice, please use msprof-analyze advisor schedule.",
+        "Free Time": "if you want more detailed advice please use msprof-analyze advisor schedule."
     }
     time_name_map = {
         "Computing Time": "computing",
