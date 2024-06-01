@@ -269,10 +269,10 @@ class NPUProfilingParser(BaseProfilingParser):
                 self._result_data.overall_metrics.update_cube_info(kernel.duration)
             elif kernel.is_sdma():
                 self._result_data.overall_metrics.update_sdma_info(kernel.duration)
-            elif kernel.is_vector():
-                self._result_data.overall_metrics.update_vec_info(kernel.duration)
             elif kernel.is_page_attention():
                 self._result_data.overall_metrics.update_pa_info(kernel.duration)
+            elif kernel.is_vector():
+                self._result_data.overall_metrics.update_vec_info(kernel.duration)
             else:
                 self._result_data.overall_metrics.update_cube_info(kernel.duration)
 
