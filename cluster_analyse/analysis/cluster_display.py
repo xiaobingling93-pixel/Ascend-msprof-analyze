@@ -203,6 +203,8 @@ def display_stats_per_rank_groups_combobox(rank_stats_gdf):
         dropdown.value = names[0]
     elif len(names) == 1:
         __display_stats_per_rank_group(names[0], rank_stats_gdf)
+    else:
+        print("cluster_display func:input rank_stats_gdf groups is null so no need to display")
 
 
 def __display_stats_per_rank_group(selected, rank_stats_gdf):
