@@ -130,12 +130,11 @@ class BindCoreManager():
             if npu_id not in self.running_pid_on_npu:
                 continue
             pids_on_npu = self.running_pid_on_npu[npu_id]
-            for pid in pids_on_npu:
-                for npu_id_with_pids, pids in self.running_pid_on_npu.items():
-                    if npu_id == npu_id_with_pids:
-                        continue
-                    if pid in pids:
-                        pids_on_npu.remove(pid)
+            for npu_id_with_pids, pids in self.running_pid_on_npu.items():
+                if npu_id == npu_id_with_pids:
+                    continue
+                pids_on_npu = list(set(pids_on_npu) - set(pids))
+            self.running_pid_on_npu[npu_id] = pids_on_npu
 
         if_running_process = False
         for npu_id, pids in self.running_pid_on_npu.items():
