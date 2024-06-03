@@ -133,16 +133,26 @@ class BaseRecipeAnalysis:
         return os.path.basename(os.path.dirname(__file__))
 
     def _get_rank_db(self):
+        invalid_rank_id = []
         if self._rank_list == 'all':
             rank_ids = list(self._data_map.keys())
         else:
-            rank_ids = [rank_id for rank_id in self._data_map.keys() if rank_id in self._rank_list]
+            rank_ids = []
+            for rank_id in self._rank_list:
+                if rank_id in self._data_map.keys():
+                    rank_ids.append(rank_id)
+                else:
+                    invalid_rank_id.append(str(rank_id))
         db_paths = []
         for rank_id in rank_ids:
             rank_path = self._data_map[rank_id]
             db_path = os.path.join(rank_path, Constant.SINGLE_OUTPUT, f"ascend_pytorch_profiler_{rank_id}.db")
             if os.path.exists(db_path):
                 db_paths.append((rank_id, db_path))
+            else:
+                print(f"[WARNING] DB file not found, rank id: {rank_id}, db path: {db_path}.")
+        if invalid_rank_id:
+            print(f"[WARNING] Invalid Rank id : [{','.join(invalid_rank_id)}].")
         return db_paths
 
     def get_mode(self):

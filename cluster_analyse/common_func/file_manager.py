@@ -98,18 +98,15 @@ class FileManager:
             raise RuntimeError(f"Can't create the file: {base_name}") from e
 
     @classmethod
-    def create_output_dir(cls, collection_path: str) -> None:
+    def create_output_dir(cls, collection_path: str, is_overwrite: bool = False) -> None:
         output_path = os.path.join(
             collection_path, Constant.CLUSTER_ANALYSIS_OUTPUT)
+        if is_overwrite:
+            if not os.path.exists(output_path):
+                PathManager.make_dir_safety(output_path)
+            return
         PathManager.remove_path_safety(output_path)
         PathManager.make_dir_safety(output_path)
-
-    @classmethod
-    def create_output_dir_non_overwrite(cls, collection_path: str) -> None:
-        output_path = os.path.join(
-            collection_path, Constant.CLUSTER_ANALYSIS_OUTPUT)
-        if not os.path.exists(output_path):
-            PathManager.make_dir_safety(output_path)
 
     @classmethod
     def check_file_size(cls, file_path):
