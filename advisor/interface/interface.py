@@ -58,7 +58,7 @@ class Interface:
         analyzer = self.get_analyzer(dimension, scope)(collection_path=self.collection_path, **kwargs)
         result = analyzer.optimize(**kwargs)
 
-        if render_html:
+        if render_html and result.data:
             if hasattr(analyzer, "html_render"):
                 analyzer.html_render.render_html()
             analyzer.html_render.save_to_file(f'att_advisor_{Timer().strftime}.html')

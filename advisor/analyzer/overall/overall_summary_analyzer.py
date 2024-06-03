@@ -225,6 +225,8 @@ class OverallSummaryAnalyzer(BaseAnalyzer):
         """
         make record for what and how to optimize
         """
+        if not self.bottleneck_str and not self.cur_advices:
+            return
         optimization_item = OptimizeItem(
             OverallSummaryAnalyzer.OVERALL_SUMMARY_ANALYZER,
             self.bottleneck_str,
@@ -238,6 +240,8 @@ class OverallSummaryAnalyzer(BaseAnalyzer):
                 self.result.add_detail(const.DATA + data_type, data_dict["headers"], data_dict["data"][0])
 
     def make_render(self):
+        if not self.bottleneck_str and not self.cur_advices:
+            return
         result_for_html = {
             "Description" : self.bottleneck_str,
             "suggestion" : self.cur_advices,
@@ -257,4 +261,4 @@ def get_profile_path(collection_path):
         for file in files:
             if file.startswith("profiler_info"):
                 return root
-    return None
+    return ""
