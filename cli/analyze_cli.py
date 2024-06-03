@@ -2,6 +2,7 @@ import click
 import sys
 import os
 import logging
+from pathlib import Path
 
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), "compare_tools"))
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), "cluster_analyse"))
@@ -15,32 +16,22 @@ from profiler.cluster_analyse.cluster_data_preprocess.pytorch_data_preprocessor 
 logger = logging.getLogger()
 
 
-def is_contain_ascend_profiler_output(file_path):
-    normalized_path = os.path.normpath(file_path)
-    ascend_output = os.path.join(normalized_path, "ASCEND_PROFILER_OUTPUT")
-    return os.path.isdir(ascend_output)
-
-
 def _analyze(dimensions, **kwargs):
     result_list = []
     job_list = []
-
+    if not Path(kwargs.get("profiling_path")).exists():
+        print(f"[ERROR] Profiling_path is not existed. Invalid profiling path: {kwargs.get('profiling_path')}")
+        return
 
     def is_cluster():
         profiling_path = kwargs.get("profiling_path")
         path_list = [os.path.join(profiling_path, dir_name) for dir_name in os.listdir(profiling_path)]
-        dir_list = [path for path in path_list if os.path.isdir(path)]
-        data_processor = PytorchDataPreprocessor(dir_list)
+        ascend_pt_dirs = [path for path in path_list if os.path.isdir(path) and path.endswith("ascend_pt")]
+        data_processor = PytorchDataPreprocessor(ascend_pt_dirs)
         data_map = data_processor.get_data_map()
         return len(data_map) > 1
 
     is_cluster = is_cluster()
-    if not is_cluster:
-        folder_path = kwargs.get("profiling_path")
-        if not is_contain_ascend_profiler_output(folder_path):
-            print(f"[ERROR] The data is not collected by PyTorch Adaptor mode or the data is not parsed. "
-                  f"Invalid profiling path: {folder_path}")
-            return
 
     for dimension in dimensions:
         if not is_cluster and dimension == "cluster":

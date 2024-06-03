@@ -34,11 +34,10 @@ class CannApiSum(BaseRecipeAnalysis):
 
     @staticmethod
     def _mapper_func(data_map, analysis_class):
-        print(f"[INFO] Current pid: {os.getpid()}, db_path: {data_map[1]}")
         df = CannApiSumExport(data_map[1], analysis_class).read_export_db()
         
         if df is None or df.empty:
-            print("[WARNING] There is no stats data.")
+            print(f"[WARNING] There is no stats data in {data_map[1]}.")
             return None
         return data_map[0], df
     

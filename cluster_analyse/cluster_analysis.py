@@ -25,14 +25,15 @@ from common_func.path_manager import PathManager
 from common_func import analysis_loader
 from analysis.analysis_facade import AnalysisFacade
 
-COMM_FEATURE_LIST = ['all', 'communication_time', 'communication_matrix', 'host_info']
-ALL_FEATURE_LIST = ['all', 'communication_time', 'communication_matrix', 'host_info', 'cann_api_sum', 'hccl_sum', 'compute_op_sum']
+COMM_FEATURE_LIST = ['all', 'communication_time', 'communication_matrix']
+ALL_FEATURE_LIST = ['all', 'communication_time', 'communication_matrix', 'cann_api_sum', 'hccl_sum', 'compute_op_sum']
 
 
 def get_analysis_args(analysis_class, analysis_args):
     parser = argparse.ArgumentParser(description="custom analysis args")
     parser.add_argument("--parallel_mode", type=str, help="context mode", default="concurrent")
     parser.add_argument("--export_type", type=str, help="export type", default="db")
+    analysis_class[1].add_parser_argument(parser)
     return parser.parse_args(analysis_args)
 
 def parse_recipe_params(analysis_name, analysis_args):
@@ -48,6 +49,7 @@ def parse_recipe_params(analysis_name, analysis_args):
         Constant.PARALLEL_MODE: args_parsed.parallel_mode,
         Constant.EXPORT_TYPE: args_parsed.export_type
     }
+    recipe_params.update(analysis_class[1].parse_argument(args_parsed))
     return recipe_params
 
 class Interface:
@@ -67,6 +69,7 @@ class Interface:
         self.recipe_class = params.get(Constant.RECIPE_CLASS)
         self.recipe_parallel_mode = params.get(Constant.PARALLEL_MODE)
         self.export_type = params.get(Constant.EXPORT_TYPE)
+        self.origin_params = params
 
     def allocate_prof_data(self):
         ascend_pt_dirs = []
@@ -97,15 +100,20 @@ class Interface:
             print("[ERROR] The current folder contains both DB and other files. Please check.")
             return
         if self.analysis_mode not in COMM_FEATURE_LIST:
+            if data_type != Constant.DB:
+                print("[ERROR] The current analysis node only supports DB as input data. Please check.")
+                return
             FileManager.create_output_dir_non_overwrite(self.collection_path)
             params = {
                 Constant.COLLECTION_PATH: self.collection_path,
                 Constant.DATA_MAP: data_map,
+                Constant.DATA_TYPE: data_type,
                 Constant.RECIPE_NAME: self.recipe_name,
                 Constant.RECIPE_CLASS: self.recipe_class,
                 Constant.PARALLEL_MODE: self.recipe_parallel_mode,
                 Constant.EXPORT_TYPE: self.export_type
             }
+            params.update(self.recipe_class.get_extra_argument(self.origin_params))
             AnalysisFacade(params).recipe_analyze()
         else:
             FileManager.create_output_dir(self.collection_path)
@@ -120,12 +128,12 @@ class Interface:
             AnalysisFacade(params).cluster_analyze()
 
 
-if __name__ == "__main__":
+def cluster_analysis_main(args=None):
     parser = argparse.ArgumentParser(description="cluster analysis module")
     parser.add_argument('-d', '--collection_path', type=str, required=True, help="profiling data path")
     parser.add_argument('-m', '--mode', choices=ALL_FEATURE_LIST,
                         default='all', help="different analysis mode")
-    args_parsed, args_remained = parser.parse_known_args()
+    args_parsed, args_remained = parser.parse_known_args(args=args)
     parameter = {
         Constant.COLLECTION_PATH: args_parsed.collection_path,
         Constant.ANALYSIS_MODE: args_parsed.mode
@@ -133,3 +141,7 @@ if __name__ == "__main__":
     if args_parsed.mode not in COMM_FEATURE_LIST:
         parameter.update(parse_recipe_params(args_parsed.mode, args_remained))
     Interface(parameter).run()
+
+
+if __name__ == "__main__":
+    cluster_analysis_main()

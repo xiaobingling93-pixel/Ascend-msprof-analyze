@@ -57,11 +57,11 @@ class SpecialHelpOrder(click.Group):
 @click.option('--version', '-V', '-v', is_flag=True,
               callback=print_version_callback, expose_value=False,
               is_eager=True, help=cli_version())
-def advisor_cli(**kwargs):
+def msprof_analyze_cli(**kwargs):
     pass
 
 
-advisor_cli.add_command(analyze_cli, name="advisor")
-advisor_cli.add_command(compare_cli, name="compare")
-advisor_cli.add_command(cluster_cli, name="cluster")
-advisor_cli.add_command(auto_complete_cli, name="auto-completion")
+msprof_analyze_cli.add_command(analyze_cli, name="advisor")
+msprof_analyze_cli.add_command(compare_cli, name="compare")
+msprof_analyze_cli.add_command(cluster_cli, name="cluster")
+msprof_analyze_cli.add_command(auto_complete_cli, name="auto-completion")

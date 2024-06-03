@@ -76,13 +76,19 @@ class SlowLinkAnalyzer(BaseAnalyzer):
                            f'the difference is {round(max(data_list) - min(data_list), 3)}GB/s. \n'
 
     def format_details(self):
-        details_dict = {}
-        headers = ['rank_id'] + list(self.rank_bw_dict[0].keys())
-        data_list = []
-        for rank_id, rank_bw in self.rank_bw_dict.items():
-            data_list.append([rank_id] + list(rank_bw.values()))
+        if not self.rank_bw_dict:
+            return {
+                "headers": [],
+                "data": []
+            }
 
-        details_dict["headers"] = headers
+        details_dict = {}
+        headers = list({k for rank_bw_value in self.rank_bw_dict.values() for k in rank_bw_value.keys()})
+        headers.sort()
+        data_list = [[rank_id] + [rank_bw.get(k, 0) for k in headers] for rank_id, rank_bw in self.rank_bw_dict.items()]
+        data_list.sort(key = lambda x: x[0]) # 按rank_id排序
+        
+        details_dict["headers"] = ["rank_id"] + headers
         details_dict["data"] = data_list
 
         return details_dict
@@ -94,7 +100,7 @@ class SlowLinkAnalyzer(BaseAnalyzer):
         optimization_item = OptimizeItem(
             SlowLinkAnalyzer.SLOW_LINK_ANALYSIS,
             self.bottelneck,
-            [""]
+            self.suggestion
         )
         self.result.add(OptimizeRecord(optimization_item))
 
