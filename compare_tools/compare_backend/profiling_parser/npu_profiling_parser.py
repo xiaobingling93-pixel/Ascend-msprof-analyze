@@ -100,7 +100,7 @@ class NPUProfilingParser(BaseProfilingParser):
         self.__parse_info_json()
         self.__parse_mem_csv()
         self.__parse_kernel_csv()
-        self.__parse_trace_view_json()
+        self.__add_lccl_time()
         self.__add_sdma_time()
         self.__add_overlap_analysis_time()
         self._picking_notify_wait_event_and_not_overlap_event()
@@ -238,8 +238,8 @@ class NPUProfilingParser(BaseProfilingParser):
             return
         self._result_data.overall_metrics.minimal_profiling = True
 
-    def __parse_trace_view_json(self):
-        for event in self._trace_events:
+    def __add_lccl_time(self):
+        for event in self._all_kernels.values():
             if event.is_lccl():
                 self._result_data.overall_metrics.update_lccl_info(event.dur)
 
