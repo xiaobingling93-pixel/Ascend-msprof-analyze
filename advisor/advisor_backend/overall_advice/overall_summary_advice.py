@@ -27,7 +27,7 @@ class OverallSummaryAdvice(AdviceBase):
     }
     time_name_map = {
         "Computing Time": "computing",
-        "Uncovered Communication Time(Wait Time)": "communication",
+        "Uncovered Communication Time": "communication",
         "Free Time": "free",
         'Cube Time(Num)': 'Cube Time',
         'Vector Time(Num)': 'Vector Time',

@@ -37,7 +37,7 @@ class OverallSummaryAnalyzer(BaseAnalyzer):
     }
     time_name_map = {
         "Computing Time": "computing",
-        "Uncovered Communication Time(Wait Time)": "communication",
+        "Uncovered Communication Time": "communication",
         "Free Time": "free",
         'Cube Time(Num)': 'Cube Time',
         'Vector Time(Num)': 'Vector Time',
@@ -178,8 +178,8 @@ class OverallSummaryAnalyzer(BaseAnalyzer):
                 ratio = "{:.2%}".format(self.calculate_ratio(time_value - base_duration, base_duration))
                 comparison_bottleneck += f"{time_type} exceeds the benchmark by {ratio}\n"
         self.cur_bottleneck["overall_data"] = overall_bottleneck
-        self.cur_bottleneck["comparison_result"] = comparison_bottleneck
-
+        if comparison_bottleneck:
+            self.cur_bottleneck["comparison_result"] = comparison_bottleneck
     def optimize(self):
         if self.path_check():
             self.process()

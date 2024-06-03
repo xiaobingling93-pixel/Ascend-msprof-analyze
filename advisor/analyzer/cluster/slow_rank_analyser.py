@@ -81,7 +81,7 @@ class SlowRankAnalyzer(BaseAnalyzer):
 
     def format_details(self):
         details_dict = {}
-        headers = ["rank_id", "comupte", "communication", "free"]
+        headers = ["rank_id", "compute", "communication", "free"]
         data_list = []
         for key,value in self.step_trace_dict.items():
             data_list.append([key] + value)
