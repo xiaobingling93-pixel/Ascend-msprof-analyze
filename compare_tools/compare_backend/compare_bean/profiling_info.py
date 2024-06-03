@@ -57,14 +57,15 @@ class ProfilingInfo:
     def calculate_other_time(self):
         self.other_time = max(
             [0, self.compute_time - self.cube_time - self.fa_time_fwd - self.fa_time_bwd -
-             self.pa_time - self.lccl_time - self.vec_time - self.conv_time_fwd - self.conv_time_bwd])
+             self.pa_time - self.vec_time - self.conv_time_fwd - self.conv_time_bwd])
 
     def calculate_vec_time(self):
         self.vec_time = self.compute_time - self.cube_time - self.fa_time_fwd - self.fa_time_bwd \
                         - self.conv_time_fwd - self.conv_time_bwd
 
     def calculate_schedule_time(self):
-        self.scheduling_time = self.e2e_time - self.compute_time - self.communication_not_overlapped
+        self.scheduling_time = (self.e2e_time - self.compute_time - self.lccl_time \
+                                - self.communication_not_overlapped)
 
     def update_fa_fwd_info(self, time: float):
         self.fa_time_fwd += time
