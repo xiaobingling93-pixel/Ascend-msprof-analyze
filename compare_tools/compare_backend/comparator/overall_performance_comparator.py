@@ -34,6 +34,14 @@ class OverallPerformanceComparator(BaseComparator):
             self._headers.append('Flash Attention Time(Backward)(Num)')
             base_col.append(f'{base_profiling_info.fa_time_bwd:.3f}s({base_profiling_info.fa_num_bwd})')
             comp_col.append(f'{comp_profiling_info.fa_time_bwd:.3f}s({comp_profiling_info.fa_num_bwd})')
+        if base_profiling_info.pa_time or comp_profiling_info.pa_time:
+            self._headers.append('Paged Attention Time(Num)')
+            base_col.append(f'{base_profiling_info.pa_time:.3f}s({base_profiling_info.pa_num})')
+            comp_col.append(f'{comp_profiling_info.pa_time:.3f}s({comp_profiling_info.pa_num})')
+        if base_profiling_info.lccl_time or comp_profiling_info.lccl_time:
+            self._headers.append('Lccl Time(Num)')
+            base_col.append(f'{base_profiling_info.lccl_time:.3f}s({base_profiling_info.lccl_num})')
+            comp_col.append(f'{comp_profiling_info.lccl_time:.3f}s({comp_profiling_info.lccl_num})')
         if base_profiling_info.other_time or comp_profiling_info.other_time:
             self._headers.append('Other Time')
             base_col.append(f'{base_profiling_info.other_time:.3f}s')
