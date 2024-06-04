@@ -70,10 +70,10 @@ class SlowLinkAnalyzer(BaseAnalyzer):
         if avg_bw == 0:
             return
         self.bottelneck += f'{link_type}: \n' \
-                           f'The average is {avg_bw}, ' \
-                           f'while the maximum  is {round(max(data_list), 3)}GB/s and ' \
-                           f'the minimum is {round(min(data_list), 3)}GB/s. ' \
-                           f'the difference is {round(max(data_list) - min(data_list), 3)}GB/s. \n'
+                           f'    The average is {avg_bw}, \n' \
+                           f'    while the maximum  is {round(max(data_list), 3)}GB/s \n' \
+                           f'    and the minimum is {round(min(data_list), 3)}GB/s. \n' \
+                           f'    the difference is {round(max(data_list) - min(data_list), 3)}GB/s. \n'
 
     def format_details(self):
         if not self.rank_bw_dict:

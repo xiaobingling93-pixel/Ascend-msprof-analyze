@@ -195,8 +195,6 @@ class TerminalResult:
         table_row_cnt = 0
         for result in self.result_list:
             table_row_cnt += 1
-            result[1] = fill(result[1], width=40)
-            result[2] = fill(result[2], width=40)
             self.table.add_row([table_row_cnt] + result)
         self.table.align = "l"
 
