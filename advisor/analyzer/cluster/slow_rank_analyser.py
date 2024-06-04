@@ -62,9 +62,10 @@ class SlowRankAnalyzer(BaseAnalyzer):
         data_list = [data_tuple[produce_type] for rank_id, data_tuple in step_dict.items()]
         max_ratio = self.compute_max_gap_ratio(data_list, mean_total_time)
         if max_ratio > self.RATIO_THRESHOLD:
-            self.bottelneck += f'{self.BOTTLENECK_LIST[produce_type]} has some issues in the cluster, ' \
-                               f'because the max difference of {self.BOTTLENECK_LIST[produce_type]} time ' \
-                               f'has reached {round(max_ratio * mean_total_time / 1000, 3)}ms. \n'
+            self.bottelneck += f'{self.BOTTLENECK_LIST[produce_type]} \n' \
+                               f'    has some issues in the cluster, \n' \
+                               f'    because the max difference of {self.BOTTLENECK_LIST[produce_type]} time \n' \
+                               f'    has reached {round(max_ratio * mean_total_time / 1000, 3)}ms. \n'
 
     def make_record(self):
         """

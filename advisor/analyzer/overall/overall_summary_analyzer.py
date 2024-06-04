@@ -161,10 +161,9 @@ class OverallSummaryAnalyzer(BaseAnalyzer):
         comparison_bottleneck = ""
         for time_type, time_value in overall_data.items():
             # add subtype time bottleneck
-            advice = self.advice_map.get(time_type, "")
-            self.cur_bottleneck[self.time_name_map.get(time_type)] = f"{time_type} is {time_value}s.\n{advice}"
+            self.cur_bottleneck[self.time_name_map.get(time_type)] = f"{time_type} is {time_value}s.\n"
             # add overall bottleneck
-            overall_bottleneck += f"  -- {time_type} is {time_value}s\n"
+            overall_bottleneck += f"    -- {time_type} is {time_value}s\n"
             if time_type == "Free Time" and self._is_minimal_profiling and self.calculate_ratio(time_value,
                                                                                                 e2e_time) > 0.1:
                 overall_bottleneck += "percentage of free time exceed the threshold 10%."
@@ -248,7 +247,7 @@ class OverallSummaryAnalyzer(BaseAnalyzer):
             "details" : [self.bottleneck_table]
         }
 
-        self.html_render.render_template(key="cluster",
+        self.html_render.render_template(key="overall",
                                          title=OverallSummaryAnalyzer.OVERALL_SUMMARY_ANALYZER,
                                          template_dir="templates",
                                          template_name="cluster_analysis.html",
