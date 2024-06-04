@@ -181,8 +181,8 @@ MindSpore场景仅支持**总体性能**和**通信性能**的对比。
 | --------------------------------------- | ------------------------------------------------------------ |
 | Cube Time(Num)                          | Cube算子总耗时，Num表示计算的次数。                          |
 | Vector Time(Num)                        | Vector算子总耗时，Num表示计算的次数。                        |
-| Corv Time(Forward)(Num)                 | conv前向算子耗时，Num表示计算的次数。                        |
-| Corv Time(Backward)(Num)                | conv反向算子耗时，Num表示计算的次数。                        |
+| Conv Time(Forward)(Num)                 | conv前向算子耗时，Num表示计算的次数。                        |
+| Conv Time(Backward)(Num)                | conv反向算子耗时，Num表示计算的次数。                        |
 | Flash Attention Time(Forward)(Num)      | Flash Attention算子前向耗时。                                |
 | Flash Attention Time(Backward)(Num)     | Flash Attention算子反向耗时。                                |
 | Computing Time                          | 计算流耗时，计算流所有event耗时总和。如果有多条并发计算，计算流耗时对重叠部分只会计算一次。 |
