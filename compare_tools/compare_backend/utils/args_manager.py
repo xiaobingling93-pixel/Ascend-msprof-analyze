@@ -96,7 +96,7 @@ class ArgsManager:
         json_path = os.path.join(profiler_output, "trace_view.json")
         if not os.path.isfile(json_path):
             msg = (f"The data is not collected by PyTorch Adaptor mode or the data is not parsed. "
-                   f"Invalid profiling path: {folder_path}")
+                   f"Invalid profiling path: {profiler_output}")
             raise RuntimeError(msg)
         path_dict = {Constant.PROFILING_TYPE: Constant.NPU, Constant.PROFILING_PATH: file_path,
                      Constant.TRACE_PATH: json_path, Constant.ASCEND_OUTPUT_PATH: profiler_output}
