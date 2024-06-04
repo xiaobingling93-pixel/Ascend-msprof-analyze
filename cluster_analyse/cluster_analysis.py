@@ -36,21 +36,21 @@ def get_analysis_args(analysis_class, analysis_args):
     analysis_class[1].add_parser_argument(parser)
     return parser.parse_args(analysis_args)
 
-def parse_recipe_params(analysis_name, analysis_args):
+def parse_specific_params(analysis_name, analysis_args):
     analysis_class = analysis_loader.get_class_from_name(analysis_name)
     if not analysis_class:
         print("[ERROR] undefined analysis.")
         return None
     
     args_parsed = get_analysis_args(analysis_class, analysis_args)
-    recipe_params = {
+    specific_params = {
         Constant.RECIPE_NAME: analysis_class[0],
         Constant.RECIPE_CLASS: analysis_class[1],
         Constant.PARALLEL_MODE: args_parsed.parallel_mode,
         Constant.EXPORT_TYPE: args_parsed.export_type
     }
-    recipe_params.update(analysis_class[1].parse_argument(args_parsed))
-    return recipe_params
+    specific_params.update(analysis_class[1].parse_argument(args_parsed))
+    return specific_params
 
 class Interface:
     ASCEND_PT = "ascend_pt"
@@ -65,10 +65,6 @@ class Interface:
         self.collective_group_dict = {}
         self.communication_ops = []
         self.matrix_ops = []
-        self.recipe_name = params.get(Constant.RECIPE_NAME)
-        self.recipe_class = params.get(Constant.RECIPE_CLASS)
-        self.recipe_parallel_mode = params.get(Constant.PARALLEL_MODE)
-        self.export_type = params.get(Constant.EXPORT_TYPE)
         self.origin_params = params
 
     def allocate_prof_data(self):
@@ -103,17 +99,17 @@ class Interface:
             if data_type != Constant.DB:
                 print("[ERROR] The current analysis node only supports DB as input data. Please check.")
                 return
-            FileManager.create_output_dir_non_overwrite(self.collection_path)
+            FileManager.create_output_dir(self.collection_path, is_overwrite=True)
             params = {
                 Constant.COLLECTION_PATH: self.collection_path,
                 Constant.DATA_MAP: data_map,
                 Constant.DATA_TYPE: data_type,
-                Constant.RECIPE_NAME: self.recipe_name,
-                Constant.RECIPE_CLASS: self.recipe_class,
-                Constant.PARALLEL_MODE: self.recipe_parallel_mode,
-                Constant.EXPORT_TYPE: self.export_type
+                Constant.RECIPE_NAME: self.origin_params.get(Constant.RECIPE_NAME, ""),
+                Constant.RECIPE_CLASS: self.origin_params.get(Constant.RECIPE_CLASS),
+                Constant.PARALLEL_MODE: self.origin_params.get(Constant.PARALLEL_MODE, ""),
+                Constant.EXPORT_TYPE: self.origin_params.get(Constant.EXPORT_TYPE, "")
             }
-            params.update(self.recipe_class.get_extra_argument(self.origin_params))
+            params.update(params[Constant.RECIPE_CLASS].get_extra_argument(self.origin_params))
             AnalysisFacade(params).recipe_analyze()
         else:
             FileManager.create_output_dir(self.collection_path)
@@ -138,8 +134,12 @@ def cluster_analysis_main(args=None):
         Constant.COLLECTION_PATH: args_parsed.collection_path,
         Constant.ANALYSIS_MODE: args_parsed.mode
     }
-    if args_parsed.mode not in COMM_FEATURE_LIST:
-        parameter.update(parse_recipe_params(args_parsed.mode, args_remained))
+    if args_parsed.mode in COMM_FEATURE_LIST:
+        if args_remained:
+            print(f"[ERROR] The specific argument {args_remained} is not supported for communication analysis.")
+            return
+    else:
+        parameter.update(parse_specific_params(args_parsed.mode, args_remained))
     Interface(parameter).run()
 
 

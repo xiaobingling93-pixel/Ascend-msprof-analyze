@@ -68,6 +68,7 @@ class HostInfoAnalysis(BaseAnalysis):
         DBManager.executemany_sql(db_conn, sql, self.all_rank_device_info)
 
     def analyze_host_info(self):
+        print_empty_host_info = ""
         for rank_id, profiling_dir in self.data_map.items():
             host_info = []
             rank_device_info = []
@@ -78,7 +79,8 @@ class HostInfoAnalysis(BaseAnalysis):
                 host_info = DBManager.fetch_all_data(curs, sql, is_dict=False)
                 DBManager.destroy_db_connect(conn, curs)
             if not (host_info and host_info[0]):
-                print(f"[WARNING] No {self.TABLE_HOST_INFO} data in {self.data_type} file.")
+                if not print_empty_host_info:
+                    print_empty_host_info = f"[WARNING] No {self.TABLE_HOST_INFO} data in {self.data_type} file."
                 continue
             if (os.path.exists(db_path) and DBManager.check_tables_in_db(db_path, self.TABLE_RANK_DEVICE_MAP)):
                 conn, curs = DBManager.create_connect_db(db_path)
@@ -90,3 +92,5 @@ class HostInfoAnalysis(BaseAnalysis):
                 rank_device_info[idx] = list(data) + [host_uid, ]
             self.all_rank_host_info[host_uid] = host_name
             self.all_rank_device_info.extend(rank_device_info)
+        if print_empty_host_info:
+            print(print_empty_host_info)
