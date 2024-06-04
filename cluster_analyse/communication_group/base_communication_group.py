@@ -20,7 +20,7 @@ from copy import deepcopy
 from multiprocessing import Pool
 
 from common_func.constant import Constant
-from utils.data_transfer_adapter import DataTransferAdapter
+from cluster_utils.data_transfer_adapter import DataTransferAdapter
 
 
 class BaseCommunicationGroup:
