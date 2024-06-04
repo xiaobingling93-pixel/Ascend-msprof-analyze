@@ -24,7 +24,7 @@ from common_func.constant import Constant
 from common_func.file_manager import FileManager
 from common_func.db_manager import DBManager
 from common_func.utils import convert_unit
-from utils.data_transfer_adapter import DataTransferAdapter
+from cluster_utils.data_transfer_adapter import DataTransferAdapter
 
 
 class BaseAnalysis:
