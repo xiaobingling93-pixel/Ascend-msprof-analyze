@@ -26,12 +26,6 @@ msprof-analyze的advisor功能是将Ascend PyTorch Profiler或者msprof采集的
      msprof-analyze advisor schedule -d [待分析性能数据文件所在路径]
      ```
 
-   - 总体性能拆解分析
-
-     ```bash
-     msprof-analyze advisor overall -d [待分析性能数据文件所在路径]
-     ```
-
 
    -d（必选）：待分析性能数据文件所在路径。
 
