@@ -183,8 +183,10 @@ MindSpore场景仅支持**总体性能**和**通信性能**的对比。
 | Vector Time(Num)                        | Vector算子总耗时，Num表示计算的次数。                        |
 | Conv Time(Forward)(Num)                 | conv前向算子耗时，Num表示计算的次数。                        |
 | Conv Time(Backward)(Num)                | conv反向算子耗时，Num表示计算的次数。                        |
-| Flash Attention Time(Forward)(Num)      | Flash Attention算子前向耗时。                                |
-| Flash Attention Time(Backward)(Num)     | Flash Attention算子反向耗时。                                |
+| Flash Attention Time(Forward)(Num)      | Flash Attention算子前向耗时，Num表示计算的次数。             |
+| Flash Attention Time(Backward)(Num)     | Flash Attention算子反向耗时，Num表示计算的次数。             |
+| Paged Attention Time(Num)               | Paged Attention算子耗时，Num表示计算的次数。                 |
+| Lccl Time(Num)                          | Lccl算子耗时，Num表示计算的次数。                            |
 | Computing Time                          | 计算流耗时，计算流所有event耗时总和。如果有多条并发计算，计算流耗时对重叠部分只会计算一次。 |
 | Mem Usage                               | 内存使用。GPU上的内存使用可以使用nvidia-smi查看，NPU上的内存使用可以使用npu-smi查看，Profiling信息采集时打开profile_memory=True开关，mem usage显示的是memory_record里面的最大resevered值，一般来说是进程级内存。 |
 | Uncovered Communication Time(Wait Time) | 通信未掩盖耗时，包含Wait Time（只有采集性能数据的Level等级为L1以上并且采集NPU数据时才会存在）为同步时间。 |
