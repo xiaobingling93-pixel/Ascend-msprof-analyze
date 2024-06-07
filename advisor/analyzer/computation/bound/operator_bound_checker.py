@@ -24,12 +24,15 @@ class OperatorBoundChecker(OperatorChecker):
         "output_data_types", "output_formats"
     ]
 
+    def pre_check(self, profiling_data) -> bool:
+        return not self.is_dynamic_shape(profiling_data)
+
     def _check_data(self, data):
+        self.format_suggestion_content(data)
         if not self._check_summary(data):
             return False
         for op_info in data.op_summary.op_list:
-            if self._check_operator(op_info):
-                return True
+            return self._check_operator(op_info)
 
         logger.warning(self.SKIP_CHECK_MSG, self._CHECKER, "ratio in op summary")
         return False
@@ -48,9 +51,3 @@ class OperatorBoundChecker(OperatorChecker):
                                     template_dir="templates",
                                     template_name="operator_no_bound.html",
                                     format_result=self.format_operator_result(record, constant.OPERATOR_OUT_TOPK))
-
-    def format_suggestion_content(self, profiling_data: ProfilingDataset) -> None:
-        if profiling_data.PROF_TYPE == constant.ASCEND_PYTORCH_PROFILER:
-            self._SUGGESTION.append(self.PyTorch_OPERATOR_TUNE_SUGGESTION)
-        elif profiling_data.PROF_TYPE == constant.MSLITE:
-            self._SUGGESTION.append(self.MSLite_OPERATOR_TUNE_SUGGESTION)

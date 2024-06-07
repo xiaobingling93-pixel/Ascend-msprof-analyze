@@ -17,11 +17,10 @@ class BaseAnalyzer(VersionControl, metaclass=ABCMeta):
 
     dataset_cls_list = []
 
-    def __init__(self, collection_path, n_processes: int = 1, cann_version=constant.DEFAULT_CANN_VERSION,
-                 torch_version=constant.DEFAULT_TORCH_VERSION, **kwargs):
+    def __init__(self, collection_path, n_processes: int = 1, **kwargs):
         self.n_processes = n_processes
-        self.cann_version = cann_version
-        self.torch_version = torch_version
+        self.cann_version = kwargs.get("cann_version", constant.DEFAULT_CANN_VERSION)
+        self.torch_version = kwargs.get("torch_version", constant.DEFAULT_TORCH_VERSION)
         self.html_render = HTMLRender()
         self.collection_path = collection_path
         self.kwargs = kwargs
@@ -41,7 +40,7 @@ class BaseAnalyzer(VersionControl, metaclass=ABCMeta):
         def decorate(func):
 
             @wraps(func)
-            def wrapper(self):
+            def wrapper(self, **kwargs):
                 data = self.dataset_list
                 if data is None:
                     return None
@@ -57,7 +56,7 @@ class BaseAnalyzer(VersionControl, metaclass=ABCMeta):
         return decorate
 
     @abstractmethod
-    def optimize(self):
+    def optimize(self, **kwargs):
         pass
 
     @abstractmethod

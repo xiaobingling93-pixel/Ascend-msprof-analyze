@@ -139,6 +139,7 @@ class OptimizeResult:
         for sheet_name, sheet_data in self.sheet_recorder.sheet_data.items():
             self.result_writer.add_data(sheet_name, sheet_data.get("headers"), sheet_data.get("data"))
         self.result_writer.save()
+        logger.info("Save problems details file to %s", Config().analysis_result_file)
         self._save_op_file_list()
         TerminalResult().print()
 

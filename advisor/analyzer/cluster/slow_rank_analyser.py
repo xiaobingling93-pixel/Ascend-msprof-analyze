@@ -29,9 +29,8 @@ class SlowRankAnalyzer(BaseAnalyzer):
     BOTTLENECK_LIST = ['Computing', 'Communication', "Free"]
     dataset_cls_list = [ClusterStepTraceTimeDataSet]
 
-    def __init__(self, collection_path, n_processes: int = 1, cann_version=constant.DEFAULT_CANN_VERSION,
-                 torch_version=constant.DEFAULT_TORCH_VERSION, **kwargs):
-        super().__init__(collection_path, n_processes, cann_version, torch_version, **kwargs)
+    def __init__(self, collection_path, n_processes: int = 1, **kwargs):
+        super().__init__(collection_path, n_processes, **kwargs)
         key = ClusterStepTraceTimeDataSet.get_key()
         self.step_trace_class =  self.get_first_data_by_key(self.dataset_list, key)
         self.step_trace_dict = self.step_trace_class.get_data()

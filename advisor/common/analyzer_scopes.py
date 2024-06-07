@@ -7,4 +7,7 @@ class SupportedScopes:
     SLOW_RANK = "slow_rank"
     SLOW_LINK = "slow_link"
     OVER_ALL = "over_all"
-    PROFILING_OPERATOR_ANALYSIS = "profiling_operator_analysis"
+    DYNAMIC_SHAPE_ANALYSIS = "dynamic_shape_analysis"
+    AICPU_ANALYSIS = "aicpu_analysis"
+    BLOCK_DIM_ANALYSIS = "block_dim_analysis"
+    OPERATOR_NO_BOUND_ANALYSIS = "operator_no_bound_analysis"

@@ -42,7 +42,7 @@ def _analyze(dimensions, **kwargs):
 
     for i, (dimension, scope, interface) in enumerate(job_list[::-1]):
         result_list.append(
-            interface.get_result(dimension, scope, render_html=i == len(job_list) - 1, output_dict=False))
+            interface.get_result(dimension, scope, render_html=i == len(job_list) - 1, output_dict=False, **kwargs))
 
     for result in result_list[::-1]:
         if result and hasattr(result, "show"):

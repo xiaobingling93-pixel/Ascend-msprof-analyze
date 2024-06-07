@@ -53,10 +53,9 @@ class OverallSummaryAnalyzer(BaseAnalyzer):
         "Free Time": ['SDMA Time(Num)']
     }
 
-    def __init__(self, collection_path: str, n_processes: int = 1, cann_version=const.DEFAULT_CANN_VERSION,
-                 torch_version=const.DEFAULT_TORCH_VERSION, **kwargs):
+    def __init__(self, collection_path: str, n_processes: int = 1, **kwargs):
         profile_path = get_profile_path(collection_path)
-        super().__init__(profile_path, n_processes, cann_version, torch_version, **kwargs)
+        super().__init__(profile_path, n_processes, **kwargs)
         self.base_collection_path = kwargs.get("base_collection_path", "")
         self._has_base_collection = False
         self._is_minimal_profiling = False
@@ -179,7 +178,7 @@ class OverallSummaryAnalyzer(BaseAnalyzer):
         self.cur_bottleneck["overall_data"] = overall_bottleneck
         if comparison_bottleneck:
             self.cur_bottleneck["comparison_result"] = comparison_bottleneck
-    def optimize(self):
+    def optimize(self, **kwargs):
         if self.path_check():
             self.process()
         self.identify_bottleneck()

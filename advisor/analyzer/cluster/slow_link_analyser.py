@@ -37,9 +37,8 @@ class SlowLinkAnalyzer(BaseAnalyzer):
     SLOW_LINK_ANALYSIS = "slow_link_analysis"
     dataset_cls_list = [ClusterCommunicationDataSet]
 
-    def __init__(self, collection_path, n_processes: int = 1, cann_version=constant.DEFAULT_CANN_VERSION,
-                 torch_version=constant.DEFAULT_TORCH_VERSION, **kwargs):
-        super().__init__(collection_path, n_processes, cann_version, torch_version, **kwargs)
+    def __init__(self, collection_path, n_processes: int = 1, **kwargs):
+        super().__init__(collection_path, n_processes, **kwargs)
         key = ClusterCommunicationDataSet.get_key()
         self.communication_data_class = self.get_first_data_by_key(self.dataset_list, key)
         self.rank_bw_dict = self.communication_data_class.get_data()

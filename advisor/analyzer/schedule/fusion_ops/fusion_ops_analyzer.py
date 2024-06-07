@@ -19,9 +19,8 @@ logger = logging.getLogger()
 class TimelineFusionOpsAnalyzer(BaseAnalyzer):
     dataset_cls_list = [TimelineEventDataset]
 
-    def __init__(self, collection_path, n_processes: int = 1, cann_version=const.DEFAULT_CANN_VERSION,
-                 torch_version=const.DEFAULT_TORCH_VERSION, **kwargs):
-        super().__init__(collection_path, n_processes, cann_version, torch_version, **kwargs)
+    def __init__(self, collection_path, n_processes: int = 1, **kwargs):
+        super().__init__(collection_path, n_processes, **kwargs)
         self._matched_op_index = {} if self.n_processes <= 1 else multiprocessing.Manager().dict()
         self.matched_op_stacks = {}
         self.empty_stacks = True

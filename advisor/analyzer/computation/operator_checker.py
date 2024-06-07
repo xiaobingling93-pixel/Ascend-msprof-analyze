@@ -15,8 +15,7 @@ logger = logging.getLogger()
 
 
 class OperatorChecker(VersionControl):
-    _SUPPORT_VERSIONS = [constant.CANN_VERSION_C30, constant.CANN_VERSION_C13, constant.CANN_VERSION_C15, constant.CANN_VERSION_C17]
-    IS_ALL_OPERATOR_DYNAMIC_SHAPE = False
+    _SUPPORT_VERSIONS = constant.SUPPORTED_CANN_VERSION
     _MAX_TUNE_OP_NUM = constant.OPERATOR_OUT_TOPK
     _MIN_TASK_DURATION = 0
     _MIN_TASK_DURATION_RATIO = 1.0
@@ -115,10 +114,33 @@ class OperatorChecker(VersionControl):
         return description
 
     def pre_check(self, profiling_data) -> bool:
-        self.format_suggestion_content(profiling_data)
-        return not (OperatorChecker.IS_ALL_OPERATOR_DYNAMIC_SHAPE and (
-                OperatorChecker.PyTorch_OPERATOR_TUNE_SUGGESTION or OperatorChecker.MSLite_OPERATOR_TUNE_SUGGESTION
-        ) in self._SUGGESTION)
+        return True
+
+    def is_dynamic_shape(self, profiling_database: ProfilingDataset) -> bool:
+        less_than_cann800_list = [constant.CANN_VERSION_C30, constant.CANN_VERSION_C13, constant.CANN_VERSION_C15]
+        # CANN 8.0.0 之前从 ge_info 中获取 op_state 属性，进行动态 shape 逻辑判断
+        if self.cann_version in less_than_cann800_list:
+            if hasattr(profiling_database, "ge_info"):
+                ge_info = profiling_database.ge_info
+                static_shape_operators = ge_info.get_static_shape_operators()
+                if len(static_shape_operators) == 0:
+                    return True
+            else:
+                logger.warning(
+                    "Skip dynamic shape check because of not containing ge_info.db file in host filefloder.\n"
+                    "To enable dynamic shape check, please try to set data_simplification=False in experimental_config.\n"
+                    "More details please refer to link : %s", constant.ASCEND_PROFILER_URL)
+        else:
+            # CANN 8.0.0 之后 op_state 属性从 op_summary 文件中获取
+            if hasattr(profiling_database, "op_summary"):
+                static_shape_operators = profiling_database.op_summary.get_static_shape_operators()
+                if len(static_shape_operators) == 0:
+                    return True
+            else:
+                logger.warning(
+                        "Skip dynamic shape check because of not containing op_summary.csv file in current filefloder."
+                    )
+        return False
 
     def format_operator_result(self, record, limit):
         """
@@ -279,4 +301,7 @@ class OperatorChecker(VersionControl):
         return details
 
     def format_suggestion_content(self, profiling_data: ProfilingDataset) -> None:
-        return
+        if profiling_data.PROF_TYPE == constant.ASCEND_PYTORCH_PROFILER:
+            self._SUGGESTION.append(self.PyTorch_OPERATOR_TUNE_SUGGESTION)
+        elif profiling_data.PROF_TYPE == constant.MSLITE:
+            self._SUGGESTION.append(self.MSLite_OPERATOR_TUNE_SUGGESTION)

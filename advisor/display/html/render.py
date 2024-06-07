@@ -5,6 +5,7 @@ from typing import List, Dict
 from jinja2 import Environment, FileSystemLoader
 from profiler.advisor.common import constant
 
+from profiler.advisor.config.config import Config
 from profiler.advisor.utils.utils import singleton, safe_write
 
 logger = logging.getLogger()
@@ -41,4 +42,4 @@ class HTMLRender:
             return
 
         safe_write(self.html, save_path)
-        logger.info("Save suggestion to %s.", save_path)
+        logger.info("Save suggestion to %s.", os.path.join(Config().work_path, save_path))

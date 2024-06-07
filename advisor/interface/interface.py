@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))), "compare_tools"))
 
 from profiler.advisor.utils.utils import Timer
-from profiler.advisor.analyzer.computation.profiling_analyzer import ProfilingAnalyzer
+from profiler.advisor.analyzer.computation.profiling_analyzer import AicpuAnalyzer, BlockDimAnalyzer, DynamicShapeAnalyzer, OperatorBoundAnalyzer
 from profiler.advisor.analyzer.schedule.fusion_ops.fusion_ops_analyzer import TimelineFusionOpsAnalyzer
 from profiler.advisor.analyzer.graph_fusion.graph_fusion_analyzer import FusionOPAnalyzer
 from profiler.advisor.common.analyzer_scopes import SupportedScopes
@@ -19,7 +19,10 @@ class Interface:
             SupportedScopes.TIMELINE_FUSION_OPS: TimelineFusionOpsAnalyzer
         }),
         "computation": OrderedDict({
-            SupportedScopes.PROFILING_OPERATOR_ANALYSIS: ProfilingAnalyzer,
+            SupportedScopes.DYNAMIC_SHAPE_ANALYSIS: DynamicShapeAnalyzer,
+            SupportedScopes.AICPU_ANALYSIS: AicpuAnalyzer,
+            SupportedScopes.OPERATOR_NO_BOUND_ANALYSIS: OperatorBoundAnalyzer,
+            SupportedScopes.BLOCK_DIM_ANALYSIS: BlockDimAnalyzer,
             SupportedScopes.GRAPH: FusionOPAnalyzer
         }),
         "communication": OrderedDict(),

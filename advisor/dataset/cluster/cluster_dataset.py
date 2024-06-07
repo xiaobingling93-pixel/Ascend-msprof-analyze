@@ -65,7 +65,7 @@ class ClusterDataset(Dataset):
 class ClusterStepTraceTimeDataSet(ClusterDataset):
     RANK = "rank"
 
-    def __init__(self, collection_path: str, data: dict, kwargs: dict = None):
+    def __init__(self, collection_path: str, data: dict, **kwargs):
         self._step_dict = defaultdict()
         super().__init__(collection_path, data)
 
@@ -107,7 +107,7 @@ class ClusterCommunicationDataSet(ClusterDataset):
     SDMA = "SDMA"
     RDMA = "RDMA"
 
-    def __init__(self, collection_path: str, data: dict, kwargs: dict = None):
+    def __init__(self, collection_path: str, data: dict, **kwargs):
         self.rank_bw_dict = defaultdict(lambda: {
             self.RDMA_TIME_MS: 0,
             self.RDMA_SIZE_MB: 0,

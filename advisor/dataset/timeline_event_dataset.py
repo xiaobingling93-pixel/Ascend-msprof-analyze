@@ -78,7 +78,7 @@ class TimelineEventDataset(Dataset):
             return False
 
         if len(self.timeline_data_list) > 1:
-            logger.warning("Please ensure only one trace_view.json in %s, there will analysis first timeline profiling data.", self.timeline_dir)
+            logger.warning("Please ensure only one trace_view.json in %s, there will analyze first timeline profiling data.", self.timeline_dir)
             self.timeline_data_list = [self.timeline_data_list[0]]
 
         result = self.parse_data_with_generator(self._add_event)

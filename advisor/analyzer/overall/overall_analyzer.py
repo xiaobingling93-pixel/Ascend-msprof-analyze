@@ -18,7 +18,7 @@ class OverallSummaryAnalyzer(BaseAnalyzer):
         self.html_render = HTMLRender()
         self.result = OptimizeResult()
 
-    def optimize(self):
+    def optimize(self, **kwargs):
         compare_result = ComparisonInterface(self.benchmark_profiling_path, self.profiling_path).compare(
             Constant.OVERALL_COMPARE)
 

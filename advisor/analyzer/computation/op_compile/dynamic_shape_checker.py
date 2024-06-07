@@ -25,33 +25,7 @@ class DynamicShapeChecker(OperatorChecker):
         super().__init__(cann_version=cann_version)
 
     def check(self, profiling_database) -> bool:
-        less_than_cann800_list = [constant.CANN_VERSION_C30, constant.CANN_VERSION_C13, constant.CANN_VERSION_C15]
-        # CANN 8.0.0 之前从 ge_info 中获取 op_state 属性，进行动态 shape 逻辑判断
-        if self.cann_version in less_than_cann800_list:
-            if hasattr(profiling_database, "ge_info"):
-                ge_info = profiling_database.ge_info
-                static_shape_operators = ge_info.get_static_shape_operators()
-                if len(static_shape_operators) == 0:
-                    OperatorChecker.IS_ALL_OPERATOR_DYNAMIC_SHAPE = True
-                    return True
-            else:
-                logger.warning(
-                    "Skip dynamic shape checker because of not containing ge_info.db file in host filefloder.\n"
-                    "To enable dynamic shape checker, please try to set data_simplification=False in experimental_config.\n"
-                    "More details please refer to link : %s", constant.ASCEND_PROFILER_URL)
-        else:
-            # CANN 8.0.0 之后 op_state 属性从 op_summary 文件中获取
-            if hasattr(profiling_database, "op_summary"):
-                static_shape_operators = profiling_database.op_summary.get_static_shape_operators()
-                if len(static_shape_operators) == 0:
-                    OperatorChecker.IS_ALL_OPERATOR_DYNAMIC_SHAPE = True
-                    return True
-            else:
-                logger.warning(
-                        "Skip dynamic shape checker because of not containing op_summary.csv file in current filefloder."
-                    )
-            
-        return False
+        return self.is_dynamic_shape(profiling_database)
 
     def make_record(self, profiling_database) -> OptimizeRecord:
         """

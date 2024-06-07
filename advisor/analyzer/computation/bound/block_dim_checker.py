@@ -20,7 +20,11 @@ class BlockDimChecker(OperatorChecker):
         "input_data_types", "input_formats", "output_shapes", "output_data_types", "output_formats"
     ]
 
+    def pre_check(self, profiling_data) -> bool:
+        return not self.is_dynamic_shape(profiling_data)
+
     def _check_data(self, data):
+        self.format_suggestion_content(data)
         if not self._check_summary(data):
             return False
         if not Config().get_config("ai_core_num"):
@@ -69,9 +73,3 @@ class BlockDimChecker(OperatorChecker):
         else:
             core_num = self._aiv_num
         return core_num
-
-    def format_suggestion_content(self, profiling_data: ProfilingDataset) -> None:
-        if profiling_data.PROF_TYPE == constant.ASCEND_PYTORCH_PROFILER:
-            self._SUGGESTION.append(self.PyTorch_OPERATOR_TUNE_SUGGESTION)
-        elif profiling_data.PROF_TYPE == constant.MSLITE:
-            self._SUGGESTION.append(self.MSLite_OPERATOR_TUNE_SUGGESTION)

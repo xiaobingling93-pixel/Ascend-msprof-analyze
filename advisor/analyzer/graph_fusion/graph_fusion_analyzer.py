@@ -22,7 +22,7 @@ class FusionOPAnalyzer(BaseAnalyzer):
         self.html_render = HTMLRender()
     
     @BaseAnalyzer.check_data((GraphDataset.get_key(),))
-    def optimize(self):
+    def optimize(self, **kwargs):
         """
         :return: result
         """
