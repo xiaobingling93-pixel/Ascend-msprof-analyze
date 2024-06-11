@@ -52,7 +52,7 @@ class HcclSum(BaseRecipeAnalysis):
 
         df["Rank"] = data_map[0]
         return df
-    
+
     def mapper_func(self, context):
         return context.wait(
             context.map(
@@ -61,7 +61,7 @@ class HcclSum(BaseRecipeAnalysis):
             analysis_class=self._recipe_name
             )
         )
-    
+
     def reducer_func(self, mapper_res):
         mapper_res = list(filter(lambda df: df is not None, mapper_res))
         if not mapper_res:
@@ -74,13 +74,15 @@ class HcclSum(BaseRecipeAnalysis):
         self.all_rank_stats = describe_duration(all_op_data.groupby("OpType")["Duration"])
         grouped_op_stats = all_op_data.groupby("OpName")
         self.top_op_stats = describe_duration(grouped_op_stats["Duration"]).nlargest(self.top_num, "MeanNs")
-        min_rank_info = pd.merge(self.top_op_stats[["MinNs", ]], all_op_data, left_on="MinNs", right_on="Duration")
-        max_rank_info = pd.merge(self.top_op_stats[["MaxNs", ]], all_op_data, left_on="MaxNs", right_on="Duration")
-        min_rank_info = min_rank_info.drop_duplicates(["OpName"])["Rank"]
-        max_rank_info = max_rank_info.drop_duplicates(["OpName"])["Rank"]
-        self.top_op_stats["MinRank"] = min_rank_info.values
-        self.top_op_stats["MaxRank"] = max_rank_info.values
-    
+        min_rank = []
+        max_rank = []
+        for op_name in self.top_op_stats.index:
+            df = grouped_op_stats.get_group(op_name)
+            min_rank.append(df[df["Duration"] == df["Duration"].min()]["Rank"].values[0])
+            max_rank.append(df[df["Duration"] == df["Duration"].max()]["Rank"].values[0])
+        self.top_op_stats["MinRank"] = min_rank
+        self.top_op_stats["MaxRank"] = max_rank
+
     def run(self, context):
         super().run(context)
         if self.top_num <= 0:
@@ -96,14 +98,14 @@ class HcclSum(BaseRecipeAnalysis):
             self.save_notebook()
         else:
             print("[ERROR] Unknown export type.")
-        
+
     def save_notebook(self):
         self.dump_data(self.all_rank_stats, os.path.join(self._get_output_dir(), "all_stats.csv"))
         self.dump_data(self.per_rank_stats, os.path.join(self._get_output_dir(), "rank_stats.csv"))
         self.dump_data(self.top_op_stats, os.path.join(self._get_output_dir(), "top_op_stats.csv"))
         self.create_notebook("stats.ipynb")
         self.add_helper_file("cluster_display.py")
-    
+
     def save_db(self):
         self.dump_data(self.all_rank_stats, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER, self.TABLE_ALL_RANK_STATS)
         self.dump_data(self.per_rank_stats, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER, self.TABLE_PER_RANK_STATS)
@@ -121,7 +123,7 @@ class HcclSum(BaseRecipeAnalysis):
             cls.TOP_NUM: args_parsed.top_num
         })
         return argument_dict
-    
+
     @classmethod
     def get_extra_argument(cls, params) -> dict:
         argument_dict = BaseRecipeAnalysis.get_extra_argument(params)
