@@ -138,10 +138,15 @@ class OptimizeResult:
     def show(self):
         for sheet_name, sheet_data in self.sheet_recorder.sheet_data.items():
             self.result_writer.add_data(sheet_name, sheet_data.get("headers"), sheet_data.get("data"))
+
+        terminal_result = TerminalResult()
+        terminal_result.print()
+        if not terminal_result.result_list:
+            Config().remove_log()
+            return
         self.result_writer.save()
         logger.info("Save problems details file to %s", Config().analysis_result_file)
         self._save_op_file_list()
-        TerminalResult().print()
 
     def _save_op_file_list(self) -> None:
         if not self._tune_op_list:
