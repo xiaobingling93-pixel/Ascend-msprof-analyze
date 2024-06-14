@@ -12,6 +12,7 @@ from profiler.advisor.common.analyzer_scopes import SupportedScopes
 from profiler.advisor.analyzer.cluster.slow_rank_analyser import SlowRankAnalyzer
 from profiler.advisor.analyzer.cluster.slow_link_analyser import SlowLinkAnalyzer
 from profiler.advisor.analyzer.overall.overall_summary_analyzer import OverallSummaryAnalyzer
+from profiler.advisor.analyzer.schedule.dispatch.timeline_op_dispatch_analyzer import OpDispatchAnalyzer
 
 class Interface:
     supported_analyzer = {
@@ -23,7 +24,8 @@ class Interface:
             SupportedScopes.AICPU_ANALYSIS: AicpuAnalyzer,
             SupportedScopes.OPERATOR_NO_BOUND_ANALYSIS: OperatorBoundAnalyzer,
             SupportedScopes.BLOCK_DIM_ANALYSIS: BlockDimAnalyzer,
-            SupportedScopes.GRAPH: FusionOPAnalyzer
+            SupportedScopes.GRAPH: FusionOPAnalyzer,
+            SupportedScopes.TIMELINE_OP_DISPATCH: OpDispatchAnalyzer
         }),
         "communication": OrderedDict(),
         "overall": OrderedDict({SupportedScopes.OVER_ALL: OverallSummaryAnalyzer}),
