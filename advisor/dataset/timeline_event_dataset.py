@@ -13,12 +13,38 @@ from profiler.advisor.utils.utils import singleton
 logger = logging.getLogger()
 
 
+class OpCompileCollector:
+    def __init__(self):
+        self._total_op_compile_counter = 0
+        self._total_op_compile_time = 0.0
+
+    @property
+    def total_time(self):
+        return self._total_op_compile_time
+
+    @property
+    def total_count(self):
+        return self._total_op_compile_counter
+
+    def is_empty(self):
+        return self._total_op_compile_counter == 0
+
+    def update(self, event: TimelineEvent):
+        self._total_op_compile_time += float(event.dur)
+        self._total_op_compile_counter += 1
+
+    def unset(self):
+        self._total_op_compile_counter = 0
+        self._total_op_compile_time = 0.0
+
+
 @singleton
 class TimelineEventDataset(Dataset):
 
     def __init__(self, collection_path, data: dict, **kwargs) -> None:
         self._ops_with_task_type = {}
         self._ops_with_stack = {}
+        self._ops_compile = OpCompileCollector()
         self._torch_to_npu = {}
         self._acl_to_npu = set()
         self._aten: List[str] = []
@@ -46,6 +72,10 @@ class TimelineEventDataset(Dataset):
     @property
     def ops_with_stack(self):
         return self._ops_with_stack
+
+    @property
+    def ops_compile(self):
+        return self._ops_compile
 
     @property
     def torch_to_npu(self):
@@ -126,6 +156,10 @@ class TimelineEventDataset(Dataset):
         # op with task type equals to ai_cpu which derived from acl_to_npu do not have stacks
         self._acl_to_npu.add(str(event.ts))
 
+    def _add_op_compile(self, event: TimelineEvent):
+        if event.name == const.OP_COMPILE_NAME or event.args.get("id") == const.OP_COMPILE_ID:
+            self._ops_compile.update(event)
+
     def _add_optimizer(self, event: TimelineEvent):
         self._optimizer.append(TimelineEvent({"name": event.name, "dataset_index": event.dataset_index}))
 
@@ -139,6 +173,7 @@ class TimelineEventDataset(Dataset):
         if not isinstance(event, TimelineEvent):
             event = TimelineEvent(event)
 
+        self._add_op_compile(event)
         if self.analysis_mode == "fusion_ops":
             self._add_event_for_fusion_ops(event)
         elif self.analysis_mode == "op_stack":
