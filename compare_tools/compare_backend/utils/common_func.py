@@ -43,7 +43,7 @@ def longest_common_subsequence_matching(base_ops: list, comparison_ops: list, na
         return result_data
 
     comparison_len, base_len = len(comparison_ops), len(base_ops)
-    dp_flag = numpy.zeros(shape=(comparison_len + 1, base_len + 1), dtype=int)
+    dp_flag = set()  # flag for only comparison op
     pre_list = [0] * (base_len + 1)
     cur_list = [0] * (base_len + 1)
 
@@ -59,7 +59,7 @@ def longest_common_subsequence_matching(base_ops: list, comparison_ops: list, na
                 only_base = cur_list[base_index - 1]
                 only_comparison = pre_list[base_index]
                 if only_base < only_comparison:
-                    dp_flag[comparison_index][base_index] = 1  # 1 for only comparison op
+                    dp_flag.add(comparison_index * base_len + base_index)
                     cur_list[base_index] = only_comparison
                 else:
                     cur_list[base_index] = only_base
@@ -76,7 +76,7 @@ def longest_common_subsequence_matching(base_ops: list, comparison_ops: list, na
             matched_op.append([base_data, comparison_data])
             comparison_index -= 1
             base_index -= 1
-        elif dp_flag[comparison_index][base_index] == 1:  # 1 for only comparison op
+        elif (comparison_index * base_len + base_index) in dp_flag:
             matched_op.append([None, comparison_data])
             comparison_index -= 1
         else:
