@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-import numpy as np
+import numpy
 
 
 def calculate_diff_ratio(base_value: float, comparison_value: float):
@@ -42,47 +42,51 @@ def longest_common_subsequence_matching(base_ops: list, comparison_ops: list, na
             result_data[index] = [value, None]
         return result_data
 
-    result_data = []
     comparison_len, base_len = len(comparison_ops), len(base_ops)
-    dp = [[0] * (base_len + 1) for _ in range(comparison_len + 1)]
-    for comparison_index in range(1, comparison_len + 1):
-        for base_index in range(1, base_len + 1):
-            if name_func(base_ops[base_index - 1]) == name_func(
-                    comparison_ops[comparison_index - 1]):
-                dp[comparison_index][base_index] = dp[comparison_index - 1][base_index - 1] + 1
+    dp_flag = set()  # flag for only comparison op
+    pre_list = [0] * (base_len + 1)
+    cur_list = [0] * (base_len + 1)
+
+    comparison_index = 1
+    iter_comparison_data = iter(comparison_ops)
+    for comparison_data in iter_comparison_data:
+        base_index = 1
+        iter_base_data = iter(base_ops)
+        for base_data in iter_base_data:
+            if name_func(comparison_data) == name_func(base_data):
+                cur_list[base_index] = pre_list[base_index - 1] + 1
             else:
-                dp[comparison_index][base_index] = max(dp[comparison_index][base_index - 1],
-                                                       dp[comparison_index - 1][base_index])
+                only_base = cur_list[base_index - 1]
+                only_comparison = pre_list[base_index]
+                if only_base < only_comparison:
+                    dp_flag.add(comparison_index * base_len + base_index)
+                    cur_list[base_index] = only_comparison
+                else:
+                    cur_list[base_index] = only_base
+            base_index += 1
+        pre_list = cur_list
+        comparison_index += 1
+
     matched_op = []
     comparison_index, base_index = comparison_len, base_len
     while comparison_index > 0 and base_index > 0:
-        if name_func(base_ops[base_index - 1]) == name_func(
-                comparison_ops[comparison_index - 1]):
-            matched_op.append([comparison_index - 1, base_index - 1])
+        base_data = base_ops[base_index - 1]
+        comparison_data = comparison_ops[comparison_index - 1]
+        if name_func(base_data) == name_func(comparison_data):
+            matched_op.append([base_data, comparison_data])
             comparison_index -= 1
             base_index -= 1
-            continue
-        if dp[comparison_index][base_index - 1] > dp[comparison_index - 1][base_index]:
-            base_index -= 1
+        elif (comparison_index * base_len + base_index) in dp_flag:
+            matched_op.append([None, comparison_data])
+            comparison_index -= 1
         else:
-            comparison_index -= 1
-    if not matched_op:
-        matched_base_index_list = []
-    else:
-        matched_op.reverse()
-        matched_op = np.array(matched_op)
-        matched_base_index_list = list(matched_op[:, 1])
-    curr_comparison_index = 0
-    for base_index, base_api_node in enumerate(base_ops):
-        if base_index not in matched_base_index_list:
-            result_data.append([base_api_node, None])
-            continue
-        matched_comparison_index = matched_op[matched_base_index_list.index(base_index), 0]
-        for comparison_index in range(curr_comparison_index, matched_comparison_index):
-            result_data.append([None, comparison_ops[comparison_index]])
-        result_data.append([base_api_node, comparison_ops[matched_comparison_index]])
-        curr_comparison_index = matched_comparison_index + 1
-    if curr_comparison_index < len(comparison_ops):
-        for comparison_index in range(curr_comparison_index, len(comparison_ops)):
-            result_data.append([None, comparison_ops[comparison_index]])
-    return result_data
+            matched_op.append([base_data, None])
+            base_index -= 1
+    while comparison_index > 0:
+        matched_op.append([None, comparison_ops[comparison_index - 1]])
+        comparison_index -= 1
+    while base_index > 0:
+        matched_op.append([base_ops[base_index - 1], None])
+        base_index -= 1
+    matched_op.reverse()
+    return matched_op

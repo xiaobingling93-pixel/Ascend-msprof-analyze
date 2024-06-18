@@ -181,11 +181,7 @@ class TraceEventBean:
         return self.task_type == 'EVENT_WAIT_SQE'
 
     def is_backward(self):
-        bwd_list = ["bwd", "backward"]
-        for bwd in bwd_list:
-            if bwd in self.lower_name:
-                return True
-        return False
+        return any(bwd in self.lower_name for bwd in Constant.BWD_LIST)
 
     def is_python_function(self):
         return self.lower_cat == "python_function"
@@ -201,6 +197,12 @@ class TraceEventBean:
 
     def reset_name(self, name):
         self._name = name
+
+    def is_conv(self):
+        return self.name.lower().startswith("aten::conv")
+
+    def is_lccl(self):
+        return self.lower_name == "kernel_aivec"
 
     def init(self):
         if isinstance(self._event, dict):

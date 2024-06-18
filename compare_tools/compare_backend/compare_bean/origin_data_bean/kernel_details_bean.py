@@ -3,6 +3,7 @@ import math
 import pandas as pd
 
 from compare_backend.utils.common_func import convert_to_float
+from compare_backend.utils.constant import Constant
 
 
 class KernelDetailsBean:
@@ -67,6 +68,16 @@ class KernelDetailsBean:
 
     def is_cube(self):
         return "matmul" in self.op_type.lower()
+
+    def is_conv(self):
+        return self.op_type.lower().startswith("conv")
+
+    def is_conv_bwd(self):
+        lower_op_type = self.op_type.lower()
+        return any(bwd in lower_op_type for bwd in Constant.BWD_LIST)
+
+    def is_page_attention(self):
+        return "pagedattention" in self.op_type.lower()
 
     def init(self):
         self._op_type = self._data.get('Type', "")

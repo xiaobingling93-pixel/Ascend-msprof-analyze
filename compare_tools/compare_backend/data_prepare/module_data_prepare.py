@@ -1,3 +1,4 @@
+import copy
 from queue import Queue
 
 from compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
@@ -62,8 +63,9 @@ class ModuleDataPrepare:
                 continue
             call_module = root_node.find_module_call(start_point.start_time)
             if call_module:
-                end_event.reset_name(f"[ BACKWARD ]{call_module.module_name}")
-                bwd_module_list.append(end_event)
+                bwd_event = copy.deepcopy(end_event)
+                bwd_event.reset_name(f"[ BACKWARD ]{call_module.module_name}")
+                bwd_module_list.append(bwd_event)
         return bwd_module_list
 
     def match_torch_op(self, fwd_root_node, bwd_root_node):

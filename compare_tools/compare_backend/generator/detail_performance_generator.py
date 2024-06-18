@@ -4,12 +4,14 @@ from datetime import datetime
 from queue import Queue
 
 from compare_backend.comparator.communication_comparator import CommunicationComparator
+from compare_backend.comparator.module_comparetor import ModuleComparator
 from compare_backend.comparator.module_statistic_comparator import ModuleStatisticComparator
 from compare_backend.comparator.operator_comparator import OperatorComparator
 from compare_backend.comparator.operator_statistic_comparator import OperatorStatisticComparator
 from compare_backend.compare_bean.communication_bean import CommunicationBean
 from compare_backend.compare_bean.memory_compare_bean import MemoryCompareBean
 from compare_backend.compare_bean.memory_statistic_bean import MemoryStatisticBean
+from compare_backend.compare_bean.module_compare_bean import ModuleCompareBean
 from compare_backend.compare_bean.module_statistic_bean import ModuleStatisticBean
 from compare_backend.compare_bean.operator_compare_bean import OperatorCompareBean
 from compare_backend.compare_bean.operator_statistic_bean import OperatorStatisticBean
@@ -47,10 +49,17 @@ class DetailPerformanceGenerator(BaseGenerator):
 
     def _create_comparator(self):
         comparator_list = []
-        if self._args.enable_operator_compare or self._args.enable_memory_compare:
-            op_compare_result = self.match_torch_op()
+
+        op_compare_result = []
         if self._args.enable_operator_compare:
-            module_compare_result = self.match_nn_module()
+            module_compare_result = self.match_nn_module() if self._profiling_data_dict.get(
+                Constant.BASE_DATA).python_function_data and self._profiling_data_dict.get(
+                Constant.COMPARISON_DATA).python_function_data else []
+            if not module_compare_result:
+                op_compare_result = self.match_torch_op()
+
+        if self._args.enable_memory_compare and not op_compare_result:
+            op_compare_result = self.match_torch_op()
 
         if self._args.enable_communication_compare:
             communication_data = {
@@ -61,11 +70,13 @@ class DetailPerformanceGenerator(BaseGenerator):
         if self._args.enable_operator_compare:
             if module_compare_result:
                 comparator_list.append(ModuleStatisticComparator(module_compare_result, ModuleStatisticBean))
-            comparator_list.append(OperatorComparator(op_compare_result, OperatorCompareBean))
-            comparator_list.append(OperatorStatisticComparator(op_compare_result, OperatorStatisticBean))
+                comparator_list.append(ModuleComparator(module_compare_result, ModuleCompareBean))
+            else:
+                comparator_list.append(OperatorStatisticComparator(op_compare_result, OperatorStatisticBean))
+                comparator_list.append(OperatorComparator(op_compare_result, OperatorCompareBean))
         if self._args.enable_memory_compare:
-            comparator_list.append(OperatorComparator(op_compare_result, MemoryCompareBean))
             comparator_list.append(OperatorStatisticComparator(op_compare_result, MemoryStatisticBean))
+            comparator_list.append(OperatorComparator(op_compare_result, MemoryCompareBean))
         return comparator_list
 
     def match_torch_op(self) -> list:

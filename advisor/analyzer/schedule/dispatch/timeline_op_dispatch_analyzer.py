@@ -1,0 +1,107 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import logging
+
+
+from profiler.advisor.common import constant as const
+from profiler.advisor.analyzer.base_analyzer import BaseAnalyzer
+from profiler.advisor.dataset.timeline_event_dataset import TimelineEventDataset
+from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
+from profiler.advisor.result.result import OptimizeResult
+from profiler.advisor.display.html.render import HTMLRender
+
+logger = logging.getLogger()
+
+
+class OpDispatchAnalyzer(BaseAnalyzer):
+    dataset_cls_list = [TimelineEventDataset]
+    """
+    operator dispatch optimizer
+    """
+
+    def __init__(self, collection_path, n_processes: int = 1, **kwargs) -> None:
+        super().__init__(collection_path, n_processes, **kwargs)
+        key = TimelineEventDataset.get_key()
+        self.dataset = self.get_first_data_by_key(self.dataset_list, key)
+        self.result = OptimizeResult()
+        self.html_render = HTMLRender()
+        self._op_compile = None
+        self._issues_record = []
+        self.optimization_item = []
+
+    def optimize(self, **kwargs):
+        """
+        optimize operator
+        :param data: input datasets
+        :return: result
+        """
+        self.get_op_compile_info(self.dataset)
+        self.make_record(self.result)
+        self.make_render(self.html_render)
+        return self.result
+
+    def get_op_compile_info(self, event_dataset: TimelineEventDataset):
+            """
+            :Param event_dataset: dataset of timeline event
+            """
+            if hasattr(event_dataset, "ops_compile"):
+                self._op_compile = getattr(event_dataset, "ops_compile")
+                if not self._op_compile or self._op_compile.total_count < const.MAX_OP_COMPILE_NUM:
+                    return
+
+                self._issues_record.append(['operator dispatch',
+                                            const.OP_COMPILE_ID,
+                                            self._op_compile.total_count,
+                                            self._op_compile.total_time])
+            else:
+                logger.debug("Skip operator compile checker, because no op_compile attr find.")
+
+    def make_record(self, result: OptimizeResult):
+        """
+        make record for what and how to optimize
+        """
+        if not self._op_compile or len(self._issues_record) <= 0:
+            return
+        desc = f"Found {self._op_compile.total_count} operator compile issues."
+        suggestion = (f"Please use `torch_npu.npu.set_compile_mode(jit_compile=False)` to disable jit compile "
+                    f"in dynamic shape usage.")
+        self.optimization_item.append(OptimizeItem("Operator dispatch", desc, [suggestion]))
+        for optimization in self.optimization_item:
+            result.add(OptimizeRecord(optimization))
+        record_title = ["Issues", "op name", "counts", "total time"]
+        result.add_detail('operator dispatch', headers=record_title)
+        for op_info in self._issues_record:
+            result.add_detail('operator dispatch', detail=op_info)
+
+    def make_render(self, html_render):
+        issues = []
+        optimizations = []
+        for optimization in self.optimization_item:
+            optimizations.append(dict(
+                description=optimization.description,
+                suggestion=optimization.suggestion[0]
+            ))
+        for record in self._issues_record:
+            issues.append(dict(issue=record[0],
+                            op_name=record[1],
+                            counts=record[2],
+                            total_time=record[3]))
+        html_render.render_template(key="schedule",
+                                    template_dir="templates",
+                                    template_name="operator_dispatch.html",
+                                    issues=issues,
+                                    optimizers=optimizations)

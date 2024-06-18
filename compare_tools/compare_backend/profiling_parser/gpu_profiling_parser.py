@@ -3,23 +3,23 @@ from collections import defaultdict, Counter
 
 from compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
 from compare_backend.profiling_parser.base_profiling_parser import BaseProfilingParser
-from compare_backend.utils.args_manager import ArgsManager
 from compare_backend.utils.constant import Constant
 
 
 class GPUProfilingParser(BaseProfilingParser):
-    CUBE_MARK = 'gemm'
+    CUBE_MARK = ['gemm', 'conv', 'cutlass', 'wgrad']
     FA_MARK_LIST = [['fmha', 'kernel'], ['flash', 'kernel'], ['attention', 'kernel']]
     SDMA_MARK_LIST = ['htod', 'dtod', 'dtoh', 'memset (device)']
     FLOW_CAT = ("async_gpu", "async_cpu_to_gpu", "ac2g", "async")
-    TORCH_OP_CAT = ("cpu_op", "user_annotation", "cuda_runtime", "operator")
+    TORCH_OP_CAT = ("cpu_op", "user_annotation", "cuda_runtime", "operator", "runtime")
 
     def __init__(self, args: any, path_dict: dict):
         super().__init__(args, path_dict)
         self._trace_events = [TraceEventBean(event) for event in self._trace_events.get("traceEvents", [])]
-        self._flow_cat = (ArgsManager().args.gpu_flow_cat,) if ArgsManager().args.gpu_flow_cat else self.FLOW_CAT
+        self._flow_cat = (args.gpu_flow_cat,) if args.gpu_flow_cat else self.FLOW_CAT
         self._compute_stream_id = self._infer_compute_stream_id()
         self._marks = defaultdict(int)
+        self._aten_index = 0
 
     @classmethod
     def __is_flash_attention(cls, name: str):
@@ -67,6 +67,14 @@ class GPUProfilingParser(BaseProfilingParser):
     def _calculate_performance_time(self):
         min_ts = sys.float_info.max
         max_ts = sys.float_info.min
+        self._trace_events.sort(key=lambda x: x.start_time)
+        aten_events = list(filter(lambda x: x.name.startswith("aten::"), self._trace_events))
+        flow_dict_new = {}
+        for flow_event in self._flow_dict.values():
+            start_event = flow_event.get("start")
+            end_event = flow_event.get("end")
+            if start_event and end_event:
+                flow_dict_new[end_event.start_time] = start_event.start_time
         for event in self._trace_events:
             if event.stream:
                 min_ts = min(event.start_time, min_ts)
@@ -79,7 +87,8 @@ class GPUProfilingParser(BaseProfilingParser):
             self.__add_marks(event)
             if event.is_nccl_name():
                 continue
-            self.__add_compute_time(event)
+            self.__add_compute_time(event, aten_events, flow_dict_new)
+        self._aten_events = None
         self._result_data.overall_metrics.set_e2e_time(float(max_ts - min_ts))
         self.__add_compute_and_overlap_time()
 
@@ -97,16 +106,37 @@ class GPUProfilingParser(BaseProfilingParser):
             for timestep in range(int(event.start_time + 1), int(event.end_time + 1)):
                 self._marks[str(timestep)] += -100  # mark this timestep in compute stream
 
-    def __add_compute_time(self, event: TraceEventBean):
+    def __add_compute_time(self, event: TraceEventBean, aten_events: list, flow_dict_new: dict):
         if self.__is_flash_attention(event.name):
             if event.is_backward():
                 self._result_data.overall_metrics.update_fa_bwd_info(event.dur)
             else:
                 self._result_data.overall_metrics.update_fa_fwd_info(event.dur)
-        elif self.CUBE_MARK in event.lower_name:
-            self._result_data.overall_metrics.update_cube_info(event.dur)
+        elif any(cube_mark in event.lower_name for cube_mark in self.CUBE_MARK):
+            is_conv = self.__check_is_conv(event, aten_events, flow_dict_new)
+            if is_conv == "conv_fwd":
+                self._result_data.overall_metrics.update_conv_fwd_info(event.dur)
+            elif is_conv == "conv_bwd":
+                self._result_data.overall_metrics.update_conv_bwd_info(event.dur)
+            else:
+                self._result_data.overall_metrics.update_cube_info(event.dur)
         else:
             self._result_data.overall_metrics.update_vec_info(event.dur)
+
+    def __check_is_conv(self, event: TraceEventBean, aten_events: list, flow_dict_new: dict) -> str:
+        flow_start_time = flow_dict_new.get(event.start_time)
+        if not flow_start_time:
+            return ""
+        aten_len = len(aten_events)
+        while self._aten_index < aten_len:
+            cur_aten = aten_events[self._aten_index]
+            if cur_aten.end_time < flow_start_time:
+                self._aten_index += 1
+                continue
+            if cur_aten.start_time < flow_start_time:
+                if cur_aten.is_conv():
+                    return "conv_bwd" if cur_aten.is_backward() else "conv_fwd"
+            return ""
 
     def _picking_memory_event(self, event: TraceEventBean):
         if event.is_memory_event():

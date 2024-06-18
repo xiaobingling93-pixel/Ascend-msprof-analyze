@@ -16,6 +16,12 @@ class ProfilingInfo:
         self.sdma_num = 0
         self.fa_num_fwd = 0
         self.fa_num_bwd = 0
+        self.pa_num = 0
+        self.lccl_num = 0
+        self.conv_time_fwd = 0.0
+        self.conv_time_bwd = 0.0
+        self.conv_num_fwd = 0
+        self.conv_num_bwd = 0
         self.compute_time = 0.0
         self.communication_not_overlapped = 0.0
         self.wait_time = 0.0
@@ -24,6 +30,8 @@ class ProfilingInfo:
         self.sdma_time = 0.0
         self.scheduling_time = 0.0
         self.fa_time_bwd = 0.0
+        self.pa_time = 0.0
+        self.lccl_time = 0.0
         self.fa_time_fwd = 0.0
         self.minimal_profiling = False
         self.hide_op_details = False
@@ -41,16 +49,23 @@ class ProfilingInfo:
         self.scheduling_time = self.scheduling_time / 10 ** 6
         self.fa_time_bwd = self.fa_time_bwd / 10 ** 6
         self.fa_time_fwd = self.fa_time_fwd / 10 ** 6
+        self.pa_time = self.pa_time / 10 ** 6
+        self.lccl_time = self.lccl_time / 10 ** 6
+        self.conv_time_fwd = self.conv_time_fwd / 10 ** 6
+        self.conv_time_bwd = self.conv_time_bwd / 10 ** 6
 
     def calculate_other_time(self):
         self.other_time = max(
-            [0, self.compute_time - self.cube_time - self.fa_time_fwd - self.fa_time_bwd - self.vec_time])
+            [0, self.compute_time - self.cube_time - self.fa_time_fwd - self.fa_time_bwd -
+             self.pa_time - self.vec_time - self.conv_time_fwd - self.conv_time_bwd])
 
     def calculate_vec_time(self):
-        self.vec_time = self.compute_time - self.cube_time - self.fa_time_fwd - self.fa_time_bwd
+        self.vec_time = self.compute_time - self.cube_time - self.fa_time_fwd - self.fa_time_bwd \
+                        - self.conv_time_fwd - self.conv_time_bwd
 
     def calculate_schedule_time(self):
-        self.scheduling_time = self.e2e_time - self.compute_time - self.communication_not_overlapped
+        self.scheduling_time = (self.e2e_time - self.compute_time - self.lccl_time \
+                                - self.communication_not_overlapped)
 
     def update_fa_fwd_info(self, time: float):
         self.fa_time_fwd += time
@@ -59,6 +74,22 @@ class ProfilingInfo:
     def update_fa_bwd_info(self, time: float):
         self.fa_time_bwd += time
         self.fa_num_bwd += 1
+
+    def update_pa_info(self, time: float):
+        self.pa_time += time
+        self.pa_num += 1
+
+    def update_lccl_info(self, time: float):
+        self.lccl_time += time
+        self.lccl_num += 1
+
+    def update_conv_fwd_info(self, time: float):
+        self.conv_time_fwd += time
+        self.conv_num_fwd += 1
+
+    def update_conv_bwd_info(self, time: float):
+        self.conv_time_bwd += time
+        self.conv_num_bwd += 1
 
     def update_sdma_info(self, time: float, num: int = 1):
         self.sdma_time += time

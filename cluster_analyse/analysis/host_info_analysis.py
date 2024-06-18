@@ -1,0 +1,96 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import os
+
+from analysis.base_analysis import BaseAnalysis
+from common_func.constant import Constant
+from common_func.db_manager import DBManager
+
+
+class HostInfoAnalysis(BaseAnalysis):
+
+    TABLE_HOST_INFO = "HOST_INFO"
+    TABLE_RANK_DEVICE_MAP = "RANK_DEVICE_MAP"
+
+    def __init__(self, param: dict):
+        super().__init__(param)
+        self.all_rank_host_info = {}
+        self.all_rank_device_info = []
+
+    def run(self):
+        if self.data_type != Constant.DB:
+            return
+        self.analyze_host_info()
+        self.dump_db()
+
+    def dump_db(self):
+        output_path = os.path.join(self.collection_path, Constant.CLUSTER_ANALYSIS_OUTPUT)
+        result_db = os.path.join(output_path, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER)
+        conn, curs = DBManager.create_connect_db(result_db)
+        if not (conn and curs):
+            print(f"[ERROR] Failed to create db {Constant.DB_CLUSTER_COMMUNICATION_ANALYZER}")
+            return
+        self.dump_host_info(result_db, conn)
+        self.dump_rank_device_map(result_db, conn)
+        DBManager.destroy_db_connect(conn, curs)
+
+    def dump_host_info(self, result_db, db_conn):
+        if not self.all_rank_host_info:
+            print(f"[WARNING] No host info data be analyzed.")
+            return
+        DBManager.create_tables(result_db, Constant.TABLE_HOST_INFO)
+        save_host_info = list(self.all_rank_host_info.items())
+        sql = "insert into {} values ({value})".format(Constant.TABLE_HOST_INFO,
+                                                       value="?," * (len(save_host_info[0]) - 1) + "?")
+        DBManager.executemany_sql(db_conn, sql, save_host_info)
+
+    def dump_rank_device_map(self, result_db, db_conn):
+        if not self.all_rank_device_info:
+            print(f"[WARNING] No rank device map data be analyzed.")
+            return
+        self.all_rank_device_info.sort()
+        DBManager.create_tables(result_db, Constant.TABLE_RANK_DEVICE_MAP)
+        sql = "insert into {} values ({value})".format(Constant.TABLE_RANK_DEVICE_MAP,
+                                                       value="?," * (len(self.all_rank_device_info[0]) - 1) + "?")
+        DBManager.executemany_sql(db_conn, sql, self.all_rank_device_info)
+
+    def analyze_host_info(self):
+        print_empty_host_info = ""
+        for rank_id, profiling_dir in self.data_map.items():
+            host_info = []
+            rank_device_info = []
+            db_path = os.path.join(profiling_dir, Constant.SINGLE_OUTPUT, f"ascend_pytorch_profiler_{rank_id}.db")
+            if (os.path.exists(db_path) and DBManager.check_tables_in_db(db_path, self.TABLE_HOST_INFO)):
+                conn, curs = DBManager.create_connect_db(db_path)
+                sql = "select * from {0}".format(self.TABLE_HOST_INFO)
+                host_info = DBManager.fetch_all_data(curs, sql, is_dict=False)
+                DBManager.destroy_db_connect(conn, curs)
+            if not (host_info and host_info[0]):
+                if not print_empty_host_info:
+                    print_empty_host_info = f"[WARNING] No {self.TABLE_HOST_INFO} data in {self.data_type} file."
+                continue
+            if (os.path.exists(db_path) and DBManager.check_tables_in_db(db_path, self.TABLE_RANK_DEVICE_MAP)):
+                conn, curs = DBManager.create_connect_db(db_path)
+                sql = "select * from {0}".format(self.TABLE_RANK_DEVICE_MAP)
+                rank_device_info = DBManager.fetch_all_data(curs, sql, is_dict=False)
+                DBManager.destroy_db_connect(conn, curs)
+            host_uid, host_name = host_info[0][0], host_info[0][1]
+            for idx, data in enumerate(rank_device_info):
+                rank_device_info[idx] = list(data) + [host_uid, ]
+            self.all_rank_host_info[host_uid] = host_name
+            self.all_rank_device_info.extend(rank_device_info)
+        if print_empty_host_info:
+            print(print_empty_host_info)

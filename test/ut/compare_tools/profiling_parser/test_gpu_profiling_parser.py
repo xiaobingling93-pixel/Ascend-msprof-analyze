@@ -71,6 +71,7 @@ class TestGpuProfilingParser(unittest.TestCase):
             res._trace_events = [TraceEventBean(event) for event in self.trace_events]
             res._result_data = ProfilingResult("GPU")
             res._compute_stream_id = 3
+            res._flow_dict = {}
             res._marks = defaultdict(int)
             res._calculate_performance_time()
             self.assertEqual(res._result_data.overall_metrics.e2e_time, 98)
