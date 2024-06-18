@@ -43,6 +43,9 @@ def longest_common_subsequence_matching(base_ops: list, comparison_ops: list, na
         return result_data
 
     comparison_len, base_len = len(comparison_ops), len(base_ops)
+    if comparison_len * base_len > 50 * 10 ** 8:
+        print('[WARNING] The comparison time is expected to exceed 30 minutes, if you want to see the results quickly, '
+              'you can restart comparison task and turn on the switch --disable_details.')
     dp_flag = set()  # flag for only comparison op
     pre_list = [0] * (base_len + 1)
     cur_list = [0] * (base_len + 1)
