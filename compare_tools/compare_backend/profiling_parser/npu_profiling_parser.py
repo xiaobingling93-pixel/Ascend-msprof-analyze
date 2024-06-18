@@ -108,63 +108,6 @@ class NPUProfilingParser(BaseProfilingParser):
         self._result_data.overall_metrics.calculate_schedule_time()
         self._result_data.overall_metrics.trans_time_to_s()
 
-    def _picking_notify_wait_event_and_not_overlap_event(self):
-        self.notify_event_cache = []
-        self._not_overlaped_commu_event = []
-        for event in self._comm_task_list:
-            if event.name == 'Notify_Wait' and event.args.get('rdma_type', 0) != 'RDMA_PAYLOAD_CHECK' \
-                    and event.args.get('rdma_type', 0) != 'RDMA_PAYLOAD_ACK':
-                self.notify_event_cache.append(event)
-        for event in self._overlap_analysis:
-            if event.is_comm_not_overlap():
-                self._not_overlaped_commu_event.append(event)
-        self._not_overlaped_commu_event.sort(key=lambda x: x.start_time)
-
-    def __add_overlap_wait_time(self):
-        notify_wait_event_dict = dict()
-        for notify_event in self.notify_event_cache:
-            if notify_event.tid in notify_wait_event_dict:
-                notify_wait_event_dict[notify_event.tid].append(notify_event)
-            else:
-                notify_wait_event_dict[notify_event.tid] = [notify_event]
-        total_time = 0
-        for commu_event in self._not_overlaped_commu_event:
-            wait_time_list = [0]
-            commu_event_start_time = float(commu_event.start_time)
-            commu_event_end_time = float(commu_event.start_time) + commu_event.dur
-
-            for plane_id, events in notify_wait_event_dict.items():
-                wait_time = 0
-                idx = 0
-                for notify_event in events:
-                    notify_event_start_time = float(notify_event.start_time)
-                    notify_event_end_time = float(notify_event.start_time) + notify_event.dur
-                    if notify_event_start_time < commu_event_start_time and notify_event_end_time > \
-                            commu_event_end_time:
-                        wait_time = commu_event_end_time - commu_event_start_time
-                        break
-                    elif notify_event_start_time < commu_event_start_time <= notify_event_end_time <= \
-                            commu_event_end_time:
-                        wait_time += notify_event_end_time - commu_event_start_time
-                        idx += 1
-                    elif commu_event_start_time <= notify_event_start_time <= commu_event_end_time < \
-                            notify_event_end_time:
-                        wait_time += commu_event_end_time - notify_event_start_time
-                        break
-                    elif notify_event_start_time >= commu_event_start_time and notify_event_end_time <= \
-                            commu_event_end_time:
-                        wait_time += notify_event_end_time - notify_event_start_time
-                        idx += 1
-                    elif notify_event_end_time < commu_event_start_time:
-                        idx += 1
-                    else:
-                        break
-
-                wait_time_list.append(wait_time)
-                notify_wait_event_dict[plane_id] = notify_wait_event_dict[plane_id][idx:]
-            total_time += max(wait_time_list)
-        self._result_data.overall_metrics.update_comm_not_overlap_wait_time(total_time)
-
     def _picking_hccl_event(self, event: TraceEventBean):
         if event.pid != self._hccl_pid or not event.is_x_mode():
             return False
@@ -298,7 +241,7 @@ class NPUProfilingParser(BaseProfilingParser):
                 sdma_dict.setdefault(stream_id, []).append(event.dur)
             elif event.is_compute_event():
                 ai_core_stream.add(stream_id)
-        compute_stream = event_wait_stream & ai_core_stream if event_wait_stream else ai_core_stream
+        compute_stream = event_wait_stream & ai_core_stream
         for stream in compute_stream:
             dur_list = sdma_dict.get(stream, [])
             self._result_data.overall_metrics.update_sdma_info(sum(dur_list), len(dur_list))
