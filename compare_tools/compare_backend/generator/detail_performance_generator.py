@@ -30,6 +30,12 @@ class DetailPerformanceGenerator(BaseGenerator):
     def __init__(self, profiling_data_dict: dict, args: any):
         super().__init__(profiling_data_dict, args)
 
+    @classmethod
+    def _match_none_subsequence(cls, base_ops: list, comparison_ops: list) -> list:
+        op_compare_result = [[op, None] for op in iter(base_ops)]
+        op_compare_result.extend([[None, op] for op in iter(comparison_ops)])
+        return op_compare_result
+
     def compare(self):
         if self._args.enable_operator_compare or self._args.enable_memory_compare or \
                 self._args.enable_communication_compare:
@@ -70,13 +76,16 @@ class DetailPerformanceGenerator(BaseGenerator):
         if self._args.enable_operator_compare:
             if module_compare_result:
                 comparator_list.append(ModuleStatisticComparator(module_compare_result, ModuleStatisticBean))
-                comparator_list.append(ModuleComparator(module_compare_result, ModuleCompareBean))
+                if not self._args.disable_details:
+                    comparator_list.append(ModuleComparator(module_compare_result, ModuleCompareBean))
             else:
                 comparator_list.append(OperatorStatisticComparator(op_compare_result, OperatorStatisticBean))
-                comparator_list.append(OperatorComparator(op_compare_result, OperatorCompareBean))
+                if not self._args.disable_details:
+                    comparator_list.append(OperatorComparator(op_compare_result, OperatorCompareBean))
         if self._args.enable_memory_compare:
             comparator_list.append(OperatorStatisticComparator(op_compare_result, MemoryStatisticBean))
-            comparator_list.append(OperatorComparator(op_compare_result, MemoryCompareBean))
+            if not self._args.disable_details:
+                comparator_list.append(OperatorComparator(op_compare_result, MemoryCompareBean))
         return comparator_list
 
     def match_torch_op(self) -> list:
@@ -86,7 +95,8 @@ class DetailPerformanceGenerator(BaseGenerator):
         if not base_ops and not comparison_ops:
             return []
         name_func = NameFunction(self._args).get_name_func()
-        op_compare_result = longest_common_subsequence_matching(base_ops, comparison_ops, name_func)
+        op_compare_result = longest_common_subsequence_matching(base_ops, comparison_ops, name_func) \
+            if not self._args.disable_details else self._match_none_subsequence(base_ops, comparison_ops)
         if self._args.max_kernel_num is not None:
             op_compare_result = self._drill_down(op_compare_result, name_func)
         return op_compare_result
@@ -105,7 +115,11 @@ class DetailPerformanceGenerator(BaseGenerator):
             if max(base_op.kernel_num, comparison_op.kernel_num) <= self._args.max_kernel_num:
                 drill_down_result.append(match_data)
                 continue
-            match_list = longest_common_subsequence_matching(base_op.child_nodes, comparison_op.child_nodes, name_func)
+            match_list = longest_common_subsequence_matching(base_op.child_nodes,
+                                                             comparison_op.child_nodes,
+                                                             name_func) \
+                if not self._args.disable_details else self._match_none_subsequence(base_op.child_nodes,
+                                                                                    comparison_op.child_nodes)
             match_list.reverse()
             for data in match_list:
                 op_deque.append(data)
@@ -142,4 +156,6 @@ class DetailPerformanceGenerator(BaseGenerator):
         if not base_modules and not comparison_modules:
             return []
         name_func = NameFunction(self._args).get_module_name
-        return longest_common_subsequence_matching(base_modules, comparison_modules, name_func)
+        result = longest_common_subsequence_matching(base_modules, comparison_modules, name_func) \
+            if not self._args.disable_details else self._match_none_subsequence(base_modules, comparison_modules)
+        return result

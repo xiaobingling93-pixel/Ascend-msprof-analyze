@@ -32,6 +32,7 @@ from profiler.compare_tools.compare_backend.comparison_generator import Comparis
 @click.option('--enable_operator_compare', is_flag=True)
 @click.option('--enable_memory_compare', is_flag=True)
 @click.option('--enable_communication_compare', is_flag=True)
+@click.option('--disable_details', is_flag=True)
 @click.option('--output_path', '-o', 'output_path', type=click.Path())
 @click.option('--max_kernel_num', 'max_kernel_num', type=int, help="The number of kernels per torch op is limited.")
 @click.option('--op_name_map', type=ast.literal_eval, default='{}',
