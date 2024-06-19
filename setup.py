@@ -16,7 +16,7 @@ extras = {
 with open('requirements/build.txt', 'r') as f:
     requires = f.read().splitlines()
 
-with open('requirements/test.txt', 'r') as f:
+with open('requirements/tests.txt', 'r') as f:
     tests_requires = f.read().splitlines()
 tests_requires.extend(set(requires))
 
