@@ -25,9 +25,9 @@ from profiler.compare_tools.compare_backend.comparison_generator import Comparis
 
 @click.command(context_settings=Constant.CONTEXT_SETTINGS, name="compare",
                short_help='Compare the performance differences between GPUs and NPUs.')
-@click.option('--profiling_path', '-d', 'base_profiling_path', type=click.Path(), required=True,
+@click.option('--profiling_path', '-d', 'comparison_profiling_path', type=click.Path(), required=True,
               help='path of the profiling data')
-@click.option('--benchmark_profiling_path', '-bp', 'comparison_profiling_path', type=click.Path(), required=True)
+@click.option('--benchmark_profiling_path', '-bp', 'base_profiling_path', type=click.Path(), required=True)
 @click.option('--enable_profiling_compare', is_flag=True)
 @click.option('--enable_operator_compare', is_flag=True)
 @click.option('--enable_memory_compare', is_flag=True)
