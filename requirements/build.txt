@@ -10,3 +10,5 @@ requests
 xlsxwriter
 sqlalchemy
 urllib3<2.0
+numpy
+pandas
