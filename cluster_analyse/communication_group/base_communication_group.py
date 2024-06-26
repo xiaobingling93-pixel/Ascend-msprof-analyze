@@ -52,7 +52,8 @@ class BaseCommunicationGroup:
             else:
                 print(
                     f"[WARNING] Rank {rank_id} does not have valid communication data and communication_matrix data.")
-        with Pool() as p:
+        max_processes = int(os.cpu_count() / 2)
+        with Pool(processes=max_processes) as p:
             self.rank_comm_dir_dict = p.map(self.read_communication_func, comm_op_dirs)
 
     def set_p2p_groups(self):

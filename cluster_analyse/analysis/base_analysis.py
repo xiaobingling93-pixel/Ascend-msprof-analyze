@@ -28,7 +28,7 @@ from cluster_utils.data_transfer_adapter import DataTransferAdapter
 
 
 class BaseAnalysis:
-
+    MAX_RANKS = 1000
     def __init__(self, param: dict):
         self.collection_path = param.get(Constant.COLLECTION_PATH)
         self.data_map = param.get(Constant.DATA_MAP)
@@ -69,7 +69,11 @@ class BaseAnalysis:
         if self.data_type == Constant.TEXT:
             self.dump_json()
         else:
-            self.dump_db()
+            if len(self.data_map) >= self.MAX_RANKS:
+                print("[WARNING]The number of ranks is too large to dump to db, it will be dumped to json file.") 
+                self.dump_json()
+            else:
+                self.dump_db()
 
     @abstractmethod
     def dump_db(self):
