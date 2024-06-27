@@ -1,10 +1,10 @@
 # 性能工具
 
-ATT工具针对训练&大模型场景，提供端到端性能调优工具：用户采集到性能数据后，由ATT性能工具提供统计、分析以及相关的调优建议。
+MindStudio Training Tools工具针对训练&大模型场景，提供端到端性能调优工具：用户采集到性能数据后，由MindStudio Training Tools的性能工具提供统计、分析以及相关的调优建议。
 
 ## NPU性能数据采集
 
-目前ATT工具主要支持Ascend PyTorch Profiler接口的性能数据采集，请参考官方文档：[Ascend PyTorch Profiler数据采集与分析](https://www.hiascend.com/document/detail/zh/canncommercial/80RC1/devaids/auxiliarydevtool/atlasprofiling_16_0006.html)。
+目前MindStudio Training Tools工具主要支持对Ascend PyTorch Profiler接口采集的性能数据进行分析，请参考官方文档：[Ascend PyTorch Profiler数据采集与分析](https://www.hiascend.com/document/detail/zh/canncommercial/80RC1/devaids/auxiliarydevtool/atlasprofiling_16_0006.html)。
 
 Ascend PyTorch Profiler接口支持AscendPyTorch 1.11.0或更高版本，支持的PyThon和CANN软件版本配套关系请参见“[安装PyTorch框架](https://www.hiascend.com/document/detail/zh/Pytorch/60RC1/configandinstg/instg/insg_0006.html)”。
 
@@ -111,7 +111,7 @@ ascend pytorch profiler数据目录结构如下：
 
       若回显呈现对应版本whl包一致的**校验码**，则表示下载了正确的性能工具whl安装包。示例如下：
 
-      ```
+      ```bash
       sha256sum msprof_analyze-1.0-py3-none-any.whl
       xx *msprof_analyze-1.0-py3-none-any.whl
       ```
@@ -120,19 +120,19 @@ ascend pytorch profiler数据目录结构如下：
 
    执行如下命令进行安装。
 
-   ```
+   ```bash
    pip3 install ./msprof_analyze-{version}-py3-none-any.whl
    ```
 
    若为覆盖安装，请在命令行末尾增加“--force-reinstall”参数强制安装，例如：
 
-   ```
+   ```bash
    pip3 install ./msprof_analyze-{version}-py3-none-any.whl --force-reinstall
    ```
 
    提示如下信息则表示安装成功。
 
-   ```
+   ```bash
    Successfully installed msprof_analyze-{version}
    ```
 

@@ -124,11 +124,11 @@ MindSpore性能调试工具采集结果数据目录结构如下：
 
 #### 脚本方式
 
-将att代码仓下载到本地，执行如下命令：
+将mstt代码仓下载到本地，执行如下命令：
 
 ```bash
-# 进入att代码仓目录下的compare_tools目录
-cd att/profiler/compare_tools
+# 进入mstt代码仓目录下的compare_tools目录
+cd mstt/profiler/compare_tools
 # 执行最简比对命令
 python performance_compare.py [基准性能数据文件所在路径] [比对性能数据文件所在路径] --output_path=[比对结果文件存放路径]
 ```

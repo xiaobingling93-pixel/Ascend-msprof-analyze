@@ -51,7 +51,7 @@ Jupyter Notebook使用方式如下：
 
    Jupyter Notebook工具的具体安装和使用指导请至Jupyter Notebook工具官网查找。
 
-2. 在环境下安装ATT工具。
+2. 在环境下安装mstt工具。
 
    ```
    git clone https://gitee.com/ascend/att.git
