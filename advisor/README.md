@@ -2,7 +2,11 @@
 
 msprof-analyze的advisor功能是将Ascend PyTorch Profiler或者msprof采集的PyThon场景性能数据进行分析，并输出性能调优建议（当前暂不支持对db格式文件分析）。
 
+性能数据采集方法请参见《[性能分析工具](https://www.hiascend.com/document/detail/zh/mindstudio/70RC1/mscommandtoolug/mscommandug/atlasprofiling_16_0001.html)》。
+
 ## 工具使用（命令行方式方式）
+
+### 操作步骤
 
 1. 参见《[性能工具](../README.md)》完成工具安装。建议安装最新版本。
 
@@ -11,31 +15,146 @@ msprof-analyze的advisor功能是将Ascend PyTorch Profiler或者msprof采集的
    - 总体性能瓶颈
 
      ```bash
-     msprof-analyze advisor all -d [待分析性能数据文件所在路径] -bp [基准性能数据文件所在路径]
+     msprof-analyze advisor all -d $HOME/profiling_data/
      ```
 
    - 计算瓶颈
 
      ```bash
-     msprof-analyze advisor computation -d [待分析性能数据文件所在路径]
+     msprof-analyze advisor computation -d $HOME/profiling_data/
      ```
 
    - 调度瓶颈
 
      ```bash
-     msprof-analyze advisor schedule -d [待分析性能数据文件所在路径]
+     msprof-analyze advisor schedule -d $HOME/profiling_data/
      ```
 
-
-   -d（必选）：待分析性能数据文件所在路径。
-
-   -bp（可选）：基准性能数据文件所在路径。
+   以上命令更多参数介绍请参见“**命令详解**”。
 
    单卡场景需要指定到性能数据文件`*_ascend_pt`目录；多卡或集群场景需要指定到`*_ascend_pt`目录的父目录层级。
 
 3. 查看结果。
 
-   分析结果打屏展示并生成html和csv文件。
+   分析结果输出相关简略建议到执行终端中，并生成`att_advisor_{timestamp}.html`和`att_advisor_{timestamp}.xlsx`文件供用户预览。
+   
+   `att_advisor_{timestamp}.xlsx`文件内容与执行终端输出一致。
+   
+   `att_advisor_{timestamp}.html`文件分析详见“**报告解析**”。
+   
+   执行终端输出示例如下：
+   
+   总体性能瓶颈
+   
+   ![all](./img/all.png)
+   
+   计算瓶颈
+   
+   ![computation](./img/computation.png)
+   
+   调度瓶颈
+   
+   ![schedule](./img/schedule.png)
+   
+   
+
+### 命令详解
+
+#### 命令功能介绍
+
+| dimension  | mode                       | 参数释义                                 |
+| ---------- | -------------------------- | ---------------------------------------- |
+| overall    | overall_summary            | 计算、通信、空闲等维度对性能数据进行拆解 |
+| cluster    | slow_rank                  | 慢卡识别                                 |
+|            | slow_link                  | 慢链路识别                               |
+| computing  | aicpu                      | AI CPU调优                               |
+|            | dynamic_shape_analysis     | 识别动态Shape算子                        |
+|            | block_dim_analysis         | block dim算子调优                        |
+|            | operator_no_bound_analysis | operator no bound                        |
+|            | graph                      | 融合算子图调优                           |
+| scheduling | timeline_fusion_ops        | 亲和API替换调优                          |
+|            | timeline_op_dispatch       | 识别算子下发问题(路径3/路径5)            |
+
+- all
+
+  总体性能瓶颈：包含上表中所有功能。
+
+- computation
+
+  计算瓶颈：包含上表中computing功能。
+
+- schedule
+
+  调度瓶颈：包含上表中scheduling功能。
+
+#### 命令格式
+
+- 总体性能瓶颈
+
+  ```bash
+  msprof-analyze advisor all -d {profiling_path} [-bp benchmark_profiling_path] [-cv cann_version] [-tv torch_version] [-pt profiling_type] [-d] [-h]
+  ```
+
+- 计算瓶颈
+
+  ```bash
+  msprof-analyze advisor computation -d {profiling_path} [-bp benchmark_profiling_path] [-cv cann_version] [-tv torch_version] [-pt profiling_type] [-d] [-h]
+  ```
+
+- 调度瓶颈
+
+  ```bash
+  msprof-analyze advisor schedule -d {profiling_path} [-bp benchmark_profiling_path] [-cv cann_version] [-tv torch_version] [-d] [-h]
+  ```
+
+#### 参数介绍
+
+| 参数                               | 说明                                                         | 是否必选 |
+| ---------------------------------- | ------------------------------------------------------------ | -------- |
+| -d<br>--profiling_path             | 性能数据所在目录。性能数据通过Profiling工具采集获取。请确保性能数据采集时配置“aic-metrics”参数为“PipeUtilization”，“aicpu”参数为“on”。advisor依赖Profiling工具解析后的timeline数据、summary数据以及info.json*文件，请确保指定的“profiling_dir”目录下存在以上文件。 | 是       |
+| -bp<br/>--benchmark_profiling_path | 基准性能数据所在目录，用于性能比对。性能数据通过Profiling工具采集获取。<br>**computation和schedule不支持该参数。** | 否       |
+| -cv<br/>--cann_version             | 使用Profiling工具采集时对应的CANN软件版本，可通过在环境中执行如下命令获取其version字段，目前配套的兼容版本为“6.3.RC2”，“7.0.RC1”、“7.0.0”、“8.0.RC1”，此字段不填默认按“8.0.RC1”版本数据进行处理，其余版本采集的Profiling数据在分析时可能会导致不可知问题：`cat /usr/local/Ascend/ascend-toolkit/latest/aarch64-linux/ascend_toolkit_install.info` | 否       |
+| -tv<br/>--torch_version            | 运行环境的torch版本，默认为1.11.0，支持torch1.11.0和torch2.1.0，当运行环境torch版本为其他版本如torch1.11.3时，可以忽略小版本号差异选择相近的torch版本如1.11.0。 | 否       |
+| -pt<br/>--profiling_type           | 配置性能数据采集使用的Profiling工具类型。可取值：<br>        ascend_pytorch_profiler：使用Ascend PyThon Profiler接口方式采集的性能数据时配置，默认值。<br/>        msprof：使用msprof命令行方式采集的性能数据时配置。<br/>        mslite：使用[Benchmark](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)工具采集的性能数据时配置。<br>**schedule不支持该参数。** | 否       |
+| -D<br/>--debug                     | 工具执行报错时可打开此开关，将会展示详细保存堆栈信息。       | 否       |
+| -h，-H<br/>--help                  | 在需要查询当前命令附属子命令或相关参数时，给出帮助建议。     | 否       |
+
+### 报告解析
+
+如下图所示，工具会从集群、单卡性能拆解、调度和计算等维度进行问题诊断并给出相应的调优建议。
+
+![输入图片说明](./img/cluster.png)
+
+cluster模块的分析包含快慢卡和快慢链路分析，仅识别问题，不提供调优建议。
+如下图示例，识别到当前训练任务的通信和下发（free较多说明存在任务下发存在问题）存在问题。
+
+![cluster_1](./img/cluster_1.png)
+
+overall模块的分析包含当前训练任务慢卡的性能拆解，按照计算、通信和下发三个维度进行耗时的统计，可以基于该分析识别到训练性能瓶颈是计算、通信还是下发问题，同样不提供调优建议。
+
+![输入图片说明](./img/overall.png)
+
+schedule模块包含亲和API、aclOpCompile、syncBatchNorm、SynchronizeStream等多项检测。
+如下图示例，Operator Dispatch Issues提示需要在运行脚本的最开头添加如下代码用于消除aclOpCompile：
+
+```python
+torch_npu.npu.set_compile_mode(jit_compile=False);
+torch_npu.npu.config.allow_internal_format = False
+```
+
+![输入图片说明](./img/schedule_1.png)
+
+如下图示例，Synchronize Stream Issues提示存在耗时较多的同步流，并给出触发同步流的堆栈，需要根据堆栈来修改对应代码消除同步流。
+
+![schedule_2](./img/schedule_2.png)
+
+如下图示例，Affinity API Issues提示存在可以替换的亲和API并给出对应的堆栈，用户可以根据堆栈找到需要修改的代码，并给出修改案例（API instruction超链接）。
+
+![schedule_3](./img/schedule_3.png)
+
+computation模块从device计算性能维度进行分析，能够识别AI CPU、计算bound、动态Shape等问题并给出相应建议。此处不再详细展开，按照报告进行调优即可。
+
+![computation_1](./img/computation_1.png)
 
 ## 工具使用（Jupyter Notebook方式）
 
