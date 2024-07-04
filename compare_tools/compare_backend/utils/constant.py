@@ -74,7 +74,7 @@ class Constant(object):
     MEMORY_LIST = "memory_list"
     COMMUNICATION_DICT = "comm_dict"
 
-    #compare type
+    # compare type
     OVERALL_COMPARE = "overall"
 
     BWD_LIST = ["bwd", "backward", "back"]
