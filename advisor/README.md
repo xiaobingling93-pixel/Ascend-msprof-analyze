@@ -173,18 +173,18 @@ Jupyter Notebook使用方式如下：
 2. 在环境下安装mstt工具。
 
    ```
-   git clone https://gitee.com/ascend/att.git
+   git clone https://gitee.com/ascend/mstt.git
    ```
 
    安装环境下保存Ascend PyTorch Profiler采集的性能数据。
 
-3. 进入att\profiler\advisor目录执行如下命令启动Jupyter Notebook工具。
+3. 进入mstt\profiler\advisor目录执行如下命令启动Jupyter Notebook工具。
 
    ```bash
    jupyter notebook
    ```
 
-   执行成功则自动启动浏览器读取att\profiler\advisor目录，如下示例：
+   执行成功则自动启动浏览器读取mstt\profiler\advisor目录，如下示例：
 
    ![jupyter_report](./img/jupyter_report.PNG)
 

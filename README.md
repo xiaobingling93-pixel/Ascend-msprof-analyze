@@ -149,17 +149,17 @@ ascend pytorch profiler数据目录结构如下：
 2. 下载源码。
 
    ```bash
-   git clone https://gitee.com/ascend/att.git
+   git clone https://gitee.com/ascend/mstt.git
    ```
 
 3. 编译whl包。
 
    ```bash
-   cd att/profiler
+   cd mstt/profiler
    python3 setup.py bdist_wheel
    ```
 
-   以上命令执行完成后在att/profiler/dist目录下生成性能工具whl安装包`msprof_analyze-{version}-py3-none-any.whl`。
+   以上命令执行完成后在mstt/profiler/dist目录下生成性能工具whl安装包`msprof_analyze-{version}-py3-none-any.whl`。
 
 4. 安装。
 
