@@ -58,7 +58,8 @@ def analyze_cli(**kwargs):
 
 @analyze_cli.command(context_settings=CONTEXT_SETTINGS,
                      name="all",
-                     short_help='Analyze timeline, operators and graph.')
+                     short_help='Analyze timeline fusion operators, operators and graph,\
+                                 operators dispatching and cluster.')
 @click.option('--profiling_path', '-d', 'profiling_path', type=click.Path(), required=True,
               help='Directory of profiling data')
 @click.option('--benchmark_profiling_path', '-bp', 'benchmark_profiling_path', type=click.Path(),
@@ -93,7 +94,7 @@ def analyze_all(**kwargs) -> None:
 
 @analyze_cli.command(context_settings=CONTEXT_SETTINGS,
                      name="schedule",
-                     short_help='Analyze timeline, operators and graph.')
+                     short_help='Analyze operators dispatching and timeline fusion operators.')
 @click.option('--profiling_path', '-d', 'profiling_path', type=click.Path(), required=True,
               help='Directory of profiling data')
 @click.option('--cann_version', '-cv', 'cann_version',
@@ -112,7 +113,7 @@ def analyze_schedule(**kwargs) -> None:
 
 @analyze_cli.command(context_settings=CONTEXT_SETTINGS,
                      name="computation",
-                     short_help='Analyze timeline, operators and graph.')
+                     short_help='Analyze operators and graph.')
 @click.option('--profiling_path', '-d', 'profiling_path', type=click.Path(), required=True,
               help='Directory of profiling data')
 @click.option('--cann_version', '-cv', 'cann_version',

@@ -1,5 +1,5 @@
 DataTypeSuggeation: &DataTypeSuggeation "Data type {} in {} operator may cause AICPU issues, Try to convert to {} if possible."
-AICPU_DOC_URL: &AICPU_DOC_URL "https://support.huaweicloud.com/bestpractice-modelarts/modelarts_10_2517.html"
+AICPU_DOC_URL: &AICPU_DOC_URL "https://gitee.com/ascend/mstt/blob/master/profiler/advisor/doc/Samples%20of%20AI%20CPU%20Operator%20Replacement.md"
 
 CommonChecker:
   - DataTypeChecker:

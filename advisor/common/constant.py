@@ -47,7 +47,8 @@ NO_STACK_REASON_MAP = {
     TIMELINE_BACKWARD_NO_STACK_CODE: "Backward broadcast, without call stacks in profiling.",
     TIMELINE_ACL_TO_NPU_NO_STACK_CODE: "Incoming flow is 'acl_to_npu', without call stacks in profiling."
 }
-TIMELINE_API_DOC_URL = "https://support.huaweicloud.com/bestpractice-modelarts/modelarts_10_2516.html"
+TIMELINE_API_DOC_URL = "https://gitee.com/ascend/mstt/blob/master/profiler/advisor/doc \
+                        /Samples%20of%20Fused%20Operator%20API%20Replacement.md"
 AFFINITY_TRAINING_API = "Affinity training api"
 TIMELINE_WITH_STACK_DOC_URL = "https://www.hiascend.com/document/detail/zh/canncommercial/" \
                               "70RC1/modeldevpt/ptmigr/AImpug_0067.html"
@@ -69,7 +70,7 @@ SLOW_RANK_TIME_RATIO_THRESHOLD = 0.05
 CANN_VERSION_C30 = '6.3.RC2'
 CANN_VERSION_C13 = '7.0.RC1'
 CANN_VERSION_C15 = '7.0.0'
-CANN_VERSION_C17 = '8.0.0'
+CANN_VERSION_C17 = '8.0.RC1'
 SUPPORTED_CANN_VERSION = [CANN_VERSION_C30, CANN_VERSION_C13, CANN_VERSION_C15, CANN_VERSION_C17]
 DEFAULT_CANN_VERSION = CANN_VERSION_C17
 ASCEND_PYTORCH_PROFILER = "ascend_pytorch_profiler"
