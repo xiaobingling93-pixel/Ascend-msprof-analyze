@@ -92,19 +92,19 @@ msprof-analyze的advisor功能是将Ascend PyTorch Profiler或者msprof采集的
 - 总体性能瓶颈
 
   ```bash
-  msprof-analyze advisor all -d {profiling_path} [-bp benchmark_profiling_path] [-cv cann_version] [-tv torch_version] [-pt profiling_type] [-d] [-h]
+  msprof-analyze advisor all -d {profiling_path} [-bp benchmark_profiling_path] [-cv cann_version] [-tv torch_version] [-pt profiling_type] [-D] [-h]
   ```
 
 - 计算瓶颈
 
   ```bash
-  msprof-analyze advisor computation -d {profiling_path} [-bp benchmark_profiling_path] [-cv cann_version] [-tv torch_version] [-pt profiling_type] [-d] [-h]
+  msprof-analyze advisor computation -d {profiling_path} [-bp benchmark_profiling_path] [-cv cann_version] [-tv torch_version] [-pt profiling_type] [-D] [-h]
   ```
 
 - 调度瓶颈
 
   ```bash
-  msprof-analyze advisor schedule -d {profiling_path} [-bp benchmark_profiling_path] [-cv cann_version] [-tv torch_version] [-d] [-h]
+  msprof-analyze advisor schedule -d {profiling_path} [-bp benchmark_profiling_path] [-cv cann_version] [-tv torch_version] [-D] [-h]
   ```
 
 #### 参数介绍
