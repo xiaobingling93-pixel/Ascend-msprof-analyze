@@ -30,9 +30,9 @@ def print_version_callback(ctx, param, value):  # NOQA
 
     if not value or ctx.resilient_parsing:
         return
-    click.echo('Version {}'.format(get_package_version("att_advisor")))
+    click.echo('Version {}'.format(get_package_version("msprof-analyze")))
     ctx.exit()
 
 
 def cli_version():
-    return get_package_version("att_advisor")
+    return get_package_version("msprof-analyze")
