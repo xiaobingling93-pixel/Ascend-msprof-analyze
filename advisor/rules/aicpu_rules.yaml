@@ -46,7 +46,7 @@ CommonChecker:
       suggestion: *DataTypeSuggeation
 
   - DataTypeChecker:
-      cann_version: [8.0.0, 7.0.0]
+      cann_version: [8.0.RC1, 7.0.0]
       op_type: [ __ALL__ ]
       ignore_type: [ cast, tensorequal, equal, nonzero, mul ]
       input: [ float, float32, float16, dt_bf16, float64, bool, int32, int64, int8, uint8, int16, complex64, complex128 ]
@@ -54,28 +54,28 @@ CommonChecker:
       suggestion: *DataTypeSuggeation
 
   - DataTypeChecker:
-      cann_version: [8.0.0, 7.0.0]
+      cann_version: [8.0.RC1, 7.0.0]
       op_type: [ cast ]
       input: [ float, float32, float16, bool, int32, uint32, int64, uint64, uint8, dt_bf16 ]
       output: [ float, float32, float16, bool, int32, uint32, int64, uint64, uint8, dt_bf16 ]
       suggestion: *DataTypeSuggeation
 
   - DataTypeChecker:
-      cann_version: [8.0.0, 7.0.0]
+      cann_version: [8.0.RC1, 7.0.0]
       op_type: [ tensorequal ]
       input: [ float, float32, float16, dt_bf16, float64, bool, int32, int8, uint8 ]
       output: [ bool ]
       suggestion: *DataTypeSuggeation
 
   - DataTypeChecker:
-      cann_version: [8.0.0, 7.0.0]
+      cann_version: [8.0.RC1, 7.0.0]
       op_type: [ equal ]
       input: [ float, float32, float16, dt_bf16, float64, bool, int32, int64, int8, uint8 ]
       output: [ bool ]
       suggestion: *DataTypeSuggeation
 
   - DataTypeChecker:
-      cann_version: [8.0.0, 7.0.0]
+      cann_version: [8.0.RC1, 7.0.0]
       op_type: [ mul ]
       input: [ float, float32, float16, dt_bf16, float64, bool, int32, int64, int8, uint8, complex64 ]
       output: [ float, float32, float16, dt_bf16, float64, bool, int32, int64, int8, uint8, complex64 ]

@@ -49,7 +49,7 @@
                                 "(slice|chunk)-sigmoid-mul-mul", "(slice|chunk)-mul-sigmoid-mul",
                                 "(slice|chunk)-mul-mul-sigmoid" ]
 
-- cann_version: 8.0.0
+- cann_version: 8.0.RC1
   torch_version: [1.11.0, 2.1.0]
   unique_id: 3
   inherit_unique_id: 2

@@ -118,7 +118,7 @@ class OperatorChecker(VersionControl):
 
     def is_dynamic_shape(self, profiling_database: ProfilingDataset) -> bool:
         less_than_cann800_list = [constant.CANN_VERSION_C30, constant.CANN_VERSION_C13, constant.CANN_VERSION_C15]
-        # CANN 8.0.0 之前从 ge_info 中获取 op_state 属性，进行动态 shape 逻辑判断
+        # CANN 8.0.RC1 之前从 ge_info 中获取 op_state 属性，进行动态 shape 逻辑判断
         if self.cann_version in less_than_cann800_list:
             if hasattr(profiling_database, "ge_info"):
                 ge_info = profiling_database.ge_info
@@ -131,7 +131,7 @@ class OperatorChecker(VersionControl):
                     "To enable dynamic shape check, please try to set data_simplification=False in experimental_config.\n"
                     "More details please refer to link : %s", constant.ASCEND_PROFILER_URL)
         else:
-            # CANN 8.0.0 之后 op_state 属性从 op_summary 文件中获取
+            # CANN 8.0.RC1 之后 op_state 属性从 op_summary 文件中获取
             if hasattr(profiling_database, "op_summary"):
                 static_shape_operators = profiling_database.op_summary.get_static_shape_operators()
                 if len(static_shape_operators) == 0:

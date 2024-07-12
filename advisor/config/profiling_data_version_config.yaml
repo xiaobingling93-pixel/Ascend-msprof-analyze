@@ -1,5 +1,5 @@
 versions:
-  - version: 8.0.0
+  - version: 8.0.RC1
     dirs_pattern:
       ^PROF_\d{6}_\d{17}_\w+$:
         mindstudio_profiler_output:
