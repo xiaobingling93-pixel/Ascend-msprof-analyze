@@ -91,6 +91,7 @@ ascend pytorch profiler数据目录结构如下：
 
    | profiler版本 | 发布日期   | 下载链接                                                     | 校验码                                                       |
    | ------------ | ---------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+   | 1.1.2        | 2024-07-12 | [msprof_analyze-1.1.2-py3-none-any.whl](https://ptdbg.obs.myhuaweicloud.com/profiler/package/1.1.2/msprof_analyze-1.1.2-py3-none-any.whl) | af62125b1f9348bf491364e03af712fc6d0282ccee3fb07458bc9bbef82dacc6 |
    | 1.1.1        | 2024-06-20 | [msprof_analyze-1.1.1-py3-none-any.whl](https://ptdbg.obs.myhuaweicloud.com/profiler/package/1.1.1/msprof_analyze-1.1.1-py3-none-any.whl) | 76aad967a3823151421153d368d4d2f8e5cfbcb356033575e0b8ec5acea8e5e4 |
    | 1.1.0        | 2024-05-28 | [msprof_analyze-1.1.0-py3-none-any.whl](https://ptdbg.obs.myhuaweicloud.com/profiler/package/1.1.0/msprof_analyze-1.1.0-py3-none-any.whl) | b339f70e7d1e45e81f289332ca64990a744d0e7ce6fdd84a8d82e814fa400698 |
    | 1.0          | 2024-05-10 | [msprof_analyze-1.0-py3-none-any.whl](https://ptdbg.obs.myhuaweicloud.com/profiler/package/1.0/msprof_analyze-1.0-py3-none-any.whl) | 95b2f41c8c8e8afe4887b738c8cababcb4f412e1874483b6adae4a025fcbb7d4 |
@@ -122,12 +123,6 @@ ascend pytorch profiler数据目录结构如下：
 
    ```bash
    pip3 install ./msprof_analyze-{version}-py3-none-any.whl
-   ```
-
-   若为覆盖安装，请在命令行末尾增加“--force-reinstall”参数强制安装，例如：
-
-   ```bash
-   pip3 install ./msprof_analyze-{version}-py3-none-any.whl --force-reinstall
    ```
 
    提示如下信息则表示安装成功。
@@ -167,25 +162,45 @@ ascend pytorch profiler数据目录结构如下：
 
    ```bash
    cd dist
-   pip3 install ./msprof_analyze-{version}-py3-none-any.whl --force-reinstall
+   pip3 install ./msprof_analyze-{version}-py3-none-any.whl
+   ```
+
+## 卸载和更新
+
+若需要更新工具，请先卸载旧版本后再重新安装新版本，如下操作：
+
+1. 卸载
+
+   ```bash
+   pip3 uninstall msprof-analyze
+   ```
+
+2. 更新
+
+   ```bash
+   pip3 install ./msprof_analyze-{version}-py3-none-any.whl
    ```
 
 ## 工具使用
 
 ```bash
-msprof-analyze advisor [-h] [-v]
+msprof-analyze advisor [-h]
 ```
 
 ```bash
-msprof-analyze compare [-h] [-v]
+msprof-analyze compare [-h]
 ```
 
 ```bash
-msprof-analyze cluster [-h] [-v]
+msprof-analyze cluster [-h]
 ```
 
 ```bash
-msprof-analyze auto-completion [-h] [-v]
+msprof-analyze auto-completion [-h]
+```
+
+```
+msprof-analyze [-h] [-v]
 ```
 
 | 参数                 | 说明                                                         |
