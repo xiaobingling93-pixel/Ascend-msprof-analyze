@@ -9,6 +9,7 @@ from profiler.advisor.common import constant as const
 from profiler.advisor.common.timeline.event import TimelineEvent
 from profiler.advisor.utils.utils import get_file_path_from_directory
 from profiler.advisor.utils.utils import singleton
+from profiler.cluster_analyse.common_func.file_manager import FileManager
 
 logger = logging.getLogger()
 
@@ -121,13 +122,13 @@ class TimelineEventDataset(Dataset):
     def parse_data_with_generator(self, func):
         result = []
         try:
-            with open(self.timeline_data_list[0], "r") as f:
-                for i, event in tqdm(enumerate(ijson.items(f, "item")),
-                                     leave=False, ncols=100, desc="Building dataset for timeline analysis",
-                                     total=self.dataset_len):
-                    func_res = func(index=i, event=event)
-                    if func_res is not None:
-                        result.append(func_res)
+            json_content = FileManager.read_json_file(self.timeline_data_list[0])
+            for i, event in tqdm(enumerate(json_content), leave=False, ncols=100,
+                                 desc="Building dataset for timeline analysis",
+                                 total=self.dataset_len):
+                func_res = func(index=i, event=event)
+                if func_res:
+                    result.append(func_res)
         except Exception as e:
             logger.warning("Error %s while parsing file %s, continue to timeline analysis", e,
                            self.timeline_data_list[0])

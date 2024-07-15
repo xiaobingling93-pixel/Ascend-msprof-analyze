@@ -25,9 +25,9 @@ class ClusterDataset(Dataset):
         """
         for file in os.listdir(self.collection_path):
             if file == 'cluster_analysis_output':
-                print("[INFO]Cluster has been analyzed "
-                      "because of the existence of cluster analysis output directory.")
-                print("[INFO]Skip Cluster analyze backend.")
+                logger.info("[INFO]Cluster has been analyzed "
+                            "because of the existence of cluster analysis output directory.")
+                logger.info("[INFO]Skip Cluster analyze backend.")
                 return True
         return False
 
@@ -62,7 +62,7 @@ class ClusterDataset(Dataset):
 
 
 @singleton
-class ClusterStepTraceTimeDataSet(ClusterDataset):
+class ClusterStepTraceTimeDataset(ClusterDataset):
     RANK = "rank"
 
     def __init__(self, collection_path: str, data: dict, **kwargs):
@@ -77,10 +77,10 @@ class ClusterStepTraceTimeDataSet(ClusterDataset):
             print("捕获到异常：", e)
             self._step_dict = None
             return False
-        self._step_dict = self.formate_data(step_data)
+        self._step_dict = self.format_data(step_data)
         return True
 
-    def formate_data(self, step_data: list):
+    def format_data(self, step_data: list):
         step_dict = defaultdict(lambda: [0, 0, 0])
         for step_bean in step_data:
             if step_bean.type == self.RANK:
@@ -94,7 +94,7 @@ class ClusterStepTraceTimeDataSet(ClusterDataset):
 
 
 @singleton
-class ClusterCommunicationDataSet(ClusterDataset):
+class ClusterCommunicationDataset(ClusterDataset):
     RDMA_TIME_MS = "RDMA time(ms)"
     RDMA_SIZE_MB = "RDMA size(mb)"
     SDMA_TIME_MS = "SDMA time(ms)"

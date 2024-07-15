@@ -1,5 +1,4 @@
 import logging
-
 from typing import List
 
 from profiler.advisor.analyzer.computation.operator_checker import OperatorChecker
