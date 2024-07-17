@@ -16,3 +16,16 @@ class Constant(object):
     COLLECTION_PATH = "collection_path"
     ANALYSIS_MODE = "analysis_mode"
     CONTEXT_SETTINGS = dict(help_option_names=['-H', '-h', '--help'])
+
+    MAX_FILE_SIZE_5_GB = 1024 * 1024 * 1024 * 5
+
+    MODULE_EVENT = "module_event"
+    CPU_OP_EVENT = "op_event"
+    TORCH_TO_NPU_FLOW = "torch_to_device"
+    KERNEL_EVENT = "kernel_event"
+    FWD_BWD_FLOW = "fwd_to_bwd"
+    NPU_ROOT_ID = "NPU"
+
+    FWD_OR_OPT = 0
+    BACKWARD = 1
+    INVALID_RETURN = -1
