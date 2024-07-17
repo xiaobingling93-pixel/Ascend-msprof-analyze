@@ -92,31 +92,31 @@ msprof-analyze的advisor功能是将Ascend PyTorch Profiler或者msprof采集的
 - 总体性能瓶颈
 
   ```bash
-  msprof-analyze advisor all -d {profiling_path} [-bp benchmark_profiling_path] [-cv cann_version] [-tv torch_version] [-pt profiling_type] [-D] [-h]
+  msprof-analyze advisor all -d {profiling_path} [-bp benchmark_profiling_path] [-cv cann_version] [-tv torch_version] [-pt profiling_type] [--debug] [-h]
   ```
 
 - 计算瓶颈
 
   ```bash
-  msprof-analyze advisor computation -d {profiling_path} [-bp benchmark_profiling_path] [-cv cann_version] [-tv torch_version] [-pt profiling_type] [-D] [-h]
+  msprof-analyze advisor computation -d {profiling_path} [-cv cann_version] [-tv torch_version] [-pt profiling_type] [--debug] [-h]
   ```
 
 - 调度瓶颈
 
   ```bash
-  msprof-analyze advisor schedule -d {profiling_path} [-bp benchmark_profiling_path] [-cv cann_version] [-tv torch_version] [-D] [-h]
+  msprof-analyze advisor schedule -d {profiling_path} [-cv cann_version] [-tv torch_version] [--debug] [-h]
   ```
 
 #### 参数介绍
 
 | 参数                               | 说明                                                         | 是否必选 |
 | ---------------------------------- | ------------------------------------------------------------ | -------- |
-| -d<br>--profiling_path             | 性能数据所在目录。性能数据通过Profiling工具采集获取。请确保性能数据采集时配置“aic-metrics”参数为“PipeUtilization”，“aicpu”参数为“on”。advisor依赖Profiling工具解析后的timeline数据、summary数据以及info.json*文件，请确保指定的“profiling_dir”目录下存在以上文件。 | 是       |
+| -d<br>--profiling_path             | 性能数据文件或目录所在路径，Ascend PyTorch Profiler采集场景指定为`*_ascend_pt`性能数据结果目录，其他场景指定为`PROF_XXX`性能数据结果目录。建议通过Ascend PyTorch Profiler获取性能数据。<br/>advisor依赖Profiling工具解析后的timeline数据（.json）、summary（.csv）数据以及info.json*文件，请确保指定的“profiling_path”目录下存在以上文件。 | 是       |
 | -bp<br/>--benchmark_profiling_path | 基准性能数据所在目录，用于性能比对。性能数据通过Profiling工具采集获取。<br>**computation和schedule不支持该参数。** | 否       |
 | -cv<br/>--cann_version             | 使用Profiling工具采集时对应的CANN软件版本，可通过在环境中执行如下命令获取其version字段，目前配套的兼容版本为“6.3.RC2”，“7.0.RC1”、“7.0.0”、“8.0.RC1”，此字段不填默认按“8.0.RC1”版本数据进行处理，其余版本采集的Profiling数据在分析时可能会导致不可知问题：`cat /usr/local/Ascend/ascend-toolkit/latest/aarch64-linux/ascend_toolkit_install.info` | 否       |
 | -tv<br/>--torch_version            | 运行环境的torch版本，默认为1.11.0，支持torch1.11.0和torch2.1.0，当运行环境torch版本为其他版本如torch1.11.3时，可以忽略小版本号差异选择相近的torch版本如1.11.0。 | 否       |
-| -pt<br/>--profiling_type           | 配置性能数据采集使用的Profiling工具类型。可取值：<br>        ascend_pytorch_profiler：使用Ascend PyThon Profiler接口方式采集的性能数据时配置，默认值。<br/>        msprof：使用msprof命令行方式采集的性能数据时配置。<br/>        mslite：使用[Benchmark](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)工具采集的性能数据时配置。<br>**schedule不支持该参数。** | 否       |
-| -D<br/>--debug                     | 工具执行报错时可打开此开关，将会展示详细保存堆栈信息。       | 否       |
+| -pt<br/>--profiling_type           | 配置性能数据采集使用的Profiling工具类型。可取值：<br>        ascend_pytorch_profiler：使用Ascend PyThon Profiler接口方式采集的性能数据时配置，默认值。<br/>        msprof：使用msprof命令行方式采集的性能数据时配置。功能完善中，暂不建议使用。<br/>        mslite：使用[Benchmark](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)工具采集的性能数据时配置。不建议使用。<br>**schedule不支持该参数。** | 否       |
+| --debug                            | 工具执行报错时可打开此开关，将会展示详细保存堆栈信息。       | 否       |
 | -h，-H<br/>--help                  | 在需要查询当前命令附属子命令或相关参数时，给出帮助建议。     | 否       |
 
 ### 报告解析
