@@ -11,6 +11,7 @@ class Constant(object):
     GREEN_COLOR = "00FF00"
     RED_COLOR = "FF0000"
     BLUE_COLOR = "00BFFF"
+    LIGHT_BLUE_COLOR = "87CEFA"
     US_TO_MS = 1000
     KB_TO_MB = 1024
     INVALID_VALUE = -1
@@ -55,6 +56,7 @@ class Constant(object):
     PERFORMANCE_TABLE = "Model Profiling Time Distribution"
     MODULE_TABLE = "ModuleCompare"
     MODULE_TOP_TABLE = "ModuleCompareStatistic"
+    OVERALL_METRICS_TABLE = "OverallMetrics"
 
     # memory
     SIZE = "Size(KB)"
@@ -74,7 +76,13 @@ class Constant(object):
     MEMORY_LIST = "memory_list"
     COMMUNICATION_DICT = "comm_dict"
 
-    #compare type
+    # compare type
     OVERALL_COMPARE = "overall"
 
     BWD_LIST = ["bwd", "backward", "back"]
+
+    CPU_OP_FA_MASK = ("flash_attention", "fusion_attention", "flashattn", "xformers_flash", "efficient_attention")
+    CPU_OP_CONV = "aten::conv"
+    CPU_OP_MATMUL_MASK = ("aten::addmm", "aten::bmm", "aten::mm", "aten::matmul")
+    KERNEL_CUBE_MASK = ("gemm", "conv", "cutlass", "wgrad")
+    KERNEL_TRANS_MASK = ("cast", "transdata", "transpose")

@@ -47,5 +47,5 @@ class TestKernelDetailsBean(unittest.TestCase):
         self.assertFalse(self.kernel_bean2.is_flash_attention())
 
     def test_is_cube(self):
-        self.assertTrue(self.kernel_bean2.is_cube())
-        self.assertFalse(self.kernel_bean3.is_cube())
+        self.assertTrue(self.kernel_bean2.is_matmul())
+        self.assertFalse(self.kernel_bean3.is_matmul())
