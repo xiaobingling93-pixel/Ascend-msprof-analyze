@@ -83,9 +83,6 @@ def analyze_cli(**kwargs):
               help="enter the profiling type, selectable range ascend_pytorch_profiler, mslite ,msprof")
 @debug_option
 def analyze_all(**kwargs) -> None:
-    # 当前compare_tools必须输入两个profiling路径，att-advisor有等价功能支持输入一个Profiling路径，后续替换成对应实现
-    if not kwargs.get("benchmark_profiling_path"):
-        kwargs["benchmark_profiling_path"] = kwargs.get("profiling_path")
     try:
         _analyze(Interface.all_dimension, **kwargs)
     except RuntimeError as e:
