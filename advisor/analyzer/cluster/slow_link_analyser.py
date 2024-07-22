@@ -19,7 +19,7 @@ from profiler.advisor.analyzer.base_analyzer import BaseAnalyzer
 from profiler.advisor.common import constant
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
-from profiler.advisor.dataset.cluster.cluster_dataset import ClusterCommunicationDataSet
+from profiler.advisor.dataset.cluster.cluster_dataset import ClusterCommunicationDataset
 
 
 class SlowLinkAnalyzer(BaseAnalyzer):
@@ -35,11 +35,11 @@ class SlowLinkAnalyzer(BaseAnalyzer):
     SDMA = "SDMA"
     RDMA = "RDMA"
     SLOW_LINK_ANALYSIS = "slow_link_analysis"
-    dataset_cls_list = [ClusterCommunicationDataSet]
+    dataset_cls_list = [ClusterCommunicationDataset]
 
     def __init__(self, collection_path, n_processes: int = 1, **kwargs):
         super().__init__(collection_path, n_processes, **kwargs)
-        key = ClusterCommunicationDataSet.get_key()
+        key = ClusterCommunicationDataset.get_key()
         self.communication_data_class = self.get_first_data_by_key(self.dataset_list, key)
         self.rank_bw_dict = self.communication_data_class.get_data()
         self.result = OptimizeResult()
@@ -49,8 +49,9 @@ class SlowLinkAnalyzer(BaseAnalyzer):
 
     def optimize(self, **kwargs):
         if self.rank_bw_dict is None:
-            print("slow_link 分析失败，原因是数据加载失败，请检查你的cluster_analysis_outpu文件夹, \
-                   如不关心这类数据请忽略")
+            print("Slow link analysis failed due to data loading failure. \
+                        Please check your cluster_analysis_output folder. \
+                        If you are not concerned about this type of data, please ignore this message.")
             return self.result
         self.process()
         self.format_datas = self.format_details()
@@ -65,8 +66,11 @@ class SlowLinkAnalyzer(BaseAnalyzer):
 
     def produce_bottleneck(self, link_type: str):
         data_list = [rank_dict.get(link_type, 0) for rank_id, rank_dict in self.rank_bw_dict.items()]
-        avg_bw = round(sum(data_list) / len(data_list), 3)
-        if avg_bw == 0:
+        if len(data_list) > 0:
+            avg_bw = round(sum(data_list) / len(data_list), 3)
+        else:
+            print("The slow link (identified bottleneck) cannot provide a bottleneck \
+                           because the analysis data is missing bandwidth information.")
             return
         self.bottelneck += f'{link_type}: \n' \
                            f'    The average is {avg_bw}, \n' \

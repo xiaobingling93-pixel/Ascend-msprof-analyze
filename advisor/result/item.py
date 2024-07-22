@@ -15,7 +15,7 @@ class OptimizeItem:
 
     @property
     def headers(self):
-        return ["problem", "description", "suggestion"]
+        return ["category", "description", "suggestion"]
 
 
 class StatisticsItem:

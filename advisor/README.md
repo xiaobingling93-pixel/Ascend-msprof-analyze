@@ -36,11 +36,11 @@ msprof-analyze的advisor功能是将Ascend PyTorch Profiler或者msprof采集的
 
 3. 查看结果。
 
-   分析结果输出相关简略建议到执行终端中，并生成`att_advisor_{timestamp}.html`和`att_advisor_{timestamp}.xlsx`文件供用户预览。
+   分析结果输出相关简略建议到执行终端中，并生成`mstt_advisor_{timestamp}.html`和`mstt_advisor_{timestamp}.xlsx`文件供用户预览。
    
-   `att_advisor_{timestamp}.xlsx`文件内容与执行终端输出一致。
+   `mstt_advisor_{timestamp}.xlsx`文件内容与执行终端输出一致。
    
-   `att_advisor_{timestamp}.html`文件分析详见“**报告解析**”。
+   `mstt_advisor_{timestamp}.html`文件分析详见“**报告解析**”。
    
    执行终端输出示例如下：
    

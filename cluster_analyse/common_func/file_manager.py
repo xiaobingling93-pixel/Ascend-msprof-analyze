@@ -17,6 +17,8 @@ import os
 import csv
 import json
 
+import yaml
+
 from common_func.constant import Constant
 from common_func.path_manager import PathManager
 
@@ -56,6 +58,23 @@ class FileManager:
         try:
             with open(file_path, "r") as json_file:
                 result_data = json.loads(json_file.read())
+        except Exception as e:
+            raise RuntimeError(f"Failed to read the file: {base_name}") from e
+        return result_data
+
+    @classmethod
+    def read_yaml_file(cls, file_path: str) -> dict:
+        PathManager.check_path_readable(file_path)
+        base_name = os.path.basename(file_path)
+        file_size = os.path.getsize(file_path)
+        if file_size <= 0:
+            return {}
+        if file_size > Constant.MAX_JSON_SIZE:
+            raise RuntimeError(f"The file({base_name}) size exceeds the preset max value.")
+
+        try:
+            with open(file_path, "r") as yaml_file:
+                result_data = yaml.safe_load(yaml_file)
         except Exception as e:
             raise RuntimeError(f"Failed to read the file: {base_name}") from e
         return result_data

@@ -213,7 +213,7 @@ activities配置仅采集NPU数据，不配置experimental_config参数以及其
 
 - 当Computing Time耗时增大，分析**算子性能**。
 - 当Uncovered Communication Time耗时增大，分析**通信性能**，若通信性能分析没有劣化的通信算子，代表通信与计算的并行度较差，继续进行NPU的集群性能分析。
-- 当Mem Usage增大，分析**算子内存**，若没有明显占用较大的算子，则代表算子内存申请量没有差异，问题在于内存的释放（持有时间过久），可以使用tensorboard或ascend insight继续进行NPU内存的分析。
+- 当Mem Usage增大，分析**算子内存**，若没有明显占用较大的算子，则代表算子内存申请量没有差异，问题在于内存的释放（持有时间过久），可以使用TensorBoard或MindStudio insight继续进行NPU内存的分析。
 
 ### 算子性能
 

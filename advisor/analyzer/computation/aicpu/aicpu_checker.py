@@ -3,13 +3,13 @@ import os
 from functools import partial
 from typing import List, Dict, Optional
 
-import yaml
 from profiler.advisor.analyzer.computation.operator_checker import OperatorChecker, logger
 from profiler.advisor.analyzer.schedule.fusion_ops.timeline_api_stack_checker import OpStackFinder
 from profiler.advisor.common import constant
 from profiler.advisor.dataset.dataset import Dataset
 from profiler.advisor.dataset.profiling.profiling_dataset import ProfilingDataset
 from profiler.advisor.dataset.timeline_event_dataset import TimelineEventDataset
+from profiler.cluster_analyse.common_func.file_manager import FileManager
 
 
 class AicpuChecker(OperatorChecker):
@@ -47,8 +47,8 @@ class AicpuChecker(OperatorChecker):
         if not os.path.exists(rule_path):
             logger.warning("Skip analyze aicpu issues, because %s does not exist.", rule_path)
             return {}
-        with open(rule_path, 'r') as f:
-            self.aicpu_rules = yaml.safe_load(f)
+
+        self.aicpu_rules = FileManager.read_yaml_file(rule_path)
         self.filter_aicpu_rules(self.aicpu_rules)
         for checker_name, check_rule in self.aicpu_rules.items():
             if not isinstance(check_rule, (list, dict,)):

@@ -149,7 +149,7 @@ class GraphFusionRules:
         optimization_item = OptimizeItem(
             "fusion issue",
             f"Found {len(self.candidates)} fusion issues",
-            ["Check fusion issues detail in att_advisor*.html"]
+            ["Check fusion issues detail in mstt_advisor*.html"]
         )
         total_time = 0.0
         for candidate in self.task_duration_list:

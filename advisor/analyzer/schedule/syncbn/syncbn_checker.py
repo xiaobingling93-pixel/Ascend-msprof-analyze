@@ -1,0 +1,70 @@
+import logging
+import os
+
+from profiler.advisor.dataset.timeline_event_dataset import TimelineEventDataset
+from profiler.advisor.result.result import OptimizeResult
+from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
+from profiler.cluster_analyse.common_func.file_manager import FileManager
+
+logger = logging.getLogger()
+
+
+class SyncBNChecker:
+
+    def __init__(self):
+        self.optimization_item = []
+        self.syncbn_issues = False
+        self.desc = ""
+        self.suggestions = []
+        self.solutions = None
+        self.max_syncbn_num = None
+        self._init_rule()
+
+    def check_syncbn(self, event_dataset: TimelineEventDataset):
+        """
+        :Param event_dataset: dataset of timeline event
+        """
+        if not hasattr(event_dataset, "sync_batchnorm") or not getattr(event_dataset, "sync_batchnorm"):
+            logger.debug("Skip syncbn checker, because no syncbn found")
+            return
+
+        syncbn_num = len(event_dataset.sync_batchnorm)
+        self.syncbn_issues = syncbn_num >= self.max_syncbn_num
+        self.desc = self.desc.format(syncbn_num=syncbn_num)
+
+    def make_record(self, result: OptimizeResult):
+        """
+        make record for what and how to optimize
+        """
+        if not self.syncbn_issues:
+            return
+
+        self.optimization_item.append(OptimizeItem("SyncBatchNorm", self.desc, self.suggestions))
+        for optimization in self.optimization_item:
+            result.add(OptimizeRecord(optimization))
+
+    def make_render(self, html_render):
+        if not self.syncbn_issues:
+            return
+        html_render.render_template(key="schedule",
+                                    template_dir="templates",
+                                    template_name="sync_batchnorm.html",
+                                    desc=self.desc,
+                                    solutions=self.solutions)
+
+    def _init_rule(self):
+        syncbn_rule_path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))),
+            "rules",
+            "sync_batchnorm.yaml"
+        )
+
+        syncbn_rule = FileManager.read_yaml_file(syncbn_rule_path)
+
+        self.max_syncbn_num = syncbn_rule.get("max_syncbn_num")
+        self.desc = syncbn_rule.get("problem")
+
+        self.solutions = syncbn_rule.get("solutions")
+        for solution in self.solutions:
+            for key, val in solution.items():
+                self.suggestions.append(f"{key}, {val.get('desc')}")

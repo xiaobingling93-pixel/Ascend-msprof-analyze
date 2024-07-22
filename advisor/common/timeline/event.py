@@ -1,3 +1,4 @@
+from decimal import Decimal
 class AdvisorDict(dict):
     def __getstate__(self):
         return self.__dict__
@@ -18,6 +19,6 @@ class AdvisorDict(dict):
 class TimelineEvent(AdvisorDict):
 
     def ts_include(self, event):
-
-        return float(self.ts) <= float(event.ts) and float(self.ts) + float(self.dur) >= float(event.ts) + float(
+        return Decimal(self.ts) <= Decimal(event.ts) and Decimal(self.ts) + Decimal(self.dur) >= Decimal(
+            event.ts) + Decimal(
             event.dur)

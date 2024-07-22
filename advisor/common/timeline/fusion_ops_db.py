@@ -1,13 +1,12 @@
 import logging
 import os
 
-import yaml
-
 from profiler.advisor.common import constant
 from profiler.advisor.common.timeline.fusion_ops_rule import OpRule
 from profiler.advisor.common.timeline.fusion_ops_rule_handler import TimelineOpRuleHandler
 from profiler.advisor.utils.log import get_log_level
 from profiler.advisor.utils.utils import get_file_path_by_walk
+from profiler.cluster_analyse.common_func.file_manager import FileManager
 
 logger = logging.getLogger()
 logger.setLevel(get_log_level())
@@ -241,8 +240,7 @@ class FusionOperatorDB:
 
         logger.debug("The rule yaml file is successfully found in path: %s", os.path.abspath(file_path))
 
-        with open(file_path, "rb") as file:
-            db_content = yaml.safe_load(file)
+        db_content = FileManager.read_yaml_file(file_path)
 
         if not self._is_version_supported(db_content):
             self.is_empty = True

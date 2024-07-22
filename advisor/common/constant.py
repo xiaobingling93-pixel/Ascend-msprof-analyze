@@ -26,6 +26,7 @@ ENQUEUE = "enqueue"
 TORCH_TO_NPU = "torch_to_npu"
 OP_COMPILE_NAME = "AscendCL@aclopCompileAndExecute"
 OP_COMPILE_ID = "aclopCompileAndExecute"
+SYNC_STREAM = "AscendCL@aclrtSynchronizeStream"
 MAX_OP_COMPILE_NUM = 20
 ACL_TO_NPU = "acl_to_npu"
 TASK_TYPE = "Task Type"
@@ -111,7 +112,7 @@ HTTP_PREFIXES = "http://"
 HTTPS_PREFIXES = "https://"
 COMMON_YAML_DIR = "modelarts/solution/ma_advisor_rules/"
 COMMON_ENDPOINT_SUFFIX = "obs.{}.myhuaweicloud.com"
-INNER_ENDPOINT_SUFFIX= "obs.{}.ulanqab.huawei.com"
+INNER_ENDPOINT_SUFFIX = "obs.{}.ulanqab.huawei.com"
 
 AICPU_RULES_YAML_NAME = "aicpu_rules.yaml"
 FUSION_PASS_YAML_NAME = "op_fusion_pass.yaml"
@@ -139,3 +140,7 @@ CLUSTER_COMM_JSON = "cluster_communication.json"
 
 BOTTLENECK = "bottleneck"
 DATA = "data"
+
+FRAMEWORK_STACK_BLACK_LIST = ["torch", "torch_npu", "megatron", "deepspeed"]
+DISABLE_STREAMING_READER = "DISABLE_STREAMING_READER"
+MAX_FILE_SIZE = 10**10

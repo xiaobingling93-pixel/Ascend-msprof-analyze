@@ -68,6 +68,7 @@ class TestGpuProfilingParser(unittest.TestCase):
                 patch("compare_backend.profiling_parser.gpu_profiling_parser.GPUProfilingParser.__init__",
                       return_value=None):
             res = GPUProfilingParser({}, {})
+            res._profiling_type = "GPU"
             res._trace_events = [TraceEventBean(event) for event in self.trace_events]
             res._result_data = ProfilingResult("GPU")
             res._compute_stream_id = 3

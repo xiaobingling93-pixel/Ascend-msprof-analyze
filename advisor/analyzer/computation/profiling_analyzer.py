@@ -1,19 +1,15 @@
 import logging
 from abc import ABC
-from typing import Dict, List
 
 from profiler.advisor.analyzer.base_analyzer import BaseAnalyzer
-from profiler.advisor.common import constant
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.analyzer.computation.aicpu.aicpu_checker import AicpuChecker
 from profiler.advisor.analyzer.computation.bound.block_dim_checker import BlockDimChecker
 from profiler.advisor.analyzer.computation.bound.operator_bound_checker import OperatorBoundChecker
-from profiler.advisor.analyzer.computation.operator_checker import OperatorChecker
 from profiler.advisor.analyzer.computation.op_compile.dynamic_shape_checker import DynamicShapeChecker
 from profiler.advisor.analyzer.computation.operator_checker import OperatorChecker
 from profiler.advisor.display.html.render import HTMLRender
 from profiler.advisor.dataset.profiling.profiling_dataset import ProfilingDataset
-from profiler.advisor.utils.utils import get_supported_subclass
 
 logger = logging.getLogger()
 
@@ -76,12 +72,13 @@ class BlockDimAnalyzer(ProfilingAnalyzer):
     def __init__(self, collection_path, **kwargs) -> None:
         super().__init__(collection_path, **kwargs)
         self.checker = BlockDimChecker(self.cann_version)
-        
+
 
 class OperatorBoundAnalyzer(ProfilingAnalyzer):
     def __init__(self, collection_path, **kwargs) -> None:
         super().__init__(collection_path, **kwargs)
         self.checker = OperatorBoundChecker(self.cann_version)
+
 
 class AicpuAnalyzer(ProfilingAnalyzer):
     def __init__(self, collection_path, **kwargs) -> None:

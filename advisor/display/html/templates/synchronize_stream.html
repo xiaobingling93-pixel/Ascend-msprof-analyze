@@ -1,0 +1,57 @@
+<div class="collapsible">
+  <h2 class="collapsible-header" style="background-color: {{ priority_background_color }};">Synchronize Stream Issues</h2>
+  <div class="collapsible-content">
+      <a style="font-weight: bold" id="timeline_api_instruction">{{ desc }}</a>
+
+         <table>
+            <tr>
+                <th>Suggestions</th>
+            </tr>
+
+            {% for item in solutions %}
+                {% set rowloop = loop %}
+                {% for key, value in item.items() %}
+
+                <tr>
+                    <td>{{  rowloop.index }}. {{ value.desc }}</td>
+                </tr>
+                {% endfor %}
+            {% endfor %}
+         </table>
+
+      <div class="collapsible">
+        {% if not empty_stacks %}
+        <a style="font-weight: bold" id="timeline_api_instruction">Please click on the collapsible box below to view the detailed code stack that triggers synchronizeStream</a>
+        {% elif not framework_black_list %}
+        <a style="font-weight: bold" id="timeline_api_instruction">Suggestion: </a>
+        <a>These operators have no code stack. If parameter 'with_stack=False' was set while profiling, please refer to</a>
+        <a href="{{with_stack_doc_url|safe}}" target="_blank">Ascend PyTorch Profiler</a> to set
+            <span style="font-weight:bold;color:red;">'with_stack=True'</span>. Otherwise, ignore following affinity APIs due to backward broadcast lack of stack.
+        {% endif %}
+
+      {% for api_name, stacks in result.items() %}
+
+        {% if empty_stacks %}
+        <div class="non-stack-api-box">{{api_name|safe}}</div>
+
+        {% elif stacks | length > 0 %}
+
+        <div class="collapsible-header">{{api_name|safe}}</div>
+        <div class="collapsible-content">
+          <div class="collapsible">
+          {% for stack in stacks %}
+              <div class="collapsible-header">No.{{loop.index|safe}} code stack, called {{stack[1]|safe}} times</div>
+              <div class="collapsible-content">
+                <a id="timeline_api_stack">{{stack[0]|safe}}</a>
+              </div>
+          {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+      {% endfor %}
+
+      </div>
+
+  </div>
+</div>

@@ -10,6 +10,7 @@ from profiler.advisor.common.profiling.tasktime import TaskTime
 from profiler.advisor.dataset.dataset import Dataset
 from profiler.advisor.dataset.profiling.device_info import DeviceInfoParser
 from profiler.advisor.utils.utils import join_prof_path
+from profiler.cluster_analyse.common_func.file_manager import FileManager
 
 
 logger = logging.getLogger()
@@ -69,8 +70,7 @@ class ProfilingDataset(Dataset):
             logger.warning("Skip parse profiling dataset, because %s does not exist.", config_path)
             return []
 
-        with open(config_path, 'r') as f:
-            patterns = yaml.safe_load(f)
+        patterns = FileManager.read_yaml_file(config_path)
 
         return patterns
 

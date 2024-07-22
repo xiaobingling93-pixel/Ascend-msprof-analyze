@@ -1,0 +1,9 @@
+# unit is milliseconds
+dataloader_duration_threshold: 10
+problem: "Found slow dataloader, cost {dataloader_duration} milliseconds for one step while profiling, normally less than {dataloader_duration_threshold} milliseconds."
+solutions:
+   - "Please check the disk I/O of your data directory. If you are training model in ModelArts, please move data to '/cache' or mount a more efficient cloud disk for better I/O."
+   - "Please check if there are any other multiprocess operations in runtime that may have affected the dataloader, such as training process core binding command 'taskset ...' used for launching the training job."
+   - "Please check the format of your data, avoid file format like tar, tar.gz, zip."
+   - "Please set 'pin_memory=True' for your dataloader."
+   - "Try to adjust dataloader parameter 'num_workers'."

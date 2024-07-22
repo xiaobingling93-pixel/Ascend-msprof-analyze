@@ -97,6 +97,13 @@ class Config:
         """
         return float(self.config.get("THRESHOLD", "operator_bound_ratio"))
 
+    @property
+    def frequency_threshold(self) -> float:
+        """
+        frequency_threshold
+        """
+        return float(self.config.get("THRESHOLD", "frequency_threshold"))
+
     def set_log_path(self, result_file: str, log_path: str = None):
         self.log_path = log_path if log_path is not None else os.path.join(self._work_path, "log")
         os.makedirs(self.log_path, exist_ok=True)

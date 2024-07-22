@@ -12,3 +12,7 @@ class SupportedScopes:
     BLOCK_DIM_ANALYSIS = "block_dim_analysis"
     OPERATOR_NO_BOUND_ANALYSIS = "operator_no_bound_analysis"
     TIMELINE_OP_DISPATCH = "timeline_op_dispatch"
+    DATALOADER = "dataloader"
+    SYNCBN = "syncbn"
+    SYNCHRONIZE_STREAM = "synchronize_stream"
+    FREQ_ANALYSIS = "freq_analysis"

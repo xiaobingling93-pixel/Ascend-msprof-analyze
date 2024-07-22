@@ -1,0 +1,8 @@
+problem: "SynchronizeStream will reduce training efficiency. Found {synchronize_num} SynchronizeStream, {slow_synchronize_num} slow SynchronizeStream cost {total_synchronize_stream_time} us."
+max_synchronize_num: 20
+slow_synchronize_threshold: 10 #ms
+solutions:
+  - disable ascend launch blocking:
+      desc: "please check your env 'ASCEND_LAUNCH_BLOCKING', if ASCEND_LAUNCH_BLOCKING=1, please execute 'unset ASCEND_LAUNCH_BLOCKING' and then start your training job."
+  - modify code to avoid synchronize stream:
+      desc: "please try to modify your training code to avoid synchronize stream between cpu and npu."

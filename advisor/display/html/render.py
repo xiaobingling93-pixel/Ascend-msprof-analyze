@@ -1,6 +1,7 @@
 import os
 import logging
 from typing import List, Dict
+from collections import defaultdict
 
 from jinja2 import Environment, FileSystemLoader
 from profiler.advisor.common import constant
@@ -15,7 +16,7 @@ logger = logging.getLogger()
 class HTMLRender:
     def __init__(self):
         self.html = ""
-        self.render_list: Dict[str, List] = {}
+        self.render_list = defaultdict(list)
 
     def render_html(self, template_dir: str = "templates", template_name: str = "main.html",
                     template_header=constant.DEFAULT_TEMPLATE_HEADER):
@@ -30,8 +31,6 @@ class HTMLRender:
                           autoescape=True)
         template = env.get_template(template_name)
         rendered_html = template.render(**kwargs)
-        if key not in self.render_list:
-            self.render_list[key] = []
         self.render_list[key].append(rendered_html)
         return rendered_html
 

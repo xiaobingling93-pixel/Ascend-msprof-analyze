@@ -1,0 +1,84 @@
+import os
+import re
+import logging
+import yaml
+
+from profiler.advisor.dataset.timeline_event_dataset import TimelineEventDataset
+from profiler.advisor.result.result import OptimizeResult
+from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
+from profiler.cluster_analyse.common_func.file_manager import FileManager
+
+logger = logging.getLogger()
+
+
+class DataloaderChecker:
+
+    def __init__(self):
+
+        self.dataloader_issues = False
+        self.optimization_item = []
+        self.desc = ""
+        self.suggestions = []
+        self.dataloader_duration_threshold = None
+        self._init_rule()
+
+    def check_slow_dataloader(self, event_dataset: TimelineEventDataset):
+        """
+        :Param event_dataset: dataset of timeline event
+        """
+        if not hasattr(event_dataset, "dataloader") or not getattr(event_dataset, "dataloader"):
+            logger.debug("Skip slow dataloader checker, because no dataloader duration larger than %s",
+                         self.dataloader_duration_threshold)
+            return
+        for event in event_dataset.dataloader:
+
+            dataloader_duration = float(event.dur) / 1000
+            if dataloader_duration < self.dataloader_duration_threshold:
+                continue
+            self.desc = self.desc.format(dataloader_duration=dataloader_duration,
+                                         dataloader_duration_threshold=self.dataloader_duration_threshold)
+            self.dataloader_issues = True
+
+            if re.search("singleprocess", event.name.lower()):
+                self.suggestions = self._reset_suggestions(["I/O", "num_workers"])
+
+    def make_record(self, result: OptimizeResult):
+        """
+        make record for what and how to optimize
+        """
+        if not self.dataloader_issues:
+            return
+
+        self.optimization_item.append(OptimizeItem("Slow dataloader", self.desc, self.suggestions))
+        for optimization in self.optimization_item:
+            result.add(OptimizeRecord(optimization))
+
+    def make_render(self, html_render):
+        if not self.dataloader_issues:
+            return
+        html_render.render_template(key="dataloader",
+                                    template_dir="templates",
+                                    template_name="slow_dataloader.html",
+                                    desc=self.desc,
+                                    suggestions=self.suggestions)
+
+    def _init_rule(self):
+        dataloader_rule_path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))),
+            "rules",
+            "dataloader.yaml"
+        )
+        dataloader_rule = FileManager.read_yaml_file(dataloader_rule_path)
+
+        self.dataloader_duration_threshold = dataloader_rule.get("dataloader_duration_threshold")
+        self.desc = dataloader_rule.get("problem")
+        self.suggestions = dataloader_rule.get("solutions")
+
+    def _reset_suggestions(self, suggestion_pattern_list):
+
+        suggestions = []
+        for solution in self.suggestions:
+            for suggestion_pattern in suggestion_pattern_list:
+                if re.search(suggestion_pattern, solution):
+                    suggestions.append(solution)
+        return suggestions

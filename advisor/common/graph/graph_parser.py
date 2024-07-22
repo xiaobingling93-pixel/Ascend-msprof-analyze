@@ -1,10 +1,11 @@
 import os
 import logging
-import yaml
 import itertools
 from collections import deque
 from dataclasses import dataclass
 from typing import List, Tuple, Dict
+
+from profiler.cluster_analyse.common_func.file_manager import FileManager
 
 logger = logging.getLogger()
 
@@ -344,9 +345,9 @@ class QueryGraphParser:
 
         if not os.path.exists(rule_database):
             raise FileNotFoundError(f"Path {rule_database} does not exist.")
-        with open(rule_database, 'r') as f:
-            database = yaml.safe_load(f)
-            self.parse_yaml(database)
+
+        database = FileManager.read_yaml_file(rule_database)
+        self.parse_yaml(database)
 
     def parse_yaml(self, yaml_database):
         fusion_strategy_list = yaml_database.get("GraphFusion", [])

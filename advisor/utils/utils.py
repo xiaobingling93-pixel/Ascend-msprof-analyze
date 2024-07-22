@@ -1,5 +1,6 @@
 import inspect
 import json
+
 import logging
 import multiprocessing as mp
 import os
@@ -11,7 +12,7 @@ import traceback
 import types
 from functools import wraps
 from typing import Any, Set
-
+import ijson
 import click
 import requests
 from requests.adapters import HTTPAdapter
@@ -43,7 +44,7 @@ class ContextObject(object):
 
 
 def debug_option(f):
-    return click.option('--debug', '-D',
+    return click.option('--debug',
                         is_flag=True,
                         expose_value=False,
                         is_eager=True,
@@ -550,3 +551,50 @@ def get_file_path_by_walk(root, filename):
                 file_path = os.path.join(root, name)
                 return file_path
     return file_path
+
+
+def check_path_valid(path):
+    if os.path.islink(os.path.abspath(path)):
+        logger.error("fThe path is detected as a soft connection. path:%ss", path)
+        return False
+    elif not os.access(path, os.R_OK):
+        logger.error(f"The file is not readable. path:%ss", path)
+        return False
+    elif os.path.getsize(path) > const.MAX_FILE_SIZE:
+        logger.error(f"The file size exceeds the limit. path:%ss, MAX_FILE_SIZE:%ss B",path, const.MAX_FILE_SIZE)
+        return False
+    return True
+
+
+def parse_json_with_generator(timeline_data_path, func):
+    result = []
+    if not check_path_valid(timeline_data_path):
+        return result
+    try:
+        with open(timeline_data_path, "r") as f:
+            if os.getenv(const.DISABLE_STREAMING_READER) == "1":
+                logger.debug("Disable streaming reader.")
+                file_parser = json.loads(f.read())
+            else:
+                logger.debug("Enable streaming reader.")
+                file_parser = ijson.items(f, "item")
+
+            for i, event in tqdm(enumerate(file_parser),
+                                 leave=False, ncols=100, desc="Building dataset for timeline analysis"):
+                func_res = func(index=i, event=event)
+                if func_res is not None:
+                    result.append(func_res)
+
+    except Exception:
+        logger.warning("Error %s while parsing file %s, continue to timeline analysis", traceback.format_exc(),
+                       timeline_data_path)
+    return result
+
+
+def convert_to_float(num):
+    try:
+        return float(num)
+    except (ValueError, FloatingPointError):
+        logger.error(f"Can not convert %ss to float", num)
+        pass
+    return 0
