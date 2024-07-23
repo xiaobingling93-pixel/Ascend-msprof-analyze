@@ -42,34 +42,18 @@ class OverallSummaryAnalyzer(BaseAnalyzer):
         'Other Time': "Other Computing Time",
         'SDMA Time(Num)': 'SDMA Time'
     }
-    performance_time_dict = {
-        "Computing Time": ['Cube Time(Num)', 'Vector Time(Num)', 'Flash Attention Time(Forward)(Num)',
-                           'Flash Attention Time(Backward)(Num)', 'Other Time'],
-        "Uncovered Communication Time(Wait Time)": [],
-        "Free Time": ['SDMA Time(Num)']
-    }
-    time_field_map = {
-        "Computing Time": ['compute_time', None],
-        "Uncovered Communication Time(Wait Time)": ['communication_not_overlapped', 'wait_time'],
-        "Free Time": ['scheduling_time', None],
-        "Cube Time(Num)": ['cube_time', 'cube_num'],
-        "Vector Time(Num)": ['vec_time', 'vec_num'],
-        "Flash Attention Time(Forward)(Num)": ['fa_time_fwd', 'fa_num_fwd'],
-        "Flash Attention Time(Backward)(Num)": ['fa_time_bwd', 'fa_num_bwd'],
-        "Other Time": ['other_time', None],
-        "SDMA Time(Num)": ['sdma_time', 'sdma_num'],
-    }
 
     def __init__(self, collection_path: str, n_processes: int = 1, **kwargs):
         profile_path = get_profile_path(collection_path)
         super().__init__(profile_path, n_processes, **kwargs)
-        self.base_collection_path = kwargs.get("benchmark_profiling_path", "")
-        self._has_base_collection = False
+        self.benchmark_profiling_path = kwargs.get("benchmark_profiling_path", "")
+        self._has_benchmark_profiling = False
         self._is_minimal_profiling = False
         self.cur_data = {}
         self.cur_data_table = {}
         self.cur_bottleneck = {}
         self._disaggregate_perf = {}
+        self._disaggregate_benchmark_perf = {}
         self.cur_advices = ""
         self._headers = []
         self._base_data = []
@@ -85,79 +69,51 @@ class OverallSummaryAnalyzer(BaseAnalyzer):
             return float("inf")
         return dividend / divisor
 
+    @staticmethod
+    def get_time_category_dict(overall_dict: dict):
+        time_category_dict = {
+            "Computing Time": round(overall_dict.get('computing_time_ms', 0.0), 3),
+            "Uncovered Communication Time": round(overall_dict.get('uncovered_communication_time_ms', 0.0), 3),
+            "Free Time": round(overall_dict.get('free_time_ms', 0.0), 3)
+        }
+        return time_category_dict
+
     def path_check(self):
-        if self.base_collection_path:
-            if os.path.exists(self.base_collection_path):
-                self._has_base_collection = True
+        if self.benchmark_profiling_path:
+            if os.path.exists(self.benchmark_profiling_path):
+                self._has_benchmark_profiling = True
             else:
-                print(f"[WARNING] Invalid path which not exists: {self.base_collection_path}.")
+                print(f"[WARNING] Invalid path which not exists: {self.benchmark_profiling_path}.")
         return os.path.exists(self.collection_path)
 
     def process(self):
         self._disaggregate_perf = ComparisonInterface(self.collection_path).disaggregate_perf(Constant.OVERALL_COMPARE)
+        if self._has_benchmark_profiling:
+            self._disaggregate_benchmark_perf = (ComparisonInterface(self.benchmark_profiling_path)
+                                                 .disaggregate_perf(Constant.OVERALL_COMPARE))
         if not self._disaggregate_perf:
             return
         self._is_minimal_profiling = self._disaggregate_perf.get("minimal_profiling", False)
-        if self._has_base_collection:
-            base_collection_path = self.base_collection_path if self._has_base_collection else self.collection_path
-            comparison_result = ComparisonInterface(base_collection_path, self.collection_path).compare(
-                Constant.OVERALL_COMPARE)
-            self.cur_data["comparison_result"] = comparison_result
-
-        time_category_dict = {}
-        for time_category, time_list in self.performance_time_dict.items():
-            duration, _ = self.get_duration_and_num(time_category)
-            if duration == Constant.INVALID_VALUE:
-                continue
-            time_category = time_category.split("(")[0]
-            time_category_dict[time_category] = duration
-            self.get_sub_category_time(time_category, time_list, duration)
-        self.cur_data["overall_data"] = time_category_dict
-
-    def get_duration_and_num(self, time_category: str):
-        field_list = self.time_field_map.get(time_category)
-        if not field_list:
-            return Constant.INVALID_VALUE, Constant.INVALID_VALUE
-        duration = round(self._disaggregate_perf.get(field_list[0], 0.0), 3)
-        num = self._disaggregate_perf.get(field_list[1], None)
-        if isinstance(num, float):
-            num = round(num, 3)
-        return duration, num
-
-    def get_sub_category_time(self, category: str, time_list: list, total_duration: float):
-        sub_time_dict = {}
-        for time_name in time_list:
-            sub_time_dict.setdefault(f"{category} Subtype", []).append(self.time_name_map.get(time_name, ""))
-            duration, num = self.get_duration_and_num(time_name)
-            if duration == Constant.INVALID_VALUE or num == Constant.INVALID_VALUE:
-                continue
-            sub_time_dict.setdefault(f"Duration(s)", []).append(duration)
-            sub_time_dict.setdefault(f"Duration Ratio", []).append(
-                "{:.2%}".format(self.calculate_ratio(duration, total_duration)))
-            sub_time_dict.setdefault(f"Kernel Number", []).append(num)
-        self.cur_data[self.time_name_map.get(category)] = sub_time_dict
+        self.cur_data["overall_data"] = self.get_time_category_dict(self._disaggregate_perf.get('overall', {}))
 
     def identify_bottleneck(self):
         overall_data = self.cur_data.get("overall_data")
         if not overall_data:
             return
         e2e_time = '%.3f' % sum([data for data in overall_data.values()])
-        overall_bottleneck = f"The Model E2E Time is {e2e_time}s.\n"
+        overall_bottleneck = f"The Model E2E Time is {e2e_time}ms.\n"
         comparison_bottleneck = ""
         for time_type, time_value in overall_data.items():
-            # add subtype time bottleneck
-            self.cur_bottleneck[self.time_name_map.get(time_type)] = f"{time_type} is {time_value}s.\n"
             # add overall bottleneck
-            overall_bottleneck += f"    -- {time_type} is {time_value}s\n"
+            overall_bottleneck += f"    -- {time_type} is {time_value}ms\n"
             if time_type == "Free Time" and self._is_minimal_profiling and self.calculate_ratio(time_value,
                                                                                                 e2e_time) > 0.1:
                 overall_bottleneck += "percentage of free time exceed the threshold 10%."
-            if not self._has_base_collection:
+            if not self._has_benchmark_profiling:
                 continue
             # add comparison bottleneck
-            time_type_origin = "Uncovered Communication Time(Wait Time)" \
-                if time_type == "Uncovered Communication Time" else time_type
-            base_duration, _ = self.get_duration_and_num(time_type_origin)
+            base_duration = self.get_time_category_dict(self._disaggregate_benchmark_perf.get('overall', {})).get(
+                time_type)
             if time_value > base_duration:
                 ratio = "{:.2%}".format(self.calculate_ratio(time_value - base_duration, base_duration))
                 comparison_bottleneck += f"{time_type} exceeds the benchmark by {ratio}\n"
@@ -183,7 +139,7 @@ class OverallSummaryAnalyzer(BaseAnalyzer):
         for key, value in self.cur_bottleneck.items():
             if not value:
                 continue
-            result += f'{key}: {value} \n'
+            result += f'{value} \n'
             headers.append(key)
             data.append(value)
         data_list.append(data)
@@ -226,8 +182,10 @@ class OverallSummaryAnalyzer(BaseAnalyzer):
     def make_render(self):
         if not self.bottleneck_str and not self.cur_advices:
             return
+        # 将\n替换为html换行
+        bottleneck_str = self.bottleneck_str.replace('\n', '<br />')
         result_for_html = {
-            "Description": self.bottleneck_str,
+            "Description": bottleneck_str,
             "suggestion": self.cur_advices,
             "details": [self.bottleneck_table]
         }
