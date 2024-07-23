@@ -2,6 +2,7 @@ from abc import abstractmethod, ABC
 from decimal import Decimal
 
 from compare_backend.compare_bean.origin_data_bean.compare_event import KernelEvent, MemoryEvent
+from compare_backend.compare_bean.origin_data_bean.kernel_details_bean import KernelDetailsBean
 from compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
 from compare_backend.compare_bean.profiling_info import ProfilingInfo
 from compare_backend.utils.constant import Constant
@@ -66,6 +67,18 @@ class BaseProfilingParser(ABC):
         self._comm_list = []
         self._read_trace_event()
         self._cur_func_index = 0
+        self._categorize_performance_index = 0
+        self._cpu_cube_op = None
+        self._bwd_tid = None
+
+    @property
+    def cpu_cube_op(self):
+        if self._cpu_cube_op is not None:
+            return self._cpu_cube_op
+        cpu_cube_op = [op for op in self._result_data.torch_op_data if op.is_cpu_cube_op()]
+        cpu_cube_op.sort(key=lambda x: x.start_time)
+        self._cpu_cube_op = cpu_cube_op
+        return self._cpu_cube_op
 
     @abstractmethod
     def _update_memory_list(self):
@@ -101,6 +114,90 @@ class BaseProfilingParser(ABC):
             self._update_overall_metrics()
         self._check_result_data()
         return self._result_data
+
+    def categorize_computing_performance_data(self, tk: (TraceEventBean, KernelDetailsBean), flow_dict_new: dict):
+        if tk.is_page_attention():
+            self._result_data.overall_metrics.update_page_attention_info(tk.dur)
+            return
+        if tk.is_sdma():
+            self._result_data.overall_metrics.update_sdma_tensor_move_info(tk.dur)
+            return
+        flow_start_time = flow_dict_new.get(tk.start_time)
+        if flow_start_time:
+            while self._categorize_performance_index < len(self.cpu_cube_op):
+                cur_op = self.cpu_cube_op[self._categorize_performance_index]
+                if cur_op.end_time < flow_start_time:
+                    self._categorize_performance_index += 1
+                    continue
+                if cur_op.start_time <= flow_start_time:
+                    self._categorize_cube_performance_data(cur_op, tk)
+                    return
+                break
+        if self._profiling_type == Constant.NPU:
+            # 缺失torch至npu连线的算子，判断fa/conv/matmul使用kernel_details.csv的op_type字段
+            if tk.is_flash_attention():
+                if tk.is_fa_bwd():
+                    self._result_data.overall_metrics.update_fa_bwd_cube_info(tk.dur)
+                else:
+                    self._result_data.overall_metrics.update_fa_fwd_cube_info(tk.dur)
+                return
+            elif tk.is_conv():
+                if tk.is_conv_bwd():
+                    self._result_data.overall_metrics.update_conv_bwd_cube_info(tk.dur)
+                else:
+                    self._result_data.overall_metrics.update_conv_fwd_cube_info(tk.dur)
+                return
+            elif tk.is_matmul():
+                self._result_data.overall_metrics.update_matmul_cube_info(tk.dur)
+                return
+        if tk.is_cube_kernel_cat():
+            self._result_data.overall_metrics.update_other_cube_info(tk.dur)
+        elif tk.is_trans():
+            self._result_data.overall_metrics.update_vector_trans_info(tk.dur)
+        else:
+            self._result_data.overall_metrics.update_vector_notrans_info(tk.dur)
+
+    def _categorize_cube_performance_data(self, cpu_op: TraceEventBean, tk: (TraceEventBean, KernelDetailsBean)):
+        """
+        判断fa/conv/matmul/vector使用cpu_op
+        """
+        if cpu_op.is_fa_for_cpu_op():
+            if self._is_backward(cpu_op):
+                if tk.is_cube_kernel_cat():
+                    self._result_data.overall_metrics.update_fa_bwd_cube_info(tk.dur)
+                else:
+                    self._result_data.overall_metrics.update_fa_bwd_vector_info(tk.dur)
+            else:
+                if tk.is_cube_kernel_cat():
+                    self._result_data.overall_metrics.update_fa_fwd_cube_info(tk.dur)
+                else:
+                    self._result_data.overall_metrics.update_fa_fwd_vector_info(tk.dur)
+        elif cpu_op.is_conv_for_cpu_op():
+            if self._is_backward(cpu_op):
+                if tk.is_cube_kernel_cat():
+                    self._result_data.overall_metrics.update_conv_bwd_cube_info(tk.dur)
+                else:
+                    self._result_data.overall_metrics.update_conv_bwd_vector_info(tk.dur)
+            else:
+                if tk.is_cube_kernel_cat():
+                    self._result_data.overall_metrics.update_conv_fwd_cube_info(tk.dur)
+                else:
+                    self._result_data.overall_metrics.update_conv_fwd_vector_info(tk.dur)
+        elif cpu_op.is_matmul_for_cpu_op():  # matmul
+            if tk.is_cube_kernel_cat():
+                self._result_data.overall_metrics.update_matmul_cube_info(tk.dur)
+            else:
+                self._result_data.overall_metrics.update_matmul_vector_info(tk.dur)
+
+    def _is_backward(self, event: TraceEventBean):
+        return event.tid == self._bwd_tid or event.is_bwd_for_cpu_op()
+
+    def _get_flow_time_dict(self):
+        return {
+            flow_event["end"].start_time: flow_event["start"].start_time
+            for flow_event in self._flow_dict.values()
+            if flow_event.get("end") and flow_event.get("start")
+        }
 
     def _dispatch_events(self):
         if not self._dispatch_func:

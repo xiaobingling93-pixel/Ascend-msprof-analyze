@@ -18,6 +18,8 @@ class CellFormatType:
                   'valign': 'vcenter', 'bold': True, 'border': True}  # 绿色背景，加粗
     YELLOW_BOLD = {"font_name": "Arial", 'font_size': 11, 'fg_color': Constant.YELLOW_COLOR, 'align': 'left',
                    'valign': 'vcenter', 'bold': True, 'border': True}  # 黄色背景，加粗
+    BLUE_NORMAL = {'fg_color': Constant.BLUE_COLOR}  # 蓝色背景，主要用于行样式
+    LIGHT_BLUE_NORMAL = {'fg_color': Constant.LIGHT_BLUE_COLOR}  # 淡蓝色背景，主要用于行样式
 
 
 class ExcelConfig(object):
@@ -65,6 +67,10 @@ class ExcelConfig(object):
     MODULE_LEVEL = "Module Level"
     BASE_CALL_STACK = "Base Call Stack"
     COMPARISON_CALL_STACK = "Comparison Call Stack"
+    INDEX = "Index"
+    DURATION = "Duration(ms)"
+    DURATION_RATIO = "Duration Ratio"
+    DIFF_DUR_MS = "Diff Duration(ms)"
 
     HEADERS = {
         Constant.OPERATOR_TABLE: [
@@ -176,10 +182,81 @@ class ExcelConfig(object):
             {"name": DIFF_TOTAL_RATIO, "type": CellFormatType.DEFAULT_RATIO, "width": 15},
             {"name": BASE_CALL_STACK, "type": CellFormatType.DEFAULT, "width": 30},
             {"name": COMPARISON_CALL_STACK, "type": CellFormatType.DEFAULT, "width": 30}
+        ],
+        Constant.OVERALL_METRICS_TABLE: [
+            {"name": INDEX, "type": CellFormatType.DEFAULT, "width": 40},
+            {"name": DURATION, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": DURATION_RATIO, "type": CellFormatType.DEFAULT_RATIO, "width": 20},
+            {"name": NUMBER, "type": CellFormatType.DEFAULT, "width": 10},
+            {"name": DURATION, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": DURATION_RATIO, "type": CellFormatType.DEFAULT_RATIO, "width": 20},
+            {"name": NUMBER, "type": CellFormatType.DEFAULT, "width": 10},
+            {"name": DIFF_DUR_MS, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": DIFF_RATIO, "type": CellFormatType.DEFAULT_RATIO, "width": 10},
+
         ]
     }
 
     OVERHEAD = {Constant.OPERATOR_TABLE: ["B1:F1", "G1:K1"], Constant.MEMORY_TABLE: ["B1:F1", "G1:K1"],
                 Constant.COMMUNICATION_TABLE: ["B1:H1", "I1:O1"], Constant.OPERATOR_TOP_TABLE: ["C1:D1", "E1:F1"],
                 Constant.MEMORY_TOP_TABLE: ["C1:E1", "F1:H1"], Constant.MODULE_TOP_TABLE: ["F1:I1", "J1:M1"],
-                Constant.MODULE_TABLE: ["E1:H1", "I1:L1"]}
+                Constant.MODULE_TABLE: ["E1:H1", "I1:L1"],
+                Constant.OVERALL_METRICS_TABLE: ["B1:D1", "E1:G1"]}
+
+    # overall metrics index
+    # computing time
+    COMPUTING = "Computing Time"
+
+    FA = "\tFlash Attention"
+    FA_FWD_CUBE = "\t\tFlash Attention (Forward) (Cube)"
+    FA_FWD_VECTOR = "\t\tFlash Attention (Forward) (Vector)"
+    FA_BWD_CUBE = "\t\tFlash Attention (Backward) (Cube)"
+    FA_BWD_VECTOR = "\t\tFlash Attention (Backward) (Vector)"
+
+    CONV = "\tConv"
+    CONV_FWD_CUBE = "\t\tConv (Forward) (Cube)"
+    CONV_FWD_VECTOR = "\t\tConv (Forward) (Vector)"
+    CONV_BWD_CUBE = "\t\tConv (Backward) (Cube)"
+    CONV_BWD_VECTOR = "\t\tConv (Backward) (Vector)"
+
+    MM = "\tMatmul"
+    MM_CUBE = "\t\tMatmul (Cube)"
+    MM_VECTOR = "\t\tMatmul (Vector)"
+
+    PA = "\tPage Attention"
+
+    VECTOR = "\tVector"
+    VECTOR_TRANS = "\t\tVector (Trans)"
+    VECTOR_NO_TRANS = "\t\tVector (No Trans)"
+
+    CUBE = "\tCube"
+    SDMA_TM = "\tSDMA (Tensor Move)"
+    OTHER = "\tOther"
+
+    # communication time
+    COMMUNICATION_TIME = "Uncovered Communication Time"
+    WAIT = "\tWait"
+    TRANSMIT = "\tTransmit"
+
+    # free time
+    FREE_TIME = "Free Time"
+    SDMA = "\tSDMA"
+    FREE = "\tFree"
+
+    # e2e time
+    E2E_TIME = "E2E Time"
+
+    ROW_STYLE_MAP = {
+        COMPUTING: CellFormatType.BLUE_NORMAL,
+        COMMUNICATION_TIME: CellFormatType.BLUE_NORMAL,
+        FREE_TIME: CellFormatType.BLUE_NORMAL,
+        E2E_TIME: CellFormatType.BLUE_NORMAL,
+        FA: CellFormatType.LIGHT_BLUE_NORMAL,
+        CONV: CellFormatType.LIGHT_BLUE_NORMAL,
+        MM: CellFormatType.LIGHT_BLUE_NORMAL,
+        PA: CellFormatType.LIGHT_BLUE_NORMAL,
+        VECTOR: CellFormatType.LIGHT_BLUE_NORMAL,
+        CUBE: CellFormatType.LIGHT_BLUE_NORMAL,
+        SDMA_TM: CellFormatType.LIGHT_BLUE_NORMAL,
+        OTHER: CellFormatType.LIGHT_BLUE_NORMAL
+    }

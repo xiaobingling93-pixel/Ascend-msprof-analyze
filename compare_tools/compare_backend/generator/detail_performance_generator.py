@@ -8,6 +8,7 @@ from compare_backend.comparator.module_comparetor import ModuleComparator
 from compare_backend.comparator.module_statistic_comparator import ModuleStatisticComparator
 from compare_backend.comparator.operator_comparator import OperatorComparator
 from compare_backend.comparator.operator_statistic_comparator import OperatorStatisticComparator
+from compare_backend.comparator.overall_metrics_comparator import OverallMetricsComparator
 from compare_backend.compare_bean.communication_bean import CommunicationBean
 from compare_backend.compare_bean.memory_compare_bean import MemoryCompareBean
 from compare_backend.compare_bean.memory_statistic_bean import MemoryStatisticBean
@@ -15,6 +16,7 @@ from compare_backend.compare_bean.module_compare_bean import ModuleCompareBean
 from compare_backend.compare_bean.module_statistic_bean import ModuleStatisticBean
 from compare_backend.compare_bean.operator_compare_bean import OperatorCompareBean
 from compare_backend.compare_bean.operator_statistic_bean import OperatorStatisticBean
+from compare_backend.compare_bean.overall_metrics_bean import OverallMetricsBean
 from compare_backend.data_prepare.module_data_prepare import ModuleDataPrepare
 from compare_backend.data_prepare.operator_data_prepare import OperatorDataPrepare
 from compare_backend.generator.base_generator import BaseGenerator
@@ -41,8 +43,16 @@ class DetailPerformanceGenerator(BaseGenerator):
                 self._args.enable_communication_compare:
             print("[INFO] Start to compare performance detail data, please wait.")
             comparator_list = self._create_comparator()
-            for comparator in comparator_list:
-                self._result_data.update(comparator.generate_data())
+        else:
+            comparator_list = []
+        if self._args.enable_profiling_compare:
+            overall_data = {Constant.BASE_DATA: self._profiling_data_dict.get(Constant.BASE_DATA).overall_metrics,
+                            Constant.COMPARISON_DATA: self._profiling_data_dict.get(
+                                Constant.COMPARISON_DATA).overall_metrics}
+            # overall 数据在最前面
+            comparator_list.insert(0, OverallMetricsComparator(overall_data, OverallMetricsBean))
+        for comparator in comparator_list:
+            self._result_data.update(comparator.generate_data())
 
     def generate_view(self):
         if not self._result_data:
@@ -57,6 +67,7 @@ class DetailPerformanceGenerator(BaseGenerator):
         comparator_list = []
 
         op_compare_result = []
+
         if self._args.enable_operator_compare:
             module_compare_result = self.match_nn_module() if self._profiling_data_dict.get(
                 Constant.BASE_DATA).python_function_data and self._profiling_data_dict.get(

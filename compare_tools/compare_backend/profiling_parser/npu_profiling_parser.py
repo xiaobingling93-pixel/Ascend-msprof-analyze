@@ -36,7 +36,7 @@ class NPUProfilingParser(BaseProfilingParser):
 
     def _get_dispatch_func(self):
         func_list = set()
-        if self._enable_memory_compare or self._enable_operator_compare:
+        if self._enable_memory_compare or self._enable_operator_compare or self._enable_profiling_compare:
             func_list.add(self._picking_torch_op_event)
         if self._enable_operator_compare or self._args.max_kernel_num:
             func_list.add(self._picking_kernel_event)
@@ -52,6 +52,7 @@ class NPUProfilingParser(BaseProfilingParser):
             func_list.add(self._picking_overlap_analysis_data)
             func_list.add(self._picking_kernel_event)
             func_list.add(self._picking_hccl_event)
+            func_list.add(self._picking_flow_event)
         return list(func_list)
 
     def _update_memory_list(self):
@@ -205,6 +206,8 @@ class NPUProfilingParser(BaseProfilingParser):
 
     def _filter_meta_id(self):
         for event in self._trace_events:
+            if event.is_fwdbwd() and event.is_flow_end():
+                self._bwd_tid = event.tid
             if not event.is_process_meta():
                 continue
             if event.is_hccl_process_name():
@@ -244,17 +247,7 @@ class NPUProfilingParser(BaseProfilingParser):
                 self._result_data.overall_metrics.update_lccl_info(event.dur)
 
     def __parse_kernel_csv(self):
-        try:
-            kernel_details = FileReader.read_csv_file(self._kernel_detail_path, KernelDetailsBean)
-        except Exception:
-            print('[WARNING] Npu kernel details csv file is not available.')
-            return
-        if not kernel_details or kernel_details[0].is_hide_op_pmu():
-            self._result_data.overall_metrics.hide_op_details = True
-            return
-        for kernel in kernel_details:
-            if kernel.is_invalid():
-                continue
+        def __screen_data(kernel: KernelDetailsBean):
             if kernel.is_flash_attention():
                 if kernel.is_fa_bwd():
                     self._result_data.overall_metrics.update_fa_bwd_info(kernel.duration)
@@ -265,7 +258,7 @@ class NPUProfilingParser(BaseProfilingParser):
                     self._result_data.overall_metrics.update_conv_bwd_info(kernel.duration)
                 else:
                     self._result_data.overall_metrics.update_conv_fwd_info(kernel.duration)
-            elif kernel.is_cube():
+            elif kernel.is_matmul():
                 self._result_data.overall_metrics.update_cube_info(kernel.duration)
             elif kernel.is_sdma():
                 self._result_data.overall_metrics.update_sdma_info(kernel.duration)
@@ -275,6 +268,22 @@ class NPUProfilingParser(BaseProfilingParser):
                 self._result_data.overall_metrics.update_vec_info(kernel.duration)
             else:
                 self._result_data.overall_metrics.update_cube_info(kernel.duration)
+
+        try:
+            kernel_details = FileReader.read_csv_file(self._kernel_detail_path, KernelDetailsBean)
+        except Exception:
+            print('[WARNING] Npu kernel details csv file is not available.')
+            return
+        if not kernel_details or kernel_details[0].is_hide_op_pmu():
+            self._result_data.overall_metrics.hide_op_details = True
+            return
+        flow_dict_new = self._get_flow_time_dict()
+        kernel_details.sort(key=lambda x: x.start_time)
+        for kernel in kernel_details:
+            if kernel.is_invalid():
+                continue
+            __screen_data(kernel)
+            self.categorize_computing_performance_data(kernel, flow_dict_new)
 
     def __parse_mem_csv(self):
         try:
@@ -321,3 +330,4 @@ class NPUProfilingParser(BaseProfilingParser):
         for stream in compute_stream:
             dur_list = sdma_dict.get(stream, [])
             self._result_data.overall_metrics.update_sdma_info(sum(dur_list), len(dur_list))
+            self._result_data.overall_metrics.update_sdma_stream_info(sum(dur_list), len(dur_list))

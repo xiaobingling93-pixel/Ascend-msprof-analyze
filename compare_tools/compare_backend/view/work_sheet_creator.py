@@ -20,7 +20,10 @@ class WorkSheetCreator:
             return
         self._work_sheet = self._work_book.add_worksheet(self._sheet_name)
         self._write_headers()
-        self._write_data()
+        if "row_style" in self._data:
+            self._write_data_with_row_style()
+        else:
+            self._write_data()
 
     def _write_headers(self):
         base_header_format = self._work_book.add_format(CellFormatType.GREEN_BOLD)
@@ -43,7 +46,7 @@ class WorkSheetCreator:
             col_id = self._col_ids[index]
             self._work_sheet.set_column(f"{col_id}:{col_id}", header.get("width"))
             self._work_sheet.write(f"{col_id}{self._row_id}", header.get("name"), header_format)
-            self._field_format[index] = self._work_book.add_format(header.get("type"))
+            self._field_format[index] = header.get("type")
             if header.get("name") in (ExcelConfig.DIFF_RATIO, ExcelConfig.DIFF_TOTAL_RATIO):
                 self._diff_ratio_index = index
         self._row_id += 1
@@ -52,7 +55,27 @@ class WorkSheetCreator:
         red_ratio_format = self._work_book.add_format(CellFormatType.RED_RATIO)
         for data in self._data.get("rows"):
             for index, cell_data in enumerate(data):
-                cell_format = self._field_format.get(index)
+                cell_format = self._work_book.add_format(self._field_format.get(index))
+                if index == self._diff_ratio_index and cell_data and cell_data > 1:
+                    cell_format = red_ratio_format
+                    cell_data = "INF" if cell_data == float('inf') else cell_data
+                self._work_sheet.write(f"{self._col_ids[index]}{self._row_id}", cell_data, cell_format)
+            self._row_id += 1
+
+    def _write_data_with_row_style(self):
+        """
+        带行样式及缩进的sheet
+        """
+        red_ratio_format = self._work_book.add_format(CellFormatType.RED_RATIO)
+        rows = self._data.get("rows")
+        row_style = self._data.get("row_style")  # 行样式
+
+        for data, row_style in zip(rows, row_style):
+            for index, cell_data in enumerate(data):
+                cell_style = {**self._field_format.get(index), **row_style}
+                if index == 0:  # 0 for Index field
+                    cell_style["indent"] = cell_data.count("\t")
+                cell_format = self._work_book.add_format(cell_style)
                 if index == self._diff_ratio_index and cell_data and cell_data > 1:
                     cell_format = red_ratio_format
                     cell_data = "INF" if cell_data == float('inf') else cell_data

@@ -114,6 +114,21 @@ class TraceEventBean:
     def is_torch_op(self, value: bool):
         self._is_torch_op = value
 
+    @classmethod
+    def is_sdma(cls):
+        return False
+
+    @classmethod
+    def is_page_attention(cls):
+        return False
+
+    @classmethod
+    def is_trans(cls) -> bool:
+        """
+        暂时没找到GPU判断trans的方法，暂时都是notrans
+        """
+        return False
+
     def is_m_mode(self) -> bool:
         return self._ph == "M"
 
@@ -199,10 +214,43 @@ class TraceEventBean:
         self._name = name
 
     def is_conv(self):
-        return self.name.lower().startswith("aten::conv")
+        return self.lower_name.startswith("aten::conv")
 
     def is_lccl(self):
         return self.lower_name == "kernel_aivec"
+
+    def is_fa_for_cpu_op(self) -> bool:
+        """
+        这个类在cpu op和gpu中均有用到，这里是在cpu op阶段判断
+        """
+        return any(cube_mask in self.lower_name for cube_mask in Constant.CPU_OP_FA_MASK)
+
+    def is_conv_for_cpu_op(self) -> bool:
+        """
+        这个类在cpu op和gpu中均有用到，这里是在cpu op阶段判断
+        """
+        return self.lower_name.startswith(Constant.CPU_OP_CONV)
+
+    def is_matmul_for_cpu_op(self) -> bool:
+        """
+        这个类在cpu op和gpu中均有用到，这里是在cpu op阶段判断
+        """
+        return any(bwd_mask in self.lower_name for bwd_mask in Constant.CPU_OP_MATMUL_MASK)
+
+    def is_bwd_for_cpu_op(self) -> bool:
+        """
+        这个类在cpu op和gpu中均有用到，这里是在cpu op阶段判断
+        """
+        return any(bwd_mask in self.lower_name for bwd_mask in Constant.BWD_LIST)
+
+    def is_cpu_cube_op(self) -> bool:
+        return self.is_matmul_for_cpu_op() or self.is_fa_for_cpu_op() or self.is_conv_for_cpu_op()
+
+    def is_vector(self):
+        return not any(cube_mask in self.lower_name for cube_mask in Constant.KERNEL_CUBE_MASK)
+
+    def is_cube_kernel_cat(self):
+        return any(cube_mask in self.lower_name for cube_mask in Constant.KERNEL_CUBE_MASK)
 
     def init(self):
         if isinstance(self._event, dict):

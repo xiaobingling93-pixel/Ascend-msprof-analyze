@@ -20,6 +20,7 @@ class GPUProfilingParser(BaseProfilingParser):
         self._compute_stream_id = self._infer_compute_stream_id()
         self._marks = defaultdict(int)
         self._aten_index = 0
+        self._find_bwd_tid()
 
     @classmethod
     def __is_flash_attention(cls, name: str):
@@ -30,10 +31,7 @@ class GPUProfilingParser(BaseProfilingParser):
 
     @classmethod
     def __is_sdma_time(cls, name: str):
-        for mark in cls.SDMA_MARK_LIST:
-            if mark in name.lower():
-                return True
-        return False
+        return any(mask in name.lower() for mask in cls.SDMA_MARK_LIST)
 
     def _update_memory_list(self):
         if not self._enable_memory_compare:
@@ -68,19 +66,15 @@ class GPUProfilingParser(BaseProfilingParser):
         min_ts = sys.float_info.max
         max_ts = sys.float_info.min
         self._trace_events.sort(key=lambda x: x.start_time)
-        aten_events = list(filter(lambda x: x.name.startswith("aten::"), self._trace_events))
-        flow_dict_new = {}
-        for flow_event in self._flow_dict.values():
-            start_event = flow_event.get("start")
-            end_event = flow_event.get("end")
-            if start_event and end_event:
-                flow_dict_new[end_event.start_time] = start_event.start_time
+        aten_events = [event for event in self._trace_events if event.name.startswith("aten::")]
+        flow_dict_new = self._get_flow_time_dict()
         for event in self._trace_events:
             if event.stream:
                 min_ts = min(event.start_time, min_ts)
                 max_ts = max(event.end_time, max_ts)
             if event.stream == self._compute_stream_id and self.__is_sdma_time(event.name):
                 self._result_data.overall_metrics.update_sdma_info(event.dur)
+                self._result_data.overall_metrics.update_sdma_stream_info(event.dur)
                 continue
             if not event.is_kernel_cat():
                 continue
@@ -88,6 +82,7 @@ class GPUProfilingParser(BaseProfilingParser):
             if event.is_nccl_name():
                 continue
             self.__add_compute_time(event, aten_events, flow_dict_new)
+            self.categorize_computing_performance_data(event, flow_dict_new)
         self._aten_events = None
         self._result_data.overall_metrics.set_e2e_time(float(max_ts - min_ts))
         self.__add_compute_and_overlap_time()
@@ -162,7 +157,7 @@ class GPUProfilingParser(BaseProfilingParser):
 
     def _get_dispatch_func(self):
         func_set = set()
-        if self._enable_memory_compare or self._enable_operator_compare:
+        if self._enable_memory_compare or self._enable_operator_compare or self._enable_profiling_compare:
             func_set.add(self._picking_torch_op_event)
         if self._enable_communication_compare:
             func_set.add(self._picking_kernel_event)
@@ -174,6 +169,8 @@ class GPUProfilingParser(BaseProfilingParser):
             func_set.add(self._picking_flow_event)
         if self._enable_memory_compare or self._enable_profiling_compare:
             func_set.add(self._picking_memory_event)
+        if self._enable_profiling_compare:
+            func_set.add(self._picking_flow_event)
         return list(func_set)
 
     def _infer_compute_stream_id(self):
@@ -187,3 +184,9 @@ class GPUProfilingParser(BaseProfilingParser):
             raise RuntimeError('[ERROR] The profiling data does not contain kernel running data.')
         counter = Counter(kernel_stream_ids)
         return counter.most_common(1)[0][0]
+
+    def _find_bwd_tid(self):
+        for event in self._trace_events:
+            if event.is_fwdbwd() and event.is_flow_end():
+                self._bwd_tid = event.tid
+                break
