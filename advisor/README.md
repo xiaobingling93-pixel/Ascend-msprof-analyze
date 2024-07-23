@@ -72,6 +72,7 @@ msprof-analyze的advisor功能是将Ascend PyTorch Profiler或者msprof采集的
 |            | block_dim_analysis         | block dim算子调优                        |
 |            | operator_no_bound_analysis | operator no bound                        |
 |            | graph                      | 融合算子图调优                           |
+|            | freq_analysis              | AI Core算子降频分析                      |
 | scheduling | timeline_fusion_ops        | 亲和API替换调优                          |
 |            | timeline_op_dispatch       | 识别算子下发问题(路径3/路径5)            |
 
@@ -152,7 +153,7 @@ torch_npu.npu.config.allow_internal_format = False
 
 ![schedule_3](./img/schedule_3.png)
 
-computation模块从device计算性能维度进行分析，能够识别AI CPU、计算bound、动态Shape等问题并给出相应建议。此处不再详细展开，按照报告进行调优即可。
+computation模块从device计算性能维度进行分析，能够识别AI CPU、计算bound、动态Shape、AI Core算子降频分析等问题并给出相应建议。此处不再详细展开，按照报告进行调优即可。
 
 ![computation_1](./img/computation_1.png)
 
