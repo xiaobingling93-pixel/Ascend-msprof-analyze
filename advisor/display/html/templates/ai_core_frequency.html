@@ -1,0 +1,27 @@
+{% if data|length > 0 %}
+<div class="collapsible">
+      <h2 class="collapsible-header">AI CORE Frequency Issues</h2>
+      <div class="collapsible-content">
+            <a style="font-weight: bold" id="timeline_api_instruction_issue">Issue: {{ desc }}</a>
+            <br>
+            <a style="font-weight: bold" id="timeline_api_suggestion">Suggestion: {{ suggestion }}</a>
+            <br><br>
+            <table>
+                <tr>
+                {% for header in headers %}
+                    <th> {{ header }} </th>
+                {% endfor %}
+                </tr>
+
+                {% for row in data %}
+                <tr>
+                    {% for element in row %}
+                    <td>{{ element|safe }}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </table>
+
+        </div>
+</div>
+{% endif %}

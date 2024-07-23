@@ -54,6 +54,8 @@ class DeviceInfoParser:
                 config.set_config("device_id", device_info["id"])
             if "aiv_num" in device_info:
                 config.set_config("aiv_num", device_info["aiv_num"])
+            if "aic_frequency" in device_info:
+                config.set_config("aic_frequency", device_info["aic_frequency"])
             if "ai_core_num" in device_info:
                 config.set_config("ai_core_num", device_info["ai_core_num"])
                 return True
