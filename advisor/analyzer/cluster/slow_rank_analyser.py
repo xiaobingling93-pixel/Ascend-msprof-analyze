@@ -19,7 +19,7 @@ from profiler.advisor.analyzer.base_analyzer import BaseAnalyzer
 from profiler.advisor.common import constant
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
-from profiler.advisor.dataset.cluster.cluster_dataset import ClusterStepTraceTimeDataSet
+from profiler.advisor.dataset.cluster.cluster_dataset import ClusterStepTraceTimeDataset
 
 
 class SlowRankAnalyzer(BaseAnalyzer):
@@ -27,11 +27,11 @@ class SlowRankAnalyzer(BaseAnalyzer):
     RANK = "rank"
     RATIO_THRESHOLD = 0.05
     BOTTLENECK_LIST = ['Computing', 'Communication', "Free"]
-    dataset_cls_list = [ClusterStepTraceTimeDataSet]
+    dataset_cls_list = [ClusterStepTraceTimeDataset]
 
     def __init__(self, collection_path, n_processes: int = 1, **kwargs):
         super().__init__(collection_path, n_processes, **kwargs)
-        key = ClusterStepTraceTimeDataSet.get_key()
+        key = ClusterStepTraceTimeDataset.get_key()
         self.step_trace_class =  self.get_first_data_by_key(self.dataset_list, key)
         self.step_trace_dict = self.step_trace_class.get_data()
         self.result = OptimizeResult()
