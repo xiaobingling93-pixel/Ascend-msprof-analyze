@@ -12,7 +12,7 @@ class WorkSheetCreator:
         self._work_sheet = None
         self._row_id = 1
         self._field_format = {}
-        self._diff_ratio_index = None
+        self._diff_ratio_index = []
         self._col_ids = "ABCDEFGHIJKLMNOPQRSTUVW"
 
     def create_sheet(self):
@@ -47,8 +47,10 @@ class WorkSheetCreator:
             self._work_sheet.set_column(f"{col_id}:{col_id}", header.get("width"))
             self._work_sheet.write(f"{col_id}{self._row_id}", header.get("name"), header_format)
             self._field_format[index] = header.get("type")
-            if header.get("name") in (ExcelConfig.DIFF_RATIO, ExcelConfig.DIFF_TOTAL_RATIO):
-                self._diff_ratio_index = index
+            ratio_white_list = [ExcelConfig.DIFF_RATIO, ExcelConfig.DIFF_TOTAL_RATIO,
+                                ExcelConfig.DIFF_AVG_RATIO, ExcelConfig.DIFF_CALLS_RATIO, ExcelConfig.DIFF_SELF_RATIO]
+            if header.get("name") in ratio_white_list:
+                self._diff_ratio_index.append(index)
         self._row_id += 1
 
     def _write_data(self):
@@ -56,7 +58,7 @@ class WorkSheetCreator:
         for data in self._data.get("rows"):
             for index, cell_data in enumerate(data):
                 cell_format = self._work_book.add_format(self._field_format.get(index))
-                if index == self._diff_ratio_index and cell_data and cell_data > 1:
+                if index in self._diff_ratio_index and cell_data and cell_data > 1:
                     cell_format = red_ratio_format
                     cell_data = "INF" if cell_data == float('inf') else cell_data
                 self._work_sheet.write(f"{self._col_ids[index]}{self._row_id}", cell_data, cell_format)
@@ -76,7 +78,7 @@ class WorkSheetCreator:
                 if index == 0:  # 0 for Index field
                     cell_style["indent"] = cell_data.count("\t")
                 cell_format = self._work_book.add_format(cell_style)
-                if index == self._diff_ratio_index and cell_data and cell_data > 1:
+                if index in self._diff_ratio_index and cell_data and cell_data > 1:
                     cell_format = red_ratio_format
                     cell_data = "INF" if cell_data == float('inf') else cell_data
                 self._work_sheet.write(f"{self._col_ids[index]}{self._row_id}", cell_data, cell_format)

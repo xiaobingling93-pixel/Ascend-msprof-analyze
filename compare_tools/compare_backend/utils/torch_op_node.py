@@ -64,6 +64,14 @@ class TorchOpNode:
     def device_dur(self):
         return sum([kernel.device_dur for kernel in self._kernel_list])
 
+    @property
+    def api_dur(self):
+        return self._event.dur
+    
+    @property
+    def api_self_time(self):
+        return self.api_dur - sum(child.api_dur for child in self._child_nodes)
+
     def add_child_node(self, child_node):
         self._child_nodes.append(child_node)
 
