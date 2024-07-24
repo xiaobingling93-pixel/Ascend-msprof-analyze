@@ -139,3 +139,6 @@ CLUSTER_COMM_JSON = "cluster_communication.json"
 
 BOTTLENECK = "bottleneck"
 DATA = "data"
+
+DISABLE_STREAMING_READER = "DISABLE_STREAMING_READER"
+MAX_FILE_SIZE = 10**10

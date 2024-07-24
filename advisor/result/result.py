@@ -93,6 +93,9 @@ class SheetRecoder:
         if data not in self._sheet_data[sheet_name]["data"]:
             self._sheet_data[sheet_name]["data"].append(data)
 
+    def clear(self):
+        self._sheet_data.clear()
+
 
 @singleton
 class OptimizeResult:
@@ -110,12 +113,12 @@ class OptimizeResult:
     def add_tune_op_list(self, tune_op_list) -> None:
         """
         add tune op name to tune op list
-        :param tune_op_list: tune op name list to be added
+        :param tune_op_list: list of operators to be optimized
         :return: None
         """
-        for op_name in tune_op_list:
-            if op_name not in self._tune_op_list:
-                self._tune_op_list.append(op_name)
+        for operator_name in tune_op_list:
+            if operator_name not in self._tune_op_list:
+                self._tune_op_list.append(operator_name)
 
     def add(self, overview_item):
         sheet_name = "problems"
@@ -147,6 +150,9 @@ class OptimizeResult:
         self.result_writer.save()
         logger.info("Save problems details file to %s", Config().analysis_result_file)
         self._save_op_file_list()
+
+    def clear(self) -> None:
+        self.data.clear()
 
     def _save_op_file_list(self) -> None:
         if not self._tune_op_list:
