@@ -43,14 +43,19 @@ class ProfilingDataset(Dataset):
                 self.build_from_pattern(value, join_prof_path(current_path, key))
         elif isinstance(dirs_pattern, list):
             for item in dirs_pattern:
+                if hasattr(self, item) and getattr(self, item):
+                    # 避免重复构建kernel_details.csv, op_summary.csv的数据对象
+                    continue
+                file_pattern = self.current_version_pattern.get('file_attr').get(item)
                 data_class = globals()[self.current_version_pattern.get('class_attr').get(item)]
-                data_class.FILE_PATTERN = self.current_version_pattern.get('file_attr').get(item)
+                data_class.FILE_PATTERN = file_pattern
                 data_object = data_class(current_path)
                 is_success = data_object.parse_data()
                 if is_success:
                     setattr(self, item, data_object)
                 else:
-                    logger.warning("Skip parse %s from local path %s", self.current_version_pattern.get('class_attr').get(item), current_path)
+                    logger.warning("Skip parse %s with file pattern %s from local path %s", 
+                                   self.current_version_pattern.get('class_attr').get(item), file_pattern, current_path)
         else:
             logger.warning(f"Unsupported arguments : %s to build %s", dirs_pattern, self.__class__.__name__)
 

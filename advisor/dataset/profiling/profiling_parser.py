@@ -37,15 +37,21 @@ class ProfilingParser:
         return False
 
     def _parse_from_file(self):
-        file_list = get_file_path_from_directory(self._path, self.file_match_func(self.FILE_PATTERN))
-        if not file_list:
-            return False
-        ## get last file
-        file = file_list[-1]
-        self.FILE_PATH = file
-        if len(file_list) > 1:
-            logger.warning("Multiple copies of %s were found, use %s", self.FILE_INFO, file)
-        return self.parse_from_file(file)
+
+        if not isinstance(self.FILE_PATTERN, list):
+            self.FILE_PATTERN = [self.FILE_PATTERN]
+
+        for file_pattern in self.FILE_PATTERN:
+            file_list = get_file_path_from_directory(self._path, self.file_match_func(file_pattern))
+            if not file_list:
+                continue
+            ## get last file
+            file = file_list[-1]
+            self.FILE_PATH = file
+            if len(file_list) > 1:
+                logger.warning("Multiple copies of %s were found, use %s", self.FILE_INFO, file)
+            return self.parse_from_file(file)
+        return False
 
     @staticmethod
     def get_float(data) -> float:
