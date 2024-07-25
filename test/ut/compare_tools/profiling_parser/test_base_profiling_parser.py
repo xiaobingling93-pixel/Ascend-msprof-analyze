@@ -24,6 +24,11 @@ class ProfilingParser(BaseProfilingParser):
         self._enable_operator_compare = True
         self._enable_memory_compare = True
         self._enable_communication_compare = True
+        self._enable_kernel_compare = True
+        self._enable_api_compare = True
+
+    def _update_kernel_details(self):
+        pass
 
     def _update_memory_list(self):
         pass

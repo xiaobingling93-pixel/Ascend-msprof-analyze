@@ -33,9 +33,10 @@ class Msprof(ProfilingParser):
     msprof
 
     """
-    FILE_PATTERN = r"^msprof[_\d]+.json$"
     FILE_PATTERN_MSG = "msprof_*.json"
     FILE_INFO = "msprof"
+
+    file_pattern_list = [r"^msprof[_\d]+.json$"]
 
     def __init__(self, path: str) -> None:
         super().__init__(path)

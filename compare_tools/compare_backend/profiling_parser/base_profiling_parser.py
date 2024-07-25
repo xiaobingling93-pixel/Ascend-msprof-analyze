@@ -20,6 +20,7 @@ class ProfilingResult:
         self.overall_metrics = ProfilingInfo(profiling_type)
         self.python_function_data = []
         self.fwdbwd_dict = {}
+        self.kernel_details = {}
 
     def update_torch_op_data(self, event: TraceEventBean):
         event.is_torch_op = True
@@ -43,6 +44,9 @@ class ProfilingResult:
     def update_comm_task_data(self, comm_name: str, task_event: TraceEventBean):
         self.communication_dict.setdefault(comm_name, {}).setdefault("comm_task", {}).setdefault(
             task_event.name, []).append(task_event.dur)
+    
+    def update_kernel_details(self, kernels: dict):
+        self.kernel_details = kernels
 
 
 class BaseProfilingParser(ABC):
@@ -57,6 +61,8 @@ class BaseProfilingParser(ABC):
         self._enable_operator_compare = args.enable_operator_compare
         self._enable_memory_compare = args.enable_memory_compare
         self._enable_communication_compare = args.enable_communication_compare
+        self._enable_api_compare = args.enable_api_compare
+        self._enable_kernel_compare = args.enable_kernel_compare
         self._dispatch_func = self._get_dispatch_func()
         self._result_data = ProfilingResult(self._profiling_type)
         self._memory_events = []
@@ -79,6 +85,10 @@ class BaseProfilingParser(ABC):
         cpu_cube_op.sort(key=lambda x: x.start_time)
         self._cpu_cube_op = cpu_cube_op
         return self._cpu_cube_op
+
+    @abstractmethod
+    def _update_kernel_details(self):
+        raise NotImplementedError("Function _update_kernel_details need to be implemented.")
 
     @abstractmethod
     def _update_memory_list(self):
@@ -112,6 +122,8 @@ class BaseProfilingParser(ABC):
             self._update_memory_list()
         if self._enable_profiling_compare:
             self._update_overall_metrics()
+        if self._enable_kernel_compare:
+            self._update_kernel_details()
         self._check_result_data()
         return self._result_data
 
@@ -300,6 +312,10 @@ class BaseProfilingParser(ABC):
             print(f"[WARNING] Can't find any memory event in the file: {self._profiling_path}")
         if self._enable_communication_compare and not self._result_data.communication_dict:
             print(f"[WARNING] Can't find any communication op in the file: {self._profiling_path}")
+        if self._enable_api_compare and not self._result_data.torch_op_data:
+            print(f"[WARNING] Can't find any torch op in the file: {self._profiling_path}")
+        if self._enable_kernel_compare and not self._result_data.kernel_details:
+            print(f"[WARNING] Can't find any kernel details in the file: {self._profiling_path}")
 
     def _read_trace_event(self):
         try:

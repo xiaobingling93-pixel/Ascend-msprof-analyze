@@ -33,6 +33,9 @@ class GPUProfilingParser(BaseProfilingParser):
     def __is_sdma_time(cls, name: str):
         return any(mask in name.lower() for mask in cls.SDMA_MARK_LIST)
 
+    def _update_kernel_details(self):
+        pass
+
     def _update_memory_list(self):
         if not self._enable_memory_compare:
             return

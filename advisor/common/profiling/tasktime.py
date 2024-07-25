@@ -17,10 +17,10 @@ class TaskTime(ProfilingParser):
     """
     task time info
     """
-
-    FILE_PATTERN = r"^task_time_[_\d]+\.json$"
     FILE_PATTERN_MSG = "task_time*.json"
     FILE_INFO = "task time"
+
+    file_pattern_list = [r"^task_time_[_\d]+\.json$"]
 
     def __init__(self, path: str) -> None:
         super().__init__(path)

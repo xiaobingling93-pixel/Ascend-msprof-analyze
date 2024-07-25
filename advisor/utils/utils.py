@@ -416,14 +416,14 @@ def format_excel_title(title: str) -> str:
     title = title.replace(" ", "_")
 
     # 将kernel_details中的列名转为与op_summary_x.csv中一致
-    kernel_details_col_name_map = dict(
-        name="op_name",
-        type="op_type",
-        accelerator_core="task_type",
-        start_time="task_start_time",
-        duration="task_duration",
-        wait_time="wait_time"
-    )
+    kernel_details_col_name_map = {
+        "name": "op_name",
+        "type": "op_type",
+        "accelerator_core": "task_type",
+        "start_time": "task_start_time",
+        "duration": "task_duration",
+        "wait_time": "wait_time"
+    }
     return kernel_details_col_name_map.get(title, title)
 
 

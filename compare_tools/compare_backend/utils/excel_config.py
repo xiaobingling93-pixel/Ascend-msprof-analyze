@@ -57,7 +57,7 @@ class ExcelConfig(object):
     DEVICE_SELF_TIME = "Device Self Time(ms)"
     DEVICE_TOTAL_TIME = "Device Total Time(ms)"
     DIFF_SELF_TIME = "Device Self Time Diff(ms)"
-    DIFF_TOTAL_RATIO = "Total Diff Ratio"
+    DIFF_TOTAL_RATIO = "Diff Total Ratio"
     DIFF_TOTAL_TIME = "Device Total Time Diff(ms)"
     DEVICE_SELF_TIME_US = "Device Self Time(us)"
     DEVICE_TOTAL_TIME_US = "Device Total Time(us)"
@@ -71,6 +71,14 @@ class ExcelConfig(object):
     DURATION = "Duration(ms)"
     DURATION_RATIO = "Duration Ratio"
     DIFF_DUR_MS = "Diff Duration(ms)"
+    API_NAME = "api name"
+    TOTAL_DURATION_MS = "Total Duration(ms)"
+    AVG_DURATION_MS = "Avg Duration(ms)"
+    SELF_TIME_MS = "Self Time(ms)"
+    DIFF_SELF_RATIO = "Diff Self Ratio"
+    DIFF_AVG_RATIO = "Diff Avg Ratio"
+    DIFF_CALLS_RATIO = "Diff Calls Ratio"
+    KERNEL = "Kernel"
 
     HEADERS = {
         Constant.OPERATOR_TABLE: [
@@ -193,7 +201,39 @@ class ExcelConfig(object):
             {"name": NUMBER, "type": CellFormatType.DEFAULT, "width": 10},
             {"name": DIFF_DUR_MS, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
             {"name": DIFF_RATIO, "type": CellFormatType.DEFAULT_RATIO, "width": 10},
-
+        ],
+        Constant.API_TABLE: [
+            {"name": ORDER, "type": CellFormatType.DEFAULT, "width": 10},
+            {"name": API_NAME, "type": CellFormatType.BOLD_STR, "width": 30},
+            {"name": TOTAL_DURATION_MS, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
+            {"name": SELF_TIME_MS, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
+            {"name": AVG_DURATION_MS, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
+            {"name": CALLS, "type": CellFormatType.DEFAULT,"width": 20},
+            {"name": TOTAL_DURATION_MS, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
+            {"name": SELF_TIME_MS, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
+            {"name": AVG_DURATION_MS, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
+            {"name": CALLS, "type": CellFormatType.DEFAULT,"width": 20},
+            {"name": DIFF_TOTAL_RATIO, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
+            {"name": DIFF_SELF_RATIO, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
+            {"name": DIFF_AVG_RATIO, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
+            {"name": DIFF_CALLS_RATIO, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
+        ],
+        Constant.KERNEL_COMPARE: [
+            {"name": ORDER, "type": CellFormatType.DEFAULT, "width": 10},
+            {"name": KERNEL, "type": CellFormatType.BOLD_STR, "width": 30},
+            {"name": INPUT_SHAPE, "type": CellFormatType.DEFAULT,"width": 20},
+            {"name": TOTAL_DURATION, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
+            {"name": AVG_DURATION, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
+            {"name": MAX_DURATION, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
+            {"name": MIN_DURATION, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
+            {"name": CALLS, "type": CellFormatType.DEFAULT,"width": 20},
+            {"name": TOTAL_DURATION, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
+            {"name": AVG_DURATION, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
+            {"name": MAX_DURATION, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
+            {"name": MIN_DURATION, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
+            {"name": CALLS, "type": CellFormatType.DEFAULT,"width": 20},
+            {"name": DIFF_TOTAL_RATIO, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
+            {"name": DIFF_AVG_RATIO, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
         ]
     }
 
@@ -201,7 +241,9 @@ class ExcelConfig(object):
                 Constant.COMMUNICATION_TABLE: ["B1:H1", "I1:O1"], Constant.OPERATOR_TOP_TABLE: ["C1:D1", "E1:F1"],
                 Constant.MEMORY_TOP_TABLE: ["C1:E1", "F1:H1"], Constant.MODULE_TOP_TABLE: ["F1:I1", "J1:M1"],
                 Constant.MODULE_TABLE: ["E1:H1", "I1:L1"],
-                Constant.OVERALL_METRICS_TABLE: ["B1:D1", "E1:G1"]}
+                Constant.OVERALL_METRICS_TABLE: ["B1:D1", "E1:G1"],
+                Constant.API_TABLE: ["C1:F1", "G1:J1"],
+                Constant.KERNEL_TABLE: ["D1:H1", "I1:M1"]}
 
     # overall metrics index
     # computing time
