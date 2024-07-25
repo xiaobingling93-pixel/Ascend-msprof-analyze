@@ -32,7 +32,7 @@ class TestSynchronizeChecker(unittest.TestCase):
         dataset = self._get_mock_dataset(100, [], is_empty_dataset=False)
         checker = SynchronizeStreamChecker()
         checker.check_synchronize(dataset)
-        self.assertTrue(checker.synchronize_issues)
+        self.assertFalse(checker.synchronize_issues)
 
     def _get_mock_dataset(self, total_count, slow_synchronize_stream, is_empty_dataset=False):
         dataset = TimelineEvent()

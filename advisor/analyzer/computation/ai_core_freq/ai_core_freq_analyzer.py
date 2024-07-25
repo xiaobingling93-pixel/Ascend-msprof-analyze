@@ -34,9 +34,3 @@ class AICoreFreqAnalyzer(BaseAnalyzer):
         ai_core_freq_checker.make_record(self.result)
         self.html = ai_core_freq_checker.make_render(self.html_render, add_render_list)
         return self.result
-
-    def make_record(self):
-        pass
-
-    def make_render(self):
-        pass
