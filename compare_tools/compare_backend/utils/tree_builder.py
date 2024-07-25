@@ -23,7 +23,8 @@ class TreeBuilder:
                     tree_node = TorchOpNode(event, last_node)
                     last_node.add_child_node(tree_node)
                     last_node = tree_node
-                    tree_node.set_kernel_list(kernel_dict.get(event.start_time, []))
+                    if kernel_dict:
+                        tree_node.set_kernel_list(kernel_dict.get(event.start_time, []))
                 else:
                     event.set_name(last_node.name)
                     last_node.set_memory_allocated(event)

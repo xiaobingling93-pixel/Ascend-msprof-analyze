@@ -39,13 +39,16 @@ class Constant(object):
     # compare type
     OPERATOR_COMPARE = "OperatorCompare"
     MEMORY_COMPARE = "MemoryCompare"
-
+    API_COMPARE = "ApiCompare"
+    KERNEL_COMPARE = "KernelCompare"
     # sheet name
     OPERATOR_SHEET = "OperatorCompare"
     MEMORY_SHEET = "MemoryCompare"
     OPERATOR_TOP_SHEET = "OperatorCompareStatistic"
     MEMORY_TOP_SHEET = "MemoryCompareStatistic"
     COMMUNICATION_SHEET = "CommunicationCompare"
+    API_SHEET = "ApiCompare"
+    KERNEL_SHEET = "KernelCompare"
 
     # table name
     OPERATOR_TABLE = "OperatorCompare"
@@ -57,6 +60,8 @@ class Constant(object):
     MODULE_TABLE = "ModuleCompare"
     MODULE_TOP_TABLE = "ModuleCompareStatistic"
     OVERALL_METRICS_TABLE = "OverallMetrics"
+    API_TABLE = "ApiCompare"
+    KERNEL_TABLE = "KernelCompare"    
 
     # memory
     SIZE = "Size(KB)"

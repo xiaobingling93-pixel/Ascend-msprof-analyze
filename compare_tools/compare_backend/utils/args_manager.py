@@ -69,6 +69,14 @@ class ArgsManager:
     def enable_communication_compare(self):
         return self._args.enable_communication_compare
 
+    @property
+    def enable_api_compare(self):
+        return self._args.enable_api_compare
+    
+    @property
+    def enable_kernel_compare(self):
+        return self._args.enable_kernel_compare
+
     @classmethod
     def check_profiling_path(cls, file_path: str):
         PathManager.input_path_common_check(file_path)
@@ -119,11 +127,14 @@ class ArgsManager:
             raise RuntimeError(msg)
 
         if not any([self._args.enable_profiling_compare, self._args.enable_operator_compare,
-                    self._args.enable_memory_compare, self._args.enable_communication_compare]):
+                    self._args.enable_memory_compare, self._args.enable_communication_compare,
+                    self._args.enable_api_compare, self._args.enable_kernel_compare]):
             self._args.enable_profiling_compare = True
             self._args.enable_operator_compare = True
             self._args.enable_memory_compare = True
             self._args.enable_communication_compare = True
+            self._args.enable_api_compare = True
+            self._args.enable_kernel_compare = True
 
         base_profiling_path = PathManager.get_realpath(self._args.base_profiling_path)
         self.check_profiling_path(base_profiling_path)

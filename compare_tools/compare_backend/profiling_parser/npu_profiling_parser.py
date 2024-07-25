@@ -53,7 +53,31 @@ class NPUProfilingParser(BaseProfilingParser):
             func_list.add(self._picking_kernel_event)
             func_list.add(self._picking_hccl_event)
             func_list.add(self._picking_flow_event)
+        if self._enable_api_compare:
+            func_list.add(self._picking_torch_op_event)
         return list(func_list)
+
+    def _update_kernel_details(self):
+        try:
+            kernel_details = FileReader.read_csv_file(self._kernel_detail_path, KernelDetailsBean)
+        except FileNotFoundError:
+            print("[WARNING] The file kernel_details.csv does not exist.")
+        except Exception:
+            print("[ERROR] Failed to read kernel_details.csv.")
+            return
+        if not kernel_details:
+            return
+        kernels_dict = {}
+        for kernel in kernel_details:
+            if kernel.is_invalid():
+                continue
+            input_shapes = kernel.input_shapes if kernel.input_shapes else 'N/A'
+            kernels_dict.setdefault(kernel.op_type, {}).setdefault(input_shapes, []).append(
+                [kernel.name, kernel.duration])
+        if len(kernels_dict) == 1:
+            print("[ERROR] Failed to enable enable_kernel_compare, type of kernel_details.csv is null.")
+            return
+        self._result_data.update_kernel_details(kernels_dict)
 
     def _update_memory_list(self):
         try:

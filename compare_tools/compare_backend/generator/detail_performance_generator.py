@@ -8,6 +8,8 @@ from compare_backend.comparator.module_comparetor import ModuleComparator
 from compare_backend.comparator.module_statistic_comparator import ModuleStatisticComparator
 from compare_backend.comparator.operator_comparator import OperatorComparator
 from compare_backend.comparator.operator_statistic_comparator import OperatorStatisticComparator
+from compare_backend.comparator.api_compare_comparator import ApiCompareComparator
+from compare_backend.comparator.kernel_compare_comparator import KernelCompareComparator
 from compare_backend.comparator.overall_metrics_comparator import OverallMetricsComparator
 from compare_backend.compare_bean.communication_bean import CommunicationBean
 from compare_backend.compare_bean.memory_compare_bean import MemoryCompareBean
@@ -16,6 +18,8 @@ from compare_backend.compare_bean.module_compare_bean import ModuleCompareBean
 from compare_backend.compare_bean.module_statistic_bean import ModuleStatisticBean
 from compare_backend.compare_bean.operator_compare_bean import OperatorCompareBean
 from compare_backend.compare_bean.operator_statistic_bean import OperatorStatisticBean
+from compare_backend.compare_bean.api_compare_bean import ApiCompareBean
+from compare_backend.compare_bean.kernel_compare_bean import KernelCompareBean
 from compare_backend.compare_bean.overall_metrics_bean import OverallMetricsBean
 from compare_backend.data_prepare.module_data_prepare import ModuleDataPrepare
 from compare_backend.data_prepare.operator_data_prepare import OperatorDataPrepare
@@ -39,8 +43,10 @@ class DetailPerformanceGenerator(BaseGenerator):
         return op_compare_result
 
     def compare(self):
-        if self._args.enable_operator_compare or self._args.enable_memory_compare or \
-                self._args.enable_communication_compare:
+        enable_compare = [self._args.enable_operator_compare, self._args.enable_memory_compare,
+                          self._args.enable_communication_compare, self._args.enable_api_compare,
+                          self._args.enable_kernel_compare]
+        if any(enable_compare):
             print("[INFO] Start to compare performance detail data, please wait.")
             comparator_list = self._create_comparator()
         else:
@@ -97,6 +103,18 @@ class DetailPerformanceGenerator(BaseGenerator):
             comparator_list.append(OperatorStatisticComparator(op_compare_result, MemoryStatisticBean))
             if not self._args.disable_details:
                 comparator_list.append(OperatorComparator(op_compare_result, MemoryCompareBean))
+        if self._args.enable_api_compare:
+            api_compare_result = {
+                Constant.BASE_DATA: OperatorDataPrepare(
+                    self._profiling_data_dict.get(Constant.BASE_DATA)).get_all_layer_ops(),
+                Constant.COMPARISON_DATA: OperatorDataPrepare(
+                    self._profiling_data_dict.get(Constant.COMPARISON_DATA)).get_all_layer_ops()}
+            comparator_list.append(ApiCompareComparator(api_compare_result, ApiCompareBean))
+        if self._args.enable_kernel_compare:
+            kernel_compare_result = {
+                Constant.BASE_DATA: self._profiling_data_dict.get(Constant.BASE_DATA).kernel_details,
+                Constant.COMPARISON_DATA: self._profiling_data_dict.get(Constant.COMPARISON_DATA).kernel_details}
+            comparator_list.append(KernelCompareComparator(kernel_compare_result, KernelCompareBean))
         return comparator_list
 
     def match_torch_op(self) -> list:

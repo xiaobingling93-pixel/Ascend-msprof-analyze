@@ -12,6 +12,7 @@ class KernelDetailsBean:
         self._data = data
         self._op_type = ""
         self._name = ""
+        self._input_shapes = ""
         self._aiv_vec_time = 0.0
         self._aicore_time = 0.0
         self._mac_time = 0.0
@@ -26,6 +27,10 @@ class KernelDetailsBean:
     @property
     def name(self) -> str:
         return self._name
+
+    @property
+    def input_shapes(self) -> str:
+        return self._input_shapes
 
     @property
     def aiv_vec_time(self) -> float:
@@ -109,6 +114,7 @@ class KernelDetailsBean:
     def init(self):
         self._op_type = self._data.get('Type', "")
         self._name = self._data.get('Name', "")
+        self._input_shapes = self._data.get('Input Shapes', "")
         self._aiv_vec_time = self._data.get('aiv_vec_time(us)', "")
         self._aicore_time = self._data.get("aicore_time(us)", "")
         self._mac_time = self._data.get('mac_time(us)', "")
