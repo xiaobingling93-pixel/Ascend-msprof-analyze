@@ -174,6 +174,8 @@ class GPUProfilingParser(BaseProfilingParser):
             func_set.add(self._picking_memory_event)
         if self._enable_profiling_compare:
             func_set.add(self._picking_flow_event)
+        if self._enable_api_compare:
+            func_set.add(self._picking_torch_op_event)
         return list(func_set)
 
     def _infer_compute_stream_id(self):

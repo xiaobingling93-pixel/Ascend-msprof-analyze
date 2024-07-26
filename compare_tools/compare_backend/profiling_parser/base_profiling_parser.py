@@ -303,7 +303,7 @@ class BaseProfilingParser(ABC):
                 task_index += 1
 
     def _check_result_data(self):
-        if self._enable_operator_compare or self._enable_memory_compare:
+        if self._enable_operator_compare or self._enable_memory_compare or self._enable_api_compare:
             if not self._result_data.torch_op_data:
                 print(f"[WARNING] Can't find any torch op in the file: {self._profiling_path}")
         if self._enable_operator_compare and not self._result_data.kernel_dict:
@@ -312,10 +312,11 @@ class BaseProfilingParser(ABC):
             print(f"[WARNING] Can't find any memory event in the file: {self._profiling_path}")
         if self._enable_communication_compare and not self._result_data.communication_dict:
             print(f"[WARNING] Can't find any communication op in the file: {self._profiling_path}")
-        if self._enable_api_compare and not self._result_data.torch_op_data:
-            print(f"[WARNING] Can't find any torch op in the file: {self._profiling_path}")
         if self._enable_kernel_compare and not self._result_data.kernel_details:
-            print(f"[WARNING] Can't find any kernel details in the file: {self._profiling_path}")
+            if self._profiling_type == Constant.GPU:
+                print(f"[WARNING] kernel compare between GPU data and NPU data is not supported.")
+            else:
+                print(f"[WARNING] Can't find any kernel details in the file: {self._profiling_path}")
 
     def _read_trace_event(self):
         try:
