@@ -16,12 +16,12 @@ class OpSummary(ProfilingParser):
     """
     op summary
     """
-
-    FILE_PATTERN = r"^op_summary_[_\d]+\.csv$"
     FILE_PATTERN_MSG = "op_summary_*.csv"
     FILE_INFO = "op summary"
     STATIC_OP_STATE = "static"
     DYNAMIC_OP_STATE = "dynamic"
+
+    file_pattern_list = [r"^op_summary_[_\d]+\.csv$"]
 
     def __init__(self, path: str) -> None:
         super().__init__(path)

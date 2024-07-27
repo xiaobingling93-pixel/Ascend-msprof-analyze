@@ -12,10 +12,10 @@ class ProfilingParser:
     """
     profiling
     """
-    FILE_PATTERN = ""
     FILE_PATTERN_MSG = ""
     FILE_INFO = ""
-    FILE_PATH = ""
+
+    file_pattern_list = []
 
     def __init__(self, path: str) -> None:
         self._path = path
@@ -37,15 +37,20 @@ class ProfilingParser:
         return False
 
     def _parse_from_file(self):
-        file_list = get_file_path_from_directory(self._path, self.file_match_func(self.FILE_PATTERN))
-        if not file_list:
-            return False
-        ## get last file
-        file = file_list[-1]
-        self.FILE_PATH = file
-        if len(file_list) > 1:
-            logger.warning("Multiple copies of %s were found, use %s", self.FILE_INFO, file)
-        return self.parse_from_file(file)
+
+        if not isinstance(self.file_pattern_list, list):
+            self.file_pattern_list = [self.file_pattern_list]
+
+        for file_pattern in self.file_pattern_list:
+            file_list = get_file_path_from_directory(self._path, self.file_match_func(file_pattern))
+            if not file_list:
+                continue
+            ## get last file
+            target_file = file_list[-1]
+            if len(file_list) > 1:
+                logger.warning("Multiple copies of %s were found, use %s", self.FILE_INFO, target_file)
+            return self.parse_from_file(target_file)
+        return False
 
     @staticmethod
     def get_float(data) -> float:

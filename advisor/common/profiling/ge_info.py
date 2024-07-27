@@ -17,11 +17,12 @@ class GeInfo(ProfilingParser):
     """
     ge info file
     """
-    FILE_PATTERN = r"ge_info.db"
     FILE_PATTERN_MSG = "ge_info.db"
     FILE_INFO = "ge info"
     STATIC_OP_STATE = "0"
     DYNAMIC_OP_STATE = "1"
+
+    file_pattern_list = [r"ge_info.db"]
 
     def __init__(self, path: str) -> None:
         super().__init__(path)
