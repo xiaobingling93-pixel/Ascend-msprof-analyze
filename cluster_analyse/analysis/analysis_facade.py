@@ -19,8 +19,6 @@ from analysis.communication_analysis import CommunicationAnalysis
 from analysis.comm_matrix_analysis import CommMatrixAnalysis
 from analysis.step_trace_time_analysis import StepTraceTimeAnalysis
 from analysis.host_info_analysis import HostInfoAnalysis
-from common_func.context import Context
-from common_func.constant import Constant
 
 class AnalysisFacade:
     default_module = {CommunicationAnalysis, StepTraceTimeAnalysis, CommMatrixAnalysis, HostInfoAnalysis}
@@ -38,13 +36,3 @@ class AnalysisFacade:
 
         for process in process_list:
             process.join()
-    
-    def recipe_analyze(self):
-        HostInfoAnalysis(self.params).run()
-        print("[INFO] Recipe analysis launched.")
-        try:
-            with Context.create_context(self.params.get(Constant.PARALLEL_MODE)) as context:
-                with self.params.get(Constant.RECIPE_CLASS)(self.params) as recipe:
-                    recipe.run(context)
-        except Exception as e:
-            print("[ERROR] Recipe analysis launched failed, %s." % str(e))
