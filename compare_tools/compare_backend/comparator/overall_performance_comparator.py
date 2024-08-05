@@ -13,11 +13,11 @@ class OverallPerformanceComparator(BaseComparator):
         base_col = [f'{base_profiling_info.profiling_type}']
         comp_col = [f'{comp_profiling_info.profiling_type}']
         if base_profiling_info.RDMA_bandwidth or comp_profiling_info.RDMA_bandwidth:
-            self._headers.extend(['RDMA Bandwidth(GB/s)'])
+            self._headers.extend(['RDMA Bandwidth'])
             base_col.append(f'{base_profiling_info.RDMA_bandwidth:.3f}GB/s')
             comp_col.append(f'{comp_profiling_info.RDMA_bandwidth:.3f}GB/s')
         if base_profiling_info.SDMA_bandwidth or comp_profiling_info.SDMA_bandwidth:
-            self._headers.extend(['SDMA Bandwidth(GB/s)'])
+            self._headers.extend(['SDMA Bandwidth'])
             base_col.append(f'{base_profiling_info.SDMA_bandwidth:.3f}GB/s')
             comp_col.append(f'{comp_profiling_info.SDMA_bandwidth:.3f}GB/s')
         if not base_profiling_info.hide_op_details and not comp_profiling_info.hide_op_details:

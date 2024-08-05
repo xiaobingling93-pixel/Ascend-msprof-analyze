@@ -61,25 +61,9 @@ class GPUProfilingParser(BaseProfilingParser):
     def _update_overall_metrics(self):
         self._calculate_performance_time()
         self.__parse_memory_reserved()
-        self._result_data.overall_metrics.trans_time_to_s()
-        self._result_data.overall_metrics.calculate_cube_time()
         self._result_data.overall_metrics.calculate_vec_time()
-        self._result_data.overall_metrics.calculate_cube_num()
-        self._result_data.overall_metrics.calculate_vec_num()
-        self._result_data.overall_metrics.calculate_sdma_num()
-        self._result_data.overall_metrics.calculate_fa_num_fwd()
-        self._result_data.overall_metrics.calculate_fa_num_bwd()
-        self._result_data.overall_metrics.calculate_pa_num()
-        self._result_data.overall_metrics.calculate_pa_time()
-        self._result_data.overall_metrics.calculate_conv_time_fwd()
-        self._result_data.overall_metrics.calculate_conv_time_bwd()
-        self._result_data.overall_metrics.calculate_conv_num_fwd()
-        self._result_data.overall_metrics.calculate_conv_num_bwd()
-        self._result_data.overall_metrics.calculate_sdma_time()
-        self._result_data.overall_metrics.calculate_fa_time_fwd()
-        self._result_data.overall_metrics.calculate_fa_time_bwd()
         self._result_data.overall_metrics.calculate_schedule_time()
-        self._result_data.overall_metrics.trans_to_s()
+        self._result_data.overall_metrics.trans_time_to_s()
 
     def _calculate_performance_time(self):
         min_ts = sys.float_info.max
@@ -92,6 +76,7 @@ class GPUProfilingParser(BaseProfilingParser):
                 min_ts = min(event.start_time, min_ts)
                 max_ts = max(event.end_time, max_ts)
             if event.stream == self._compute_stream_id and self.__is_sdma_time(event.name):
+                self._result_data.overall_metrics.update_sdma_info(event.dur)
                 self._result_data.overall_metrics.update_sdma_stream_info(event.dur)
                 continue
             if not event.is_kernel_cat():
@@ -99,6 +84,7 @@ class GPUProfilingParser(BaseProfilingParser):
             self.__add_marks(event)
             if event.is_nccl_name():
                 continue
+            self.__add_compute_time(event, aten_events, flow_dict_new)
             self.categorize_computing_performance_data(event, flow_dict_new)
         self._aten_events = None
         self._result_data.overall_metrics.set_e2e_time(float(max_ts - min_ts))
@@ -117,6 +103,23 @@ class GPUProfilingParser(BaseProfilingParser):
         else:
             for timestep in range(int(event.start_time + 1), int(event.end_time + 1)):
                 self._marks[str(timestep)] += -100  # mark this timestep in compute stream
+
+    def __add_compute_time(self, event: TraceEventBean, aten_events: list, flow_dict_new: dict):
+        if self.__is_flash_attention(event.name):
+            if event.is_backward():
+                self._result_data.overall_metrics.update_fa_bwd_info(event.dur)
+            else:
+                self._result_data.overall_metrics.update_fa_fwd_info(event.dur)
+        elif any(cube_mark in event.lower_name for cube_mark in self.CUBE_MARK):
+            is_conv = self.__check_is_conv(event, aten_events, flow_dict_new)
+            if is_conv == "conv_fwd":
+                self._result_data.overall_metrics.update_conv_fwd_info(event.dur)
+            elif is_conv == "conv_bwd":
+                self._result_data.overall_metrics.update_conv_bwd_info(event.dur)
+            else:
+                self._result_data.overall_metrics.update_cube_info(event.dur)
+        else:
+            self._result_data.overall_metrics.update_vec_info(event.dur)
 
     def __check_is_conv(self, event: TraceEventBean, aten_events: list, flow_dict_new: dict) -> str:
         flow_start_time = flow_dict_new.get(event.start_time)
