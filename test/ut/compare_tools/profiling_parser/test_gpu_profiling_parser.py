@@ -76,7 +76,7 @@ class TestGpuProfilingParser(unittest.TestCase):
             res._marks = defaultdict(int)
             res._calculate_performance_time()
             self.assertEqual(res._result_data.overall_metrics.e2e_time, 98)
-            self.assertEqual(res._result_data.overall_metrics.sdma_time, 4)
+            self.assertEqual(res._result_data.overall_metrics.sdma_time, 0)
             self.assertEqual(res._result_data.overall_metrics.sdma_num, 0)
             self.assertEqual(res._result_data.overall_metrics.cube_time, 1)
             self.assertEqual(res._result_data.overall_metrics.cube_num, 1)

@@ -224,9 +224,9 @@ class ProfilingInfo:
             [0, self.compute_time - self.cube_time - self.fa_time_fwd - self.fa_time_bwd -
              self.pa_time - self.vec_time - self.conv_time_fwd - self.conv_time_bwd])
 
-    def calculate_vec_time(self):
-        self.vec_time = self.compute_time - self.cube_time - self.fa_time_fwd - self.fa_time_bwd \
-                        - self.conv_time_fwd - self.conv_time_bwd
+    # def calculate_vec_time(self):
+    #     self.vec_time = self.compute_time - self.cube_time - self.fa_time_fwd - self.fa_time_bwd \
+    #                     - self.conv_time_fwd - self.conv_time_bwd
 
     def calculate_schedule_time(self):
         self.scheduling_time = (self.e2e_time - self.compute_time - self.lccl_time - self.communication_not_overlapped)
