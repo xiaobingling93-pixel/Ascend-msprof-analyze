@@ -58,12 +58,30 @@ class GPUProfilingParser(BaseProfilingParser):
         for record in addr_dict.values():
             self._result_data.update_memory_list(record)
 
+    gpu
+
     def _update_overall_metrics(self):
         self._calculate_performance_time()
         self.__parse_memory_reserved()
         self._result_data.overall_metrics.trans_time_to_s()
+        self._result_data.overall_metrics.calculate_cube_time()
         self._result_data.overall_metrics.calculate_vec_time()
+        self._result_data.overall_metrics.calculate_cube_num()
+        self._result_data.overall_metrics.calculate_vec_num()
+        self._result_data.overall_metrics.calculate_sdma_num()
+        self._result_data.overall_metrics.calculate_fa_num_fwd()
+        self._result_data.overall_metrics.calculate_fa_num_bwd()
+        self._result_data.overall_metrics.calculate_pa_num()
+        self._result_data.overall_metrics.calculate_pa_time()
+        self._result_data.overall_metrics.calculate_conv_time_fwd()
+        self._result_data.overall_metrics.calculate_conv_time_bwd()
+        self._result_data.overall_metrics.calculate_conv_num_fwd()
+        self._result_data.overall_metrics.calculate_conv_num_bwd()
+        self._result_data.overall_metrics.calculate_sdma_time()
+        self._result_data.overall_metrics.calculate_fa_time_fwd()
+        self._result_data.overall_metrics.calculate_fa_time_bwd()
         self._result_data.overall_metrics.calculate_schedule_time()
+        self._result_data.overall_metrics.trans_to_s()
 
     def _calculate_performance_time(self):
         min_ts = sys.float_info.max

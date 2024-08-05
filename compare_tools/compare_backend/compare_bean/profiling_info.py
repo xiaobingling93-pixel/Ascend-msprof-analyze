@@ -136,7 +136,15 @@ class ProfilingInfo:
     @property
     def vector_total_num(self):
         return sum((self.vector_num_trans, self.vector_num_notrans))
-
+    def trans_to_s(self):
+        self.cube_time /= 10 ** 3
+        self.vec_time /= 10 ** 3
+        self.conv_time_fwd /= 10 ** 3
+        self.conv_time_bwd /= 10 ** 3
+        self.sdma_time /= 10 ** 3
+        self.fa_time_bwd /= 10 ** 3
+        self.pa_time /= 10 ** 3
+        self.fa_time_fwd /= 10 ** 3
     def trans_time_to_s(self):
         # 新指标单位为ms
         self.fa_time_fwd_cube /= 10 ** 3
@@ -155,24 +163,6 @@ class ProfilingInfo:
         self.sdma_time_stream /= 10 ** 3
         self.page_attention_time /= 10 ** 3
         self.other_cube_time /= 10 ** 3
-
-        self.cube_time = (self.matmul_time_cube + self.matmul_time_vector + self.other_cube_time) / 1000
-        self.vec_time = (self.vector_time_trans + self.vector_time_notrans) / 1000
-        self.cube_num = (self.matmul_num_cube + self.matmul_num_vector + self.other_cube_num)
-        self.vec_num = (self.vector_num_trans + self.vector_num_notrans)
-        self.sdma_num = (self.sdma_num_tensor_move + self.sdma_num_stream)
-        self.fa_num_fwd = (self.fa_num_fwd_cube + self.fa_num_fwd_vector)
-        self.fa_num_bwd = (self.fa_num_bwd_cube + self.fa_num_bwd_vector)
-        self.pa_num = self.page_attention_num
-        self.conv_time_fwd = (self.conv_time_fwd_cube + self.conv_time_fwd_vector) / 1000
-        self.conv_time_bwd = (self.conv_time_bwd_cube + self.conv_time_bwd_vector) / 1000
-        self.conv_num_fwd = (self.conv_num_fwd_cube + self.conv_num_fwd_vector)
-        self.conv_num_bwd = (self.conv_num_bwd_cube + self.conv_num_bwd_vector)
-        self.sdma_time = (self.sdma_time_tensor_move + self.sdma_time_stream) / 1000
-        self.fa_time_bwd = (self.fa_time_bwd_cube + self.fa_time_bwd_vector) / 1000
-        self.pa_time = self.page_attention_time / 1000
-        self.fa_time_fwd = (self.fa_time_fwd_cube + self.fa_time_fwd_vector) / 1000
-
         self.other_time = self.other_time / 10 ** 6
         self.compute_time = self.compute_time / 10 ** 6
         self.communication_not_overlapped = self.communication_not_overlapped / 10 ** 6
@@ -180,6 +170,55 @@ class ProfilingInfo:
         self.e2e_time = self.e2e_time / 10 ** 6
         self.scheduling_time = self.scheduling_time / 10 ** 6
         self.lccl_time = self.lccl_time / 10 ** 6
+
+    def calculate_cube_time(self):
+        self.cube_time = self.matmul_time_cube + self.matmul_time_vector + self.other_cube_time
+
+    def calculate_vec_time(self):
+        self.vec_time = self.vector_time_trans + self.vector_time_notrans
+
+    def calculate_cube_num(self):
+        self.cube_num = self.matmul_num_cube + self.matmul_num_vector + self.other_cube_num
+
+    def calculate_vec_num(self):
+        self.vec_num = self.vector_num_trans + self.vector_num_notrans
+
+    def calculate_sdma_num(self):
+        self.sdma_num = self.sdma_num_tensor_move + self.sdma_num_stream
+
+    def calculate_fa_num_fwd(self):
+        self.fa_num_fwd = self.fa_num_fwd_cube + self.fa_num_fwd_vector
+
+    def calculate_fa_num_bwd(self):
+        self.fa_num_bwd = self.fa_num_bwd_cube + self.fa_num_bwd_vector
+
+    def calculate_pa_num(self):
+        self.pa_num = self.page_attention_num
+
+    def calculate_pa_time(self):
+        self.pa_num = self.page_attention_time
+
+    def calculate_conv_time_fwd(self):
+        self.conv_time_fwd = self.conv_time_fwd_cube + self.conv_time_fwd_vector
+
+    def calculate_conv_time_bwd(self):
+        self.conv_time_bwd = self.conv_time_bwd_cube + self.conv_time_bwd_vector
+
+    def calculate_conv_num_fwd(self):
+        self.conv_num_fwd = self.conv_num_fwd_cube + self.conv_num_fwd_vector
+
+    def calculate_conv_num_bwd(self):
+        self.conv_num_bwd = self.conv_num_bwd_cube + self.conv_num_bwd_vector
+
+    def calculate_sdma_time(self):
+        self.sdma_time = self.sdma_time_tensor_move + self.sdma_time_stream
+
+    def calculate_fa_time_fwd(self):
+        self.fa_time_fwd = self.fa_time_fwd_cube + self.fa_time_fwd_vector
+
+    def calculate_fa_time_bwd(self):
+        self.fa_time_bwd = self.fa_time_bwd_cube + self.fa_time_bwd_vector
+
     def calculate_other_time(self):
         self.other_time = max(
             [0, self.compute_time - self.cube_time - self.fa_time_fwd - self.fa_time_bwd -
