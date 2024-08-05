@@ -196,7 +196,7 @@ class ProfilingInfo:
         self.pa_num = self.page_attention_num
 
     def calculate_pa_time(self):
-        self.pa_num = self.page_attention_time
+        self.pa_num = self.page_attention_num
 
     def calculate_conv_time_fwd(self):
         self.conv_time_fwd = self.conv_time_fwd_cube + self.conv_time_fwd_vector
