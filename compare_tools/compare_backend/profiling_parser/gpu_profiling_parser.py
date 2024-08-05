@@ -58,8 +58,6 @@ class GPUProfilingParser(BaseProfilingParser):
         for record in addr_dict.values():
             self._result_data.update_memory_list(record)
 
-    gpu
-
     def _update_overall_metrics(self):
         self._calculate_performance_time()
         self.__parse_memory_reserved()
