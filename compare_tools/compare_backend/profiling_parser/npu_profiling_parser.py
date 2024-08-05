@@ -22,6 +22,7 @@ class NPUProfilingParser(BaseProfilingParser):
         self._operator_memory_path = os.path.join(path_dict.get(Constant.ASCEND_OUTPUT_PATH, ""), "operator_memory.csv")
         self._memory_record_path = os.path.join(path_dict.get(Constant.ASCEND_OUTPUT_PATH, ""), "memory_record.csv")
         self._kernel_detail_path = os.path.join(path_dict.get(Constant.ASCEND_OUTPUT_PATH, ""), "kernel_details.csv")
+        self._communication_path = os.path.join(path_dict.get(Constant.ASCEND_OUTPUT_PATH, ""), "communication.json")
         self._info_json_path = path_dict.get(Constant.INFO_JSON_PATH, "")
         self._trace_events = [TraceEventBean(event) for event in self._trace_events]
         self._hccl_pid = None
@@ -78,7 +79,6 @@ class NPUProfilingParser(BaseProfilingParser):
             print("[ERROR] Failed to enable enable_kernel_compare, type of kernel_details.csv is null.")
             return
         self._result_data.update_kernel_details(kernels_dict)
-
     def _update_memory_list(self):
         try:
             memory_data = FileReader.read_csv_file(self._operator_memory_path, OperatorMemoryBean)
@@ -121,6 +121,35 @@ class NPUProfilingParser(BaseProfilingParser):
         return self._dequeue_data[left].corr_id if self._dequeue_data[left].start_time <= ts_time <= \
                                                    self._dequeue_data[left].end_time else Constant.INVALID_VALUE
 
+    def _update_bandwidth(self):
+        try:
+            communication_json = FileReader.read_json_file(self._communication_path)
+        except FileNotFoundError:
+            print("[WARNING] The file communication.json does not exist.")
+        except Exception:
+            print("[ERROR] Failed to read communication.json.")
+            return
+        if not communication_json:
+            print("[WARNING] The JSON file is empty.")
+            return
+        for _, group_dict in communication_json.items():
+            step_dict = group_dict.get("collective")
+            total_op_info = step_dict.get("Total Op Info", {})
+            rdma_size_mb = rdma_time_ms = sdma_size_mb = sdma_time_ms = 0
+            if "Communication Bandwidth Info" in total_op_info:
+                bandwidth_info = total_op_info["Communication Bandwidth Info"]
+                if "RDMA" in bandwidth_info:
+                    rdma_info = bandwidth_info["RDMA"]
+                    rdma_size_mb += rdma_info.get("Transit Size(MB)", 0)  # 单位为 MB
+                    rdma_time_ms += rdma_info.get("Transit Time(ms)", 0)  # 单位为 MS
+                if "SDMA" in bandwidth_info:
+                    sdma_info = bandwidth_info["SDMA"]
+                    sdma_size_mb += sdma_info.get("Transit Size(MB)", 0)  # 单位为 MB
+                    sdma_time_ms += sdma_info.get("Transit Time(ms)", 0)  # 单位为 MS
+                rdma_bandwidth = (rdma_size_mb / 1024) / (rdma_time_ms / 1000) if rdma_time_ms > 0 else 0
+                sdma_bandwidth = (sdma_size_mb / 1024) / (sdma_time_ms / 1000) if sdma_time_ms > 0 else 0
+        self._result_data.overall_metrics.set_RDMA_bandwidth(rdma_bandwidth)
+        self._result_data.overall_metrics.set_SDMA_bandwidth(sdma_bandwidth)
     def _update_overall_metrics(self):
         self.__parse_info_json()
         self.__parse_mem_csv()
@@ -130,10 +159,11 @@ class NPUProfilingParser(BaseProfilingParser):
         self.__add_overlap_analysis_time()
         self._picking_notify_wait_event_and_not_overlap_event()
         self.__add_overlap_wait_time()
+        self._result_data.overall_metrics.trans_time_to_s()
         self._result_data.overall_metrics.calculate_other_time()
         self._result_data.overall_metrics.calculate_schedule_time()
-        self._result_data.overall_metrics.trans_time_to_s()
 
+        self._update_bandwidth()
     def _picking_notify_wait_event_and_not_overlap_event(self):
         self.notify_event_cache = []
         self._not_overlaped_commu_event = []
@@ -271,28 +301,6 @@ class NPUProfilingParser(BaseProfilingParser):
                 self._result_data.overall_metrics.update_lccl_info(event.dur)
 
     def __parse_kernel_csv(self):
-        def __screen_data(kernel: KernelDetailsBean):
-            if kernel.is_flash_attention():
-                if kernel.is_fa_bwd():
-                    self._result_data.overall_metrics.update_fa_bwd_info(kernel.duration)
-                else:
-                    self._result_data.overall_metrics.update_fa_fwd_info(kernel.duration)
-            elif kernel.is_conv():
-                if kernel.is_conv_bwd():
-                    self._result_data.overall_metrics.update_conv_bwd_info(kernel.duration)
-                else:
-                    self._result_data.overall_metrics.update_conv_fwd_info(kernel.duration)
-            elif kernel.is_matmul():
-                self._result_data.overall_metrics.update_cube_info(kernel.duration)
-            elif kernel.is_sdma():
-                self._result_data.overall_metrics.update_sdma_info(kernel.duration)
-            elif kernel.is_page_attention():
-                self._result_data.overall_metrics.update_pa_info(kernel.duration)
-            elif kernel.is_vector():
-                self._result_data.overall_metrics.update_vec_info(kernel.duration)
-            else:
-                self._result_data.overall_metrics.update_cube_info(kernel.duration)
-
         try:
             kernel_details = FileReader.read_csv_file(self._kernel_detail_path, KernelDetailsBean)
         except Exception:
@@ -306,7 +314,6 @@ class NPUProfilingParser(BaseProfilingParser):
         for kernel in kernel_details:
             if kernel.is_invalid():
                 continue
-            __screen_data(kernel)
             self.categorize_computing_performance_data(kernel, flow_dict_new)
 
     def __parse_mem_csv(self):
@@ -353,5 +360,4 @@ class NPUProfilingParser(BaseProfilingParser):
         compute_stream = event_wait_stream & ai_core_stream if event_wait_stream else ai_core_stream
         for stream in compute_stream:
             dur_list = sdma_dict.get(stream, [])
-            self._result_data.overall_metrics.update_sdma_info(sum(dur_list), len(dur_list))
             self._result_data.overall_metrics.update_sdma_stream_info(sum(dur_list), len(dur_list))

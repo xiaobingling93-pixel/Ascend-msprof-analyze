@@ -8,8 +8,20 @@ class ProfilingInfo:
 
     def __init__(self, profiling_type: str):
         self.profiling_type = profiling_type
-        self.cube_time = 0.0
         self.other_time = 0.0
+        self.lccl_num = 0
+        self.compute_time = 0.0
+        self.communication_not_overlapped = 0.0
+        self.wait_time = 0.0
+        self.memory_used = 0.0
+        self.e2e_time = 0.0
+        self.scheduling_time = 0.0
+        self.lccl_time = 0.0
+        self.minimal_profiling = False
+        self.hide_op_details = False
+        self.is_level0 = False
+
+        self.cube_time = 0.0
         self.vec_time = 0.0
         self.cube_num = 0
         self.vec_num = 0
@@ -17,26 +29,14 @@ class ProfilingInfo:
         self.fa_num_fwd = 0
         self.fa_num_bwd = 0
         self.pa_num = 0
-        self.lccl_num = 0
         self.conv_time_fwd = 0.0
         self.conv_time_bwd = 0.0
         self.conv_num_fwd = 0
         self.conv_num_bwd = 0
-        self.compute_time = 0.0
-        self.communication_not_overlapped = 0.0
-        self.wait_time = 0.0
-        self.memory_used = 0.0
-        self.e2e_time = 0.0
         self.sdma_time = 0.0
-        self.scheduling_time = 0.0
         self.fa_time_bwd = 0.0
         self.pa_time = 0.0
-        self.lccl_time = 0.0
         self.fa_time_fwd = 0.0
-        self.minimal_profiling = False
-        self.hide_op_details = False
-        self.is_level0 = False
-
         # 性能拆解新指标
         self.fa_time_fwd_cube = 0.0
         self.fa_num_fwd_cube = 0
@@ -76,7 +76,8 @@ class ProfilingInfo:
 
         self.other_cube_time = 0.0
         self.other_cube_num = 0
-
+        self.RDMA_bandwidth = 0.0
+        self.SDMA_bandwidth = 0.0
     @property
     def e2e_time_ms(self):
         return self.e2e_time * 10 ** 3
@@ -137,22 +138,6 @@ class ProfilingInfo:
         return sum((self.vector_num_trans, self.vector_num_notrans))
 
     def trans_time_to_s(self):
-        self.cube_time = self.cube_time / 10 ** 6
-        self.other_time = self.other_time / 10 ** 6
-        self.vec_time = self.vec_time / 10 ** 6
-        self.compute_time = self.compute_time / 10 ** 6
-        self.communication_not_overlapped = self.communication_not_overlapped / 10 ** 6
-        self.wait_time = self.wait_time / 10 ** 6
-        self.e2e_time = self.e2e_time / 10 ** 6
-        self.sdma_time = self.sdma_time / 10 ** 6
-        self.scheduling_time = self.scheduling_time / 10 ** 6
-        self.fa_time_bwd = self.fa_time_bwd / 10 ** 6
-        self.fa_time_fwd = self.fa_time_fwd / 10 ** 6
-        self.pa_time = self.pa_time / 10 ** 6
-        self.lccl_time = self.lccl_time / 10 ** 6
-        self.conv_time_fwd = self.conv_time_fwd / 10 ** 6
-        self.conv_time_bwd = self.conv_time_bwd / 10 ** 6
-
         # 新指标单位为ms
         self.fa_time_fwd_cube /= 10 ** 3
         self.fa_time_bwd_cube /= 10 ** 3
@@ -171,6 +156,30 @@ class ProfilingInfo:
         self.page_attention_time /= 10 ** 3
         self.other_cube_time /= 10 ** 3
 
+        self.cube_time = (self.matmul_time_cube + self.matmul_time_vector + self.other_cube_time) / 1000
+        self.vec_time = (self.vector_time_trans + self.vector_time_notrans) / 1000
+        self.cube_num = (self.matmul_num_cube + self.matmul_num_vector + self.other_cube_num)
+        self.vec_num = (self.vector_num_trans + self.vector_num_notrans)
+        self.sdma_num = (self.sdma_num_tensor_move + self.sdma_num_stream)
+        self.fa_num_fwd = (self.fa_num_fwd_cube + self.fa_num_fwd_vector)
+        self.fa_num_bwd = (self.fa_num_bwd_cube + self.fa_num_bwd_vector)
+        self.pa_num = self.page_attention_num
+        self.conv_time_fwd = (self.conv_time_fwd_cube + self.conv_time_fwd_vector) / 1000
+        self.conv_time_bwd = (self.conv_time_bwd_cube + self.conv_time_bwd_vector) / 1000
+        self.conv_num_fwd = (self.conv_num_fwd_cube + self.conv_num_fwd_vector)
+        self.conv_num_bwd = (self.conv_num_bwd_cube + self.conv_num_bwd_vector)
+        self.sdma_time = (self.sdma_time_tensor_move + self.sdma_time_stream) / 1000
+        self.fa_time_bwd = (self.fa_time_bwd_cube + self.fa_time_bwd_vector) / 1000
+        self.pa_time = self.page_attention_time / 1000
+        self.fa_time_fwd = (self.fa_time_fwd_cube + self.fa_time_fwd_vector) / 1000
+
+        self.other_time = self.other_time / 10 ** 6
+        self.compute_time = self.compute_time / 10 ** 6
+        self.communication_not_overlapped = self.communication_not_overlapped / 10 ** 6
+        self.wait_time = self.wait_time / 10 ** 6
+        self.e2e_time = self.e2e_time / 10 ** 6
+        self.scheduling_time = self.scheduling_time / 10 ** 6
+        self.lccl_time = self.lccl_time / 10 ** 6
     def calculate_other_time(self):
         self.other_time = max(
             [0, self.compute_time - self.cube_time - self.fa_time_fwd - self.fa_time_bwd -
@@ -182,14 +191,6 @@ class ProfilingInfo:
 
     def calculate_schedule_time(self):
         self.scheduling_time = (self.e2e_time - self.compute_time - self.lccl_time - self.communication_not_overlapped)
-
-    def update_fa_fwd_info(self, time: float):
-        self.fa_time_fwd += time
-        self.fa_num_fwd += 1
-
-    def update_fa_bwd_info(self, time: float):
-        self.fa_time_bwd += time
-        self.fa_num_bwd += 1
 
     def update_fa_fwd_cube_info(self, time: float):
         self.fa_time_fwd_cube += time
@@ -215,21 +216,9 @@ class ProfilingInfo:
         self.sdma_time_stream += time
         self.sdma_num_stream += num
 
-    def update_pa_info(self, time: float):
-        self.pa_time += time
-        self.pa_num += 1
-
     def update_lccl_info(self, time: float):
         self.lccl_time += time
         self.lccl_num += 1
-
-    def update_conv_fwd_info(self, time: float):
-        self.conv_time_fwd += time
-        self.conv_num_fwd += 1
-
-    def update_conv_bwd_info(self, time: float):
-        self.conv_time_bwd += time
-        self.conv_num_bwd += 1
 
     def update_conv_bwd_cube_info(self, time: float):
         self.conv_time_bwd_cube += time
@@ -267,18 +256,6 @@ class ProfilingInfo:
         self.vector_time_notrans += time
         self.vector_num_notrans += 1
 
-    def update_sdma_info(self, time: float, num: int = 1):
-        self.sdma_time += time
-        self.sdma_num += num
-
-    def update_cube_info(self, time: float):
-        self.cube_time += time
-        self.cube_num += 1
-
-    def update_vec_info(self, time: float):
-        self.vec_time += time
-        self.vec_num += 1
-
     def update_other_cube_info(self, time: float):
         self.other_cube_time += time
         self.other_cube_num += 1
@@ -306,3 +283,9 @@ class ProfilingInfo:
 
     def is_not_minimal_profiling(self) -> bool:
         return self.profiling_type == Constant.NPU and not self.minimal_profiling
+
+    def set_RDMA_bandwidth(self, bandwidth: float):
+        self.RDMA_bandwidth = bandwidth
+
+    def set_SDMA_bandwidth(self, bandwidth: float):
+        self.SDMA_bandwidth = bandwidth
