@@ -26,7 +26,7 @@ with torch_npu.profiler.profile(
     profile_memory=True,
     with_stack=True,
     experimental_config=experimental_config,
-    schedule=torch.profiler.schedule(wait=10, warmup=0, active=1, repeat=1),
+    schedule=torch_npu.profiler.schedule(wait=10, warmup=0, active=1, repeat=1),
     on_trace_ready=torch_npu.profiler.tensorboard_trace_handler("./profiling_data")
 ) as prof:
   # 模型训练代码
