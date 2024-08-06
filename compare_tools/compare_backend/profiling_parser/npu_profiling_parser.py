@@ -147,8 +147,8 @@ class NPUProfilingParser(BaseProfilingParser):
                     sdma_info = bandwidth_info["SDMA"]
                     sdma_size_mb += sdma_info.get("Transit Size(MB)", 0)  # 单位为 MB
                     sdma_time_ms += sdma_info.get("Transit Time(ms)", 0)  # 单位为 MS
-                rdma_bandwidth = (rdma_size_mb / 1024) / (rdma_time_ms / 1000) if rdma_time_ms > 0 else 0
-                sdma_bandwidth = (sdma_size_mb / 1024) / (sdma_time_ms / 1000) if sdma_time_ms > 0 else 0
+                rdma_bandwidth = rdma_size_mb / rdma_time_ms if rdma_time_ms > 0 else 0
+                sdma_bandwidth = sdma_size_mb / sdma_time_ms if sdma_time_ms > 0 else 0
         self._result_data.overall_metrics.set_RDMA_bandwidth(rdma_bandwidth)
         self._result_data.overall_metrics.set_SDMA_bandwidth(sdma_bandwidth)
     def _update_overall_metrics(self):
