@@ -106,3 +106,6 @@ class Constant(object):
     CONFIG = "config"
     EXPER_CONFIG = "experimental_config"
     EXPORT_TYPE = "_export_type"
+
+    # metadata key
+    DISTRIBUTED_ARGS = "distributed_args"
