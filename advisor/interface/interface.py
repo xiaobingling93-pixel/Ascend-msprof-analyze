@@ -27,6 +27,7 @@ from profiler.advisor.analyzer.cluster.slow_rank_analyser import SlowRankAnalyze
 from profiler.advisor.analyzer.cluster.slow_link_analyser import SlowLinkAnalyzer
 from profiler.advisor.analyzer.cluster.Communication_retransmission_analyzer import RDMARetransmissionAnalyzer
 from profiler.advisor.analyzer.overall.overall_summary_analyzer import OverallSummaryAnalyzer
+from profiler.advisor.analyzer.overall.environment_variable_analyzer import EnvironmentVariabelAnalyzer
 from profiler.advisor.analyzer.schedule.dispatch.timeline_op_dispatch_analyzer import OpDispatchAnalyzer
 from profiler.advisor.analyzer.schedule.syncbn.syncbn_analyzer import SyncBNAnalyzer
 from profiler.advisor.analyzer.schedule.synchronize_stream.synchronize_stream_analyzer import SynchronizeStreamAnalyzer
@@ -54,7 +55,10 @@ class Interface:
         "communication": OrderedDict({
             SupportedScopes.PACKET: PacketAnalyzer
         }),
-        "overall": OrderedDict({SupportedScopes.OVER_ALL: OverallSummaryAnalyzer}),
+        "overall": OrderedDict({
+            SupportedScopes.ENVIRONMENT_VARIABLE_ANALYSIS: EnvironmentVariabelAnalyzer,
+            SupportedScopes.OVER_ALL: OverallSummaryAnalyzer,
+        }),
         "dataloader": OrderedDict({SupportedScopes.DATALOADER: DataloaderAnalyzer}),
         "cluster": OrderedDict({
             SupportedScopes.COMMUNICATION_RETRANSMISSION_DETECTION: RDMARetransmissionAnalyzer,

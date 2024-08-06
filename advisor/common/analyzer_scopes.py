@@ -23,6 +23,7 @@ class SupportedScopes:
     COMMUNICATION_RETRANSMISSION_DETECTION = "communication_retransmission_analysis"
     PACKET = "packet_analysis"
     OVER_ALL = "over_all"
+    ENVIRONMENT_VARIABLE_ANALYSIS = "environment_variable_analysis"
     DYNAMIC_SHAPE_ANALYSIS = "dynamic_shape_analysis"
     AICPU_ANALYSIS = "aicpu_analysis"
     BLOCK_DIM_ANALYSIS = "block_dim_analysis"
