@@ -48,8 +48,8 @@ NO_STACK_REASON_MAP = {
     TIMELINE_BACKWARD_NO_STACK_CODE: "Backward broadcast, without call stacks in profiling.",
     TIMELINE_ACL_TO_NPU_NO_STACK_CODE: "Incoming flow is 'acl_to_npu', without call stacks in profiling."
 }
-TIMELINE_API_DOC_URL = "https://gitee.com/ascend/mstt/blob/master/profiler/advisor/doc \
-                        /Samples%20of%20Fused%20Operator%20API%20Replacement.md"
+TIMELINE_API_DOC_URL = "https://gitee.com/ascend/mstt/blob/master/profiler/advisor/doc/"\
+                       "Samples%20of%20Fused%20Operator%20API%20Replacement.md"
 AFFINITY_TRAINING_API = "Affinity training api"
 TIMELINE_WITH_STACK_DOC_URL = "https://www.hiascend.com/document/detail/zh/canncommercial/" \
                               "70RC1/modeldevpt/ptmigr/AImpug_0067.html"
