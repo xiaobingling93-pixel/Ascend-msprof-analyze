@@ -12,14 +12,6 @@ class OverallPerformanceComparator(BaseComparator):
         self._headers = ['']
         base_col = [f'{base_profiling_info.profiling_type}']
         comp_col = [f'{comp_profiling_info.profiling_type}']
-        if base_profiling_info.RDMA_bandwidth or comp_profiling_info.RDMA_bandwidth:
-            self._headers.extend(['RDMA Bandwidth'])
-            base_col.append(f'{base_profiling_info.RDMA_bandwidth:.3f}GB/s')
-            comp_col.append(f'{comp_profiling_info.RDMA_bandwidth:.3f}GB/s')
-        if base_profiling_info.SDMA_bandwidth or comp_profiling_info.SDMA_bandwidth:
-            self._headers.extend(['SDMA Bandwidth'])
-            base_col.append(f'{base_profiling_info.SDMA_bandwidth:.3f}GB/s')
-            comp_col.append(f'{comp_profiling_info.SDMA_bandwidth:.3f}GB/s')
         if not base_profiling_info.hide_op_details and not comp_profiling_info.hide_op_details:
             self._headers.extend(['Cube Time(Num)', 'Vector Time(Num)'])
             base_col.extend([f'{base_profiling_info.cube_time:.3f}s({base_profiling_info.cube_num})',
@@ -72,6 +64,14 @@ class OverallPerformanceComparator(BaseComparator):
         else:
             comp_col.extend(
                 [f'{comp_profiling_info.communication_not_overlapped: .3f}s({comp_profiling_info.wait_time:.3f}s)'])
+        if base_profiling_info.RDMA_bandwidth or comp_profiling_info.RDMA_bandwidth:
+            self._headers.extend(['RDMA Bandwidth'])
+            base_col.append(f'{base_profiling_info.RDMA_bandwidth:.3f}GB/s')
+            comp_col.append(f'{comp_profiling_info.RDMA_bandwidth:.3f}GB/s')
+        if base_profiling_info.SDMA_bandwidth or comp_profiling_info.SDMA_bandwidth:
+            self._headers.extend(['SDMA Bandwidth'])
+            base_col.append(f'{base_profiling_info.SDMA_bandwidth:.3f}GB/s')
+            comp_col.append(f'{comp_profiling_info.SDMA_bandwidth:.3f}GB/s')
         if base_profiling_info.sdma_time or comp_profiling_info.sdma_time:
             self._headers.append('SDMA Time(Num)')
             base_col.append(f'{base_profiling_info.sdma_time:.3f}s({base_profiling_info.sdma_num})')
