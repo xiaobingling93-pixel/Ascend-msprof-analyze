@@ -8,7 +8,7 @@ from compare_backend.utils.constant import Constant
 
 class FileReader:
     @classmethod
-    def read_json_file(cls, file_path: str) -> any:
+    def read_trace_file(cls, file_path: str) -> any:
         PathManager.check_path_readable(file_path)
         if not os.path.isfile(file_path):
             raise FileNotFoundError("File not exists.")

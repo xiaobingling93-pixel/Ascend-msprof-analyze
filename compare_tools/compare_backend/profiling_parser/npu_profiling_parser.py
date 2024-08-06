@@ -124,7 +124,7 @@ class NPUProfilingParser(BaseProfilingParser):
 
     def _update_bandwidth(self):
         try:
-            communication_json = FileReader.read_json_file(self._communication_path)
+            communication_json = FileReader.read_trace_file(self._communication_path)
         except FileNotFoundError:
             print("[WARNING] The file communication.json does not exist.")
         except Exception:
