@@ -134,7 +134,7 @@ class NPUProfilingParser(BaseProfilingParser):
             print("[WARNING] The JSON file is empty.")
             return
         for _, group_dict in communication_json.items():
-            step_dict = group_dict.get("collective")
+            step_dict = group_dict.get("collective", {})
             total_op_info = step_dict.get("Total Op Info", {})
             rdma_size_mb = rdma_time_ms = sdma_size_mb = sdma_time_ms = 0
             if "Communication Bandwidth Info" in total_op_info:
