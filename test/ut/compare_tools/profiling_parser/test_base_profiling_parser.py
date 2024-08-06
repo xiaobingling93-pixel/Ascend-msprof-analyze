@@ -26,6 +26,7 @@ class ProfilingParser(BaseProfilingParser):
         self._enable_communication_compare = True
         self._enable_kernel_compare = True
         self._enable_api_compare = True
+        self._bwd_tid = 1
 
     def _update_kernel_details(self):
         pass

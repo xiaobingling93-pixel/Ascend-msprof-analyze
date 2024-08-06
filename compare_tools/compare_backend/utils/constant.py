@@ -91,3 +91,6 @@ class Constant(object):
     CPU_OP_MATMUL_MASK = ("aten::addmm", "aten::bmm", "aten::mm", "aten::matmul")
     KERNEL_CUBE_MASK = ("gemm", "conv", "cutlass", "wgrad")
     KERNEL_TRANS_MASK = ("cast", "transdata", "transpose")
+
+    IS_BWD = "is_bwd"
+    OPS = "ops"

@@ -21,6 +21,7 @@ class ProfilingResult:
         self.python_function_data = []
         self.fwdbwd_dict = {}
         self.kernel_details = {}
+        self.bwd_tid = None
 
     def update_torch_op_data(self, event: TraceEventBean):
         event.is_torch_op = True
@@ -44,9 +45,12 @@ class ProfilingResult:
     def update_comm_task_data(self, comm_name: str, task_event: TraceEventBean):
         self.communication_dict.setdefault(comm_name, {}).setdefault("comm_task", {}).setdefault(
             task_event.name, []).append(task_event.dur)
-    
+
     def update_kernel_details(self, kernels: dict):
         self.kernel_details = kernels
+
+    def update_bwd_tid(self, bwd_tid):
+        self.bwd_tid = bwd_tid
 
 
 class BaseProfilingParser(ABC):
@@ -115,6 +119,7 @@ class BaseProfilingParser(ABC):
         raise NotImplementedError("Function _get_dispatch_func need to be implemented.")
 
     def load_data(self) -> ProfilingResult:
+        self._result_data.update_bwd_tid(self._bwd_tid)
         self._dispatch_events()
         self._update_kernel_dict()
         self._update_communication_dict()

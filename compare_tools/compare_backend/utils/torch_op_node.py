@@ -25,6 +25,10 @@ class TorchOpNode:
         return self._event.name
 
     @property
+    def tid(self):
+        return self._event.tid
+
+    @property
     def input_shape(self):
         return str(self._event.args.get("Input Dims", Constant.NA))
 
@@ -67,7 +71,7 @@ class TorchOpNode:
     @property
     def api_dur(self):
         return self._event.dur
-    
+
     @property
     def api_self_time(self):
         return self.api_dur - sum(child.api_dur for child in self._child_nodes)

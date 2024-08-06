@@ -41,6 +41,11 @@ def longest_common_subsequence_matching(base_ops: list, comparison_ops: list, na
         for index, value in enumerate(base_ops):
             result_data[index] = [value, None]
         return result_data
+    if not base_ops:
+        result_data = [None] * len(comparison_ops)
+        for index, value in enumerate(comparison_ops):
+            result_data[index] = [None, value]
+        return result_data
 
     comparison_len, base_len = len(comparison_ops), len(base_ops)
     if comparison_len * base_len > 50 * 10 ** 8:
@@ -51,12 +56,12 @@ def longest_common_subsequence_matching(base_ops: list, comparison_ops: list, na
     cur_list = [0] * (base_len + 1)
 
     comparison_index = 1
-    iter_comparison_data = iter(comparison_ops)
-    for comparison_data in iter_comparison_data:
+    all_base_data = [hash(name_func(op)) for op in base_ops]
+    all_comparison_data = [hash(name_func(op)) for op in comparison_ops]
+    for comparison_data in iter(all_comparison_data):
         base_index = 1
-        iter_base_data = iter(base_ops)
-        for base_data in iter_base_data:
-            if name_func(comparison_data) == name_func(base_data):
+        for base_data in all_base_data:
+            if comparison_data == base_data:
                 cur_list[base_index] = pre_list[base_index - 1] + 1
             else:
                 only_base = cur_list[base_index - 1]
@@ -75,7 +80,7 @@ def longest_common_subsequence_matching(base_ops: list, comparison_ops: list, na
     while comparison_index > 0 and base_index > 0:
         base_data = base_ops[base_index - 1]
         comparison_data = comparison_ops[comparison_index - 1]
-        if name_func(base_data) == name_func(comparison_data):
+        if all_base_data[base_index - 1] == all_comparison_data[comparison_index - 1]:
             matched_op.append([base_data, comparison_data])
             comparison_index -= 1
             base_index -= 1
