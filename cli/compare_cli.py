@@ -44,7 +44,4 @@ from profiler.compare_tools.compare_backend.comparison_generator import Comparis
 @click.option('--gpu_flow_cat', type=str, default='', help="Identifier of the GPU connection.")
 def compare_cli(**kwargs) -> None:
     args = AnalyzeDict(kwargs)
-    try:
-        ComparisonGenerator(args).run()
-    except RuntimeError as e:
-        print(f"[ERROR] {e}")
+    ComparisonGenerator(args).run()

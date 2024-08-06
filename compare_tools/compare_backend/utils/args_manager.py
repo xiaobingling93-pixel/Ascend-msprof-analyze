@@ -11,17 +11,17 @@ class Singleton(object):
         self._cls = cls
         self._instance = {}
 
-    def __call__(self):
+    def __call__(self, args):
         if self._cls not in self._instance:
-            self._instance[self._cls] = self._cls()
+            self._instance[self._cls] = self._cls(args)
         return self._instance[self._cls]
 
 
 @Singleton
 class ArgsManager:
 
-    def __init__(self):
-        self._args = None
+    def __init__(self, args: any):
+        self._args = args
         self._base_path_dict = {}
         self._comparison_path_dict = {}
 
@@ -114,8 +114,7 @@ class ArgsManager:
                 path_dict.update({Constant.INFO_JSON_PATH: os.path.join(file_path, dir_name)})
         return path_dict
 
-    def init(self, args: any):
-        self._args = args
+    def init(self):
         if self._args.max_kernel_num is not None and self._args.max_kernel_num <= Constant.LIMIT_KERNEL:
             msg = f"Invalid param, --max_kernel_num has to be greater than {Constant.LIMIT_KERNEL}"
             raise RuntimeError(msg)

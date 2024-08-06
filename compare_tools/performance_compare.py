@@ -31,7 +31,6 @@ def main():
 
     ComparisonGenerator(args).run()
 
-
 if __name__ == "__main__":
     start_time = datetime.datetime.now()
     main()
