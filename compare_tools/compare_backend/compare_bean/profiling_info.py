@@ -76,6 +76,8 @@ class ProfilingInfo:
 
         self.other_cube_time = 0.0
         self.other_cube_num = 0
+        self.RDMA_bandwidth = 0.0
+        self.SDMA_bandwidth = 0.0
 
     @property
     def e2e_time_ms(self):
@@ -306,3 +308,9 @@ class ProfilingInfo:
 
     def is_not_minimal_profiling(self) -> bool:
         return self.profiling_type == Constant.NPU and not self.minimal_profiling
+
+    def set_RDMA_bandwidth(self, bandwidth: float):
+        self.RDMA_bandwidth = bandwidth
+
+    def set_SDMA_bandwidth(self, bandwidth: float):
+        self.SDMA_bandwidth = bandwidth
