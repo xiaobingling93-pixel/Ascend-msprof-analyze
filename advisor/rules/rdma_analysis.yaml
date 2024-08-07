@@ -1,0 +1,9 @@
+problem: "RDMA communication retransmission occurs. A single retransmission takes more than 4s. Retransmission problems 
+are detected in {group_count} communication domains. \n
+Advised to perform the following suggestions"
+min_retransmission_time: 4000 #ms
+solutions:
+  - check RDMA transmission time:
+      desc: "Check whether the transmission time of the RDMA operator that is suspected to be retransmitted is correct."
+  - Check the network configuration.:
+      desc: "Check the network configuration of the switch and compute node server."

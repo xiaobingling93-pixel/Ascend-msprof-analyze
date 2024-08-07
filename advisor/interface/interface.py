@@ -25,6 +25,7 @@ from profiler.advisor.analyzer.graph_fusion.graph_fusion_analyzer import FusionO
 from profiler.advisor.common.analyzer_scopes import SupportedScopes
 from profiler.advisor.analyzer.cluster.slow_rank_analyser import SlowRankAnalyzer
 from profiler.advisor.analyzer.cluster.slow_link_analyser import SlowLinkAnalyzer
+from profiler.advisor.analyzer.cluster.Communication_retransmission_analyzer import RDMARetransmissionAnalyzer
 from profiler.advisor.analyzer.overall.overall_summary_analyzer import OverallSummaryAnalyzer
 from profiler.advisor.analyzer.schedule.dispatch.timeline_op_dispatch_analyzer import OpDispatchAnalyzer
 from profiler.advisor.analyzer.schedule.syncbn.syncbn_analyzer import SyncBNAnalyzer
@@ -56,6 +57,7 @@ class Interface:
         "overall": OrderedDict({SupportedScopes.OVER_ALL: OverallSummaryAnalyzer}),
         "dataloader": OrderedDict({SupportedScopes.DATALOADER: DataloaderAnalyzer}),
         "cluster": OrderedDict({
+            SupportedScopes.COMMUNICATION_RETRANSMISSION_DETECTION: RDMARetransmissionAnalyzer,
             SupportedScopes.SLOW_RANK: SlowRankAnalyzer,
             SupportedScopes.SLOW_LINK: SlowLinkAnalyzer
         })
