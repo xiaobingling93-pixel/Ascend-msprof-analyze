@@ -15,9 +15,18 @@ class OverallPerfInterface:
         self._result_data = {}
 
     def run(self):
-        self._check_path()
-        self._load_data()
-        self._generate_result()
+        try:
+            self._check_path()
+            self._load_data()
+            self._generate_result()
+        except NotImplementedError as e:
+            print(f"[ERROR] {e}")
+        except RuntimeError as e:
+            print(f"[ERROR] {e}")
+        except FileNotFoundError as e:
+            print(f"[ERROR] {e}")
+        except Exception as e:
+            print(f"[ERROR] {e}")
         return self._result_data
 
     def _check_path(self):
