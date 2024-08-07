@@ -123,6 +123,20 @@ MAX_RETRIES = 3
 TIMEOUT = 3
 
 ADVISOR_RULE_PATH = "ADVISOR_RULE_PATH"
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 CLOUD_RULE_PATH = "rules/cloud/"
 DEFAULT_RULE_PATH = "./rules/"
 
@@ -137,6 +151,7 @@ CLUSTER_ANALYSIS_OUTPUT = "cluster_analysis_output"
 KERNEL_DETAILS_CSV = "kernel_details.csv"
 CLUSTER_STEP_TIME_CSV = "cluster_step_trace_time.csv"
 CLUSTER_COMM_JSON = "cluster_communication.json"
+COMMUNICATION_JSON = "communication.json"
 
 BOTTLENECK = "bottleneck"
 DATA = "data"

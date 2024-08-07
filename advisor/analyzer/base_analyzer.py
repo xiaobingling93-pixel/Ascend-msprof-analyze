@@ -81,7 +81,11 @@ class BaseAnalyzer(VersionControl, metaclass=ABCMeta):
 
         for dataset_cls in dataset_cls_list:
             if dataset_cls and callable(dataset_cls):
-                dataset = dataset_cls(collection_path=self.collection_path, data=self.dataset_list, **self.kwargs)
+                try:
+                    dataset = dataset_cls(collection_path=self.collection_path, data=self.dataset_list, **self.kwargs)
+                except Exception as e:
+                    logger.error(e)
+                    continue
                 key = dataset_cls.get_key()
                 if key not in self.dataset_list:
                     self.dataset_list[key] = []
