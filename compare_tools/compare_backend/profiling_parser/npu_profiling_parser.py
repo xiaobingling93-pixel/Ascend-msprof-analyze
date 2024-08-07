@@ -131,7 +131,7 @@ class NPUProfilingParser(BaseProfilingParser):
             print("[ERROR] Failed to read communication.json.")
             return
         if not communication_json:
-            print("[WARNING] The JSON file is empty.")
+            print("[WARNING] The communication.json file is empty.")
             return
         for _, group_dict in communication_json.items():
             step_dict = group_dict.get("collective", {})
