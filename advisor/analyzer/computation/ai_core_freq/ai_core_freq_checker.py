@@ -49,7 +49,7 @@ class AICoreFreqChecker:
             max_freq = max(self.DEFAULT_FREQ, convert_to_float(Config().get_config("aic_frequency")))
 
             decrease_freq_ratio = sum(max_freq - freq for freq in freq_list) / (max_freq * len(freq_list))
-            if decrease_freq_ratio >= self.DECREASE_FREQ_RATIO:
+            if decrease_freq_ratio >= Config().get_config("frequency_threshold"):
                 self.ai_core_freq_issues = True
                 self.decrease_freq_ops.append([op_name, op_count, op_total_duration,
                                                f"{round(decrease_freq_ratio, 4):.2%}",

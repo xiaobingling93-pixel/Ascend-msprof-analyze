@@ -32,6 +32,7 @@ from profiler.advisor.analyzer.schedule.syncbn.syncbn_analyzer import SyncBNAnal
 from profiler.advisor.analyzer.schedule.synchronize_stream.synchronize_stream_analyzer import SynchronizeStreamAnalyzer
 from profiler.advisor.analyzer.dataloader.dataloader_analyzer import DataloaderAnalyzer
 from profiler.advisor.analyzer.computation.ai_core_freq.ai_core_freq_analyzer import AICoreFreqAnalyzer
+from profiler.advisor.analyzer.communication.packet_analyzer import PacketAnalyzer
 
 
 class Interface:
@@ -50,7 +51,9 @@ class Interface:
             SupportedScopes.GRAPH: FusionOPAnalyzer,
             SupportedScopes.FREQ_ANALYSIS: AICoreFreqAnalyzer
         }),
-        "communication": OrderedDict(),
+        "communication": OrderedDict({
+            SupportedScopes.PACKET: PacketAnalyzer
+        }),
         "overall": OrderedDict({SupportedScopes.OVER_ALL: OverallSummaryAnalyzer}),
         "dataloader": OrderedDict({SupportedScopes.DATALOADER: DataloaderAnalyzer}),
         "cluster": OrderedDict({

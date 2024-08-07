@@ -4,28 +4,6 @@ from compare_backend.compare_bean.profiling_info import ProfilingInfo
 
 
 class TestProfilingInfo(unittest.TestCase):
-    def test_calculate_other_time(self):
-        info = ProfilingInfo("NPU")
-        info.compute_time = 10
-        info.cube_time = 1
-        info.fa_time_fwd = 2
-        info.fa_time_bwd = 2
-        info.vec_time = 3
-        info.calculate_other_time()
-        self.assertEqual(info.other_time, 2)
-        info.vec_time = 7
-        info.calculate_other_time()
-        self.assertEqual(info.other_time, 0)
-
-    def test_calculate_vec_time(self):
-        info = ProfilingInfo("NPU")
-        info.compute_time = 10
-        info.cube_time = 1
-        info.fa_time_fwd = 2
-        info.fa_time_bwd = 2
-        info.calculate_vec_time()
-        self.assertEqual(info.vec_time, 5)
-
     def test_calculate_schedule_time(self):
         info = ProfilingInfo("NPU")
         info.e2e_time = 10
@@ -36,41 +14,50 @@ class TestProfilingInfo(unittest.TestCase):
 
     def test_update_fa_fwd_info(self):
         info = ProfilingInfo("NPU")
-        info.update_fa_fwd_info(5)
-        info.update_fa_fwd_info(5)
-        self.assertEqual(info.fa_time_fwd, 10)
+        info.fa_time_fwd_cube = 5
+        info.fa_time_fwd_vector = 5
+        info.fa_num_fwd_cube = 1
+        info.fa_num_fwd_vector = 1
+        self.assertEqual(info.fa_time_fwd, 0.01)
         self.assertEqual(info.fa_num_fwd, 2)
 
     def test_update_fa_bwd_info(self):
         info = ProfilingInfo("NPU")
-        info.update_fa_bwd_info(5)
-        info.update_fa_bwd_info(5)
-        self.assertEqual(info.fa_time_bwd, 10)
+        info.fa_time_bwd_cube = 5
+        info.fa_time_bwd_vector = 5
+        info.fa_num_bwd_cube = 1
+        info.fa_num_bwd_vector = 1
+        self.assertEqual(info.fa_time_bwd, 0.01)
         self.assertEqual(info.fa_num_bwd, 2)
 
     def test_update_sdma_info(self):
         info = ProfilingInfo("NPU")
-        info.update_sdma_info(5)
-        self.assertEqual(info.sdma_time, 5)
-        self.assertEqual(info.sdma_num, 1)
-        info.update_sdma_info(5, 5)
-        self.assertEqual(info.sdma_time, 10)
-        self.assertEqual(info.sdma_num, 6)
+        info.sdma_time_tensor_move = 5
+        info.sdma_time_stream = 5
+        info.sdma_num_tensor_move = 5
+        info.sdma_num_stream = 5
+        self.assertEqual(info.sdma_time, 0.01)
+        self.assertEqual(info.sdma_num, 10)
 
     def test_update_cube_info(self):
         info = ProfilingInfo("NPU")
-        info.update_cube_info(5)
-        info.update_cube_info(5)
-        self.assertEqual(info.cube_time, 10)
-        self.assertEqual(info.cube_num, 2)
+        info.matmul_time_cube = 1
+        info.matmul_time_vector = 1
+        info.other_cube_time = 1
+        info.matmul_num_cube = 5
+        info.matmul_num_vector = 5
+        info.other_cube_num = 5
+        self.assertEqual(info.cube_time, 0.003)
+        self.assertEqual(info.cube_num, 15)
 
     def test_update_vec_info(self):
         info = ProfilingInfo("NPU")
-        info.update_vec_info(5)
-        info.update_vec_info(5)
-        self.assertEqual(info.vec_time, 10)
-        self.assertEqual(info.vec_num, 2)
-
+        info.vector_time_trans = 1
+        info.vector_time_notrans = 1
+        info.vector_num_trans = 2
+        info.vector_num_notrans = 2
+        self.assertEqual(info.vec_time, 0.002)
+        self.assertEqual(info.vec_num, 4)
     def test_set_compute_time(self):
         info = ProfilingInfo("NPU")
         info.update_compute_time(1)
