@@ -76,16 +76,12 @@ class TestGpuProfilingParser(unittest.TestCase):
             res._marks = defaultdict(int)
             res._calculate_performance_time()
             self.assertEqual(res._result_data.overall_metrics.e2e_time, 98)
-            self.assertEqual(res._result_data.overall_metrics.sdma_time, 4)
+            self.assertEqual(res._result_data.overall_metrics.sdma_time, 0.004)
             self.assertEqual(res._result_data.overall_metrics.sdma_num, 4)
-            self.assertEqual(res._result_data.overall_metrics.cube_time, 1)
+            self.assertEqual(res._result_data.overall_metrics.cube_time, 0.001)
             self.assertEqual(res._result_data.overall_metrics.cube_num, 1)
-            self.assertEqual(res._result_data.overall_metrics.fa_time_fwd, 2)
-            self.assertEqual(res._result_data.overall_metrics.fa_num_fwd, 2)
-            self.assertEqual(res._result_data.overall_metrics.fa_time_bwd, 2)
-            self.assertEqual(res._result_data.overall_metrics.fa_num_bwd, 2)
-            self.assertEqual(res._result_data.overall_metrics.vec_time, 2)
-            self.assertEqual(res._result_data.overall_metrics.vec_num, 2)  # cun yi
+            self.assertEqual(res._result_data.overall_metrics.vec_time, 0.006)
+            self.assertEqual(res._result_data.overall_metrics.vec_num, 6)  # cun yi
             self.assertEqual(res._result_data.overall_metrics.communication_not_overlapped, 2)
             self.assertEqual(res._result_data.overall_metrics.compute_time, 7)
 

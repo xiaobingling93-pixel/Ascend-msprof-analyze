@@ -301,28 +301,6 @@ class NPUProfilingParser(BaseProfilingParser):
                 self._result_data.overall_metrics.update_lccl_info(event.dur)
 
     def __parse_kernel_csv(self):
-        def __screen_data(kernel: KernelDetailsBean):
-            if kernel.is_flash_attention():
-                if kernel.is_fa_bwd():
-                    self._result_data.overall_metrics.update_fa_bwd_info(kernel.duration)
-                else:
-                    self._result_data.overall_metrics.update_fa_fwd_info(kernel.duration)
-            elif kernel.is_conv():
-                if kernel.is_conv_bwd():
-                    self._result_data.overall_metrics.update_conv_bwd_info(kernel.duration)
-                else:
-                    self._result_data.overall_metrics.update_conv_fwd_info(kernel.duration)
-            elif kernel.is_matmul():
-                self._result_data.overall_metrics.update_cube_info(kernel.duration)
-            elif kernel.is_sdma():
-                self._result_data.overall_metrics.update_sdma_info(kernel.duration)
-            elif kernel.is_page_attention():
-                self._result_data.overall_metrics.update_pa_info(kernel.duration)
-            elif kernel.is_vector():
-                self._result_data.overall_metrics.update_vec_info(kernel.duration)
-            else:
-                self._result_data.overall_metrics.update_cube_info(kernel.duration)
-
         try:
             kernel_details = FileReader.read_csv_file(self._kernel_detail_path, KernelDetailsBean)
         except Exception:
@@ -336,7 +314,6 @@ class NPUProfilingParser(BaseProfilingParser):
         for kernel in kernel_details:
             if kernel.is_invalid():
                 continue
-            __screen_data(kernel)
             self.categorize_computing_performance_data(kernel, flow_dict_new)
 
     def __parse_mem_csv(self):
@@ -383,5 +360,4 @@ class NPUProfilingParser(BaseProfilingParser):
         compute_stream = event_wait_stream & ai_core_stream if event_wait_stream else ai_core_stream
         for stream in compute_stream:
             dur_list = sdma_dict.get(stream, [])
-            self._result_data.overall_metrics.update_sdma_info(sum(dur_list), len(dur_list))
             self._result_data.overall_metrics.update_sdma_stream_info(sum(dur_list), len(dur_list))
