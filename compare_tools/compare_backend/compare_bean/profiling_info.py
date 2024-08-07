@@ -124,11 +124,12 @@ class ProfilingInfo:
 
     @property
     def cube_time(self):
-        return (self.matmul_time_cube + self.matmul_time_vector + self.other_cube_time) / 1000
+        return (
+                self.matmul_time_cube + self.matmul_time_vector + self.other_cube_time) / Constant.MILLISECONDS_TO_SECONDS
 
     @property
     def vec_time(self):
-        return (self.vector_time_trans + self.vector_time_notrans) / 1000
+        return (self.vector_time_trans + self.vector_time_notrans) / Constant.MILLISECONDS_TO_SECONDS
 
     @property
     def cube_num(self):
@@ -156,15 +157,15 @@ class ProfilingInfo:
 
     @property
     def pa_time(self):
-        return self.page_attention_time / 1000
+        return self.page_attention_time / Constant.MILLISECONDS_TO_SECONDS
 
     @property
     def conv_time_fwd(self):
-        return (self.conv_time_fwd_cube + self.conv_time_fwd_vector) / 1000
+        return (self.conv_time_fwd_cube + self.conv_time_fwd_vector) / Constant.MILLISECONDS_TO_SECONDS
 
     @property
     def conv_time_bwd(self):
-        return (self.conv_time_bwd_cube + self.conv_time_bwd_vector) / 1000
+        return (self.conv_time_bwd_cube + self.conv_time_bwd_vector) / Constant.MILLISECONDS_TO_SECONDS
 
     @property
     def conv_num_fwd(self):
@@ -176,16 +177,15 @@ class ProfilingInfo:
 
     @property
     def sdma_time(self):
-        return (self.sdma_time_tensor_move + self.sdma_time_stream) / 1000
+        return (self.sdma_time_tensor_move + self.sdma_time_stream) / Constant.MILLISECONDS_TO_SECONDS
 
     @property
     def fa_time_fwd(self):
-        return (self.fa_time_fwd_cube + self.fa_time_fwd_vector) / 1000
+        return (self.fa_time_fwd_cube + self.fa_time_fwd_vector) / Constant.MILLISECONDS_TO_SECONDS
 
     @property
     def fa_time_bwd(self):
-        return (self.fa_time_bwd_cube + self.fa_time_bwd_vector) / 1000
-
+        return (self.fa_time_bwd_cube + self.fa_time_bwd_vector) / Constant.MILLISECONDS_TO_SECONDS
     def calculate_other_time(self):
         self.other_time = max(
             [0, self.compute_time - self.cube_time - self.fa_time_fwd - self.fa_time_bwd -
@@ -294,26 +294,26 @@ class ProfilingInfo:
 
     def trans_time_to_s(self):
         # 新指标单位为ms
-        self.fa_time_fwd_cube /= 10 ** 3
-        self.fa_time_bwd_cube /= 10 ** 3
-        self.fa_time_fwd_vector /= 10 ** 3
-        self.fa_time_bwd_vector /= 10 ** 3
-        self.conv_time_fwd_cube /= 10 ** 3
-        self.conv_time_bwd_cube /= 10 ** 3
-        self.conv_time_fwd_vector /= 10 ** 3
-        self.conv_time_bwd_vector /= 10 ** 3
-        self.matmul_time_cube /= 10 ** 3
-        self.matmul_time_vector /= 10 ** 3
-        self.vector_time_trans /= 10 ** 3
-        self.vector_time_notrans /= 10 ** 3
-        self.sdma_time_tensor_move /= 10 ** 3
-        self.sdma_time_stream /= 10 ** 3
-        self.page_attention_time /= 10 ** 3
-        self.other_cube_time /= 10 ** 3
-        self.other_time = self.other_time / 10 ** 6
-        self.compute_time = self.compute_time / 10 ** 6
-        self.communication_not_overlapped = self.communication_not_overlapped / 10 ** 6
-        self.wait_time = self.wait_time / 10 ** 6
-        self.e2e_time = self.e2e_time / 10 ** 6
-        self.scheduling_time = self.scheduling_time / 10 ** 6
-        self.lccl_time = self.lccl_time / 10 ** 6
+        self.fa_time_fwd_cube /= Constant.MILLISECONDS_TO_SECONDS
+        self.fa_time_bwd_cube /= Constant.MILLISECONDS_TO_SECONDS
+        self.fa_time_fwd_vector /= Constant.MILLISECONDS_TO_SECONDS
+        self.fa_time_bwd_vector /= Constant.MILLISECONDS_TO_SECONDS
+        self.conv_time_fwd_cube /= Constant.MILLISECONDS_TO_SECONDS
+        self.conv_time_bwd_cube /= Constant.MILLISECONDS_TO_SECONDS
+        self.conv_time_fwd_vector /= Constant.MILLISECONDS_TO_SECONDS
+        self.conv_time_bwd_vector /= Constant.MILLISECONDS_TO_SECONDS
+        self.matmul_time_cube /= Constant.MILLISECONDS_TO_SECONDS
+        self.matmul_time_vector /= Constant.MILLISECONDS_TO_SECONDS
+        self.vector_time_trans /= Constant.MILLISECONDS_TO_SECONDS
+        self.vector_time_notrans /= Constant.MILLISECONDS_TO_SECONDS
+        self.sdma_time_tensor_move /= Constant.MILLISECONDS_TO_SECONDS
+        self.sdma_time_stream /= Constant.MILLISECONDS_TO_SECONDS
+        self.page_attention_time /= Constant.MILLISECONDS_TO_SECONDS
+        self.other_cube_time /= Constant.MILLISECONDS_TO_SECONDS
+        self.other_time /= Constant.MICROSECONDS_TO_SECONDS
+        self.compute_time /= Constant.MICROSECONDS_TO_SECONDS
+        self.communication_not_overlapped /= Constant.MICROSECONDS_TO_SECONDS
+        self.wait_time /= Constant.MICROSECONDS_TO_SECONDS
+        self.e2e_time /= Constant.MICROSECONDS_TO_SECONDS
+        self.scheduling_time /= Constant.MICROSECONDS_TO_SECONDS
+        self.lccl_time /= Constant.MICROSECONDS_TO_SECONDS

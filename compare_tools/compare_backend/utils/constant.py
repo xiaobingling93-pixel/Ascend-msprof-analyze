@@ -16,6 +16,8 @@ class Constant(object):
     US_TO_MS = 1000
     KB_TO_MB = 1024
     INVALID_VALUE = -1
+    MILLISECONDS_TO_SECONDS = 10 ** 3
+    MICROSECONDS_TO_SECONDS = 10 ** 6
 
     # epsilon
     EPS = 1e-15
