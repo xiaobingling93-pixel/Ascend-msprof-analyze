@@ -61,7 +61,6 @@ class GPUProfilingParser(BaseProfilingParser):
     def _update_overall_metrics(self):
         self._calculate_performance_time()
         self.__parse_memory_reserved()
-        self._result_data.overall_metrics.calculate_vec_time()
         self._result_data.overall_metrics.calculate_schedule_time()
         self._result_data.overall_metrics.trans_time_to_s()
 
