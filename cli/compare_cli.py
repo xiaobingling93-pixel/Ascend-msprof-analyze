@@ -42,6 +42,9 @@ from profiler.compare_tools.compare_backend.comparison_generator import Comparis
               required=False)
 @click.option('--use_input_shape', is_flag=True)
 @click.option('--gpu_flow_cat', type=str, default='', help="Identifier of the GPU connection.")
+@click.option('--base_step', type=str, default='', help="基准性能数据指定比对step")
+@click.option('--comparison_step', type=str, default='', help="比较性能数据指定比对step")
+
 def compare_cli(**kwargs) -> None:
     args = AnalyzeDict(kwargs)
     ComparisonGenerator(args).run()

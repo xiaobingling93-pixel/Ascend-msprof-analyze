@@ -31,6 +31,8 @@ from compare_backend.data_prepare.sequence_pre_matching import SequencePreMatchi
 class DetailPerformanceGenerator(BaseGenerator):
     def __init__(self, profiling_data_dict: dict, args: any):
         super().__init__(profiling_data_dict, args)
+        self._base_step_id = int(args.base_step) if args.base_step else Constant.VOID_STEP
+        self._comparison_step_id = int(args.comparison_step) if args.comparison_step else Constant.VOID_STEP
 
     def compare(self):
         enable_compare = [self._args.enable_operator_compare, self._args.enable_memory_compare,
@@ -83,8 +85,10 @@ class DetailPerformanceGenerator(BaseGenerator):
         # build tree for operator_compare memory_compare and api_compare
         base_op_prepare, comparison_op_prepare = None, None
         if self._args.enable_memory_compare or self.enable_api_compare or enable_operator_compare:
-            base_op_prepare = OperatorDataPrepare(self._profiling_data_dict.get(Constant.BASE_DATA))
-            comparison_op_prepare = OperatorDataPrepare(self._profiling_data_dict.get(Constant.COMPARISON_DATA))
+            base_op_prepare = OperatorDataPrepare(self._profiling_data_dict.get(Constant.BASE_DATA),
+                                                  self._base_step_id)
+            comparison_op_prepare = OperatorDataPrepare(self._profiling_data_dict.get(Constant.COMPARISON_DATA),
+                                                        self._comparison_step_id)
 
         # 算子性能比对-operator级
         op_compare_result = []

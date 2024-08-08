@@ -17,8 +17,8 @@ class NPUProfilingParser(BaseProfilingParser):
     ACTIVE_CPU = "ProfilerActivity.CPU"
     LEVEL_0 = "Level0"
 
-    def __init__(self, args: any, path_dict: dict):
-        super().__init__(args, path_dict)
+    def __init__(self, args: any, path_dict: dict, step_id: int = Constant.VOID_STEP):
+        super().__init__(args, path_dict, step_id)
         self._operator_memory_path = os.path.join(path_dict.get(Constant.ASCEND_OUTPUT_PATH, ""), "operator_memory.csv")
         self._memory_record_path = os.path.join(path_dict.get(Constant.ASCEND_OUTPUT_PATH, ""), "memory_record.csv")
         self._kernel_detail_path = os.path.join(path_dict.get(Constant.ASCEND_OUTPUT_PATH, ""), "kernel_details.csv")
@@ -72,11 +72,17 @@ class NPUProfilingParser(BaseProfilingParser):
         for kernel in kernel_details:
             if kernel.is_invalid():
                 continue
+            if self._step_id != Constant.VOID_STEP and kernel.step_id != self._step_id:
+                continue
             input_shapes = kernel.input_shapes if kernel.input_shapes else 'N/A'
             kernels_dict.setdefault(kernel.op_type, {}).setdefault(input_shapes, []).append(
                 [kernel.name, kernel.duration])
-        if len(kernels_dict) == 1:
-            print("[ERROR] Failed to enable enable_kernel_compare, type of kernel_details.csv is null.")
+        if not kernels_dict:
+            if self._step_id != Constant.VOID_STEP:
+                print(f"[ERROR] There is no kernel details infomation for step {self._step_id}," \
+                        " please check whether the data contains this step.")
+            else:
+                print("[ERROR] Failed to enable enable_kernel_compare, type of kernel_details.csv is null.")
             return
         self._result_data.update_kernel_details(kernels_dict)
 

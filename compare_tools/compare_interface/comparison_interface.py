@@ -12,11 +12,14 @@ from compare_backend.utils.constant import Constant
 
 
 class ComparisonInterface:
-    def __init__(self, base_profiling_path: str, comparison_profiling_path: str = ""):
+    def __init__(self, base_profiling_path: str, comparison_profiling_path: str = "",
+                 base_step: str = "", comparison_step: str = ""):
         self.base_profiling_path = base_profiling_path
         if comparison_profiling_path:
             self._args = Args(base_profiling_path=base_profiling_path,
-                              comparison_profiling_path=comparison_profiling_path)
+                              comparison_profiling_path=comparison_profiling_path,
+                              base_step=base_step,
+                              comparison_step=comparison_step)
 
     def compare(self, compare_type: str) -> dict:
         if compare_type == Constant.OVERALL_COMPARE:

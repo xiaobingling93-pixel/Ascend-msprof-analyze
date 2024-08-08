@@ -13,8 +13,8 @@ class GPUProfilingParser(BaseProfilingParser):
     FLOW_CAT = ("async_gpu", "async_cpu_to_gpu", "ac2g", "async")
     TORCH_OP_CAT = ("cpu_op", "user_annotation", "cuda_runtime", "operator", "runtime")
 
-    def __init__(self, args: any, path_dict: dict):
-        super().__init__(args, path_dict)
+    def __init__(self, args: any, path_dict: dict, step_id: int = Constant.VOID_STEP):
+        super().__init__(args, path_dict, step_id)
         self._trace_events = [TraceEventBean(event) for event in self._trace_events.get("traceEvents", [])]
         self._flow_cat = (args.gpu_flow_cat,) if args.gpu_flow_cat else self.FLOW_CAT
         self._compute_stream_id = self._infer_compute_stream_id()

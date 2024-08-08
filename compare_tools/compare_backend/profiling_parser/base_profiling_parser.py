@@ -55,7 +55,7 @@ class ProfilingResult:
 
 class BaseProfilingParser(ABC):
 
-    def __init__(self, args: any, path_dict: dict):
+    def __init__(self, args: any, path_dict: dict, step_id: int = Constant.VOID_STEP):
         self._args = args
         self._profiling_type = path_dict.get(Constant.PROFILING_TYPE)
         self._profiling_path = path_dict.get(Constant.PROFILING_PATH)
@@ -80,6 +80,7 @@ class BaseProfilingParser(ABC):
         self._categorize_performance_index = 0
         self._cpu_cube_op = None
         self._bwd_tid = None
+        self._step_id = step_id
 
     @property
     def cpu_cube_op(self):
@@ -120,6 +121,9 @@ class BaseProfilingParser(ABC):
 
     def load_data(self) -> ProfilingResult:
         self._result_data.update_bwd_tid(self._bwd_tid)
+        if self._step_id != Constant.VOID_STEP and self._profiling_type == Constant.GPU:
+            msg = "[WARNING] step id is invalid in GPU data, please use this when comparing between NPU datas."
+            raise RuntimeError(msg)
         self._dispatch_events()
         self._update_kernel_dict()
         self._update_communication_dict()

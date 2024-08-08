@@ -31,9 +31,13 @@ class ComparisonGenerator:
 
     def load_data(self):
         self._data_dict[Constant.BASE_DATA] = self.PARSER_DICT.get(self._args_manager.base_profiling_type)(
-            self._args_manager.args, self._args_manager.base_path_dict).load_data()
+            self._args_manager.args,
+            self._args_manager.base_path_dict,
+            self._args_manager.base_step).load_data()
         self._data_dict[Constant.COMPARISON_DATA] = self.PARSER_DICT.get(self._args_manager.comparison_profiling_type)(
-            self._args_manager.args, self._args_manager.comparison_path_dict).load_data()
+            self._args_manager.args,
+            self._args_manager.comparison_path_dict,
+            self._args_manager.comparison_step).load_data()
 
     def generate_compare_result(self):
         overall_data = {Constant.BASE_DATA: self._data_dict.get(Constant.BASE_DATA).overall_metrics,

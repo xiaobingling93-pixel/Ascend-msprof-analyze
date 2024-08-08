@@ -97,3 +97,5 @@ class Constant(object):
 
     IS_BWD = "is_bwd"
     OPS = "ops"
+
+    VOID_STEP = -1

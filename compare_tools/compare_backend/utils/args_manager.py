@@ -24,6 +24,8 @@ class ArgsManager:
         self._args = args
         self._base_path_dict = {}
         self._comparison_path_dict = {}
+        self._base_step = Constant.VOID_STEP
+        self._comparison_step = Constant.VOID_STEP
 
     @property
     def args(self):
@@ -52,6 +54,14 @@ class ArgsManager:
     @property
     def comparison_path_dict(self):
         return self._comparison_path_dict
+
+    @property
+    def base_step(self):
+        return self._base_step
+
+    @property
+    def comparison_step(self):
+        return self._comparison_step
 
     @property
     def enable_profiling_compare(self):
@@ -87,6 +97,18 @@ class ArgsManager:
         PathManager.check_input_directory_path(output_path)
         PathManager.make_dir_safety(output_path)
         PathManager.check_path_writeable(output_path)
+
+    def get_step_args_with_validating(self):
+        if self._args.base_step and self._args.comparison_step:
+            if all([self._args.base_step.isdigit(), self._args.comparison_step.isdigit()]):
+                self._base_step = int(self._args.base_step)
+                self._comparison_step = int(self._args.comparison_step)
+            else:
+                msg = "Invalid param, base_step and comparison_step must be a number."
+                raise RuntimeError(msg)
+        elif any([self._args.base_step, self._args.comparison_step]):
+            msg = "Invalid param, base_step and comparison_step must be set at the same time."
+            raise RuntimeError(msg)
 
     def parse_profiling_path(self, file_path: str):
         self.check_profiling_path(file_path)
@@ -134,7 +156,8 @@ class ArgsManager:
             self._args.enable_communication_compare = True
             self._args.enable_api_compare = True
             self._args.enable_kernel_compare = True
-
+        
+        self.get_step_args_with_validating()
         base_profiling_path = PathManager.get_realpath(self._args.base_profiling_path)
         self.check_profiling_path(base_profiling_path)
         self._base_path_dict = self.parse_profiling_path(base_profiling_path)

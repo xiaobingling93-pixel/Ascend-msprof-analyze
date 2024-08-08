@@ -100,5 +100,10 @@ class TorchOpNode:
     def is_step_profiler(self) -> bool:
         return self._event.is_step_profiler()
 
+    def get_step_id(self) -> int:
+        if self.is_step_profiler():
+            return int(self._event.name.split("#")[1])
+        return Constant.VOID_STEP
+
     def get_op_info(self) -> list:
         return [self.name, self.input_shape, self.input_type, self.call_stack]
