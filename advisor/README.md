@@ -62,19 +62,21 @@ msprof-analyze的advisor功能是将Ascend PyTorch Profiler或者msprof采集的
 
 #### 命令功能介绍
 
-| dimension  | mode                       | 参数释义                                 |
-| ---------- | -------------------------- | ---------------------------------------- |
-| overall    | overall_summary            | 计算、通信、空闲等维度对性能数据进行拆解 |
-| cluster    | slow_rank                  | 慢卡识别                                 |
-|            | slow_link                  | 慢链路识别                               |
-| computing  | aicpu                      | AI CPU调优                               |
-|            | dynamic_shape_analysis     | 识别动态Shape算子                        |
-|            | block_dim_analysis         | block dim算子调优                        |
-|            | operator_no_bound_analysis | operator no bound                        |
-|            | graph                      | 融合算子图调优                           |
-|            | freq_analysis              | AI Core算子降频分析                      |
-| scheduling | timeline_fusion_ops        | 亲和API替换调优                          |
-|            | timeline_op_dispatch       | 识别算子下发问题(路径3/路径5)            |
+| dimension  | mode                                  | 参数释义                             |
+| ---------- |---------------------------------------| ------------------------------------ |
+| overall    | overall_summary                       | 计算、通信、空闲等维度对性能数据进行拆解 |
+| cluster    | slow_rank                             | 慢卡识别                             |
+|            | slow_link                             | 慢链路识别                           |
+|            | communication_retransmission_analysis |通信重传检测                          |
+| computing  | aicpu                                 | AI CPU调优                           |
+|            | dynamic_shape_analysis                | 识别动态Shape算子                    |
+|            | block_dim_analysis                    | block dim算子调优                    |
+|            | operator_no_bound_analysis            | operator no bound                    |
+|            | graph                                 | 融合算子图调优                        |
+|            | freq_analysis                         | AI Core算子降频分析                  |
+|communication| packet_analysis                       |通信小包检测                          |
+| scheduling | timeline_fusion_ops                   | 亲和API替换调优                      |
+|            | timeline_op_dispatch                  | 识别算子下发问题(路径3/路径5)            |
 
 - all
 
@@ -126,11 +128,14 @@ msprof-analyze的advisor功能是将Ascend PyTorch Profiler或者msprof采集的
 
 ![输入图片说明](./img/cluster.png)
 
-cluster模块的分析包含快慢卡和快慢链路分析，仅识别问题，不提供调优建议。
+cluster模块的分析
+1. 包含快慢卡和快慢链路分析，仅识别问题，不提供调优建议。
+2. 通信重传检测分析，识别发生重传的通信域并提供调优建议。  
 如下图示例，识别到当前训练任务的通信和下发（free较多说明存在任务下发存在问题）存在问题。
 
 ![cluster_1](./img/cluster_1.png)
-
+如下图所示，识别到当前训练任务存在通信重传问题，并提供调优建议
+![cluster_2](./img/cluster_2.png)
 overall模块的分析包含当前训练任务慢卡的性能拆解，按照计算、通信和下发三个维度进行耗时的统计，可以基于该分析识别到训练性能瓶颈是计算、通信还是下发问题，同样不提供调优建议。
 
 ![输入图片说明](./img/overall_0.png)
@@ -158,6 +163,9 @@ torch_npu.npu.config.allow_internal_format = False
 computation模块从device计算性能维度进行分析，能够识别AI CPU、计算bound、动态Shape、AI Core算子降频分析等问题并给出相应建议。此处不再详细展开，按照报告进行调优即可。
 
 ![computation_1](./img/computation_1.png)
+
+communication模块从通信维度进行分析，目前支持通信小算子检测。
+![communication](./img/communication.png)
 
 ## 工具使用（Jupyter Notebook方式）
 

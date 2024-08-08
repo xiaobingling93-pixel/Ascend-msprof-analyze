@@ -21,7 +21,6 @@ class ComparisonInterface:
     def compare(self, compare_type: str) -> dict:
         if compare_type == Constant.OVERALL_COMPARE:
             self._args.enable_profiling_compare = True
-
         return ComparisonGenerator(self._args).run_interface(compare_type)
 
     def disaggregate_perf(self, compare_type: str) -> dict:

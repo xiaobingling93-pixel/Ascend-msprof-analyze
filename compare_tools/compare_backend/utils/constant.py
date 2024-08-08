@@ -6,6 +6,7 @@ class Constant(object):
     MAX_PATH_LENGTH = 4096
     MAX_FLOW_CAT_LEN = 20
     MAX_FILE_SIZE = 1024 * 1024 * 1024 * 5
+    MAX_JSON_SIZE = 1024 * 1024 * 1024 * 10
     BYTE_TO_KB = 1024
     YELLOW_COLOR = "FFFF00"
     GREEN_COLOR = "00FF00"
@@ -15,6 +16,8 @@ class Constant(object):
     US_TO_MS = 1000
     KB_TO_MB = 1024
     INVALID_VALUE = -1
+    MILLISECONDS_TO_SECONDS = 10 ** 3
+    MICROSECONDS_TO_SECONDS = 10 ** 6
 
     # epsilon
     EPS = 1e-15

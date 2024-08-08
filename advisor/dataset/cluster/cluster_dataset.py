@@ -1,3 +1,17 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import logging
 
 import os
@@ -10,6 +24,7 @@ from profiler.cluster_analyse.common_func.constant import Constant
 from collections import defaultdict
 from profiler.cluster_analyse.cluster_analysis import Interface
 from profiler.advisor.dataset.cluster.cluster_step_trace_time_bean import ClusterStepTraceTimeBean
+from profiler.advisor.dataset.cluster.hccl_collection import HcclInfo
 
 logger = logging.getLogger()
 
@@ -114,6 +129,7 @@ class ClusterCommunicationDataset(ClusterDataset):
             self.SDMA_TIME_MS: 0,
             self.SDMA_SIZE_MB: 0,
         })
+        self.hccl_dict = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
         super().__init__(collection_path, data)
 
     @staticmethod
@@ -136,9 +152,26 @@ class ClusterCommunicationDataset(ClusterDataset):
 
     def process(self, communication_json: dict):
         for comm_group, group_dict in communication_json.items():
+            if self.hccl_dict.get(comm_group) is None:
+                self.hccl_dict.setdefault(comm_group, defaultdict(lambda: defaultdict(list)))
             for step, step_dict in group_dict.items():
                 for op, op_dict in step_dict.items():
                     self.compute_bandwidth(op_dict)
+                    self.process_hccl_info(comm_group, step, op, op_dict)
+
+    def process_hccl_info(self, group, step, op, op_dict):
+        op_name = op.split("@")[0]
+        for rank_id, rank_dict in op_dict.items():
+            try:
+                hccl_info = HcclInfo(group, step, rank_id, op, rank_dict)
+                if self.hccl_dict[group].get(op_name) is None:
+                    self.hccl_dict[group].setdefault(op_name, defaultdict(list))
+                if self.hccl_dict[group][op_name].get(step) is None:
+                    self.hccl_dict[group][op_name].setdefault(step, list())
+                self.hccl_dict[group][op_name][step].append(hccl_info)
+            except ValueError as e:
+                msg = "[ERROR] Cluster_communication.json has invalid structure."
+                raise ValueError(msg) from e
 
     def compute_bandwidth(self, op_dict: dict):
         for rank_id, rank_dict in op_dict.items():
