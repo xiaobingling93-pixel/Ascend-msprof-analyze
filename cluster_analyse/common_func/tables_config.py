@@ -59,7 +59,10 @@ class TablesConfig:
             ("stage", "NUMERIC, null"),
             ("bubble", "NUMERIC, null"),
             ("communication_not_overlapped_and_exclude_receive", "NUMERIC, null"),
-            ("preparing", "NUMERIC, null")
+            ("preparing", "NUMERIC, null"),
+            ("dp_index", "INTEGER, null"),
+            ("pp_index", "INTEGER, null"),
+            ("tp_index", "INTEGER, null")
         ],
         "HostInfoMap": [
             ("hostUid", "INTEGER, null"),
