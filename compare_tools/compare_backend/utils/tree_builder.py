@@ -9,11 +9,13 @@ class TreeBuilder:
     @classmethod
     def build_tree(cls, event_list: list, kernel_dict: dict, memory_list: list) -> TorchOpNode:
         root_node = TorchOpNode()
+        all_nodes = [root_node] + ([None] * len(event_list))
         all_event_list = []
         all_event_list.extend(event_list)
         all_event_list.extend(memory_list)
         all_event_list.sort(key=lambda x: x.start_time)
         last_node = root_node
+        index = 1
         for event in all_event_list:
             while last_node:
                 if last_node != root_node and event.start_time > last_node.end_time:
@@ -21,6 +23,8 @@ class TreeBuilder:
                     continue
                 if event.is_torch_op:
                     tree_node = TorchOpNode(event, last_node)
+                    all_nodes[index] = tree_node
+                    index += 1
                     last_node.add_child_node(tree_node)
                     last_node = tree_node
                     if kernel_dict:
@@ -29,7 +33,7 @@ class TreeBuilder:
                     event.set_name(last_node.name)
                     last_node.set_memory_allocated(event)
                 break
-        return root_node
+        return all_nodes[:index]
 
     @classmethod
     def get_total_kernels(cls, root_node: TorchOpNode) -> list:

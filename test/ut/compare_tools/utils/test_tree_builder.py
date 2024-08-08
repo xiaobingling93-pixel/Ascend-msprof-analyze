@@ -18,11 +18,11 @@ class TestUtils(unittest.TestCase):
         for event in event_list:
             event.is_torch_op = True
         tree = TreeBuilder.build_tree(event_list, flow_kernel_dict, memory_allocated_list)
-        child_nodes = tree.child_nodes
-        self.assertEqual(len(tree._child_nodes), 2)
+        child_nodes = tree[0].child_nodes
+        self.assertEqual(len(tree[0].child_nodes), 2)
         self.assertEqual(child_nodes[0].start_time, 0)
         self.assertEqual(child_nodes[0].end_time, 1)
         self.assertEqual(child_nodes[0].kernel_num, 2)
         self.assertEqual(child_nodes[1].kernel_num, 0)
-        self.assertEqual(len(TreeBuilder.get_total_kernels(tree)), 2)
-        self.assertEqual(TreeBuilder.get_total_memory(tree)[0].size, 1)
+        self.assertEqual(len(TreeBuilder.get_total_kernels(tree[0])), 2)
+        self.assertEqual(TreeBuilder.get_total_memory(tree[0])[0].size, 1)
