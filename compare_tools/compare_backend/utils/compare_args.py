@@ -12,7 +12,9 @@ class Args:
                  max_kernel_num: int = None,
                  op_name_map: dict = {},
                  use_input_shape: bool = False,
-                 gpu_flow_cat: str = ""):
+                 gpu_flow_cat: str = "",
+                 base_step: str = "",
+                 comparison_step: str = ""):
         self.base_profiling_path = base_profiling_path
         self.comparison_profiling_path = comparison_profiling_path
         self.enable_profiling_compare = enable_profiling_compare
@@ -26,3 +28,5 @@ class Args:
         self.op_name_map = op_name_map
         self.use_input_shape = use_input_shape
         self.gpu_flow_cat = gpu_flow_cat
+        self.base_step = base_step
+        self.comparison_step = comparison_step

@@ -27,6 +27,8 @@ def main():
                         help="配置GPU与NPU等价的算子名称映射关系，以字典的形式传入")
     parser.add_argument("--use_input_shape", default=False, action='store_true', help="开启算子的精准匹配")
     parser.add_argument("--gpu_flow_cat", type=str, default='', help="gpu flow event的分类标识")
+    parser.add_argument("--base_step", type=str, default='', help="基准性能数据指定比对step")
+    parser.add_argument("--comparison_step", type=str, default='', help="比较性能数据指定比对step")
     args = parser.parse_args()
 
     ComparisonGenerator(args).run()

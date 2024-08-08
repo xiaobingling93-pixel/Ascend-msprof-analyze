@@ -18,6 +18,7 @@ class KernelDetailsBean:
         self._mac_time = 0.0
         self._duration = 0.0
         self._start_time = Decimal("0")
+        self._step_id = ""
         self.init()
 
     @property
@@ -65,6 +66,10 @@ class KernelDetailsBean:
     @property
     def end_time(self) -> Decimal:
         return self.start_time + convert_to_decimal(self._duration)
+    
+    @property
+    def step_id(self) -> int:
+        return int(self._step_id) if self._step_id else Constant.VOID_STEP
 
     def is_hide_op_pmu(self):
         if "mac_time(us)" in self._data.keys() or "aiv_vec_time(us)" in self._data.keys():
@@ -119,4 +124,5 @@ class KernelDetailsBean:
         self._aicore_time = self._data.get("aicore_time(us)", "")
         self._mac_time = self._data.get('mac_time(us)', "")
         self._duration = self._data.get('Duration(us)', 0)
+        self._step_id = self._data.get('Step Id', "")
         self._start_time = Decimal(self._data.get("Start Time(us)", "0"))
