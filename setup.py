@@ -28,6 +28,12 @@ setup(
     name="msprof-analyze",
     version=version,
     description="MindStudio Profiler Analyze Tools",
+    long_description="msprof-analyze provides statistics, analysis, and related tuning suggestions for the "
+                     "performance data collected in training and large model scenarios. The main functional modules"
+                     " include: performance comparison, performance analysis, and cluster analysis.",
+    url="https://gitee.com/ascend/mstt/tree/master/profiler",
+    author="MindStudio",
+    author_email="pmail_mindstudio@huawei.com",
     package_dir={"": root_path},
     packages=find_packages(root_path),
     include_package_data=False,
@@ -35,6 +41,7 @@ setup(
     install_requires=requires,
     package_data={'': ['*.json', '*.ini', '*.txt', '*.yaml', '*.html', '*.ipynb']},
     tests_require=tests_requires,
+    license='Apache License 2.0',
     entry_points="""
         [console_scripts]
         msprof-analyze=profiler.cli.entrance:msprof_analyze_cli
