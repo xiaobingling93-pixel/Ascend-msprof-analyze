@@ -85,7 +85,7 @@ class CommunicationDataset:
             return False
 
         if len(self.timeline_data_list) > 1:
-            logger.warning("Found multiple communication.json in %s, load the file of device 0 for analysis  .",
+            logger.warning("Found multiple communication.json in %s, load the file of device 0 for analysis.",
                            self.timeline_dir)
 
         json_data = self.load_json_data(sorted(self.timeline_data_list)[0])

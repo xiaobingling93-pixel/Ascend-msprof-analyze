@@ -10,7 +10,6 @@ logger = logging.getLogger()
 
 
 class AICoreFreqChecker:
-    DEFAULT_FREQ = 1800
     DECREASE_FREQ_RATIO = 0.05
     SHOW_TOPK_OPS = 10
     TOTAL_DURATION_INDEX = 2
@@ -46,7 +45,7 @@ class AICoreFreqChecker:
 
             op_count = op_info.get("count", 0)
             op_total_duration = round(op_info.get("dur", 0), 2)
-            max_freq = max(self.DEFAULT_FREQ, convert_to_float(Config().get_config("aic_frequency")))
+            max_freq = convert_to_float(Config().get_config("aic_frequency"))
 
             decrease_freq_ratio = sum(max_freq - freq for freq in freq_list) / (max_freq * len(freq_list))
             if decrease_freq_ratio >= Config().get_config("frequency_threshold"):
