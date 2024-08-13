@@ -78,8 +78,13 @@ class StepTraceTimeAnalysis:
 
         for step_data in self.step_data_list:
             rank_id = step_data[2]
-            step_data.extend(list(parallelism_map[rank_id])
-                             if parallelism_map[rank_id] else ['NA'] * len(self.PARALLEL_HEADERS))
+            if isinstance(rank_id, int):
+                # type is rank, rank_id is int
+                step_data.extend(list(parallelism_map[rank_id])
+                                 if parallelism_map[rank_id] else ['NA'] * len(self.PARALLEL_HEADERS))
+            else:
+                # type is stage, rank_id is tuple
+                step_data.extend(['NA'] * len(self.PARALLEL_HEADERS))
 
     def dump_data(self):
         if not self.step_data_list:
