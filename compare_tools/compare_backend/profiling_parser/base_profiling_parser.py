@@ -136,14 +136,13 @@ class BaseProfilingParser(ABC):
         self._check_result_data()
         return self._result_data
 
-    def categorize_computing_performance_data(self, tk: (TraceEventBean, KernelDetailsBean), flow_dict_new: dict):
+    def categorize_computing_performance_data(self, tk: (TraceEventBean, KernelDetailsBean), flow_start_time):
         if tk.is_page_attention():
             self._result_data.overall_metrics.update_page_attention_info(tk.dur)
             return
         if tk.is_sdma():
             self._result_data.overall_metrics.update_sdma_tensor_move_info(tk.dur)
             return
-        flow_start_time = flow_dict_new.get(tk.start_time)
         if flow_start_time:
             while self._categorize_performance_index < len(self.cpu_cube_op):
                 cur_op = self.cpu_cube_op[self._categorize_performance_index]
@@ -183,7 +182,7 @@ class BaseProfilingParser(ABC):
         判断fa/conv/matmul/vector使用cpu_op
         """
         if cpu_op.is_fa_for_cpu_op():
-            if self._is_backward(cpu_op):
+            if cpu_op.is_bwd_for_cpu_op():
                 if tk.is_cube_kernel_cat():
                     self._result_data.overall_metrics.update_fa_bwd_cube_info(tk.dur)
                 else:

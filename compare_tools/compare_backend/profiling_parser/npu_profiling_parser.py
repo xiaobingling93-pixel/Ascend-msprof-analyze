@@ -80,7 +80,7 @@ class NPUProfilingParser(BaseProfilingParser):
         if not kernels_dict:
             if self._step_id != Constant.VOID_STEP:
                 print(f"[ERROR] There is no kernel details infomation for step {self._step_id}," \
-                        " please check whether the data contains this step.")
+                      " please check whether the data contains this step.")
             else:
                 print("[ERROR] Failed to enable enable_kernel_compare, type of kernel_details.csv is null.")
             return
@@ -157,6 +157,7 @@ class NPUProfilingParser(BaseProfilingParser):
                 sdma_bandwidth = sdma_size_mb / sdma_time_ms if sdma_time_ms > 0 else 0
         self._result_data.overall_metrics.set_RDMA_bandwidth(rdma_bandwidth)
         self._result_data.overall_metrics.set_SDMA_bandwidth(sdma_bandwidth)
+
     def _update_overall_metrics(self):
         self.__parse_info_json()
         self.__parse_mem_csv()
@@ -170,6 +171,7 @@ class NPUProfilingParser(BaseProfilingParser):
         self._result_data.overall_metrics.calculate_schedule_time()
         self._result_data.overall_metrics.trans_time_to_s()
         self._update_bandwidth()
+
     def _picking_notify_wait_event_and_not_overlap_event(self):
         self.notify_event_cache = []
         self._not_overlaped_commu_event = []
@@ -316,11 +318,11 @@ class NPUProfilingParser(BaseProfilingParser):
             self._result_data.overall_metrics.hide_op_details = True
             return
         flow_dict_new = self._get_flow_time_dict()
-        kernel_details.sort(key=lambda x: x.start_time)
-        for kernel in kernel_details:
-            if kernel.is_invalid():
-                continue
-            self.categorize_computing_performance_data(kernel, flow_dict_new)
+        ordered_computing_events = sorted(
+            ((flow_dict_new.get(kernel.start_time, 0), kernel) for kernel in kernel_details if not kernel.is_invalid()),
+            key=lambda x: x[0])
+        for flow_start_time, event in ordered_computing_events:
+            self.categorize_computing_performance_data(event, flow_start_time)
 
     def __parse_mem_csv(self):
         try:
