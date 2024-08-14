@@ -69,7 +69,7 @@ class AICoreFreqDataset:
             return False
 
         if len(self.timeline_data_list) > 1:
-            logger.warning("Found multiple trace_view.json in %s, load the file of device 0 for analysis  .",
+            logger.warning("Found multiple trace_view.json in %s, load the file of device 0 for analysis.",
                            self.timeline_dir)
 
         _ = parse_json_with_generator(sorted(self.timeline_data_list)[0], self._add_event)
