@@ -64,7 +64,7 @@ class Constant(object):
     MODULE_TOP_TABLE = "ModuleCompareStatistic"
     OVERALL_METRICS_TABLE = "OverallMetrics"
     API_TABLE = "ApiCompare"
-    KERNEL_TABLE = "KernelCompare"    
+    KERNEL_TABLE = "KernelCompare"
 
     # memory
     SIZE = "Size(KB)"
@@ -87,7 +87,7 @@ class Constant(object):
     # compare type
     OVERALL_COMPARE = "overall"
 
-    BWD_LIST = ["bwd", "backward", "back"]
+    BWD_LIST = ["bwd", "backward", "back", "grad"]
 
     CPU_OP_FA_MASK = ("flash_attention", "fusion_attention", "flashattn", "xformers_flash", "efficient_attention")
     CPU_OP_CONV = "aten::conv"

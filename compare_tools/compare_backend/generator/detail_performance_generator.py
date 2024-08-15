@@ -84,7 +84,7 @@ class DetailPerformanceGenerator(BaseGenerator):
 
         # build tree for operator_compare memory_compare and api_compare
         base_op_prepare, comparison_op_prepare = None, None
-        if self._args.enable_memory_compare or self.enable_api_compare or enable_operator_compare:
+        if self._args.enable_memory_compare or self._args.enable_api_compare or enable_operator_compare:
             base_op_prepare = OperatorDataPrepare(self._profiling_data_dict.get(Constant.BASE_DATA),
                                                   self._base_step_id)
             comparison_op_prepare = OperatorDataPrepare(self._profiling_data_dict.get(Constant.COMPARISON_DATA),

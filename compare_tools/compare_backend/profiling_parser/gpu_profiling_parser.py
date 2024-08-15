@@ -7,8 +7,6 @@ from compare_backend.utils.constant import Constant
 
 
 class GPUProfilingParser(BaseProfilingParser):
-    CUBE_MARK = ['gemm', 'conv', 'cutlass', 'wgrad']
-    FA_MARK_LIST = [['fmha', 'kernel'], ['flash', 'kernel'], ['attention', 'kernel']]
     SDMA_MARK_LIST = ['htod', 'dtod', 'dtoh', 'memset (device)']
     FLOW_CAT = ("async_gpu", "async_cpu_to_gpu", "ac2g", "async")
     TORCH_OP_CAT = ("cpu_op", "user_annotation", "cuda_runtime", "operator", "runtime")
@@ -21,13 +19,6 @@ class GPUProfilingParser(BaseProfilingParser):
         self._marks = defaultdict(int)
         self._aten_index = 0
         self._find_bwd_tid()
-
-    @classmethod
-    def __is_flash_attention(cls, name: str):
-        for fa_mark in cls.FA_MARK_LIST:
-            if not [1 for mark in fa_mark if mark not in name.lower()]:
-                return True
-        return False
 
     @classmethod
     def __is_sdma_time(cls, name: str):
