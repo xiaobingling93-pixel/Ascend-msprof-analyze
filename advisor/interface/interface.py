@@ -34,6 +34,7 @@ from profiler.advisor.analyzer.schedule.synchronize_stream.synchronize_stream_an
 from profiler.advisor.analyzer.dataloader.dataloader_analyzer import DataloaderAnalyzer
 from profiler.advisor.analyzer.computation.ai_core_freq.ai_core_freq_analyzer import AICoreFreqAnalyzer
 from profiler.advisor.analyzer.communication.packet_analyzer import PacketAnalyzer
+from profiler.advisor.analyzer.schedule.gc.gc_analyzer import GcAnalyzer
 
 
 class Interface:
@@ -42,7 +43,8 @@ class Interface:
             SupportedScopes.SYNCBN: SyncBNAnalyzer,
             SupportedScopes.TIMELINE_OP_DISPATCH: OpDispatchAnalyzer,
             SupportedScopes.SYNCHRONIZE_STREAM: SynchronizeStreamAnalyzer,
-            SupportedScopes.TIMELINE_FUSION_OPS: TimelineFusionOpsAnalyzer
+            SupportedScopes.TIMELINE_FUSION_OPS: TimelineFusionOpsAnalyzer,
+            SupportedScopes.GC_ANALYSIS: GcAnalyzer
         }),
         "computation": OrderedDict({
             SupportedScopes.DYNAMIC_SHAPE_ANALYSIS: DynamicShapeAnalyzer,
