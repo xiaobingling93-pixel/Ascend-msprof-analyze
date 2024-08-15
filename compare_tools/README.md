@@ -223,36 +223,38 @@ MindSpore场景仅支持**总体性能**和**通信性能**的对比。
 
 Index列字段说明：
 
-| 字段                         |                    |                                     | 说明                                                         |
-| ---------------------------- | ------------------ | ----------------------------------- | ------------------------------------------------------------ |
-| Computing Time               |                    |                                     | 计算流耗时，计算流所有event耗时总和。如果有多条并发计算，计算流耗时对重叠部分只会计算一次。<br>NPU场景下，仅当采集性能数据的Level等级为L1及以上且aic_metrics取值为PipeUtilization时才可拆分出Computing Time的二级字段Flash Attention、Conv等。 |
-|                              | Flash Attention    |                                     | Flash Attention算子。                                        |
-|                              |                    | Flash Attention (Forward) (Cube)    | Flash Attention前向算子下发的所有Cube类Kernel的总耗时，一般为执行该算子核心计算的算子。 |
-|                              |                    | Flash Attention (Forward) (Vector)  | Flash Attention前向算子下发的所有Vector类Kernel的总耗时，一般为插入的转换类算子，如TransData。 |
-|                              |                    | Flash Attention (Backward) (Cube)   | Flash Attention反向算子下发的所有Cube类Kernel的总耗时，一般为执行该算子核心计算的算子。 |
-|                              |                    | Flash Attention (Backward) (Vector) | Flash Attention反向算子下发的所有Vector类Kernel的总耗时，一般为插入的转换类算子，如TransData。 |
-|                              | Conv               |                                     | Conv算子。                                                   |
-|                              |                    | Conv (Forward) (Cube)               | Conv前向算子下发的所有Cube类Kernel的总耗时，一般为执行该算子核心计算的算子。 |
-|                              |                    | Conv (Forward)  (Vector)            | Conv前向Vector算子。Conv前向算子下发的所有Vector类Kernel的总耗时，一般为插入的转换类算子，如TransData。 |
-|                              |                    | Conv (Backward) (Cube)              | Conv反向算子下发的所有Cube类Kernel的总耗时，一般为执行该算子核心计算的算子。 |
-|                              |                    | Conv (Backward) (Vector)            | Conv反向算子下发的所有Vector类Kernel的总耗时，一般为插入的转换类算子，如TransData。 |
-|                              | Matmul             |                                     | Matmul算子。                                                 |
-|                              |                    | Matmul (Cube)                       | Matmul算子下发的所有Cube类Kernel的总耗时，一般为执行该算子核心计算的算子。 |
-|                              |                    | Matmul (Vector)                     | Matmul算子下发的所有Vector类Kernel的总耗时，一般为插入的转换类算子，如TransData。 |
-|                              | Paged Attention    |                                     | Paged Attention算子。                                        |
-|                              | Vector             |                                     | Vector算子。                                                 |
-|                              |                    | Vector (Trans)                      | 转换类Vector算子，主要包含Cast、TransPose、TransData算子。（仅针对NPU数据） |
-|                              |                    | Vector ( No Trans)                  | 非转换类Vector算子。                                         |
-|                              | Cube               |                                     | 未识别出Flash Attention、Conv和Matmul的Cube算子。            |
-|                              | SDMA (Tensor Move) |                                     | 拷贝类任务。                                                 |
-|                              | Other              |                                     | AI CPU、DSA等其他算子。                                      |
-| Uncovered Communication Time |                    |                                     | 通信未掩盖耗时，包含卡间等待时间。                           |
-|                              | Wait               |                                     | 卡间同步等待耗时。（仅针对NPU数据）                          |
-|                              | Transmit           |                                     | 通信传输耗时。                                               |
-| Free Time                    |                    |                                     | 调度耗时 = E2E耗时 - 算子耗时 - 通信不可掩盖耗时。Free的定义为Device侧既不在通信又不在计算的时间，因此包含拷贝时间（SDMA Time）。 |
-|                              | SDMA               |                                     | NPU为除Tensor Move外的拷贝类任务，GPU为所有拷贝类任务。      |
-|                              | Free               |                                     | 排除SDMA的空闲耗时。                                         |
-| E2E Time                     |                    |                                     | E2E总耗时，计算流端到端耗时。当存在Not minimal profiling时，表示该时间存在性能膨胀，会影响通信和调度耗时。 |
+| 字段                         |                           |                                     | 说明                                                                                                                                                            |
+| ---------------------------- |:--------------------------| ----------------------------------- |---------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Computing Time               |                           |                                     | 计算流耗时，计算流所有event耗时总和。如果有多条并发计算，计算流耗时对重叠部分只会计算一次。<br>NPU场景下，仅当采集性能数据的Level等级为L1及以上且aic_metrics取值为PipeUtilization时才可拆分出Computing Time的二级字段Flash Attention、Conv等。 |
+|                              | Flash Attention (Forward) |                                     | Flash Attention前向算子。                                                                                                                                          |
+|                              |                           | Flash Attention (Forward) (Cube)    | Flash Attention前向算子下发的所有Cube类Kernel的总耗时，一般为执行该算子核心计算的算子。                                                                                                      |
+|                              |                           | Flash Attention (Forward) (Vector)  | Flash Attention前向算子下发的所有Vector类Kernel的总耗时，一般为插入的转换类算子，如TransData。                                                                                             |
+|                              | Flash Attention (Backward)|                                     | Flash Attention反向算子。                                                                                                                                          |
+|                              |                           | Flash Attention (Backward) (Cube)   | Flash Attention反向算子下发的所有Cube类Kernel的总耗时，一般为执行该算子核心计算的算子。                                                                                                      |
+|                              |                           | Flash Attention (Backward) (Vector) | Flash Attention反向算子下发的所有Vector类Kernel的总耗时，一般为插入的转换类算子，如TransData。                                                                                             |
+|                              | Conv (Forward)            |                                     | Conv前向算子。                                                                                                                                                     |
+|                              |                           | Conv (Forward) (Cube)               | Conv前向算子下发的所有Cube类Kernel的总耗时，一般为执行该算子核心计算的算子。                                                                                                                 |
+|                              |                           | Conv (Forward)  (Vector)            | Conv前向Vector算子。Conv前向算子下发的所有Vector类Kernel的总耗时，一般为插入的转换类算子，如TransData。                                                                                         |
+|                              | Conv (Backward)           |                                     | Conv反向算子。                                                                                                                                                     |
+|                              |                           | Conv (Backward) (Cube)              | Conv反向算子下发的所有Cube类Kernel的总耗时，一般为执行该算子核心计算的算子。                                                                                                                 |
+|                              |                           | Conv (Backward) (Vector)            | Conv反向算子下发的所有Vector类Kernel的总耗时，一般为插入的转换类算子，如TransData。                                                                                                        |
+|                              | Matmul                    |                                     | Matmul算子。                                                                                                                                                     |
+|                              |                           | Matmul (Cube)                       | Matmul算子下发的所有Cube类Kernel的总耗时，一般为执行该算子核心计算的算子。                                                                                                                 |
+|                              |                           | Matmul (Vector)                     | Matmul算子下发的所有Vector类Kernel的总耗时，一般为插入的转换类算子，如TransData。                                                                                                        |
+|                              | Paged Attention           |                                     | Paged Attention算子。                                                                                                                                            |
+|                              | Vector                    |                                     | Vector算子。                                                                                                                                                     |
+|                              |                           | Vector (Trans)                      | 转换类Vector算子，主要包含Cast、TransPose、TransData算子。（仅针对NPU数据）                                                                                                         |
+|                              |                           | Vector ( No Trans)                  | 非转换类Vector算子。                                                                                                                                                 |
+|                              | Cube                      |                                     | 未识别出Flash Attention、Conv和Matmul的Cube算子。                                                                                                                       |
+|                              | SDMA (Tensor Move)        |                                     | 拷贝类任务。                                                                                                                                                        |
+|                              | Other                     |                                     | AI CPU、DSA等其他算子。                                                                                                                                              |
+| Uncovered Communication Time |                           |                                     | 通信未掩盖耗时，包含卡间等待时间。                                                                                                                                             |
+|                              | Wait                      |                                     | 卡间同步等待耗时。（仅针对NPU数据）                                                                                                                                           |
+|                              | Transmit                  |                                     | 通信传输耗时。                                                                                                                                                       |
+| Free Time                    |                           |                                     | 调度耗时 = E2E耗时 - 算子耗时 - 通信不可掩盖耗时。Free的定义为Device侧既不在通信又不在计算的时间，因此包含拷贝时间（SDMA Time）。                                                                              |
+|                              | SDMA                      |                                     | NPU为除Tensor Move外的拷贝类任务，GPU为所有拷贝类任务。                                                                                                                          |
+|                              | Free                      |                                     | 排除SDMA的空闲耗时。                                                                                                                                                  |
+| E2E Time                     |                           |                                     | E2E总耗时，计算流端到端耗时。当存在Not minimal profiling时，表示该时间存在性能膨胀，会影响通信和调度耗时。                                                                                             |
 
 可以采取最简性能数据采集的方式来减少E2E耗时的性能膨胀，示例代码如下：
 

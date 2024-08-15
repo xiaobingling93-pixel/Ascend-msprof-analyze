@@ -249,15 +249,17 @@ class ExcelConfig(object):
     # computing time
     COMPUTING = "Computing Time"
 
-    FA = "\tFlash Attention"
+    FA_FWD = "\tFlash Attention (Forward)"
     FA_FWD_CUBE = "\t\tFlash Attention (Forward) (Cube)"
     FA_FWD_VECTOR = "\t\tFlash Attention (Forward) (Vector)"
+    FA_BWD = "\tFlash Attention (Backward)"
     FA_BWD_CUBE = "\t\tFlash Attention (Backward) (Cube)"
     FA_BWD_VECTOR = "\t\tFlash Attention (Backward) (Vector)"
 
-    CONV = "\tConv"
+    CONV_FWD = "\tConv (Forward)"
     CONV_FWD_CUBE = "\t\tConv (Forward) (Cube)"
     CONV_FWD_VECTOR = "\t\tConv (Forward) (Vector)"
+    CONV_BWD = "\tConv (Backward)"
     CONV_BWD_CUBE = "\t\tConv (Backward) (Cube)"
     CONV_BWD_VECTOR = "\t\tConv (Backward) (Vector)"
 
@@ -293,8 +295,10 @@ class ExcelConfig(object):
         COMMUNICATION_TIME: CellFormatType.BLUE_NORMAL,
         FREE_TIME: CellFormatType.BLUE_NORMAL,
         E2E_TIME: CellFormatType.BLUE_NORMAL,
-        FA: CellFormatType.LIGHT_BLUE_NORMAL,
-        CONV: CellFormatType.LIGHT_BLUE_NORMAL,
+        FA_FWD: CellFormatType.LIGHT_BLUE_NORMAL,
+        FA_BWD: CellFormatType.LIGHT_BLUE_NORMAL,
+        CONV_FWD: CellFormatType.LIGHT_BLUE_NORMAL,
+        CONV_BWD: CellFormatType.LIGHT_BLUE_NORMAL,
         MM: CellFormatType.LIGHT_BLUE_NORMAL,
         PA: CellFormatType.LIGHT_BLUE_NORMAL,
         VECTOR: CellFormatType.LIGHT_BLUE_NORMAL,
