@@ -73,7 +73,6 @@ def analyze_cli(**kwargs):
               type=click.Choice(constant.SUPPORTED_TORCH_VERSION, case_sensitive=False),
               default=constant.DEFAULT_TORCH_VERSION,
               help='The runtime torch version, which can be detected by exec command "pip show torch"')
-# @click.option('--is_inference', is_flag=True, help="Enable performance analysis of inference task")
 @click.option("-pt",
               "--profiling_type",
               metavar="",
