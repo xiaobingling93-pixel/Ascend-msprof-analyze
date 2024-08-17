@@ -55,14 +55,16 @@ class OverallMetricsInfo:
         self._profiling_info = profiling_info
         self._overall_metrics_data_map = {
             ExcelConfig.COMPUTING: self.computing_data,
-            ExcelConfig.FA: self.fa_data,
+            ExcelConfig.FA_FWD: self.fa_fwd_data,
             ExcelConfig.FA_FWD_CUBE: self.fa_fwd_cube_data,
             ExcelConfig.FA_FWD_VECTOR: self.fa_fwd_vector_data,
+            ExcelConfig.FA_BWD: self.fa_bwd_data,
             ExcelConfig.FA_BWD_CUBE: self.fa_bwd_cube_data,
             ExcelConfig.FA_BWD_VECTOR: self.fa_bwd_vector_data,
-            ExcelConfig.CONV: self.conv_data,
+            ExcelConfig.CONV_FWD: self.conv_fwd_data,
             ExcelConfig.CONV_FWD_CUBE: self.conv_fwd_cube_data,
             ExcelConfig.CONV_FWD_VECTOR: self.conv_fwd_vector_data,
+            ExcelConfig.CONV_BWD: self.conv_bwd_data,
             ExcelConfig.CONV_BWD_CUBE: self.conv_bwd_cube_data,
             ExcelConfig.CONV_BWD_VECTOR: self.conv_bwd_vector_data,
             ExcelConfig.MM: self.mm_data,
@@ -85,171 +87,191 @@ class OverallMetricsInfo:
         }
 
     @property
+    def e2e_time(self):
+        if isclose(self._profiling_info.e2e_time_ms, 0):
+            raise RuntimeError("Invalid E2E Time.")
+        return self._profiling_info.e2e_time_ms
+
+    @property
     def overall_metrics(self):
         return self._overall_metrics_data_map
 
     @property
     def computing_data(self):
         return [self._profiling_info.compute_time_ms,
-                self._profiling_info.compute_time_ms / self._profiling_info.e2e_time_ms,
-                sum((self._profiling_info.fa_total_num, self._profiling_info.conv_total_num,
+                self._profiling_info.compute_time_ms / self.e2e_time,
+                sum((self._profiling_info.fa_fwd_num, self._profiling_info.fa_bwd_num,
+                     self._profiling_info.conv_fwd_num, self._profiling_info.conv_bwd_num,
                      self._profiling_info.mm_total_num, self._profiling_info.vector_total_num,
                      self._profiling_info.sdma_num_tensor_move, self._profiling_info.other_cube_num,
                      self._profiling_info.page_attention_num))]
 
     @property
-    def fa_data(self):
-        return [self._profiling_info.fa_total_time,
-                self._profiling_info.fa_total_time / self._profiling_info.e2e_time_ms,
-                self._profiling_info.fa_total_num]
+    def fa_fwd_data(self):
+        return [self._profiling_info.fa_fwd_time,
+                self._profiling_info.fa_fwd_time / self.e2e_time,
+                self._profiling_info.fa_fwd_num]
+
+    @property
+    def fa_bwd_data(self):
+        return [self._profiling_info.fa_bwd_time,
+                self._profiling_info.fa_bwd_time / self.e2e_time,
+                self._profiling_info.fa_bwd_num]
 
     @property
     def fa_fwd_cube_data(self):
         return [self._profiling_info.fa_time_fwd_cube,
-                self._profiling_info.fa_time_fwd_cube / self._profiling_info.e2e_time_ms,
+                self._profiling_info.fa_time_fwd_cube / self.e2e_time,
                 self._profiling_info.fa_num_fwd_cube]
 
     @property
     def fa_fwd_vector_data(self):
         return [self._profiling_info.fa_time_fwd_vector,
-                self._profiling_info.fa_time_fwd_vector / self._profiling_info.e2e_time_ms,
+                self._profiling_info.fa_time_fwd_vector / self.e2e_time,
                 self._profiling_info.fa_num_fwd_vector]
 
     @property
     def fa_bwd_cube_data(self):
         return [self._profiling_info.fa_time_bwd_cube,
-                self._profiling_info.fa_time_bwd_cube / self._profiling_info.e2e_time_ms,
+                self._profiling_info.fa_time_bwd_cube / self.e2e_time,
                 self._profiling_info.fa_num_bwd_cube]
 
     @property
     def fa_bwd_vector_data(self):
         return [self._profiling_info.fa_time_bwd_vector,
-                self._profiling_info.fa_time_bwd_vector / self._profiling_info.e2e_time_ms,
+                self._profiling_info.fa_time_bwd_vector / self.e2e_time,
                 self._profiling_info.fa_num_bwd_vector]
 
     @property
-    def conv_data(self):
-        return [self._profiling_info.conv_total_time,
-                self._profiling_info.conv_total_time / self._profiling_info.e2e_time_ms,
-                self._profiling_info.conv_total_num]
+    def conv_fwd_data(self):
+        return [self._profiling_info.conv_fwd_time,
+                self._profiling_info.conv_fwd_time / self.e2e_time,
+                self._profiling_info.conv_fwd_num]
+
+    @property
+    def conv_bwd_data(self):
+        return [self._profiling_info.conv_bwd_time,
+                self._profiling_info.conv_bwd_time / self.e2e_time,
+                self._profiling_info.conv_bwd_num]
 
     @property
     def conv_fwd_cube_data(self):
         return [self._profiling_info.conv_time_fwd_cube,
-                self._profiling_info.conv_time_fwd_cube / self._profiling_info.e2e_time_ms,
+                self._profiling_info.conv_time_fwd_cube / self.e2e_time,
                 self._profiling_info.conv_num_fwd_cube]
 
     @property
     def conv_fwd_vector_data(self):
         return [self._profiling_info.conv_time_fwd_vector,
-                self._profiling_info.conv_time_fwd_vector / self._profiling_info.e2e_time_ms,
+                self._profiling_info.conv_time_fwd_vector / self.e2e_time,
                 self._profiling_info.conv_num_fwd_vector]
 
     @property
     def conv_bwd_cube_data(self):
         return [self._profiling_info.conv_time_bwd_cube,
-                self._profiling_info.conv_time_bwd_cube / self._profiling_info.e2e_time_ms,
+                self._profiling_info.conv_time_bwd_cube / self.e2e_time,
                 self._profiling_info.conv_num_bwd_cube]
 
     @property
     def conv_bwd_vector_data(self):
         return [self._profiling_info.conv_time_bwd_vector,
-                self._profiling_info.conv_time_bwd_vector / self._profiling_info.e2e_time_ms,
+                self._profiling_info.conv_time_bwd_vector / self.e2e_time,
                 self._profiling_info.conv_num_bwd_vector]
 
     @property
     def mm_data(self):
         return [self._profiling_info.mm_total_time,
-                self._profiling_info.mm_total_time / self._profiling_info.e2e_time_ms,
+                self._profiling_info.mm_total_time / self.e2e_time,
                 self._profiling_info.mm_total_num]
 
     @property
     def mm_cube_data(self):
         return [self._profiling_info.matmul_time_cube,
-                self._profiling_info.matmul_time_cube / self._profiling_info.e2e_time_ms,
+                self._profiling_info.matmul_time_cube / self.e2e_time,
                 self._profiling_info.matmul_num_cube]
 
     @property
     def mm_vector_data(self):
         return [self._profiling_info.matmul_time_vector,
-                self._profiling_info.matmul_time_vector / self._profiling_info.e2e_time_ms,
+                self._profiling_info.matmul_time_vector / self.e2e_time,
                 self._profiling_info.matmul_num_vector]
 
     @property
     def pa_data(self):
         return [self._profiling_info.page_attention_time,
-                self._profiling_info.page_attention_time / self._profiling_info.e2e_time_ms,
+                self._profiling_info.page_attention_time / self.e2e_time,
                 self._profiling_info.page_attention_num]
 
     @property
     def vector_data(self):
         return [self._profiling_info.vector_total_time,
-                self._profiling_info.vector_total_time / self._profiling_info.e2e_time_ms,
+                self._profiling_info.vector_total_time / self.e2e_time,
                 self._profiling_info.vector_total_num]
 
     @property
     def vector_trans_data(self):
         return [self._profiling_info.vector_time_trans,
-                self._profiling_info.vector_time_trans / self._profiling_info.e2e_time_ms,
+                self._profiling_info.vector_time_trans / self.e2e_time,
                 self._profiling_info.vector_num_trans]
 
     @property
     def vector_no_trans_data(self):
         return [self._profiling_info.vector_time_notrans,
-                self._profiling_info.vector_time_notrans / self._profiling_info.e2e_time_ms,
+                self._profiling_info.vector_time_notrans / self.e2e_time,
                 self._profiling_info.vector_num_notrans]
 
     @property
     def cube_data(self):
         return [self._profiling_info.other_cube_time,
-                self._profiling_info.other_cube_time / self._profiling_info.e2e_time_ms,
+                self._profiling_info.other_cube_time / self.e2e_time,
                 self._profiling_info.other_cube_num]
 
     @property
     def sdma_tm_data(self):
         return [self._profiling_info.sdma_time_tensor_move,
-                self._profiling_info.sdma_time_tensor_move / self._profiling_info.e2e_time_ms,
+                self._profiling_info.sdma_time_tensor_move / self.e2e_time,
                 self._profiling_info.sdma_num_tensor_move]
 
     @property
     def other_data(self):
         other_time = max((0,
-                          self._profiling_info.compute_time_ms - self._profiling_info.fa_total_time -
-                          self._profiling_info.conv_total_time - self._profiling_info.mm_total_time -
+                          self._profiling_info.compute_time_ms - self._profiling_info.fa_fwd_time -
+                          self._profiling_info.fa_bwd_time - self._profiling_info.conv_fwd_time -
+                          self._profiling_info.conv_bwd_time - self._profiling_info.mm_total_time -
                           self._profiling_info.vector_total_time - self._profiling_info.sdma_time_tensor_move -
                           self._profiling_info.other_cube_time - self._profiling_info.page_attention_time))
-        return [other_time, other_time / self._profiling_info.e2e_time_ms, "/"]
+        return [other_time, other_time / self.e2e_time, "/"]
 
     @property
     def communication_data(self):
         return [self._profiling_info.communication_not_overlapped_ms,
-                self._profiling_info.communication_not_overlapped_ms / self._profiling_info.e2e_time_ms, "/"]
+                self._profiling_info.communication_not_overlapped_ms / self.e2e_time, "/"]
 
     @property
     def wait_data(self):
         return [self._profiling_info.wait_time_ms,
-                self._profiling_info.wait_time_ms / self._profiling_info.e2e_time_ms, "/"]
+                self._profiling_info.wait_time_ms / self.e2e_time, "/"]
 
     @property
     def transmit_data(self):
         return [self._profiling_info.transmit_time_ms,
-                self._profiling_info.transmit_time_ms / self._profiling_info.e2e_time_ms, "/"]
+                self._profiling_info.transmit_time_ms / self.e2e_time, "/"]
 
     @property
     def free_time_data(self):
         return [self._profiling_info.free_time_ms,
-                self._profiling_info.free_time_ms / self._profiling_info.e2e_time_ms, "/"]
+                self._profiling_info.free_time_ms / self.e2e_time, "/"]
 
     @property
     def sdma_data(self):
         return [self._profiling_info.sdma_time_stream,
-                self._profiling_info.sdma_time_stream / self._profiling_info.e2e_time_ms, "/"]
+                self._profiling_info.sdma_time_stream / self.e2e_time, "/"]
 
     @property
     def free_data(self):
         free = self._profiling_info.free_time_ms - self._profiling_info.sdma_time_stream
-        return [free, free / self._profiling_info.e2e_time_ms, "/"]
+        return [free, free / self.e2e_time, "/"]
 
     @property
     def e2e_time_data(self):
-        return [self._profiling_info.e2e_time_ms, 1, "/"]
+        return [self.e2e_time, 1, "/"]

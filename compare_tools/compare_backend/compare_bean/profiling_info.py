@@ -88,23 +88,36 @@ class ProfilingInfo:
         return (self.communication_not_overlapped - self.wait_time) * 10 ** 3
 
     @property
-    def fa_total_time(self):
-        return sum((self.fa_time_fwd_cube, self.fa_time_fwd_vector, self.fa_time_bwd_cube, self.fa_time_bwd_vector))
+    def fa_fwd_time(self):
+        return self.fa_time_fwd_cube + self.fa_time_fwd_vector
 
     @property
-    def fa_total_num(self):
-        return sum((self.fa_num_fwd_cube, self.fa_num_fwd_vector, self.fa_num_bwd_cube, self.fa_num_bwd_vector))
+    def fa_bwd_time(self):
+        return self.fa_time_bwd_cube + self.fa_time_bwd_vector
 
     @property
-    def conv_total_time(self):
-        return sum(
-            (self.conv_time_fwd_cube, self.conv_time_fwd_vector, self.conv_time_bwd_cube,
-             self.conv_time_bwd_vector))
+    def fa_fwd_num(self):
+        return self.fa_num_fwd_cube + self.fa_num_fwd_vector
 
     @property
-    def conv_total_num(self):
-        return sum((self.conv_num_fwd_cube, self.conv_num_fwd_vector, self.conv_num_bwd_cube,
-                    self.conv_num_bwd_vector))
+    def fa_bwd_num(self):
+        return self.fa_num_bwd_cube + self.fa_num_bwd_vector
+
+    @property
+    def conv_fwd_time(self):
+        return self.conv_time_fwd_cube + self.conv_time_fwd_vector
+
+    @property
+    def conv_bwd_time(self):
+        return self.conv_time_bwd_cube + self.conv_time_bwd_vector
+
+    @property
+    def conv_fwd_num(self):
+        return self.conv_num_fwd_cube + self.conv_num_fwd_vector
+
+    @property
+    def conv_bwd_num(self):
+        return self.conv_num_bwd_cube + self.conv_num_bwd_vector
 
     @property
     def mm_total_time(self):
@@ -186,6 +199,7 @@ class ProfilingInfo:
     @property
     def fa_time_bwd(self):
         return (self.fa_time_bwd_cube + self.fa_time_bwd_vector) / Constant.MILLISECONDS_TO_SECONDS
+
     def calculate_other_time(self):
         self.other_time = max(
             [0, self.compute_time - self.cube_time - self.fa_time_fwd - self.fa_time_bwd -
