@@ -38,6 +38,8 @@ class Constant(object):
     # excel headers
     BASE_PROFILING = 'Base Profiling: '
     COMPARISON_PROFILING = 'Comparison Profiling: '
+    WAIT_TIME = "wait"
+    TRANSMIT_TIME = "transmit"
 
     # compare type
     OPERATOR_COMPARE = "OperatorCompare"

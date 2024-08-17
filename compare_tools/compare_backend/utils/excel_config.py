@@ -279,8 +279,8 @@ class ExcelConfig(object):
 
     # communication time
     COMMUNICATION_TIME = "Uncovered Communication Time"
-    WAIT = "\tWait"
-    TRANSMIT = "\tTransmit"
+    WAIT = "\t\tWait"
+    TRANSMIT = "\t\tTransmit"
 
     # free time
     FREE_TIME = "Free Time"

@@ -63,6 +63,9 @@ class ProfilingInfo:
         self.RDMA_bandwidth = 0.0
         self.SDMA_bandwidth = 0.0
 
+        # 按group展示通信的卡间等待和传输耗时
+        self.communication_group_time = {}
+
     @property
     def e2e_time_ms(self):
         return self.e2e_time * 10 ** 3
@@ -291,8 +294,10 @@ class ProfilingInfo:
     def update_comm_not_overlap(self, time: float):
         self.communication_not_overlapped += time
 
-    def update_comm_not_overlap_wait_time(self, time: float):
-        self.wait_time = time
+    def update_communication_group_time(self, time_dict: dict):
+        self.communication_group_time = time_dict
+        for time in time_dict.values():
+            self.wait_time += time.get(Constant.WAIT_TIME, 0)
 
     def set_memory_used(self, memory: float):
         self.memory_used = memory
@@ -331,3 +336,13 @@ class ProfilingInfo:
         self.e2e_time /= Constant.MICROSECONDS_TO_SECONDS
         self.scheduling_time /= Constant.MICROSECONDS_TO_SECONDS
         self.lccl_time /= Constant.MICROSECONDS_TO_SECONDS
+
+    def get_wait_time_by_group(self, group_name: str):
+        return self.communication_group_time.get(group_name, {}).get(Constant.WAIT_TIME, 0) / 10 ** 3
+
+    def get_transmit_time_by_group(self, group_name: str):
+        return self.communication_group_time.get(group_name, {}).get(Constant.TRANSMIT_TIME, 0) / 10 ** 3
+
+    def get_communication_time_by_group(self, group_name: str):
+        return (self.communication_group_time.get(group_name, {}).get(Constant.WAIT_TIME, 0)
+                + self.communication_group_time.get(group_name, {}).get(Constant.TRANSMIT_TIME, 0)) / 10 ** 3
