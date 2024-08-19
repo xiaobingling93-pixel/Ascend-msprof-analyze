@@ -64,6 +64,8 @@ def analyze_cli(**kwargs):
               help='Directory of profiling data')
 @click.option('--benchmark_profiling_path', '-bp', 'benchmark_profiling_path', type=click.Path(),
               help='Directory of benchmark profiling data, used for compare performance')
+@click.option('--output_path', '-o', 'cluster_analysis_output_path', type=click.Path(),
+              help='Path of cluster analysis output')
 @click.option('--cann_version', '-cv', 'cann_version',
               type=click.Choice(constant.SUPPORTED_CANN_VERSION, case_sensitive=False),
               default=constant.DEFAULT_CANN_VERSION,

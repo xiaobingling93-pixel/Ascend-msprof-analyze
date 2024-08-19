@@ -30,6 +30,7 @@ class StepTraceTimeAnalysis:
 
     def __init__(self, param: dict):
         self.collection_path = param.get(Constant.COLLECTION_PATH)
+        self.cluster_analysis_output_path = param.get(Constant.CLUSTER_ANALYSIS_OUTPUT_PATH)
         self.data_map = param.get(Constant.DATA_MAP)
         self.communication_group = param.get(Constant.COMM_DATA_DICT, {}).get(Constant.COMMUNICATION_GROUP)
         self.step_time_dict = {}
@@ -87,9 +88,9 @@ class StepTraceTimeAnalysis:
             return
         if self.data_type == Constant.TEXT:
             headers = self.get_headers()
-            FileManager.create_csv_file(self.collection_path, self.step_data_list, self.CLUSTER_TRACE_TIME_CSV, headers)
+            FileManager.create_csv_file(self.cluster_analysis_output_path, self.step_data_list, self.CLUSTER_TRACE_TIME_CSV, headers)
         else:
-            output_path = os.path.join(self.collection_path, Constant.CLUSTER_ANALYSIS_OUTPUT)
+            output_path = os.path.join(self.cluster_analysis_output_path, Constant.CLUSTER_ANALYSIS_OUTPUT)
             result_db = os.path.join(output_path, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER)
             DBManager.create_tables(result_db, self.CLUSTER_TRACE_TIME_TABLE)
             column_len = DBManager.get_table_column_count(result_db, self.CLUSTER_TRACE_TIME_TABLE)

@@ -27,7 +27,7 @@ class CommunicationJsonGroup(BaseCommunicationGroup):
         super().__init__(params)
 
     def dump_data(self):
-        FileManager.create_json_file(self.collection_path, self.communication_group, self.COMMUNICATION_GROUP_JSON)
+        FileManager.create_json_file(self.cluster_analysis_output_path, self.communication_group, self.COMMUNICATION_GROUP_JSON)
 
     def read_communication_func(self: any, params: tuple):
         if len(params) < 3:

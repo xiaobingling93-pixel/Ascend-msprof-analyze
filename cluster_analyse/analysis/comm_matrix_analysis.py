@@ -30,7 +30,7 @@ class CommMatrixAnalysis(BaseAnalysis):
 
     def dump_db(self):
         res_comm_matrix = self.adapter.transfer_matrix_from_json_to_db(self.comm_ops_struct)
-        output_path = os.path.join(self.collection_path, Constant.CLUSTER_ANALYSIS_OUTPUT)
+        output_path = os.path.join(self.cluster_analysis_output_path, Constant.CLUSTER_ANALYSIS_OUTPUT)
         result_db = os.path.join(output_path, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER)
         DBManager.create_tables(result_db, self.COMMUNICATION_MATRIX_TABLE)
         conn, cursor = DBManager.create_connect_db(result_db)

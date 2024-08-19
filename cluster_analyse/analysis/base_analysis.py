@@ -29,6 +29,7 @@ class BaseAnalysis:
     MAX_RANKS = 1000
     def __init__(self, param: dict):
         self.collection_path = param.get(Constant.COLLECTION_PATH)
+        self.cluster_analysis_output_path = param.get(Constant.CLUSTER_ANALYSIS_OUTPUT_PATH)
         self.data_map = param.get(Constant.DATA_MAP)
         self.data_type = param.get(Constant.DATA_TYPE)
         self.communication_ops = []
@@ -68,7 +69,7 @@ class BaseAnalysis:
             self.dump_json()
         else:
             if len(self.data_map) >= self.MAX_RANKS:
-                print("[WARNING]The number of ranks is too large to dump to db, it will be dumped to json file.") 
+                print("[WARNING]The number of ranks is too large to dump to db, it will be dumped to json file.")
                 self.dump_json()
             else:
                 self.dump_db()
@@ -81,7 +82,7 @@ class BaseAnalysis:
         output_comm_data = {}
         for key in self.comm_ops_struct:
             output_comm_data[str(key)] = self.comm_ops_struct.get(key)
-        FileManager.create_json_file(self.collection_path, output_comm_data, self.SAVED_JSON)
+        FileManager.create_json_file(self.cluster_analysis_output_path, output_comm_data, self.SAVED_JSON)
 
     def split_op_by_group(self):
         for single_op in self.communication_ops:
