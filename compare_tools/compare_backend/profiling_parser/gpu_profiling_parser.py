@@ -160,7 +160,7 @@ class GPUProfilingParser(BaseProfilingParser):
             if event.is_kernel_except_nccl() and event.stream:
                 kernel_stream_ids.append(event.stream)
         if not kernel_stream_ids:
-            raise RuntimeError('[ERROR] The profiling data does not contain kernel running data.')
+            raise RuntimeError('The profiling data does not contain kernel running data.')
         counter = Counter(kernel_stream_ids)
         return counter.most_common(1)[0][0]
 

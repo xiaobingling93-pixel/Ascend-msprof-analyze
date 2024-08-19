@@ -102,10 +102,11 @@ class NPUProfilingParser(BaseProfilingParser):
                 [kernel.name, kernel.duration])
         if not kernels_dict:
             if self._step_id != Constant.VOID_STEP:
-                print(f"[ERROR] There is no kernel details information for step {self._step_id}, "
-                      f"please check whether the data contains this step.")
+                msg = f"There is no kernel details information for step {self._step_id}," \
+                      " please check whether the data contains this step."
+                raise RuntimeError(msg)
             else:
-                print("[ERROR] Failed to enable enable_kernel_compare, type of kernel_details.csv is null.")
+                print("[WARNING] Failed to enable enable_kernel_compare, type of kernel_details.csv is null.")
             return
         self._result_data.update_kernel_details(kernels_dict)
 
@@ -316,7 +317,7 @@ class NPUProfilingParser(BaseProfilingParser):
         try:
             json_data = FileReader.read_trace_file(self._info_json_path)
         except Exception:
-            print('[WARNING] Failed to read profiler_info.json.')
+            print('[ERROR] Failed to read profiler_info.json.')
             return
         if not isinstance(json_data, dict) or not json_data:
             print('[WARNING] Invalid profiler info.')
@@ -338,7 +339,7 @@ class NPUProfilingParser(BaseProfilingParser):
         try:
             kernel_details = FileReader.read_csv_file(self._kernel_detail_path, KernelDetailsBean)
         except Exception:
-            print('[WARNING] Npu kernel details csv file is not available.')
+            print('[ERROR] Npu kernel details csv file is not available.')
             return
         if not kernel_details or kernel_details[0].is_hide_op_pmu():
             self._result_data.overall_metrics.hide_op_details = True
@@ -354,16 +355,16 @@ class NPUProfilingParser(BaseProfilingParser):
         try:
             memory_record = FileReader.read_csv_file(self._memory_record_path, MemoryRecordBean)
         except FileNotFoundError:
-            print('[INFO] Npu memory record csv file is not available.')
+            print('[WARNING] Npu memory record csv file is not available.')
         except Exception:
-            print('[WARNING] Load memory info failed.')
+            print('[ERROR] Load memory info failed.')
         else:
             memory_used = max([memory.total_reserved_mb for memory in memory_record]) / 1024
             self._result_data.overall_metrics.set_memory_used(memory_used)
 
     def __add_overlap_analysis_time(self):
         if not self._overlap_analysis:
-            print('[ERROR] Failed to get overlap analysis data.')
+            print('[WARNING] Failed to get overlap analysis data.')
             return
         min_ts = sys.float_info.max
         max_ts = sys.float_info.min

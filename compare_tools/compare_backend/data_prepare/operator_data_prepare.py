@@ -26,6 +26,10 @@ class OperatorDataPrepare:
             result_data.append(node)
             if node.child_nodes:
                 node_queue.extend(node.child_nodes)
+        if not result_data:
+            msg = f"There is no operator event data for step {self._specified_step_id}, " \
+                     "please check whether the data contains this step."
+            raise RuntimeError(msg)
         return result_data
 
     def _build_tree(self):
