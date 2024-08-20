@@ -32,8 +32,31 @@ class NPUProfilingParser(BaseProfilingParser):
         self._enqueue_dict = {}
         self._dequeue_data = []
         self._overlap_analysis = []
+        self._group_comm_tid_dict = {}
+        self._hccl_tid_name_dict = {}
         self._dispatch_func = self._get_dispatch_func()
         self._filter_meta_id()
+
+    @staticmethod
+    def __calculate_overlap_time_with_uncovered_communication(uncovered_communication_events: list, events: list):
+        overlap_time = 0
+        events.sort(key=lambda x: x.start_time)
+        index = 0
+        for comm_event in uncovered_communication_events:
+            pre_overlap_ts = comm_event.start_time
+            while index < len(events):
+                event = events[index]
+                if event.end_time <= comm_event.start_time:
+                    index += 1
+                    continue
+                if event.start_time >= comm_event.end_time:
+                    break
+                if event.end_time >= comm_event.end_time:
+                    overlap_time += comm_event.end_time - max(event.start_time, pre_overlap_ts)
+                    break
+                overlap_time += event.end_time - max(event.start_time, pre_overlap_ts)
+                index += 1
+        return float(overlap_time)
 
     def _get_dispatch_func(self):
         func_list = set()
@@ -79,8 +102,8 @@ class NPUProfilingParser(BaseProfilingParser):
                 [kernel.name, kernel.duration])
         if not kernels_dict:
             if self._step_id != Constant.VOID_STEP:
-                print(f"[ERROR] There is no kernel details infomation for step {self._step_id}," \
-                      " please check whether the data contains this step.")
+                print(f"[ERROR] There is no kernel details information for step {self._step_id}, "
+                      f"please check whether the data contains this step.")
             else:
                 print("[ERROR] Failed to enable enable_kernel_compare, type of kernel_details.csv is null.")
             return
@@ -165,73 +188,54 @@ class NPUProfilingParser(BaseProfilingParser):
         self.__add_lccl_time()
         self.__add_sdma_time()
         self.__add_overlap_analysis_time()
-        self._picking_notify_wait_event_and_not_overlap_event()
-        self.__add_overlap_wait_time()
+        self.__add_communication_wait_time()
         self._result_data.overall_metrics.calculate_other_time()
         self._result_data.overall_metrics.calculate_schedule_time()
         self._result_data.overall_metrics.trans_time_to_s()
         self._update_bandwidth()
 
-    def _picking_notify_wait_event_and_not_overlap_event(self):
-        self.notify_event_cache = []
-        self._not_overlaped_commu_event = []
-        for event in self._comm_task_list:
-            if event.name == 'Notify_Wait' and event.args.get('rdma_type', 0) != 'RDMA_PAYLOAD_CHECK' \
-                    and event.args.get('rdma_type', 0) != 'RDMA_PAYLOAD_ACK':
-                self.notify_event_cache.append(event)
-        for event in self._overlap_analysis:
-            if event.is_comm_not_overlap():
-                self._not_overlaped_commu_event.append(event)
-        self._not_overlaped_commu_event.sort(key=lambda x: x.start_time)
-
-    def __add_overlap_wait_time(self):
-        notify_wait_event_dict = dict()
-        for notify_event in self.notify_event_cache:
-            if notify_event.tid in notify_wait_event_dict:
-                notify_wait_event_dict[notify_event.tid].append(notify_event)
+    def __add_communication_wait_time(self):
+        """
+        按group统计uncovered communication time的卡间等待时间、传输时间。选择传输时间最长的plane作为该group的卡间等待时间、传输时间。
+        卡间等待时间用Notify_Wait任务（部分做rdma传输的Notify_Wait任务除外）计算，传输时间=通信时间-卡间等待时间。
+        rdma传输有两种范式，一种是RDMASend、RDMASend、Notify_Wait、RDMASend、Notify_Wait，里面的notify wait都是传输时间；
+        还有一种是RDMASend、RDMASend、Notify_Wait, 这个notify wait也是传输时间。
+        因此，满足前2个task为RDMASend、RDMASend的Notify_Wait不计入卡间等待时间，
+        满足前4个task为RDMASend、RDMASend、Notify_Wait、RDMASend的Notify_Wait不计入卡间等待时间。
+        """
+        notify_wait_task_group_by_tid = {}
+        self._comm_task_list.sort(key=lambda x: x.start_time)
+        last_4_task_mode_dict = {}  # 前4个task的类型，R代表RDMASend/N代表Notify_Wait/O代表Other
+        for task_event in self._comm_task_list:
+            last_4_task_mode = last_4_task_mode_dict.get(task_event.tid)
+            if task_event.name == 'RDMASend':
+                last_4_task_mode_dict[task_event.tid] = f"{last_4_task_mode[1:]}R" if last_4_task_mode else "OOOR"
+            elif task_event.name == 'Notify_Wait':
+                if not last_4_task_mode or last_4_task_mode != "RRNR" and last_4_task_mode[2:] != "RR":
+                    notify_wait_task_group_by_tid.setdefault(task_event.tid, []).append(task_event)
+                last_4_task_mode_dict[task_event.tid] = f"{last_4_task_mode[1:]}N" if last_4_task_mode else "OOON"
             else:
-                notify_wait_event_dict[notify_event.tid] = [notify_event]
-
-        if self._result_data.overall_metrics.is_level0:
-            return
-
-        total_time = 0
-        for commu_event in self._not_overlaped_commu_event:
-            wait_time_list = [0]
-            commu_event_start_time = float(commu_event.start_time)
-            commu_event_end_time = float(commu_event.start_time) + commu_event.dur
-
-            for plane_id, events in notify_wait_event_dict.items():
-                wait_time = 0
-                idx = 0
-                for notify_event in events:
-                    notify_event_start_time = float(notify_event.start_time)
-                    notify_event_end_time = float(notify_event.start_time) + notify_event.dur
-                    if notify_event_start_time < commu_event_start_time and notify_event_end_time > \
-                            commu_event_end_time:
-                        wait_time = commu_event_end_time - commu_event_start_time
-                        break
-                    elif notify_event_start_time < commu_event_start_time <= notify_event_end_time <= \
-                            commu_event_end_time:
-                        wait_time += notify_event_end_time - commu_event_start_time
-                        idx += 1
-                    elif commu_event_start_time <= notify_event_start_time <= commu_event_end_time < \
-                            notify_event_end_time:
-                        wait_time += commu_event_end_time - notify_event_start_time
-                        break
-                    elif notify_event_start_time >= commu_event_start_time and notify_event_end_time <= \
-                            commu_event_end_time:
-                        wait_time += notify_event_end_time - notify_event_start_time
-                        idx += 1
-                    elif notify_event_end_time < commu_event_start_time:
-                        idx += 1
-                    else:
-                        break
-
-                wait_time_list.append(wait_time)
-                notify_wait_event_dict[plane_id] = notify_wait_event_dict[plane_id][idx:]
-            total_time += max(wait_time_list)
-        self._result_data.overall_metrics.update_comm_not_overlap_wait_time(total_time)
+                last_4_task_mode_dict[task_event.tid] = f"{last_4_task_mode[1:]}O" if last_4_task_mode else "OOOO"
+        uncovered_communication_events = list(filter(lambda x: x.is_comm_not_overlap(), self._overlap_analysis))
+        group_comm_time_dict = {}
+        for comm_tid, tid_list in self._group_comm_tid_dict.items():
+            min_wait_time = float("inf")
+            min_wait_tid = None
+            for tid in tid_list:
+                notify_wait_time = sum((event.dur for event in notify_wait_task_group_by_tid.get(tid, [])))
+                if notify_wait_time < min_wait_time:
+                    min_wait_time = notify_wait_time
+                    min_wait_tid = tid
+            notify_wait_events = notify_wait_task_group_by_tid.get(min_wait_tid, [])
+            communication_op_events = list(filter(lambda x: x.tid == comm_tid, self._comm_list))
+            wait_time = self.__calculate_overlap_time_with_uncovered_communication(uncovered_communication_events,
+                                                                                   notify_wait_events)
+            uncovered_communication_time = self.__calculate_overlap_time_with_uncovered_communication(
+                uncovered_communication_events, communication_op_events)
+            group_comm_time_dict[self._hccl_tid_name_dict.get(comm_tid)] = {
+                Constant.WAIT_TIME: wait_time,
+                Constant.TRANSMIT_TIME: uncovered_communication_time - wait_time}
+        self._result_data.overall_metrics.update_communication_group_time(group_comm_time_dict)
 
     def _picking_hccl_event(self, event: TraceEventBean):
         if event.pid != self._hccl_pid or not event.is_x_mode():
@@ -267,24 +271,46 @@ class NPUProfilingParser(BaseProfilingParser):
         return event.lower_cat == self.TORCH_OP_CAT
 
     def _filter_meta_id(self):
+        thread_events, thread_sort_events = [], []
         for event in self._trace_events:
             if event.is_fwdbwd() and event.is_flow_end():
                 self._bwd_tid = event.tid
-            if not event.is_process_meta():
+            if not event.is_m_mode():
                 continue
-            if event.is_hccl_process_name():
-                self._hccl_pid = event.pid
-            elif event.is_npu_process_name():
-                self._kernel_pid = event.pid
-            elif event.is_overlap_process_name():
-                self._overlap_pid = event.pid
-        if not self._enable_communication_compare:
+            if event.is_process_meta():
+                if event.is_hccl_process_name():
+                    self._hccl_pid = event.pid
+                elif event.is_npu_process_name():
+                    self._kernel_pid = event.pid
+                elif event.is_overlap_process_name():
+                    self._overlap_pid = event.pid
+            if event.is_thread_meta():
+                thread_events.append(event)
+            if event.is_thread_sort_meta():
+                thread_sort_events.append(event)
+
+        if not self._enable_communication_compare and not self._enable_profiling_compare:
             return
-        for event in self._trace_events:
-            if not event.is_thread_meta():
+        # 获取hccl bar的所有thread信息
+        tid_index_dict = {}
+        for event in thread_events:
+            if event.pid == self._hccl_pid:
+                self._hccl_tid_name_dict[event.tid] = event.args.get("name", "")
+        for event in thread_sort_events:
+            if event.pid == self._hccl_pid:
+                tid_index_dict[event.args.get("sort_index", 0)] = event.tid
+        ordered_index = sorted(tid_index_dict.keys())
+        cur_tid = None
+        for index in ordered_index:
+            tid = tid_index_dict.get(index)
+            tid_name = self._hccl_tid_name_dict.get(tid, "")
+            if "Communication" in tid_name:
+                self._hccl_op_tid_list.append(tid)
+                self._group_comm_tid_dict.setdefault(tid, [])
+                cur_tid = tid
                 continue
-            if event.pid == self._hccl_pid and event.is_communication_op_thread():
-                self._hccl_op_tid_list.append(event.tid)
+            if tid_name:
+                self._group_comm_tid_dict.setdefault(cur_tid, []).append(tid)
 
     def __parse_info_json(self):
         try:

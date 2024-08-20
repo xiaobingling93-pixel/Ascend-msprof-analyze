@@ -1,3 +1,5 @@
+import logging
+
 from compare_backend.comparator.overall_performance_comparator import OverallPerformanceComparator
 from compare_backend.compare_bean.profiling_info import ProfilingInfo
 from compare_backend.generator.base_generator import BaseGenerator
@@ -17,3 +19,6 @@ class OverallPerformanceGenerator(BaseGenerator):
         if not self._result_data:
             return
         ScreenView(self._result_data).generate_view()
+        logging.info("The OverallMetrics sheet page is more comprehensive for the disaggregate of performance data, "
+                     "and it is recommended to view the overall performance comparison results from "
+                     "the performance_comparison_result_*.xlsx.")

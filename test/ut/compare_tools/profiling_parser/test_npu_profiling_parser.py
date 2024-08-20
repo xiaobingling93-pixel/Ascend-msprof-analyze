@@ -17,7 +17,8 @@ class TestNPUProfilingParser(unittest.TestCase):
     meta_events = [{"ph": "M", "name": "process_name", "pid": 7, "tid": 3, "args": {"name": "HCCL"}},
                    {"ph": "M", "name": "process_name", "pid": 9, "tid": 3, "args": {"name": "Overlap Analysis"}},
                    {"ph": "M", "name": "process_name", "pid": 5, "tid": 3, "args": {"name": "Ascend Hardware"}},
-                   {"ph": "M", "name": "thread_name", "pid": 7, "tid": 3, "args": {"name": "Communication"}}]
+                   {"ph": "M", "name": "thread_name", "pid": 7, "tid": 3, "args": {"name": "Communication"}},
+                   {"ph": "M", "name": "thread_sort_index", "pid": 7, "tid": 3, "args": {"sort_index": 0}}]
 
     def test_update_memory_list_when_invalid_path(self):
         with patch("compare_backend.profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"), \
@@ -125,6 +126,8 @@ class TestNPUProfilingParser(unittest.TestCase):
             res = NPUProfilingParser({}, {})
             res._trace_events = [TraceEventBean(event) for event in self.meta_events]
             res._hccl_op_tid_list = []
+            res._hccl_tid_name_dict = {}
+            res._group_comm_tid_dict = {}
             res._enable_communication_compare = True
             res._filter_meta_id()
             self.assertEqual(res._hccl_pid, 7)

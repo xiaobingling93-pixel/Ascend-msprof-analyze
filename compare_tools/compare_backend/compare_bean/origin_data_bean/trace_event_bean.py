@@ -148,10 +148,13 @@ class TraceEventBean:
         return self.lower_cat == "dequeue"
 
     def is_process_meta(self) -> bool:
-        return self.is_m_mode() and self._name == "process_name"
+        return self._name == "process_name"
 
     def is_thread_meta(self) -> bool:
-        return self.is_m_mode() and self._name == "thread_name"
+        return self._name == "thread_name"
+
+    def is_thread_sort_meta(self) -> bool:
+        return self._name == "thread_sort_index"
 
     def is_communication_op_thread(self) -> bool:
         return self._args.get("name", "").find("Communication") != -1

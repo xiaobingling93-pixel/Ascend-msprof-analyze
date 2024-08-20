@@ -322,9 +322,10 @@ class BaseProfilingParser(ABC):
             print(f"[WARNING] Can't find any communication op in the file: {self._profiling_path}")
         if self._enable_kernel_compare and not self._result_data.kernel_details:
             if self._profiling_type == Constant.GPU:
-                print(f"[WARNING] kernel compare between GPU data and NPU data is not supported.")
+                print(f"[WARNING] kernel compare only support between NPU data and NPU data.")
             else:
-                print(f"[WARNING] Can't find any kernel details in the file: {self._profiling_path}")
+                print(f"[WARNING] Can't find any valid kernels in the file: {self._profiling_path}. Please "
+                      f"make sure that the profiling data is greater than level0 and aic_metrics=PipeUtilization.")
 
     def _read_trace_event(self):
         try:
