@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 from typing import List, Any
@@ -6,7 +5,6 @@ import traceback
 
 import ijson
 from tqdm import tqdm
-import yaml
 
 from profiler.advisor.common import constant as const
 from profiler.advisor.common.timeline.event import TimelineEvent
@@ -89,6 +87,7 @@ class TimelineEventDataset:
         self._optimizer: List[Any] = []
         self._dataloader: List[Any] = []
         self._sync_batchnorm: List[Any] = []
+        self._gc: List[Any] = []
         self._synchronize_stream = SynchronizeStreamCollector()
         self.timeline_dir = collection_path
         self.timeline_data_list = get_file_path_from_directory(collection_path,
@@ -150,6 +149,10 @@ class TimelineEventDataset:
     @property
     def sync_batchnorm(self):
         return self._sync_batchnorm
+
+    @property
+    def gc_events(self):
+        return self._gc
 
     @property
     def synchronize_stream(self):
@@ -226,6 +229,10 @@ class TimelineEventDataset:
         if event.name == const.OP_COMPILE_NAME or event.args.get("id") == const.OP_COMPILE_ID:
             self._ops_compile.update(event)
 
+    def _add_gc(self, event: TimelineEvent):
+        if event.get("cat") and event.get("cat").lower() == 'gc':
+            self._gc.append(event)
+
     def _add_optimizer(self, event: TimelineEvent):
         self._optimizer.append(TimelineEvent({"name": event.name, "dataset_index": event.dataset_index}))
 
@@ -260,6 +267,8 @@ class TimelineEventDataset:
         self._add_dataloader(event)
         # for analysis of syncBatchNorm operator, prompt users to replace source code of torch_npu's syncbn
         self._add_sync_batchnorm(event)
+        # for analysis of GcAnalyzer
+        self._add_gc(event)
 
     def _add_event(self, index, event):
         event["dataset_index"] = index

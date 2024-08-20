@@ -92,6 +92,12 @@ def singleton(cls):
             _instance[cls][collection_path] = cls(*args, **kw)
         return _instance[cls].get(collection_path)
 
+    def reset_all_instances():
+        """
+        用于ut使用，清空单例类，防止ut不同测试用例间相互干扰
+        """
+        _instance.clear()
+
     # 保留原始类的属性和方法
     _singleton.__name__ = cls.__name__
     _singleton.__module__ = cls.__module__
@@ -109,6 +115,9 @@ def singleton(cls):
             if inspect.isfunction(function_obj) and not is_static_func(function_obj):
                 continue
             setattr(_singleton, function_obj.__name__, function_obj)
+
+    _singleton.reset_all_instances = reset_all_instances
+    singleton.reset_all_instances = reset_all_instances
 
     return _singleton
 
@@ -608,3 +617,12 @@ def convert_to_float(num):
         logger.error(f"Can not convert %ss to float", num)
         pass
     return 0
+
+
+def convert_to_int(data: any) -> int:
+    try:
+        int_value = int(data)
+    except ValueError:
+        logger.error(f"Can not convert %ss to float.", data)
+        return 0
+    return int_value

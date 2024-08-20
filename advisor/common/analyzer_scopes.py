@@ -33,3 +33,4 @@ class SupportedScopes:
     SYNCBN = "syncbn"
     SYNCHRONIZE_STREAM = "synchronize_stream"
     FREQ_ANALYSIS = "freq_analysis"
+    GC_ANALYSIS = "gc_analysis"
