@@ -40,7 +40,13 @@ class Interface:
         self.communication_ops = []
         self.matrix_ops = []
         self.origin_params = params
+        self.cluster_analysis_output_path = self.get_cluster_analysis_output_path(params)
 
+    def get_cluster_analysis_output_path(self, params):
+        cluster_analysis_output_path = params.get(Constant.CLUSTER_ANALYSIS_OUTPUT_PATH)
+        if cluster_analysis_output_path:
+            return PathManager.get_realpath(cluster_analysis_output_path)
+        return self.collection_path
     def allocate_prof_data(self):
         ascend_pt_dirs = []
         ascend_ms_dirs = []
@@ -58,10 +64,10 @@ class Interface:
             print("[ERROR] Can not analyze pytorch and mindspore meantime.")
             return []
         return (pt_data_map, data_type) if pt_data_map else (ms_data_map, Constant.TEXT)
-
     def run(self):
         PathManager.check_input_directory_path(self.collection_path)
         PathManager.check_path_owner_consistent(self.collection_path)
+        PathManager.check_path_writeable(self.cluster_analysis_output_path)
         data_map, data_type = self.allocate_prof_data()
         if not data_map:
             print("[WARNING] Can not get rank info or profiling data.")
@@ -69,31 +75,32 @@ class Interface:
         if data_type == Constant.INVALID:
             print("[ERROR] The current folder contains both DB and other files. Please check.")
             return
-        FileManager.create_output_dir(self.collection_path)
+        FileManager.create_output_dir(self.cluster_analysis_output_path)
         params = {
             Constant.COLLECTION_PATH: self.collection_path,
             Constant.DATA_MAP: data_map,
             Constant.ANALYSIS_MODE: self.analysis_mode,
-            Constant.DATA_TYPE: data_type
+            Constant.DATA_TYPE: data_type,
+            Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: self.cluster_analysis_output_path,
         }
         comm_data_dict = CommunicationGroupGenerator(params).generate()
         params[Constant.COMM_DATA_DICT] = comm_data_dict
         AnalysisFacade(params).cluster_analyze()
-
 
 def cluster_analysis_main(args=None):
     parser = argparse.ArgumentParser(description="cluster analysis module")
     parser.add_argument('-d', '--collection_path', type=str, required=True, help="profiling data path")
     parser.add_argument('-m', '--mode', choices=COMM_FEATURE_LIST,
                         default='all', help="different analysis mode")
+    parser.add_argument('-o', '--output_path', type=str, help='Path of cluster analysis output')
     args_parsed, _ = parser.parse_known_args(args=args)
     parameter = {
         Constant.COLLECTION_PATH: args_parsed.collection_path,
-        Constant.ANALYSIS_MODE: args_parsed.mode
+        Constant.ANALYSIS_MODE: args_parsed.mode,
+        Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: args_parsed.output_path
     }
 
     Interface(parameter).run()
-
 
 if __name__ == "__main__":
     cluster_analysis_main()

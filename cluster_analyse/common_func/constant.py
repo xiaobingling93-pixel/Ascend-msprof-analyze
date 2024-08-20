@@ -68,6 +68,7 @@ class Constant(object):
     COMMUNICATION_OPS = "communication_ops"
     MATRIX_OPS = "matrix_ops"
     COLLECTION_PATH = "collection_path"
+    CLUSTER_ANALYSIS_OUTPUT_PATH = "output_path"
     COMMUNICATION_GROUP = "communication_group"
     TRANSPORT_TYPE = "Transport Type"
     COMM_DATA_DICT = "comm_data_dict"

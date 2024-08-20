@@ -26,6 +26,7 @@ from cluster_utils.data_transfer_adapter import DataTransferAdapter
 class BaseCommunicationGroup:
     def __init__(self, params: dict):
         self.collection_path = params.get(Constant.COLLECTION_PATH)
+        self.cluster_analysis_output_path = params.get(Constant.CLUSTER_ANALYSIS_OUTPUT_PATH)
         self.data_map = params.get(Constant.DATA_MAP)
         self.data_type = params.get(Constant.DATA_TYPE)
         self.analysis_mode = params.get(Constant.ANALYSIS_MODE)

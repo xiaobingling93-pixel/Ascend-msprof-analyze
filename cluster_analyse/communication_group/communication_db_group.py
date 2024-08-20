@@ -38,7 +38,7 @@ class CommunicationDBGroup(BaseCommunicationGroup):
         return rank_id, comm_data, comm_matrix_data
 
     def dump_data(self):
-        output_path = os.path.join(self.collection_path, Constant.CLUSTER_ANALYSIS_OUTPUT)
+        output_path = os.path.join(self.cluster_analysis_output_path, Constant.CLUSTER_ANALYSIS_OUTPUT)
         result_db = os.path.join(output_path, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER)
         res = []
         for data_type, data_list in self.communication_group.items():

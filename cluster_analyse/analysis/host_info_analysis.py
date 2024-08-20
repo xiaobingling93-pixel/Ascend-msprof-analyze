@@ -37,7 +37,7 @@ class HostInfoAnalysis(BaseAnalysis):
         self.dump_db()
 
     def dump_db(self):
-        output_path = os.path.join(self.collection_path, Constant.CLUSTER_ANALYSIS_OUTPUT)
+        output_path = os.path.join(self.cluster_analysis_output_path, Constant.CLUSTER_ANALYSIS_OUTPUT)
         result_db = os.path.join(output_path, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER)
         conn, curs = DBManager.create_connect_db(result_db)
         if not (conn and curs):
