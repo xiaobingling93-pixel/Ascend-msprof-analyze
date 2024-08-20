@@ -24,6 +24,15 @@ class ComparisonInterface:
     def compare(self, compare_type: str) -> dict:
         if compare_type == Constant.OVERALL_COMPARE:
             self._args.enable_profiling_compare = True
+        elif compare_type == Constant.KERNEL_COMPARE:
+            self._args.enable_kernel_compare = True
+        elif compare_type == Constant.API_COMPARE:
+            self._args.enable_api_compare = True
+        elif compare_type == Constant.OPERATOR_COMPARE:
+            self._args.enable_operator_compare = True
+        else:
+            print('[ERROR] Invalid compare_type value: {compare_type} which not supported.')
+            return {}
         return ComparisonGenerator(self._args).run_interface(compare_type)
 
     def disaggregate_perf(self, compare_type: str) -> dict:
