@@ -1,6 +1,7 @@
 from compare_backend.generator.detail_performance_generator import DetailPerformanceGenerator
 from compare_backend.generator.overall_performance_generator import OverallPerformanceGenerator
 from compare_backend.interface.overall_interface import OverallInterface
+from compare_backend.interface.compare_interface import CompareInterface
 from compare_backend.profiling_parser.gpu_profiling_parser import GPUProfilingParser
 from compare_backend.profiling_parser.npu_profiling_parser import NPUProfilingParser
 from compare_backend.utils.constant import Constant
@@ -56,6 +57,7 @@ class ComparisonGenerator:
             interface = self.INTERFACE_DICT.get(compare_type)
             if interface:
                 return interface(self._data_dict).run()
+            return CompareInterface(self._data_dict, self._args_manager).run()
         except NotImplementedError as e:
             print(f"[ERROR] {e}")
         except RuntimeError as e:
