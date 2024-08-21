@@ -1,7 +1,7 @@
 import logging
 
 from profiler.advisor.common import constant as const
-from profiler.advisor.dataset.timeline_event_dataset import TimelineEventDataset
+from profiler.advisor.dataset.timeline_event_dataset import ScheduleAnalysisDataset
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.advisor.analyzer.schedule.timeline_base_checker import TimelineBaseChecker
@@ -21,7 +21,7 @@ class SynchronizeStreamChecker(TimelineBaseChecker):
         self.solutions = []
         self.max_synchronize_num = None
 
-    def check_synchronize(self, event_dataset: TimelineEventDataset, profiling_with_stack=None):
+    def check_synchronize(self, event_dataset: ScheduleAnalysisDataset, profiling_with_stack=None):
         """
         :Param event_dataset: dataset of timeline event
         """
@@ -73,10 +73,10 @@ class SynchronizeStreamChecker(TimelineBaseChecker):
         for optimization in self.optimization_item:
             result.add(OptimizeRecord(optimization))
 
-    def make_render(self, html_render):
+    def make_render(self, html_render, **kwargs):
         if not self.synchronize_issues:
             return
-
+        priority = kwargs.get("priority")
         format_result_for_html = format_timeline_result(dict(self.matched_op_stacks), dump_html=True)
         html_render.render_template(key="schedule",
                                     template_dir="templates",
@@ -86,4 +86,5 @@ class SynchronizeStreamChecker(TimelineBaseChecker):
                                     result=format_result_for_html,
                                     with_stack_doc_url=const.TIMELINE_WITH_STACK_DOC_URL,
                                     empty_stacks=self.empty_stacks,
-                                    framework_black_list=self.framework_black_list)
+                                    framework_black_list=self.framework_black_list,
+                                    priority_background_color=priority)

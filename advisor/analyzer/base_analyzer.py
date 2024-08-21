@@ -22,12 +22,16 @@ from profiler.advisor.common.version_control import VersionControl
 from profiler.advisor.dataset.dataset import Dataset
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.display.html.render import HTMLRender
+from profiler.advisor.display.html.priority_background_color import PriorityBackgroundColor
+from profiler.advisor.utils.utils import safe_division
 
 logger = logging.getLogger()
 
 
 class BaseAnalyzer(VersionControl, metaclass=ABCMeta):
     _SUPPORT_VERSIONS = constant.SUPPORTED_CANN_VERSION
+    ANALYZER_HIGH_PRIORITY_TIME_RATIO = 0.05
+    ANALYZER_MEDIUM_PRIORITY_TIME_RATIO = 0.03
 
     dataset_cls_list = []
 
@@ -42,6 +46,18 @@ class BaseAnalyzer(VersionControl, metaclass=ABCMeta):
         self.init_dataset_list()
         self.result = OptimizeResult()
         self.record_list: Dict[str, List] = {}
+
+    @staticmethod
+    def get_first_data_by_key(data, key) -> Union[Dataset, None]:
+        """
+        get the first member from data with key
+        :param data: input data
+        :param key: data key
+        :return: the first dataset in dataset list
+        """
+        if key in data and len(data[key]) > 0:
+            return data[key][0]
+        return None
 
     @classmethod
     def check_data(cls, data_list: tuple):
@@ -63,7 +79,7 @@ class BaseAnalyzer(VersionControl, metaclass=ABCMeta):
                         return None
 
                 logger.info("Enable analysis %s with %s", self.__class__.__name__, ",".join(data_list))
-                return func(self)
+                return func(self, **kwargs)
 
             return wrapper
 
@@ -71,6 +87,10 @@ class BaseAnalyzer(VersionControl, metaclass=ABCMeta):
 
     @abstractmethod
     def optimize(self, **kwargs):
+        pass
+
+    @abstractmethod
+    def get_priority(self):
         pass
 
     def init_dataset_list(self)->None:
@@ -91,14 +111,25 @@ class BaseAnalyzer(VersionControl, metaclass=ABCMeta):
                     self.dataset_list[key] = []
                     self.dataset_list[key].append(dataset)
 
-    @staticmethod
-    def get_first_data_by_key(data, key) -> Union[Dataset, None]:
-        """
-        get the first member from data with key
-        :param data: input data
-        :param key: data key
-        :return: the first dataset in dataset list
-        """
-        if key in data and len(data[key]) > 0:
-            return data[key][0]
-        return None
+    def init_dataset_list(self) -> None:
+        dataset_cls_list = self.dataset_cls_list
+        if len(dataset_cls_list) == 0:
+            logger.warning(f"Analyzer: %s don't rely on any dataset!", self.__class__.__name__)
+            return
+
+        for dataset_cls in dataset_cls_list:
+            if dataset_cls and callable(dataset_cls):
+                dataset = dataset_cls(collection_path=self.collection_path, data=self.dataset_list, **self.kwargs)
+                key = dataset_cls.get_key()
+                if key not in self.dataset_list:
+                    self.dataset_list[key] = []
+                    self.dataset_list[key].append(dataset)
+
+    def get_priority_by_time_ratio(self, dur, step_dur):
+        time_ratio = safe_division(dur, step_dur)
+        if time_ratio >= self.ANALYZER_HIGH_PRIORITY_TIME_RATIO:
+            return PriorityBackgroundColor.high
+        elif time_ratio >= self.ANALYZER_MEDIUM_PRIORITY_TIME_RATIO:
+            return PriorityBackgroundColor.medium
+        else:
+            return PriorityBackgroundColor.low

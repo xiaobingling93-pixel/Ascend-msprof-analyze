@@ -16,26 +16,26 @@
 # limitations under the License.
 import logging
 
-
 from profiler.advisor.common import constant as const
 from profiler.advisor.analyzer.base_analyzer import BaseAnalyzer
-from profiler.advisor.dataset.timeline_event_dataset import TimelineEventDataset
+from profiler.advisor.dataset.timeline_event_dataset import ScheduleAnalysisDataset
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.display.html.render import HTMLRender
+from profiler.advisor.display.html.priority_background_color import PriorityBackgroundColor
 
 logger = logging.getLogger()
 
 
 class OpDispatchAnalyzer(BaseAnalyzer):
-    dataset_cls_list = [TimelineEventDataset]
+    dataset_cls_list = [ScheduleAnalysisDataset]
     """
     operator dispatch optimizer
     """
 
     def __init__(self, collection_path, n_processes: int = 1, **kwargs) -> None:
         super().__init__(collection_path, n_processes, **kwargs)
-        key = TimelineEventDataset.get_key()
+        key = ScheduleAnalysisDataset.get_key()
         self.dataset = self.get_first_data_by_key(self.dataset_list, key)
         self.result = OptimizeResult()
         self.html_render = HTMLRender()
@@ -54,21 +54,21 @@ class OpDispatchAnalyzer(BaseAnalyzer):
         self.make_render(self.html_render)
         return self.result
 
-    def get_op_compile_info(self, event_dataset: TimelineEventDataset):
-            """
-            :Param event_dataset: dataset of timeline event
-            """
-            if hasattr(event_dataset, "ops_compile"):
-                self._op_compile = getattr(event_dataset, "ops_compile")
-                if not self._op_compile or self._op_compile.total_count < const.MAX_OP_COMPILE_NUM:
-                    return
+    def get_op_compile_info(self, event_dataset: ScheduleAnalysisDataset):
+        """
+        :Param event_dataset: dataset of timeline event
+        """
+        if hasattr(event_dataset, "ops_compile"):
+            self._op_compile = getattr(event_dataset, "ops_compile")
+            if not self._op_compile or self._op_compile.total_count < const.MAX_OP_COMPILE_NUM:
+                return
 
-                self._issues_record.append(['operator dispatch',
-                                            const.OP_COMPILE_ID,
-                                            self._op_compile.total_count,
-                                            self._op_compile.total_time])
-            else:
-                logger.debug("Skip operator compile checker, because no op_compile attr find.")
+            self._issues_record.append(['operator dispatch',
+                                        const.OP_COMPILE_ID,
+                                        self._op_compile.total_count,
+                                        self._op_compile.total_time])
+        else:
+            logger.debug("Skip operator compile checker, because no op_compile attr find.")
 
     def make_record(self, result: OptimizeResult):
         """
@@ -77,8 +77,9 @@ class OpDispatchAnalyzer(BaseAnalyzer):
         if not self._op_compile or len(self._issues_record) <= 0:
             return
         desc = f"Found {self._op_compile.total_count} operator compile issues."
-        suggestion = (f"Please use `torch_npu.npu.set_compile_mode(jit_compile=False)` to disable jit compile "
-                    f"in dynamic shape usage.")
+        suggestion = ("Please place the following code at the entrance of the python script to disable jit compile. " \
+                      "Code: `torch_npu.npu.set_compile_mode(jit_compile=False); "
+                      "torch_npu.npu.config.allow_internal_format = False`")
         self.optimization_item.append(OptimizeItem("Operator dispatch", desc, [suggestion]))
         for optimization in self.optimization_item:
             result.add(OptimizeRecord(optimization))
@@ -87,7 +88,7 @@ class OpDispatchAnalyzer(BaseAnalyzer):
         for op_info in self._issues_record:
             result.add_detail('operator dispatch', detail=op_info)
 
-    def make_render(self, html_render):
+    def make_render(self, html_render, **kwargs):
         issues = []
         optimizations = []
         for optimization in self.optimization_item:
@@ -97,11 +98,20 @@ class OpDispatchAnalyzer(BaseAnalyzer):
             ))
         for record in self._issues_record:
             issues.append(dict(issue=record[0],
-                            op_name=record[1],
-                            counts=record[2],
-                            total_time=record[3]))
+                               op_name=record[1],
+                               counts=record[2],
+                               total_time=record[3]))
         html_render.render_template(key="schedule",
                                     template_dir="templates",
                                     template_name="operator_dispatch.html",
                                     issues=issues,
-                                    optimizers=optimizations)
+                                    optimizers=optimizations,
+                                    priority_background_color=self.get_priority())
+
+    def get_priority(self):
+        step_duration = getattr(self.dataset, "step_duration", None)
+        op_compile_total_dur = getattr(self._op_compile, "total_time", None)
+        if step_duration is None or op_compile_total_dur is None:
+            return PriorityBackgroundColor.low
+
+        return self.get_priority_by_time_ratio(op_compile_total_dur, step_duration)
