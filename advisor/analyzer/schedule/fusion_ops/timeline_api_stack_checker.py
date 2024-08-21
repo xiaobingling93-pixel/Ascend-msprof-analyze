@@ -3,7 +3,7 @@ from typing import List
 
 from profiler.advisor.common import constant as const
 from profiler.advisor.common.timeline.event import TimelineEvent
-from profiler.advisor.dataset.timeline_event_dataset import TimelineEventDataset
+from profiler.advisor.dataset.timeline_event_dataset import ComputationAnalysisDataset
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.advisor.utils.utils import get_analyze_processes, ParallelJob
@@ -21,7 +21,8 @@ class OpStackFinder:
         self.task_type = None
         self.matched_index = set()
 
-    def get_api_stack_by_op(self, event_dataset: TimelineEventDataset, op_name: List[str] = None, task_type: str = None,
+    def get_api_stack_by_op(self, event_dataset: ComputationAnalysisDataset, op_name: List[str] = None,
+                            task_type: str = None,
                             disable_multiprocess=False):
         """
         :Param event_dataset: dataset of timeline event
@@ -82,7 +83,13 @@ class OpStackFinder:
         for op_info in self._stack_record:
             result.add_detail('operator stacks', detail=op_info)
 
-    def _get_api_stack_by_op(self, event_dataset: TimelineEventDataset, op_name: str, task_type: str):
+    def query_stack(self, event_dataset: ComputationAnalysisDataset):
+
+        if not event_dataset.dataset_len:
+            return
+        _ = event_dataset.parse_data_with_generator(self._query_stack_by_matched_index)
+            
+    def _get_api_stack_by_op(self, event_dataset: ComputationAnalysisDataset, op_name: str, task_type: str):
         for _, src_op_event in event_dataset.ops_with_task_type.items():
 
             op_task_type = src_op_event.get(const.TASK_TYPE)
@@ -110,6 +117,7 @@ class OpStackFinder:
             task_id = src_op_event.task_id
             if not task_id:
                 continue
+
             self.matched_index.add(dst_op_index)
             if dst_op_index not in self._task_id_record:
                 self._task_id_record[dst_op_index] = []
@@ -122,7 +130,7 @@ class OpStackFinder:
         if not dst_op_event:
             return const.TIMELINE_BACKWARD_NO_STACK_CODE
 
-        return dst_op_event.get("dataset_index")
+        return int(dst_op_event.get("dataset_index"))
 
     def _query_index_by_acl_to_npu(self, acl_to_npu_event):
         if acl_to_npu_event:
@@ -148,6 +156,7 @@ class OpStackFinder:
             return None
         event = TimelineEvent(event)
         stack = event.args.get(const.CALL_STACKS)
+
         stack = stack if stack else const.NO_STACK_REASON_MAP.get(const.TIMELINE_BACKWARD_NO_STACK_CODE)
         for matched_op_info in self._task_id_record.get(index, []):
             self._stack_record.append([*matched_op_info, stack])
@@ -156,8 +165,3 @@ class OpStackFinder:
             self._stack_record.append([*matched_op_info,
                                        const.NO_STACK_REASON_MAP.get(const.TIMELINE_ACL_TO_NPU_NO_STACK_CODE)])
         return None
-
-    def query_stack(self, event_dataset: TimelineEventDataset):
-        if not event_dataset.dataset_len:
-            return
-        _ = event_dataset.parse_data_with_generator(self._query_stack_by_matched_index)

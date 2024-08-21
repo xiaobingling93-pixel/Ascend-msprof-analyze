@@ -15,6 +15,7 @@
 import logging
 
 import os
+import re
 
 from profiler.advisor.dataset.dataset import Dataset
 from profiler.advisor.utils.utils import singleton
@@ -81,9 +82,11 @@ class ClusterDataset(Dataset):
 @singleton
 class ClusterStepTraceTimeDataset(ClusterDataset):
     RANK = "rank"
+    STAGE = "stage"
 
     def __init__(self, collection_path: str, data: dict, **kwargs):
         self._step_dict = defaultdict()
+        self._stages = []
         super().__init__(collection_path, data, **kwargs)
 
     def _parse(self):
@@ -101,13 +104,30 @@ class ClusterStepTraceTimeDataset(ClusterDataset):
         step_dict = defaultdict(lambda: [0, 0, 0])
         for step_bean in step_data:
             if step_bean.type == self.RANK:
-                step_dict[step_bean.index][0] += step_bean.compute
-                step_dict[step_bean.index][1] += step_bean.communication
-                step_dict[step_bean.index][2] += step_bean.free
+                step_rank_record = []
+                step = str(step_bean.step).replace(" ", "") or str(const.DEFAULT_STEP)
+                rank = str(step_bean.index).replace(" ", "")
+                if step:
+                    step_rank_record.append(step)
+                if rank:
+                    step_rank_record.append(rank)
+
+                step_rank_index = const.STEP_RANK_SEP.join(step_rank_record)
+                step_dict[step_rank_index][0] += step_bean.compute
+                step_dict[step_rank_index][1] += step_bean.communication
+                step_dict[step_rank_index][2] += step_bean.free
+            if step_bean.type == self.STAGE:
+                stage = sorted(list(map(int, re.findall(r'\d+', step_bean.stage))))
+                if stage in self._stages:
+                    continue
+                self._stages.append(stage)
         return step_dict
 
     def get_data(self):
         return self._step_dict
+
+    def get_stages(self):
+        return sorted(self._stages)
 
 
 @singleton
@@ -158,7 +178,7 @@ class ClusterCommunicationDataset(ClusterDataset):
                 self.hccl_dict.setdefault(comm_group, defaultdict(lambda: defaultdict(list)))
             for step, step_dict in group_dict.items():
                 for op, op_dict in step_dict.items():
-                    self.compute_bandwidth(op_dict)
+                    self.compute_bandwidth(step.lower().lstrip("step") or str(const.DEFAULT_STEP), op_dict)
                     self.process_hccl_info(comm_group, step, op, op_dict)
 
     def process_hccl_info(self, group, step, op, op_dict):
@@ -175,7 +195,7 @@ class ClusterCommunicationDataset(ClusterDataset):
                 msg = "[ERROR] Cluster_communication.json has invalid structure."
                 raise ValueError(msg) from e
 
-    def compute_bandwidth(self, op_dict: dict):
+    def compute_bandwidth(self, step, op_dict: dict):
         for rank_id, rank_dict in op_dict.items():
             try:
                 rank = int(rank_id)
@@ -184,17 +204,17 @@ class ClusterCommunicationDataset(ClusterDataset):
                 raise ValueError(msg) from e
             for comm_type, bw_dict in rank_dict.get(self.COMMUNICATION_BANDWIDTH_INFO, {}).items():
                 if comm_type == self.SDMA:
-                    self.rank_bw_dict[rank][self.SDMA_SIZE_MB] += bw_dict.get(self.TRANSIT_SIZE)
-                    self.rank_bw_dict[rank][self.SDMA_TIME_MS] += bw_dict.get(self.TRANSIT_TIME)
+                    self.rank_bw_dict[f"{step}{const.STEP_RANK_SEP}{rank}"][self.SDMA_SIZE_MB] += bw_dict.get(self.TRANSIT_SIZE)
+                    self.rank_bw_dict[f"{step}{const.STEP_RANK_SEP}{rank}"][self.SDMA_TIME_MS] += bw_dict.get(self.TRANSIT_TIME)
                 if comm_type == self.RDMA:
-                    self.rank_bw_dict[rank][self.RDMA_SIZE_MB] += bw_dict.get(self.TRANSIT_SIZE)
-                    self.rank_bw_dict[rank][self.RDMA_TIME_MS] += bw_dict.get(self.TRANSIT_TIME)
+                    self.rank_bw_dict[f"{step}{const.STEP_RANK_SEP}{rank}"][self.RDMA_SIZE_MB] += bw_dict.get(self.TRANSIT_SIZE)
+                    self.rank_bw_dict[f"{step}{const.STEP_RANK_SEP}{rank}"][self.RDMA_TIME_MS] += bw_dict.get(self.TRANSIT_TIME)
 
-        for rank, rank_dict in self.rank_bw_dict.items():
-            self.rank_bw_dict[rank][self.RDMA_BANDWIDTH] = self.compute_ratio(
-                self.rank_bw_dict[rank][self.RDMA_SIZE_MB], self.rank_bw_dict[rank][self.RDMA_TIME_MS])
-            self.rank_bw_dict[rank][self.SDMA_BANDWIDTH] = self.compute_ratio(
-                self.rank_bw_dict[rank][self.SDMA_SIZE_MB], self.rank_bw_dict[rank][self.SDMA_TIME_MS])
+        for step_rank in self.rank_bw_dict.keys():
+            self.rank_bw_dict[step_rank][self.RDMA_BANDWIDTH] = self.compute_ratio(
+                self.rank_bw_dict[step_rank][self.RDMA_SIZE_MB], self.rank_bw_dict[step_rank][self.RDMA_TIME_MS])
+            self.rank_bw_dict[step_rank][self.SDMA_BANDWIDTH] = self.compute_ratio(
+                self.rank_bw_dict[step_rank][self.SDMA_SIZE_MB], self.rank_bw_dict[step_rank][self.SDMA_TIME_MS])
 
     def get_data(self):
         return self.rank_bw_dict

@@ -14,33 +14,39 @@
 # limitations under the License.
 import logging
 
-from profiler.advisor.analyzer.base_analyzer import BaseAnalyzer
-from profiler.advisor.result.result import OptimizeResult
-from profiler.advisor.analyzer.communication.packet_checker import PacketChecker
+from profiler.advisor.analyzer.communication.base_communication_analyzer import BaseCommunicationAnalyzer
+from profiler.advisor.analyzer.communication.retransmission.communication_retransmission_checker import \
+    CommunicationRetransmissionChecker
+from profiler.advisor.display.html.priority_background_color import PriorityBackgroundColor
 from profiler.advisor.display.html.render import HTMLRender
-from profiler.advisor.dataset.communication.communication_dataset import CommunicationDataset
+from profiler.advisor.dataset.cluster.cluster_dataset import ClusterCommunicationDataset
+from profiler.advisor.result.result import OptimizeResult
 
 logger = logging.getLogger()
 
 
-class PacketAnalyzer(BaseAnalyzer):
-    dataset_cls_list = [CommunicationDataset]
+class RDMARetransmissionAnalyzer(BaseCommunicationAnalyzer):
+    dataset_cls_list = [ClusterCommunicationDataset]
 
     def __init__(self, collection_path, n_processes: int = 1, **kwargs) -> None:
         super().__init__(collection_path, n_processes, **kwargs)
-        key = CommunicationDataset.get_key()
+        key = ClusterCommunicationDataset.get_key()
         self.dataset = self.get_first_data_by_key(self.dataset_list, key)
         self.result = OptimizeResult()
         self.html_render = HTMLRender()
         self.html = None
 
-    @BaseAnalyzer.check_data((CommunicationDataset.get_key(),))
+    @BaseCommunicationAnalyzer.check_data((ClusterCommunicationDataset.get_key(),))
     def optimize(self, **kwargs):
         add_render_list = kwargs.get("add_render_list", True)
-        packet_checker = PacketChecker(**kwargs)
-        packet_checker.check_packet(self.dataset)
-        if not packet_checker.packet_issues:
+        rdma_checker = CommunicationRetransmissionChecker(**kwargs)
+        rdma_checker.check_retransmission(self.dataset)
+        if not rdma_checker.rdma_issues:
             return self.result
-        packet_checker.make_record(self.result)
-        self.html = packet_checker.make_render(self.html_render, add_render_list)
+        rdma_checker.make_record(self.result)
+        self.html = rdma_checker.make_render(self.html_render, add_render_list, priority=self.get_priority())
         return self.result
+
+    def get_priority(self):
+        # 单次重传最少4s，高优先级
+        return PriorityBackgroundColor.high

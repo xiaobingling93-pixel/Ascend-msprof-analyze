@@ -65,3 +65,6 @@ class ClusterStepTraceTimeBean:
             msg = "[ERROR] Cluster step trace time.csv has invalid value in column 'Free'."
             raise ValueError(msg) from e
 
+    @property
+    def stage(self) -> int:
+        return self._data.get(self.INDEX)

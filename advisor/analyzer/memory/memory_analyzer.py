@@ -1,18 +1,16 @@
 import logging
 
-from typing import List, Dict, Any
-
 from profiler.advisor.analyzer.base_analyzer import BaseAnalyzer
 from profiler.advisor.result.result import OptimizeResult
-from profiler.advisor.analyzer.dataloader.dataloader_checker import DataloaderChecker
-from profiler.advisor.display.html.priority_background_color import PriorityBackgroundColor
+from profiler.advisor.analyzer.memory.memory_checker import MemoryOpsChecker
 from profiler.advisor.display.html.render import HTMLRender
 from profiler.advisor.dataset.timeline_event_dataset import ScheduleAnalysisDataset
+from profiler.advisor.display.html.priority_background_color import PriorityBackgroundColor
 
 logger = logging.getLogger()
 
 
-class DataloaderAnalyzer(BaseAnalyzer):
+class MemoryAnalyzer(BaseAnalyzer):
     dataset_cls_list = [ScheduleAnalysisDataset]
 
     def __init__(self, collection_path, n_processes: int = 1, **kwargs) -> None:
@@ -24,11 +22,17 @@ class DataloaderAnalyzer(BaseAnalyzer):
 
     @BaseAnalyzer.check_data((ScheduleAnalysisDataset.get_key(),))
     def optimize(self, **kwargs):
-        dataloader_checker = DataloaderChecker()
-        dataloader_checker.check_slow_dataloader(self.dataset)
-        dataloader_checker.make_record(self.result)
-        dataloader_checker.make_render(self.html_render, priority=self.get_priority())
+        memory_checker = MemoryOpsChecker()
+        memory_checker.check_memory_ops(self.dataset)
+        memory_checker.make_record(self.result)
+        memory_checker.make_render(self.html_render, priority=self.get_priority(memory_checker.max_mem_op_dur))
         return self.result
 
-    def get_priority(self):
-        return PriorityBackgroundColor.high
+    def get_priority(self, max_mem_op_dur):
+        step_duration = getattr(self.dataset, "step_duration", None)
+        ratio = self.get_priority_by_time_ratio(max_mem_op_dur, step_duration)
+
+        if step_duration is None:
+            return PriorityBackgroundColor.low
+
+        return ratio

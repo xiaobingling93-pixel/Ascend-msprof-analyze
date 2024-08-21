@@ -33,6 +33,7 @@ TASK_TYPE = "Task Type"
 CPU_OP = "cpu_op"
 AI_CORE = "AI_CORE"
 AI_CPU = "AI_CPU"
+MIX_AIC = "MIX_AIC"
 CALL_STACKS = "Call stack"
 INPUT_DIMS = "Input Dims"
 OP_SEP = "-"
@@ -48,8 +49,7 @@ NO_STACK_REASON_MAP = {
     TIMELINE_BACKWARD_NO_STACK_CODE: "Backward broadcast, without call stacks in profiling.",
     TIMELINE_ACL_TO_NPU_NO_STACK_CODE: "Incoming flow is 'acl_to_npu', without call stacks in profiling."
 }
-TIMELINE_API_DOC_URL = "https://gitee.com/ascend/mstt/blob/master/profiler/advisor/doc/"\
-                       "Samples%20of%20Fused%20Operator%20API%20Replacement.md"
+TIMELINE_API_DOC_URL = "https://gitee.com/ascend/mstt/blob/master/profiler/advisor/doc/Samples%20of%20Fused%20Operator%20API%20Replacement.md"
 AFFINITY_TRAINING_API = "Affinity training api"
 TIMELINE_WITH_STACK_DOC_URL = "https://www.hiascend.com/document/detail/zh/canncommercial/" \
                               "70RC1/modeldevpt/ptmigr/AImpug_0067.html"
@@ -124,20 +124,6 @@ MAX_RETRIES = 3
 TIMEOUT = 3
 
 ADVISOR_RULE_PATH = "ADVISOR_RULE_PATH"
-# Copyright (c) 2024, Huawei Technologies Co., Ltd.
-# All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0  (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 CLOUD_RULE_PATH = "rules/cloud/"
 DEFAULT_RULE_PATH = "./rules/"
 
@@ -156,7 +142,17 @@ COMMUNICATION_JSON = "communication.json"
 
 BOTTLENECK = "bottleneck"
 DATA = "data"
-
+ADVISOR_ANALYSIS_OUTPUT_DIR = "advisor_analysis_result"
+DEFAULT_PROCESSES = 8
+CLUSTER_ANALYSIS_FILE_PATTERN = [r'profiler_info_\d+\.json', "step_trace_time.csv", "communication.json",
+                                 "communication_matrix.json"]
+ANALYSIS_OUTPUT_PATH = "ANALYSIS_OUTPUT_PATH"
+DEFAULT_RANK_FOR_PROFILING_ANALYSIS = 0
+PROFILER_INFO_FILE_PATTERN = r"profiler_info_(\d+)\.json"
+DISABLE_STREAMINIG_READER = "DISABLE_STREAMINIG_READER"
 FRAMEWORK_STACK_BLACK_LIST = ["torch", "torch_npu", "megatron", "deepspeed"]
 DISABLE_STREAMING_READER = "DISABLE_STREAMING_READER"
-MAX_FILE_SIZE = 10**10
+MAX_FILE_SIZE = 10 ** 10
+MAX_NUM_PROCESSES = 4
+DEFAULT_STEP = "-1"
+STEP_RANK_SEP = "_"

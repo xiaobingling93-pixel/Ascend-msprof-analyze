@@ -4,7 +4,7 @@ import logging
 
 from profiler.advisor.common import constant as const
 from profiler.advisor.common.timeline.event import TimelineEvent
-from profiler.advisor.dataset.timeline_event_dataset import TimelineEventDataset
+from profiler.advisor.dataset.timeline_event_dataset import ScheduleAnalysisDataset
 from profiler.advisor.result.result import OptimizeResult
 
 logger = logging.getLogger()
@@ -19,19 +19,11 @@ class TimelineBaseChecker(ABC):
         self.empty_stacks = True
         self.framework_black_list = False
 
-    @abstractmethod
-    def make_record(self, result: OptimizeResult):
-        pass
-
-    @abstractmethod
-    def make_render(self, html_render):
-        pass
-
-    def query_stack(self, event_dataset: TimelineEventDataset = None, profiling_with_stack: str = None):
+    def query_stack(self, event_dataset: ScheduleAnalysisDataset = None, profiling_with_stack: str = None):
         if all([len(matched_index) == 0 for matched_index in self._matched_op_index.values()]):
             return
 
-        event_dataset = event_dataset if not profiling_with_stack else TimelineEventDataset(
+        event_dataset = event_dataset if not profiling_with_stack else ScheduleAnalysisDataset(
             collection_path=profiling_with_stack, data={}, _datasets={}, analysis_mode="fusion_ops",
             build_dataset=False)
 

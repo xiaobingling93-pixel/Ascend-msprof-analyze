@@ -8,24 +8,28 @@ from profiler.advisor.analyzer.base_analyzer import BaseAnalyzer
 from profiler.advisor.common import constant as const
 from profiler.advisor.common.analyzer_scopes import SupportedScopes
 from profiler.advisor.common.timeline.event import TimelineEvent
-from profiler.advisor.dataset.timeline_event_dataset import TimelineEventDataset
+from profiler.advisor.dataset.timeline_event_dataset import ScheduleAnalysisDataset
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.advisor.utils.utils import format_timeline_result
 from profiler.advisor.common.timeline.fusion_ops_db import init_timeline_ops_db
+from profiler.advisor.display.html.priority_background_color import PriorityBackgroundColor
 
 logger = logging.getLogger()
 
 
 class TimelineFusionOpsAnalyzer(BaseAnalyzer):
-    dataset_cls_list = [TimelineEventDataset]
+    dataset_cls_list = [ScheduleAnalysisDataset]
 
     def __init__(self, collection_path, n_processes: int = 1, **kwargs):
         super().__init__(collection_path, n_processes, **kwargs)
         self._matched_op_index = {} if self.n_processes <= 1 else multiprocessing.Manager().dict()
         self.matched_op_stacks = {}
         self.empty_stacks = True
-        key = TimelineEventDataset.get_key()
+        key = ScheduleAnalysisDataset.get_key()
         self.timeline_event_dataset = self.get_first_data_by_key(self.dataset_list, key)
+
+    def get_priority(self):
+        return PriorityBackgroundColor.low
 
     def optimize(self, **kwargs):
         for mode in [const.ATEN.lower(), const.OPTIMIZER.lower()]:
@@ -154,8 +158,9 @@ class TimelineFusionOpsAnalyzer(BaseAnalyzer):
                 timeline_profiling_doc_url=const.TIMELINE_WITH_STACK_DOC_URL
             )
 
+        sheet_name = "Affinity apis"
         optimization_item = OptimizeItem(
-            SupportedScopes.TIMELINE_FUSION_OPS,
+            sheet_name,
             desc,
             [suggestion]
         )
@@ -163,16 +168,16 @@ class TimelineFusionOpsAnalyzer(BaseAnalyzer):
         self.result.add(OptimizeRecord(optimization_item))
 
         record_title = ["Affinity API", "Code stacks", "Stack called counts"]
-        self.result.add_detail(SupportedScopes.TIMELINE_FUSION_OPS, headers=record_title)
+        self.result.add_detail(sheet_name, headers=record_title)
 
         for api_name, stacks_info in format_timeline_result(self.matched_op_stacks).items():
             if not stacks_info:
                 detail = [api_name, "null", "null"]
-                self.result.add_detail(SupportedScopes.TIMELINE_FUSION_OPS, detail=detail)
+                self.result.add_detail(sheet_name, detail=detail)
             else:
                 for stack in stacks_info:
                     detail = [api_name, *stack]
-                    self.result.add_detail(SupportedScopes.TIMELINE_FUSION_OPS, detail=detail)
+                    self.result.add_detail(sheet_name, detail=detail)
 
     def make_render(self):
         format_result_for_html = format_timeline_result(dict(self.matched_op_stacks), dump_html=True)
@@ -185,7 +190,8 @@ class TimelineFusionOpsAnalyzer(BaseAnalyzer):
                                          empty_stacks=self.empty_stacks,
                                          with_stack_doc_url=const.TIMELINE_WITH_STACK_DOC_URL,
                                          api_doc_url=const.TIMELINE_API_DOC_URL,
-                                         result=format_result_for_html)
+                                         result=format_result_for_html,
+                                         priority_background_color=self.get_priority())
 
     def query_stack(self, event_dataset):
         if all([len(matched_index) == 0 for matched_index in self._matched_op_index.values()]):

@@ -8,7 +8,7 @@ from profiler.advisor.analyzer.schedule.fusion_ops.timeline_api_stack_checker im
 from profiler.advisor.common import constant
 from profiler.advisor.dataset.dataset import Dataset
 from profiler.advisor.dataset.profiling.profiling_dataset import ProfilingDataset
-from profiler.advisor.dataset.timeline_event_dataset import TimelineEventDataset
+from profiler.advisor.dataset.timeline_event_dataset import ComputationAnalysisDataset
 from profiler.cluster_analyse.common_func.file_manager import FileManager
 
 
@@ -30,6 +30,8 @@ class AicpuChecker(OperatorChecker):
         self.aicpu_rules: Dict = {}
         self.aicpu_checker: Dict = {}
         self.load_aicpu_rules()
+        self.total_task_duration = 0.0
+        self.aicpu_task_duration = 0.0
 
     def _check_data(self, profiling_data: ProfilingDataset) -> bool:
         if not self._check_summary(profiling_data):
@@ -88,7 +90,7 @@ class AicpuChecker(OperatorChecker):
 
         def get_opeartor_stack_info(api_stack_finder: OpStackFinder, op_name_list: list) -> list:
             data: Dict[str, Dataset] = {}
-            event_dataset = TimelineEventDataset(collection_path=profiling_data.collection_path, data=data, task_type=constant.AI_CPU)
+            event_dataset = ComputationAnalysisDataset(collection_path=profiling_data.collection_path, data=data, task_type=constant.AI_CPU)
 
             # disable multiprocessing, avoid cost time of enable new process for light task
             api_stack_finder.get_api_stack_by_op(event_dataset, op_name_list, constant.AI_CPU,
@@ -96,14 +98,16 @@ class AicpuChecker(OperatorChecker):
             return api_stack_finder._stack_record
 
         self._op_list = []
-        total_task_duration = 0.0
+
         max_task_duration = 0.0
         for op_info in op_summary.op_list:
+            task_duration = float(op_info.task_duration)
+
             if self._check_operator(op_info):
                 self._op_list.append(op_info)
+                self.aicpu_task_duration += task_duration
 
-            task_duration = float(op_info.task_duration)
-            total_task_duration += task_duration
+            self.total_task_duration += task_duration
             max_task_duration = max(max_task_duration, task_duration)
         if (not self._op_list) or (max_task_duration < self._MIN_TASK_DURATION):
             return False
@@ -145,11 +149,15 @@ class AicpuChecker(OperatorChecker):
                 ",".join(double_type_ai_cpu_operator)))
         return True
 
-    def make_render(self, html_render, record):
-        html_render.render_template(key="computation",
-                                    template_dir="templates",
-                                    template_name="operator_ai_cpu.html",
-                                    format_result=self.format_operator_result(record, constant.OPERATOR_LIST_UNLIMIT))
+    def make_render(self, html_render, record, add_render_list=True, **kwargs):
+        priority = kwargs.get("priority")
+        return html_render.render_template(key="computation",
+                                           template_dir="templates",
+                                           template_name="operator_ai_cpu.html",
+                                           format_result=self.format_operator_result(record,
+                                                                                     constant.OPERATOR_LIST_UNLIMIT),
+                                           add_render_list=add_render_list,
+                                           priority_background_color=priority)
 
     def format_operator_result(self, record, limit):
         """

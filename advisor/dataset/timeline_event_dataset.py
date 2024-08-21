@@ -1,101 +1,47 @@
+import inspect
 import logging
-import os
-from typing import List, Any
 import traceback
+from collections import OrderedDict
 
 import ijson
 from tqdm import tqdm
 
 from profiler.advisor.common import constant as const
 from profiler.advisor.common.timeline.event import TimelineEvent
-from profiler.advisor.utils.utils import get_file_path_from_directory, check_path_valid, singleton
-from profiler.cluster_analyse.common_func.file_manager import FileManager
+from profiler.advisor.utils.utils import get_file_path_from_directory, check_path_valid, singleton, convert_to_float
+from profiler.advisor.dataset.timeline_op_collector.timeline_op_collector import (
+    OpCompileCollector,
+    SynchronizeStreamCollector,
+    MemCollector,
+    DataloaderCollector,
+    SyncBNCollector,
+    AtenCollector,
+    OptimizerCollector,
+    FrequencyCollector,
+    SpecificTaskTypeOpCollector,
+    TorchToNpuCollector,
+    AclToNpuCollector,
+    OpStackCollector,
+    StepCollector,
+    GcCollector
+)
 
 logger = logging.getLogger()
 
 
-class OpCompileCollector:
-    def __init__(self):
-        self._total_op_compile_counter = 0
-        self._total_op_compile_time = 0.0
+class BaseTimelineEventDataset:
+    PROFILER_STEP_PREFIX = "ProfilerStep"
 
-    @property
-    def total_time(self):
-        return self._total_op_compile_time
-
-    @property
-    def total_count(self):
-        return self._total_op_compile_counter
-
-    def is_empty(self):
-        return self._total_op_compile_counter == 0
-
-    def update(self, event: TimelineEvent):
-        self._total_op_compile_time += float(event.dur)
-        self._total_op_compile_counter += 1
-
-    def unset(self):
-        self._total_op_compile_counter = 0
-        self._total_op_compile_time = 0.0
-
-
-class SynchronizeStreamCollector:
-
-    def __init__(self):
-        self._synchronize_stream_count = 0
-        self._slow_synchronize_stream = []
-        self.rule = SynchronizeStreamCollector._load_rule()
-
-    @property
-    def total_count(self):
-        return self._synchronize_stream_count
-
-    @property
-    def slow_synchronize_stream(self):
-        return self._slow_synchronize_stream
-
-    @staticmethod
-    def _load_rule():
-        sync_stream_rule_path = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "rules",
-                                             "synchronize.yaml")
-
-        sync_stream_rule = FileManager.read_yaml_file(sync_stream_rule_path)
-        return sync_stream_rule
-
-    def update_sync_stream_count(self):
-        self._synchronize_stream_count += 1
-
-    def append_slow_sync_stream(self, event):
-        if float(event.dur) / 1000 >= self.rule.get("slow_synchronize_threshold", 10):
-            self._slow_synchronize_stream.append(event)
-
-    def unset(self):
-        self._synchronize_stream_count = 0
-        self._slow_synchronize_stream = []
-
-
-@singleton
-class TimelineEventDataset:
+    collector_map = {}
 
     def __init__(self, collection_path, data: dict, build_dataset=True, **kwargs) -> None:
-        self._ops_with_task_type = {}
-        self._ops_with_stack = {}
-        self._ops_compile = OpCompileCollector()
-        self._torch_to_npu = {}
-        self._acl_to_npu = set()
-        self._aten: List[Any] = []
-        self._optimizer: List[Any] = []
-        self._dataloader: List[Any] = []
-        self._sync_batchnorm: List[Any] = []
-        self._gc: List[Any] = []
-        self._synchronize_stream = SynchronizeStreamCollector()
         self.timeline_dir = collection_path
+        self.profiler_step = []
         self.timeline_data_list = get_file_path_from_directory(collection_path,
                                                                lambda file: file.endswith("trace_view.json"))
         self.dataset_len = None
-        self.analysis_mode = kwargs.get("analysis_mode")
-        self.task_type = kwargs.get("task_type")
-
+        self.step = kwargs.get("step")
+        self.step_duration = None
         if not build_dataset:
             return
 
@@ -105,59 +51,6 @@ class TimelineEventDataset:
                 data[key] = []
             data[key].append(self)
 
-        if self.analysis_mode in ["op_stack", "all"]:
-            self._task_op_names = list(set([event_key.split("-")[0] for event_key in self._ops_with_task_type.keys()]))
-
-        self._post_process()
-
-    @property
-    def ops_with_stack(self):
-        return self._ops_with_stack
-
-    @property
-    def ops_compile(self):
-        return self._ops_compile
-
-    @property
-    def torch_to_npu(self):
-        return self._torch_to_npu
-
-    @property
-    def acl_to_npu(self):
-        return self._acl_to_npu
-
-    @property
-    def ops_with_task_type(self):
-        return self._ops_with_task_type
-
-    @property
-    def task_op_names(self):
-        return self._task_op_names
-
-    @property
-    def optimizer(self):
-        return self._optimizer
-
-    @property
-    def aten(self):
-        return self._aten
-
-    @property
-    def dataloader(self):
-        return self._dataloader
-
-    @property
-    def sync_batchnorm(self):
-        return self._sync_batchnorm
-
-    @property
-    def gc_events(self):
-        return self._gc
-
-    @property
-    def synchronize_stream(self):
-        return self._synchronize_stream
-
     @classmethod
     def get_key(cls):
         """
@@ -166,6 +59,23 @@ class TimelineEventDataset:
         """
         return cls.__module__.rsplit('.', maxsplit=1)[-1]
 
+    def get_post_process_kwargs(self, func_name):
+        kwargs = {}
+        if func_name == FrequencyCollector.__name__:
+            ops_with_task_type = getattr(self, "ops_with_task_type", {}).values()
+            kwargs["ai_core_ops"] = [op for op in ops_with_task_type if
+                                     op.get(const.TASK_TYPE) in [const.AI_CORE, const.MIX_AIC]]
+        return kwargs
+
+    def add_event(self, index, event):
+        event["dataset_index"] = index
+        if not isinstance(event, TimelineEvent):
+            event = TimelineEvent(event)
+
+        for _, collector in self.collector_map.items():
+            collector.add_op(event)
+        return True
+
     def parse(self):
 
         if len(self.timeline_data_list) == 0:
@@ -173,10 +83,10 @@ class TimelineEventDataset:
             return False
 
         if len(self.timeline_data_list) > 1:
-            logger.warning("Found multiple trace_view.json in %s, load the file of device 0 for analysis.",
+            logger.warning("Found multiple trace_view.json in %s, load the file of device 0 for analysis  .",
                            self.timeline_dir)
 
-        result = self.parse_data_with_generator(self._add_event)
+        result = self.parse_data_with_generator(self.add_event)
 
         if not self.dataset_len:
             self.dataset_len = len(result)
@@ -202,137 +112,100 @@ class TimelineEventDataset:
                            timeline_data_path)
         return result
 
-    def _add_ops_with_task_type(self, event):
-        key = f"{event.name}-{event.ts}"
-        self._ops_with_task_type[key] = TimelineEvent(
-            {
-                const.TASK_TYPE: event.args.get(const.TASK_TYPE),
-                "task_id": event.args.get("Task Id"),
-                "tid": event.tid,
-                "name": event.name,
-                "ts": str(event.ts)
-            }
-        )
-
-    def _add_ops_with_stack(self, event):
-        self._ops_with_stack[str(event.ts)] = TimelineEvent({"name": event.name, "dataset_index": event.dataset_index})
-
-    def _add_torch_to_npu(self, event):
-        key = f"{event.ph}-{event.id}"
-        self._torch_to_npu[key] = TimelineEvent({"tid": event.tid, "ts": str(event.ts)})
-
-    def _add_acl_to_npu(self, event):
-        # op with task type equals to ai_cpu which derived from acl_to_npu do not have stacks
-        self._acl_to_npu.add(str(event.ts))
-
-    def _add_op_compile(self, event: TimelineEvent):
-        if event.name == const.OP_COMPILE_NAME or event.args.get("id") == const.OP_COMPILE_ID:
-            self._ops_compile.update(event)
-
-    def _add_gc(self, event: TimelineEvent):
-        if event.get("cat") and event.get("cat").lower() == 'gc':
-            self._gc.append(event)
-
-    def _add_optimizer(self, event: TimelineEvent):
-        self._optimizer.append(TimelineEvent({"name": event.name, "dataset_index": event.dataset_index}))
-
-    def _add_aten(self, event: TimelineEvent):
-        self._aten.append(TimelineEvent({
-            "name": event.name, "dataset_index": event.dataset_index, "ts": event.ts, "dur": event.dur
-        }))
-
-    def _add_dataloader(self, event: TimelineEvent):
-        if "dataloader" in event.name.lower():
-            self._dataloader.append(TimelineEvent({
-                "name": event.name, "dataset_index": event.dataset_index, "ts": event.ts, "dur": event.dur,
-                "stack": event.args.get("Call stack")
-            }))
-
-    def _add_sync_batchnorm(self, event: TimelineEvent):
-        if event.name.lower() == "syncbatchnorm":
-            self._sync_batchnorm.append(TimelineEvent({
-                "name": event.name, "dataset_index": event.dataset_index, "ts": event.ts, "dur": event.dur
-            }))
-
-    def _add_synchronize(self, event: TimelineEvent):
-        if event.name.startswith(const.SYNC_STREAM):
-            self._synchronize.append(TimelineEvent({
-                "name": event.name, "ts": event.ts, "dur": event.dur
-            }))
-
-    def _add_specific_operator(self, event):
-        # for analysis of operator aclOpCompile, enable jit_compILE=False
-        self._add_op_compile(event)
-        # for analysis of slow dataloader.__next__
-        self._add_dataloader(event)
-        # for analysis of syncBatchNorm operator, prompt users to replace source code of torch_npu's syncbn
-        self._add_sync_batchnorm(event)
-        # for analysis of GcAnalyzer
-        self._add_gc(event)
-
-    def _add_event(self, index, event):
-        event["dataset_index"] = index
-        if not isinstance(event, TimelineEvent):
-            event = TimelineEvent(event)
-
-        self._add_specific_operator(event)
-
-        if self.analysis_mode == "fusion_ops":
-            self._add_event_for_fusion_ops(event)
-        elif self.analysis_mode == "op_stack":
-            self._add_event_for_op_stack(event)
+    def _get_target_ops_by_step(self, op_list):
+        target_ops = []
+        if not self.profiler_step:
+            return op_list
+        if not self.step or f"ProfilerStep#{self.step}" not in [event.name for event in self.profiler_step]:
+            target_ops = op_list
+            if self.profiler_step:
+                self.step_duration = convert_to_float(self.profiler_step[-1].dur)
         else:
-            self._add_event_for_fusion_ops(event)
-            self._add_event_for_op_stack(event)
-        return True
+            for step_event in self.profiler_step:
+                if step_event.name != f"ProfilerStep#{self.step}":
+                    continue
+                self.step_duration = convert_to_float(step_event.dur)
+                for op_event in op_list:
+                    if step_event.ts_include(op_event):
+                        target_ops.append(op_event)
+        target_ops.sort(key=lambda x: convert_to_float(x.ts))
+        return target_ops
 
-    def _add_event_for_fusion_ops(self, event):
-        if event.name.lower().startswith(f"{const.ATEN}{const.ATEN_SEP}") or event.name.lower().startswith(
-                f"{const.NPU}{const.ATEN_SEP}"):
-            self._add_aten(event)
-            return
+    def _collector_post_process(self):
+        # 按step过滤collector中的算子，并将过滤后的算子设置为当前dataset的property，与原始TimelineEventDataset的property保持一致
+        for collector_name, collector in self.collector_map.items():
+            logger.debug("Start post process for operator collector: %s", collector_name)
+            if collector.require_filter_by_step:
+                logger.debug("Operator Collector %s requires filter ops by step %s", collector_name, self.step)
+                target_op_list = self._get_target_ops_by_step(collector.op_list)
+            else:
+                logger.debug("Operator Collector %s use operators of all step for analysis", collector_name)
+                target_op_list = collector.op_list
 
-        # 检查cann层同步操作，根据时间窗口索引到host侧的aten算子并给出堆栈
-        if event.name.startswith(const.SYNC_STREAM):
-            self._add_aten(event)
+            logger.debug("Source number of ops is %s, number of ops after filtered by rank is %s",
+                         len(collector.op_list), len(target_op_list))
 
-        if event.name.startswith(f"{const.OPTIMIZER}.{const.OPTIMIZER_STEP}{const.OPTIMIZER_SEP}"):
-            self._add_optimizer(event)
-            return
+            collector_kwargs = self.get_post_process_kwargs(collector_name)
+            collector.post_process(target_op_list, **collector_kwargs)
+            for property_name, property_value in collector.attribute_to_dataset.items():
+                setattr(self, property_name, property_value)
 
-    def _add_event_for_op_stack(self, event):
-        if event.name.lower() == const.TORCH_TO_NPU:
-            self._add_torch_to_npu(event)
-            return
 
-        if event.args.get(const.CALL_STACKS):
-            self._add_ops_with_stack(event)
-            return
+@singleton
+class ScheduleAnalysisDataset(BaseTimelineEventDataset):
+    collector_map = OrderedDict(
+        StepCollector=StepCollector(),
+        MemCollector=MemCollector(),
+        OpCompileCollector=OpCompileCollector(),
+        SynchronizeStreamCollector=SynchronizeStreamCollector(),
+        DataloaderCollector=DataloaderCollector(),
+        SyncBNCollector=SyncBNCollector(),
+        AtenCollector=AtenCollector(),
+        OptimizerCollector=OptimizerCollector(),
+        GcCollector=GcCollector()
+    )
 
-        if event.args.get(const.TASK_TYPE) and event.args.get(const.TASK_TYPE) in [const.AI_CORE, const.AI_CPU]:
-            self._add_ops_with_task_type(event)
-            return
-
-        if event.name and event.ts and event.name == const.ACL_TO_NPU:
-            self._add_acl_to_npu(event)
-            return
+    def __init__(self, collection_path, data: dict, build_dataset=True, **kwargs) -> None:
+        super().__init__(collection_path, data, build_dataset, **kwargs)
+        self.aten = None
+        self.synchronize_stream = None
+        self._collector_post_process()
+        self._post_process()
 
     def _post_process(self):
         # eliminate sub aten operator of the first level aten operator by 'ts' and 'dur',
         # keep the first level aten operator contiguous
         formated_atens = []
-        for event in sorted(self._aten, key=lambda x: x.get("ts", -1)):
+        if not hasattr(self, "aten") or not hasattr(self, "synchronize_stream"):
+            return
+
+        for event in sorted(self.aten, key=lambda x: x.get("ts", -1)):
             if event.name.startswith(const.ATEN):
                 if not formated_atens or not formated_atens[-1].ts_include(event):
                     formated_atens.append(event)
 
             elif event.name.startswith(const.SYNC_STREAM):
-                self._synchronize_stream.update_sync_stream_count()
-                if formated_atens[-1].ts_include(event):
+                self.synchronize_stream.update_sync_stream_count()
+                if formated_atens and formated_atens[-1].ts_include(event):
                     # 使用aten算子的索引，用于查询堆栈
                     event["dataset_index"] = formated_atens[-1].get("dataset_index")
-                    self._synchronize_stream.append_slow_sync_stream(event)
+                    self.synchronize_stream.append_slow_sync_stream(event)
 
             else:
                 continue
-        self._aten = formated_atens
+        self.aten = formated_atens
+
+
+class ComputationAnalysisDataset(BaseTimelineEventDataset):
+    collector_map = OrderedDict(
+        StepCollector=StepCollector(),
+        SpecificTaskTypeOpCollector=SpecificTaskTypeOpCollector(),
+        TorchToNpuCollector=TorchToNpuCollector(),
+        AclToNpuCollector=AclToNpuCollector(),
+        OpStackCollector=OpStackCollector(),
+        FrequencyCollector=FrequencyCollector(),
+    )
+
+    def __init__(self, collection_path, data: dict, build_dataset=True, **kwargs) -> None:
+        super().__init__(collection_path, data, build_dataset, **kwargs)
+        self._collector_post_process()

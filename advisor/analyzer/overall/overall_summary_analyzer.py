@@ -23,7 +23,7 @@ from profiler.compare_tools.compare_interface.comparison_interface import Compar
 
 
 class OverallSummaryAnalyzer(BaseAnalyzer):
-    OVERALL_SUMMARY_ANALYZER = "overall_summary_analysis"
+    OVERALL_SUMMARY_ANALYZER = "overall summary"
     advice_map = {
         "Computing Time": "if you want more detailed advice please go to mstt_advisor_*.html",
         "Uncovered Communication Time": "if you want more detailed advice please go to mstt_advisor_*.html",
@@ -232,6 +232,9 @@ class OverallSummaryAnalyzer(BaseAnalyzer):
                                          cann_version=self.cann_version,
                                          torch_version=self.torch_version,
                                          result=result_for_html)
+
+    def get_priority(self):
+        pass
 
 
 def get_profile_path(collection_path):

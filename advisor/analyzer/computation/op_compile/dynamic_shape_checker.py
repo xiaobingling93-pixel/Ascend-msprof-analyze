@@ -27,11 +27,13 @@ class DynamicShapeChecker(OperatorChecker):
     def check(self, profiling_database) -> bool:
         return self.is_dynamic_shape(profiling_database)
 
-    def make_record(self, profiling_database) -> OptimizeRecord:
+    def make_record(self, profiling_database, rank_id=None) -> OptimizeRecord:
         """
         make record for what and how to optimize
         """
 
+        if rank_id is not None:
+            self._PROBLEM = f"rank {rank_id} ".capitalize() + self._PROBLEM.lower()
         optimization_item = OptimizeItem(
             self._PROBLEM,
             self._description,
@@ -58,8 +60,11 @@ class DynamicShapeChecker(OperatorChecker):
         format_result = {"record": record.__dict__, "suggestion": '<br> '.join(release_suggestion_list)}
         return format_result
 
-    def make_render(self, html_render, record):
-        html_render.render_template(key="computation",
-                                    template_dir="templates",
-                                    template_name="operator_dynamic_shape.html",
-                                    format_result=self.format_operator_result(record))
+    def make_render(self, html_render, record, add_render_list=True, **kwargs):
+        priority = kwargs.get("priority")
+        return html_render.render_template(key="computation",
+                                           template_dir="templates",
+                                           template_name="operator_dynamic_shape.html",
+                                           format_result=self.format_operator_result(record),
+                                           add_render_list=add_render_list,
+                                           priority_background_color=priority)

@@ -18,6 +18,7 @@ from profiler.advisor.analyzer.base_analyzer import BaseAnalyzer
 from profiler.prof_common.path_manager import PathManager
 from profiler.advisor.dataset.environment_variable_dataset import EnvironmentVariableDataset
 from profiler.advisor.analyzer.overall.environment_variable_checker import EnvironmentVariabelChecker
+from profiler.advisor.display.html.priority_background_color import PriorityBackgroundColor
 
 
 class EnvironmentVariabelAnalyzer(BaseAnalyzer):
@@ -39,6 +40,9 @@ class EnvironmentVariabelAnalyzer(BaseAnalyzer):
         checker.make_record(self.result)
         checker.make_render(self.html_render)
         return self.result
+
+    def get_priority(self):
+        return PriorityBackgroundColor.high
 
     def make_record(self):
         pass

@@ -1,0 +1,216 @@
+# Copyright (c) 2023, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import logging
+
+from profiler.advisor.analyzer.base_analyzer import BaseAnalyzer
+from profiler.advisor.common import constant
+from profiler.advisor.result.result import OptimizeResult
+from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
+from profiler.advisor.dataset.cluster.cluster_dataset import ClusterStepTraceTimeDataset
+from profiler.advisor.utils.utils import safe_index
+
+logger = logging.getLogger()
+
+
+class SlowRankAnalyzer(BaseAnalyzer):
+    SLOW_RANK_ANALYSIS = "slow rank"
+    RANK = "rank"
+    RATIO_THRESHOLD = 0.05
+    BOTTLENECK_LIST = ['Computing', 'Communication', "Free"]
+    dataset_cls_list = [ClusterStepTraceTimeDataset]
+    COMPUTE = "compute(us)"
+    FREE = "free(us)"
+    COMMUNICATION = "communication(us)"
+
+    def __init__(self, collection_path, n_processes: int = 1, **kwargs):
+        super().__init__(collection_path, n_processes, **kwargs)
+        key = ClusterStepTraceTimeDataset.get_key()
+        self.step_trace_class = self.get_first_data_by_key(self.dataset_list, key)
+        self.step_trace_dict = self.step_trace_class.get_data()
+        self.stages = self.step_trace_class.get_stages()
+        self.result = OptimizeResult()
+        self.bottelneck = ''
+        self.suggestion = ''
+        self._steps = set()
+        if self.step_trace_dict is not None:
+            self.format_datas = self.format_details()
+
+    @property
+    def steps(self):
+        return sorted(list(self._steps))
+
+    @staticmethod
+    def compute_max_gap_ratio(data: list, mean: float):
+        if mean == 0:
+            return 0
+        else:
+            return (max(data) - min(data)) / mean
+
+    def optimize(self, **kwargs):
+        if self.step_trace_dict is None:
+            logger.error("slow_rank 分析失败，原因是数据加载失败，请检查你的cluster_analysis_outpu文件夹 \
+                  如不关心这类数据请忽略")
+            return self.result
+        self.process()
+        self.make_record()
+        self.make_render(kwargs.get("template_key"))
+        return self.result
+
+    def process(self):
+        total_time_list = [sum(data_tuple) for rank_id, data_tuple in self.step_trace_dict.items()]
+        if total_time_list:
+            mean_total_time = sum(total_time_list) / len(total_time_list)
+            for i in range(len(self.BOTTLENECK_LIST)):
+                self.produce_bottleneck(self.step_trace_dict, i, mean_total_time)
+
+        if not self.bottelneck:
+            self.bottelneck = "There is no slow rank issues"
+
+    def produce_bottleneck(self, step_dict: dict, produce_type: int, mean_total_time: float):
+        data_list = [data_tuple[produce_type] for rank_id, data_tuple in step_dict.items()]
+        max_ratio = self.compute_max_gap_ratio(data_list, mean_total_time)
+        if max_ratio > self.RATIO_THRESHOLD:
+            self.bottelneck += f'{self.BOTTLENECK_LIST[produce_type]} \n' \
+                               f'    has some issues in the cluster, \n' \
+                               f'    because the max difference of {self.BOTTLENECK_LIST[produce_type]} time \n' \
+                               f'    has reached {round(max_ratio * mean_total_time / 1000, 3)}ms. \n'
+
+    def make_record(self):
+        """
+        make record for what and how to optimize
+        """
+
+        optimization_item = OptimizeItem(
+            SlowRankAnalyzer.SLOW_RANK_ANALYSIS,
+            self.bottelneck,
+            self.suggestion
+        )
+        self.result.add(OptimizeRecord(optimization_item))
+
+        data_list = self.format_datas.get("data", [])
+        headers = self.format_datas.get("headers", [])
+        for data in data_list:
+            self.result.add_detail(SlowRankAnalyzer.SLOW_RANK_ANALYSIS, headers, data)
+
+    def format_details(self):
+        details_dict = {}
+        headers = ["step", "rank_id", "compute(us)", "communication(us)", "free(us)"]
+        data_list = []
+        for key, value in self.step_trace_dict.items():
+            step, rank_id = key.split(constant.STEP_RANK_SEP)
+            data_list.append([int(step), int(rank_id)] + value)
+            if step and step not in self._steps:
+                self._steps.add(step)
+
+        details_dict["headers"] = headers
+        details_dict["data"] = sorted(data_list, key=lambda x: (x[0], x[1]))
+        return details_dict
+
+    def make_render(self, template_key="cluster"):
+        result_for_html = {
+            "Description": self.bottelneck,
+            "suggestion": self.suggestion,
+            "details": [self.format_datas]
+        }
+
+        self.html_render.render_template(key=template_key,
+                                         title=SlowRankAnalyzer.SLOW_RANK_ANALYSIS,
+                                         template_dir="templates",
+                                         template_name="cluster_analysis.html",
+                                         cann_version=self.cann_version,
+                                         torch_version=self.torch_version,
+                                         result=result_for_html)
+
+    def get_global_step_rank(self, dimension):
+        global_step_rank = {}
+
+        headers = self.format_datas.get("headers")
+
+        dimension_index = safe_index(headers, dimension)
+        rank_id_index = safe_index(headers, "rank_id")
+        step_index = safe_index(headers, "step")
+        if dimension_index is None or rank_id_index is None:
+            return global_step_rank
+
+        data_list = [tuple_list[dimension_index] for tuple_list in self.format_datas.get("data")]
+        max_time, min_time = max(data_list), min(data_list)
+
+        if self.compute_max_gap_ratio(data_list, sum(data_list) / len(
+                data_list)) < self.RATIO_THRESHOLD:
+            return global_step_rank
+        max_time_index = data_list.index(max_time)
+        min_time_index = data_list.index(min_time)
+
+        max_time_rank_id = self.format_datas.get("data")[max_time_index][rank_id_index]
+        min_time_rank_id = self.format_datas.get("data")[min_time_index][rank_id_index]
+
+        if step_index is not None:
+            max_time_step = self.format_datas.get("data")[max_time_index][step_index]
+            min_time_step = self.format_datas.get("data")[min_time_index][step_index]
+        else:
+            max_time_step, min_time_step = constant.DEFAULT_STEP, constant.DEFAULT_STEP
+
+        global_step_rank["maximum"] = {"rank_id": max_time_rank_id, "step": max_time_step}
+        global_step_rank["minimum"] = {"rank_id": min_time_rank_id, "step": min_time_step}
+
+        return global_step_rank
+
+    def get_stage_step_rank(self, dimension):
+        stage_step_rank = {}
+
+        headers = self.format_datas.get("headers")
+        dimension_index = safe_index(headers, dimension)
+        rank_id_index = safe_index(headers, "rank_id")
+        step_index = safe_index(headers, "step")
+        if dimension_index is None or rank_id_index is None:
+            return stage_step_rank
+
+        rank_list = [tuple_list[rank_id_index] for tuple_list in self.format_datas.get("data")]
+        cost_time_list = [tuple_list[dimension_index] for tuple_list in self.format_datas.get("data")]
+
+        if step_index is not None:
+            step_list = [tuple_list[step_index] for tuple_list in self.format_datas.get("data")]
+        else:
+            step_list = [constant.DEFAULT_STEP] * len(rank_list)
+
+        for index, stage in enumerate(self.stages):
+            tmp_step_list, tmp_rank_list, tmp_time_list = [], [], []
+            for step, rank_id, time in zip(step_list, rank_list, cost_time_list):
+                if rank_id not in stage:
+                    continue
+
+                tmp_step_list.append(step)
+                tmp_rank_list.append(rank_id)
+                tmp_time_list.append(time)
+
+            if self.compute_max_gap_ratio(tmp_time_list, sum(tmp_time_list) / len(
+                    tmp_time_list)) < self.RATIO_THRESHOLD:
+                continue
+
+            max_time, min_time = max(tmp_time_list), min(tmp_time_list)
+            max_time_index, min_time_index = tmp_time_list.index(max_time), tmp_time_list.index(min_time)
+
+            stage_key = f"stage-{index}"
+            stage_step_rank[stage_key] = {}
+            stage_step_rank[stage_key]["maximum"] = {"rank_id": tmp_rank_list[max_time_index],
+                                                     "step": tmp_step_list[max_time_index]}
+            stage_step_rank[stage_key]["minimum"] = {"rank_id": tmp_rank_list[min_time_index],
+                                                     "step": tmp_step_list[min_time_index]}
+
+        return stage_step_rank
+
+    def get_priority(self):
+        pass
