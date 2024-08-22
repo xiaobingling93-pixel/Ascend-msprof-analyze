@@ -8,6 +8,7 @@ class Args:
                  enable_communication_compare: bool = False,
                  enable_api_compare: bool = False,
                  enable_kernel_compare: bool = False,
+                 disable_details: bool = False,
                  output_path: str = "",
                  max_kernel_num: int = None,
                  op_name_map: dict = {},
@@ -23,6 +24,7 @@ class Args:
         self.enable_communication_compare = enable_communication_compare
         self.enable_api_compare = enable_api_compare
         self.enable_kernel_compare = enable_kernel_compare
+        self.disable_details = disable_details
         self.output_path = output_path
         self.max_kernel_num = max_kernel_num
         self.op_name_map = op_name_map
