@@ -30,6 +30,8 @@ class CommunicationDataset:
 
     def __init__(self, collection_path, data: dict, **kwargs) -> None:
         self.timeline_dir = collection_path
+        if not self.timeline_dir.endswith("ascend_pt"):
+            return
         self.timeline_data_list = self.get_file_path_from_directory(self.timeline_dir,
                                                                     lambda file: file.endswith(const.COMMUNICATION_JSON))
         self.hccl_dict = defaultdict(list)
