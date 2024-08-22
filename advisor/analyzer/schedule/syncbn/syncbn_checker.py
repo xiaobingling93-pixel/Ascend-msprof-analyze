@@ -1,7 +1,7 @@
 import logging
 import os
 
-from profiler.advisor.dataset.timeline_event_dataset import TimelineEventDataset
+from profiler.advisor.dataset.timeline_event_dataset import ScheduleAnalysisDataset
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.cluster_analyse.common_func.file_manager import FileManager
@@ -20,7 +20,7 @@ class SyncBNChecker:
         self.max_syncbn_num = None
         self._init_rule()
 
-    def check_syncbn(self, event_dataset: TimelineEventDataset):
+    def check_syncbn(self, event_dataset: ScheduleAnalysisDataset):
         """
         :Param event_dataset: dataset of timeline event
         """
@@ -43,14 +43,17 @@ class SyncBNChecker:
         for optimization in self.optimization_item:
             result.add(OptimizeRecord(optimization))
 
-    def make_render(self, html_render):
+    def make_render(self, html_render, **kwargs):
         if not self.syncbn_issues:
             return
+
+        priority = kwargs.get("priority")
         html_render.render_template(key="schedule",
                                     template_dir="templates",
                                     template_name="sync_batchnorm.html",
                                     desc=self.desc,
-                                    solutions=self.solutions)
+                                    solutions=self.solutions,
+                                    priority_background_color=priority)
 
     def _init_rule(self):
         syncbn_rule_path = os.path.join(
