@@ -362,15 +362,3 @@ class OpStackCollector(BaseOpCollector):
 
         self.attribute_to_dataset["ops_with_stack"] = op_map
 
-
-class GcCollector(BaseOpCollector):
-    def __init__(self):
-        super().__init__()
-
-    def add_op(self, event):
-        if event.cat and isinstance(event.cat, str) and event.cat.lower() == "gc":
-            self.op_list.append(TimelineEvent(
-                {"name": event.name, "dataset_index": event.dataset_index, "ts": event.ts, "dur": event.dur}))
-
-    def post_process(self, target_op_list, **kwargs):
-        self.attribute_to_dataset["gc_events"] = self.op_list

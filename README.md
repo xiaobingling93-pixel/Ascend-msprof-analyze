@@ -81,7 +81,23 @@ ascend pytorch profiler数据目录结构如下：
 
 ## 工具安装
 
-性能工具的安装方式包括：**下载whl包安装**和**源代码编译安装**。
+性能工具的安装方式包括：**pip安装**、**下载whl包安装**和**源代码编译安装**。
+
+###  pip安装
+
+```shell
+pip install msprof-analyze
+```
+
+使用`pip install msprof-analyze==版本号`可安装指定版本的包，支持1.2.1及之后版本，版本号参见“**下载whl包安装**”。
+
+pip命令会自动安装最新的包及其配套依赖。
+
+提示如下信息则表示安装成功。
+
+```bash
+Successfully installed msprof-analyze-{version}
+```
 
 #### 下载whl包安装
 
@@ -91,6 +107,7 @@ ascend pytorch profiler数据目录结构如下：
 
    | profiler版本 | 发布日期   | 下载链接                                                     | 校验码                                                       |
    | ------------ | ---------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+   | 1.2.1        | 2024-08-14 | [msprof_analyze-1.2.1-py3-none-any.whl](https://ptdbg.obs.myhuaweicloud.com/profiler/package/1.2.1/msprof_analyze-1.2.1-py3-none-any.whl) | 7acd477417bfb3ea29029dadf175d019ad3212403b7e11dc1f87e84c2412c078 |
    | 1.2.0        | 2024-07-25 | [msprof_analyze-1.2.0-py3-none-any.whl](https://ptdbg.obs.myhuaweicloud.com/profiler/package/1.2.0/msprof_analyze-1.2.0-py3-none-any.whl) | 6a4366e3beca40b4a8305080e6e441d6ecafb5c05489e5905ac0265787555f37 |
    | 1.1.2        | 2024-07-12 | [msprof_analyze-1.1.2-py3-none-any.whl](https://ptdbg.obs.myhuaweicloud.com/profiler/package/1.1.2/msprof_analyze-1.1.2-py3-none-any.whl) | af62125b1f9348bf491364e03af712fc6d0282ccee3fb07458bc9bbef82dacc6 |
    | 1.1.1        | 2024-06-20 | [msprof_analyze-1.1.1-py3-none-any.whl](https://ptdbg.obs.myhuaweicloud.com/profiler/package/1.1.1/msprof_analyze-1.1.1-py3-none-any.whl) | 76aad967a3823151421153d368d4d2f8e5cfbcb356033575e0b8ec5acea8e5e4 |
