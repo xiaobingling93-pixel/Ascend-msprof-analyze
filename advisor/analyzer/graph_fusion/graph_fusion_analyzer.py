@@ -20,17 +20,22 @@ class FusionOPAnalyzer(BaseAnalyzer):
         super(FusionOPAnalyzer, self).__init__(collection_path, **kwargs)
         self.result = OptimizeResult()
         self.html_render = HTMLRender()
-    
+        self.html = None
+
     @BaseAnalyzer.check_data((GraphDataset.get_key(),))
     def optimize(self, **kwargs):
         """
         :return: result
         """
-        self._check(self.dataset_list.get("GraphDataset"), self.dataset_list.get("ProfilingDataset"))
+        self._check(self.dataset_list.get("GraphDataset"), self.dataset_list.get("ProfilingDataset"),
+                    kwargs.get("add_render_list"))
         return self.result
 
-    def _check(self, graph_data: List[GraphDataset],
-               profiling_data: List[ProfilingDataset] = None) -> None:
+    def get_priority(self):
+        pass
+
+    def _check(self, graph_data: List[GraphDataset], profiling_data: List[ProfilingDataset] = None,
+               add_render_list=True) -> None:
         if len(graph_data) == 0 or graph_data[0].is_empty():
             return
         for _, rule in self.RULES.items():
@@ -40,10 +45,4 @@ class FusionOPAnalyzer(BaseAnalyzer):
             else:
                 checker.find_fusion_matched_issues_with_times(graph_data, profiling_data)
             checker.make_record(self.result)
-            checker.make_render(self.html_render)
-
-    def make_record(self):
-        pass
-    
-    def make_render(self):
-        pass
+            self.html = checker.make_render(self.html_render, add_render_list)

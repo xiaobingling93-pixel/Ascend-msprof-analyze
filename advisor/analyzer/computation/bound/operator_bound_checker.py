@@ -46,8 +46,12 @@ class OperatorBoundChecker(OperatorChecker):
             return False
         return True
 
-    def make_render(self, html_render, record):
-        html_render.render_template(key="computation",
-                                    template_dir="templates",
-                                    template_name="operator_no_bound.html",
-                                    format_result=self.format_operator_result(record, constant.OPERATOR_OUT_TOPK))
+    def make_render(self, html_render, record, add_render_list=True, **kwargs):
+        priority = kwargs.get("priority")
+        return html_render.render_template(key="computation",
+                                           template_dir="templates",
+                                           template_name="operator_no_bound.html",
+                                           format_result=self.format_operator_result(record,
+                                                                                     constant.OPERATOR_OUT_TOPK),
+                                           add_render_list=add_render_list,
+                                           priority_background_color=priority)

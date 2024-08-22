@@ -40,6 +40,23 @@ class OperatorChecker(VersionControl):
         self.cann_version = cann_version
         self._op_list: List[OpInfo] = []
 
+    @staticmethod
+    def get_ratio(op_info: OpInfo, attr: str) -> float:
+        if not op_info.has_attr(attr):
+            return 0
+        value = op_info.get_attr(attr)
+        if not value or value == "N/A":
+            return 0
+        return float(value)
+
+    @classmethod
+    def get_name(cls):
+        """
+        get name of checker
+        :return: checker name
+        """
+        return cls._PROBLEM
+        
     def check(self, profiling_data: ProfilingDataset) -> bool:
         """
         check if any operator need optimize
@@ -77,12 +94,16 @@ class OperatorChecker(VersionControl):
             return True
         return False
 
-    def make_record(self, profiling_data: ProfilingDataset):
+    def make_record(self, profiling_data: ProfilingDataset, rank_id=None):
         """
         Make record for what and how to optimize
         :param profiling_data: profiling data
         :return: optimize record
         """
+
+        if rank_id is not None:
+            self._PROBLEM = f"rank {rank_id} ".capitalize() + self._PROBLEM.lower()
+
         task_duration_list = [float(op_info.get_attr("task_duration")) for op_info in self._op_list if
                               hasattr(op_info, "get_attr")]
         total_cost_time = sum(task_duration_list)
@@ -239,14 +260,6 @@ class OperatorChecker(VersionControl):
         """Get node views."""
         return []
 
-    @classmethod
-    def get_name(cls):
-        """
-        get name of checker
-        :return: checker name
-        """
-        return cls._PROBLEM
-
     def get_incomes(self) -> float:
         """get incomes"""
         incomes = 0.0
@@ -269,16 +282,7 @@ class OperatorChecker(VersionControl):
             logger.warning(self.SKIP_CHECK_MSG, self._CHECKER, "op summary")
             return False
         return True
-
-    @staticmethod
-    def get_ratio(op_info: OpInfo, attr: str) -> float:
-        if not op_info.has_attr(attr):
-            return 0
-        value = op_info.get_attr(attr)
-        if not value or value == "N/A":
-            return 0
-        return float(value)
-
+    
     def get_details(self) -> list:
         """
         get details of operator to be optimized
