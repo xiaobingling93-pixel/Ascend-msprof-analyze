@@ -1,5 +1,4 @@
-# unit is milliseconds
-dataloader_duration_threshold: 10
+dataloader_duration_threshold: 10000 # us
 problem: "Found slow dataloader, cost {dataloader_duration} milliseconds for one step while profiling, normally less than {dataloader_duration_threshold} milliseconds."
 solutions:
    - "Please check the disk I/O of your data directory. If you are training model in ModelArts, please move data to '/cache' or mount a more efficient cloud disk for better I/O."

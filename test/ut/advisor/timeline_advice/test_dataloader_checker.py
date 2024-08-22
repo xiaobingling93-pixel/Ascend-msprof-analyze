@@ -15,14 +15,14 @@ class TestDataloaderChecker(unittest.TestCase):
 
     def setUp(self) -> None:
         rule_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
-            os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))))),
+            os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))),
             "advisor", "rules", "dataloader.yaml")
 
         with open(rule_path, "rb") as file:
             self.rule = yaml.safe_load(file)
 
     def test_no_dataloader(self):
-        dataloader_duration = (self.rule.get("dataloader_duration_threshold") - 1) * 1000
+        dataloader_duration = (self.rule.get("dataloader_duration_threshold") - 1)
         dataset = self._get_mock_dataset(dataloader_duration, is_empty_dataset=True)
 
         checker = DataloaderChecker()
@@ -30,20 +30,20 @@ class TestDataloaderChecker(unittest.TestCase):
         self.assertFalse(checker.dataloader_issues)
 
     def test_no_slow_dataloader(self):
-        dataloader_duration = (self.rule.get("dataloader_duration_threshold") - 1) * 1000
+        dataloader_duration = (self.rule.get("dataloader_duration_threshold") - 1)
         dataset = self._get_mock_dataset(dataloader_duration, is_empty_dataset=False)
         checker = DataloaderChecker()
         checker.check_slow_dataloader(dataset)
         self.assertFalse(checker.dataloader_issues)
 
     def test_found_slow_dataloader(self):
-        dataloader_duration = (self.rule.get("dataloader_duration_threshold") + 1) * 1000
+        dataloader_duration = (self.rule.get("dataloader_duration_threshold") + 1)
         dataset = self._get_mock_dataset(dataloader_duration, is_empty_dataset=False)
         checker = DataloaderChecker()
         checker.check_slow_dataloader(dataset)
         self.assertTrue(checker.dataloader_issues)
 
-        desc = self.rule.get("problem").format(dataloader_duration=dataloader_duration / 1000,
+        desc = self.rule.get("problem").format(dataloader_duration=float(dataloader_duration),
                                                dataloader_duration_threshold=self.rule.get(
                                                    "dataloader_duration_threshold"))
 

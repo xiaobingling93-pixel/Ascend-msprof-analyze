@@ -167,7 +167,7 @@ class TestPacketAdvice(unittest.TestCase):
     def test_run_should_run_success_when_ascend_pt_contain_communication_json(self):
         self.create_communicaton_json()
         interface = Interface(profiling_path=self.TMP_DIR)
-        dimension = "communication"
+        dimension = Interface.COMMUNICATION
         scope = SupportedScopes.PACKET
         result = interface.get_result(dimension, scope, render_html=1, output_dict=False, profiling_path=self.TMP_DIR)
         self.assertEqual(2, len(result.data.get("Packet Analysis", [])))

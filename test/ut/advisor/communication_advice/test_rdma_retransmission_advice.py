@@ -162,7 +162,7 @@ class TestRdmaAdvice(unittest.TestCase):
     def test_run_should_run_success_when_contain_cluster_communication_json(self):
         self.create_communicaton_json()
         interface = Interface(profiling_path=self.TMP_DIR)
-        dimension = "cluster"
+        dimension = Interface.COMMUNICATION
         scope = SupportedScopes.COMMUNICATION_RETRANSMISSION_DETECTION
         result = interface.get_result(dimension, scope, render_html=1, output_dict=False, profiling_path=self.TMP_DIR)
         self.assertEqual(2, len(result.data.get("Comm Retransmission Analysis", [])))

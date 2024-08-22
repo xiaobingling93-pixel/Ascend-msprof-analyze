@@ -108,7 +108,7 @@ def singleton(cls):
     for base_class in inspect.getmro(cls)[::-1]:
         # 获取类的所有成员
         members = inspect.getmembers(base_class)
-        
+
         # 过滤出函数对象
         function_objs = [member[1] for member in members if inspect.isfunction(member[1]) or inspect.ismethod(member[1])]
         for function_obj in function_objs:
@@ -213,26 +213,26 @@ def format_timeline_result(result: dict, dump_html=False):
 
 class ParallelJob:
 
-    def __init__(self, src_func, ops_api_list, job_name=None):
+    def __init__(self, src_func, job_params, job_name=None):
         if not callable(src_func):
             raise TypeError(f"src_func should be callable")
 
-        if not isinstance(ops_api_list, (list, tuple)):
-            raise TypeError(f"ops_api_list should be list or tuple")
+        if not isinstance(job_params, (list, tuple)):
+            raise TypeError(f"job_params should be list or tuple")
 
         self.src_func = src_func
-        self.ops_api_list = ops_api_list
+        self.job_params = job_params
         self.job_name = job_name
 
     def start(self, n_proccesses):
 
-        job_queue = mp.Queue(len(self.ops_api_list))
+        job_queue = mp.Queue(len(self.job_params))
         completed_queue = mp.Queue()
-        for i in range(len(self.ops_api_list)):
+        for i in range(len(self.job_params)):
             job_queue.put(i)
 
         processes = []
-        listen = mp.Process(target=self.listener, args=(completed_queue, len(self.ops_api_list),))
+        listen = mp.Process(target=self.listener, args=(completed_queue, len(self.job_params),))
         listen.start()
 
         for i in range(n_proccesses):
@@ -261,7 +261,12 @@ class ParallelJob:
                 token = job_queue.get(timeout=1)
             except queue.Empty:
                 continue
-            self.src_func(*self.ops_api_list[token])
+            if isinstance(self.job_params[token], (list, tuple)):
+                self.src_func(*self.job_params[token])
+            elif isinstance(self.job_params[token], dict):
+                self.src_func(**self.job_params[token])
+            else:
+                self.src_func(self.job_params[token])
             completed_queue.put(token)
 
 
@@ -614,9 +619,15 @@ def convert_to_float(num):
     try:
         return float(num)
     except (ValueError, FloatingPointError):
-        logger.error(f"Can not convert %ss to float", num)
-        pass
+        logger.error(f"Can not convert %s to float", num)
     return 0
+
+
+def safe_index(array, value, return_index_if_error=None):
+    if value in array:
+        return array.index(value)
+
+    return return_index_if_error
 
 
 def convert_to_int(data: any) -> int:

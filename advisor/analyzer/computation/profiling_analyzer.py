@@ -8,6 +8,7 @@ from profiler.advisor.analyzer.computation.bound.block_dim_checker import BlockD
 from profiler.advisor.analyzer.computation.bound.operator_bound_checker import OperatorBoundChecker
 from profiler.advisor.analyzer.computation.op_compile.dynamic_shape_checker import DynamicShapeChecker
 from profiler.advisor.analyzer.computation.operator_checker import OperatorChecker
+from profiler.advisor.display.html.priority_background_color import PriorityBackgroundColor
 from profiler.advisor.display.html.render import HTMLRender
 from profiler.advisor.dataset.profiling.profiling_dataset import ProfilingDataset
 
@@ -22,6 +23,7 @@ class ProfilingAnalyzer(BaseAnalyzer, ABC):
         self.checker = OperatorChecker(self.cann_version)
         self.html_render = HTMLRender()
         self.result = OptimizeResult()
+        self.html = None
 
     @BaseAnalyzer.check_data((ProfilingDataset.get_key(),))
     def optimize(self, **kwargs) -> OptimizeResult:
@@ -32,22 +34,29 @@ class ProfilingAnalyzer(BaseAnalyzer, ABC):
         """
         profiling_data = self.get_first_data_by_key(self.dataset_list, ProfilingDataset.get_key())
         checker = self.checker
+        rank_id = kwargs.get("rank_id")
+
+        add_render_list = kwargs.get("add_render_list", True)
+
         if not checker.pre_check(profiling_data):
             return self.result
         if checker.check(profiling_data):
             # add record
-            record = checker.make_record(profiling_data)
-            checker.make_render(self.html_render, record)
+            record = checker.make_record(profiling_data, rank_id)
+            self.html = checker.make_render(self.html_render, record, add_render_list,
+                                            priority=self.get_priority(checker))
             self.result.add(record)
             # add details
             details = checker.get_details()
             if details:
                 for i, detail in enumerate(details):
+                    sheet_name = checker.get_name() if rank_id is None else \
+                        f"rank {rank_id} ".capitalize() + checker.get_name()
                     if i == 0:
                         # the first row is header
-                        self.result.add_detail(checker.get_name(), headers=detail)
+                        self.result.add_detail(sheet_name, headers=detail)
                     else:
-                        self.result.add_detail(checker.get_name(), detail=detail)
+                        self.result.add_detail(sheet_name, detail=detail)
             # add tune op list
             tune_op_list = checker.get_tune_op_list()
             if tune_op_list:
@@ -55,11 +64,13 @@ class ProfilingAnalyzer(BaseAnalyzer, ABC):
 
         return self.result
 
-    def make_record(self):
-        pass
+    def get_priority(self, checker):
+        if "aicpu" not in checker.__class__.__name__.lower():
+            return PriorityBackgroundColor.low
 
-    def make_render(self):
-        pass
+        aicpu_duration = getattr(checker, "aicpu_task_duration", 0.0)
+        total_duration = getattr(checker, "total_task_duration", 0.0)
+        return self.get_priority_by_time_ratio(aicpu_duration, total_duration)
 
 
 class DynamicShapeAnalyzer(ProfilingAnalyzer):

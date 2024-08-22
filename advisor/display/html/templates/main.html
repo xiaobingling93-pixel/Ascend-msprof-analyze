@@ -137,10 +137,21 @@
 
 <div class="content">
 <h1><b>Performance Optimization Suggestions</b></h1>
+
+<div style="display: flex; align-items: center;">
+  <span style="color: black; font-weight: bold">Optimization Priority: </span>
+  <div style="width: 20px; height: 20px; background-color: #B5495B; margin-right: 10px;"></div>
+  <span style="color: #B5495B;">High</span>
+  <div style="width: 20px; height: 20px; background-color: #fcaf17; margin: 0 10px;"></div>
+  <span style="color: #fcaf17;">Medium</span>
+  <div style="width: 20px; height: 20px; background-color: #65c294; margin-right: 10px;"></div>
+  <span style="color: #65c294;">Low</span>
+</div>
+
 {% for key, renders in render_list.items() %}
-    {% if key == 'operator'%}
+    {% if key != 'performance_problem_analysis' %}
     <div class="collapsible">
-        <h2 class="collapsible-header">computation</h2>
+        <h2 class="collapsible-header">{{ key }}</h2>
         <div class="collapsible-content">
             {% for render in renders %}
             {{render|safe}}
@@ -148,14 +159,25 @@
         </div>
     </div>
     {% else %}
+
     <div class="collapsible">
-      <h2 class="collapsible-header">{{ key }}</h2>
+      <h2 class="collapsible-header">performance problem analysis</h2>
       <div class="collapsible-content">
-        {% for render in renders %}
-        {{render|safe}}
-        {% endfor %}
+
+
+      {% for sub_key, sub_renders in renders.items() %}
+        <div class="collapsible">
+          <h2 class="collapsible-header">{{ sub_key }}</h2>
+          <div class="collapsible-content">
+            {% for render in sub_renders %}
+            {{render|safe}}
+            {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
       </div>
     </div>
+
     {% endif %}
 {% endfor %}
 <div class="footer">

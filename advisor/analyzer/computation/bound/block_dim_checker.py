@@ -45,11 +45,15 @@ class BlockDimChecker(OperatorChecker):
                              "task duration are as follows:\n"
         return True
 
-    def make_render(self, html_render, record):
-        html_render.render_template(key="computation",
-                                    template_dir="templates",
-                                    template_name="operator_block_dim.html",
-                                    format_result=self.format_operator_result(record, constant.OPERATOR_OUT_TOPK))
+    def make_render(self, html_render, record, add_render_list=True, **kwargs):
+        priority = kwargs.get("priority")
+        return html_render.render_template(key="computation",
+                                           template_dir="templates",
+                                           template_name="operator_block_dim.html",
+                                           format_result=self.format_operator_result(record,
+                                                                                     constant.OPERATOR_OUT_TOPK),
+                                           add_render_list=add_render_list,
+                                           priority_background_color=priority)
 
     def _check_operator(self, op_info) -> bool:
         if op_info.task_type not in ["AI_CORE", "AI_VECTOR_CORE", "MIX_AIC"]:

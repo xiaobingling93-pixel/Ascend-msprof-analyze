@@ -1,0 +1,7 @@
+problem: "Found {memory_op_num} {memory_op_name}, cost {memory_op_dur} milliseconds, which will lead to large amount of free time."
+max_total_duration: 100000 #us
+solutions:
+  - AscendCL@aclMallocMemInner:
+      desc: "Please set env by command 'export PYTORCH_NPU_ALLOC_CONF=expandable_segments:True' and then start your training job"
+  - AscendCL@aclrtFreePhysical:
+      desc: "Please reduce your batch size for training job"

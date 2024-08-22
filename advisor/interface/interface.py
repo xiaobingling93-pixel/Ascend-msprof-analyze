@@ -15,17 +15,22 @@
 import os
 from collections import OrderedDict
 import sys
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))), "cluster_analyse"))
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))), "compare_tools"))
+
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))),
+                             "cluster_analyse"))
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))),
+                             "compare_tools"))
 
 from profiler.advisor.utils.utils import Timer
-from profiler.advisor.analyzer.computation.profiling_analyzer import AicpuAnalyzer, BlockDimAnalyzer, DynamicShapeAnalyzer, OperatorBoundAnalyzer
+from profiler.advisor.analyzer.computation.profiling_analyzer import AicpuAnalyzer, BlockDimAnalyzer, \
+    DynamicShapeAnalyzer, OperatorBoundAnalyzer
 from profiler.advisor.analyzer.schedule.fusion_ops.fusion_ops_analyzer import TimelineFusionOpsAnalyzer
 from profiler.advisor.analyzer.graph_fusion.graph_fusion_analyzer import FusionOPAnalyzer
 from profiler.advisor.common.analyzer_scopes import SupportedScopes
-from profiler.advisor.analyzer.cluster.slow_rank_analyser import SlowRankAnalyzer
-from profiler.advisor.analyzer.cluster.slow_link_analyser import SlowLinkAnalyzer
-from profiler.advisor.analyzer.cluster.Communication_retransmission_analyzer import RDMARetransmissionAnalyzer
+from profiler.advisor.analyzer.cluster.slow_rank_analyzer import SlowRankAnalyzer
+from profiler.advisor.analyzer.cluster.slow_link_analyzer import SlowLinkAnalyzer
+from profiler.advisor.analyzer.communication.retransmission.communication_retransmission_analyzer import \
+    RDMARetransmissionAnalyzer
 from profiler.advisor.analyzer.overall.overall_summary_analyzer import OverallSummaryAnalyzer
 from profiler.advisor.analyzer.overall.environment_variable_analyzer import EnvironmentVariabelAnalyzer
 from profiler.advisor.analyzer.schedule.dispatch.timeline_op_dispatch_analyzer import OpDispatchAnalyzer
@@ -33,20 +38,29 @@ from profiler.advisor.analyzer.schedule.syncbn.syncbn_analyzer import SyncBNAnal
 from profiler.advisor.analyzer.schedule.synchronize_stream.synchronize_stream_analyzer import SynchronizeStreamAnalyzer
 from profiler.advisor.analyzer.dataloader.dataloader_analyzer import DataloaderAnalyzer
 from profiler.advisor.analyzer.computation.ai_core_freq.ai_core_freq_analyzer import AICoreFreqAnalyzer
-from profiler.advisor.analyzer.communication.packet_analyzer import PacketAnalyzer
+from profiler.advisor.analyzer.memory.memory_analyzer import MemoryAnalyzer
+from profiler.advisor.analyzer.communication.packet.packet_analyzer import PacketAnalyzer
 from profiler.advisor.analyzer.schedule.gc.gc_analyzer import GcAnalyzer
 
 
 class Interface:
+    SCHEDULE = "schedule"
+    COMPUTATION = "computation"
+    COMMUNICATION = "communication"
+    OVERALL = "overall"
+    CLUSTER = "cluster"
+    MEMORY = "memory"
+
     supported_analyzer = {
-        "schedule": OrderedDict({
+        SCHEDULE: OrderedDict({
             SupportedScopes.SYNCBN: SyncBNAnalyzer,
             SupportedScopes.TIMELINE_OP_DISPATCH: OpDispatchAnalyzer,
             SupportedScopes.SYNCHRONIZE_STREAM: SynchronizeStreamAnalyzer,
             SupportedScopes.TIMELINE_FUSION_OPS: TimelineFusionOpsAnalyzer,
+            SupportedScopes.DATALOADER: DataloaderAnalyzer,
             SupportedScopes.GC_ANALYSIS: GcAnalyzer
         }),
-        "computation": OrderedDict({
+        COMPUTATION: OrderedDict({
             SupportedScopes.DYNAMIC_SHAPE_ANALYSIS: DynamicShapeAnalyzer,
             SupportedScopes.AICPU_ANALYSIS: AicpuAnalyzer,
             SupportedScopes.OPERATOR_NO_BOUND_ANALYSIS: OperatorBoundAnalyzer,
@@ -54,19 +68,15 @@ class Interface:
             SupportedScopes.GRAPH: FusionOPAnalyzer,
             SupportedScopes.FREQ_ANALYSIS: AICoreFreqAnalyzer
         }),
-        "communication": OrderedDict({
-            SupportedScopes.PACKET: PacketAnalyzer
-        }),
-        "overall": OrderedDict({
-            SupportedScopes.ENVIRONMENT_VARIABLE_ANALYSIS: EnvironmentVariabelAnalyzer,
-            SupportedScopes.OVER_ALL: OverallSummaryAnalyzer,
-        }),
-        "dataloader": OrderedDict({SupportedScopes.DATALOADER: DataloaderAnalyzer}),
-        "cluster": OrderedDict({
-            SupportedScopes.COMMUNICATION_RETRANSMISSION_DETECTION: RDMARetransmissionAnalyzer,
+        COMMUNICATION: OrderedDict({SupportedScopes.PACKET: PacketAnalyzer,
+                                    SupportedScopes.COMMUNICATION_RETRANSMISSION_DETECTION: RDMARetransmissionAnalyzer}),
+        OVERALL: OrderedDict({SupportedScopes.OVER_ALL: OverallSummaryAnalyzer,
+                              SupportedScopes.ENVIRONMENT_VARIABLE_ANALYSIS: EnvironmentVariabelAnalyzer}),
+        CLUSTER: OrderedDict({
             SupportedScopes.SLOW_RANK: SlowRankAnalyzer,
             SupportedScopes.SLOW_LINK: SlowLinkAnalyzer
-        })
+        }),
+        MEMORY: OrderedDict({SupportedScopes.MEMORY: MemoryAnalyzer})
     }
 
     all_dimension = list(supported_analyzer.keys())
@@ -81,6 +91,12 @@ class Interface:
     @staticmethod
     def get_analyzer(dimension, scope):
         return Interface.supported_analyzer.get(dimension).get(scope)
+
+    @staticmethod
+    def add_analyzer(dimension, scope, analyzer_class):
+        if dimension not in Interface.supported_analyzer:
+            Interface.supported_analyzer[dimension] = OrderedDict()
+        Interface.supported_analyzer[dimension][scope] = analyzer_class
 
     def get_result(self: any, dimension: str, scope: str, render_html=False, output_dict=True, **kwargs):
         """

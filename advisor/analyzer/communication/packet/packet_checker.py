@@ -116,19 +116,20 @@ class PacketChecker:
         result.add_detail(sub_table_name, headers=self.headers)
         result.add_detail(sub_table_name, detail=self.small_packet_detail)
 
-    def make_render(self, html_render, add_render_list=True):
+    def make_render(self, html_render, add_render_list=True, **kwargs):
+        priority = kwargs.get("priority")
         return html_render.render_template(key="communication",
                                            template_dir="templates",
                                            template_name="packet_analysis.html",
                                            desc=self.desc,
                                            solutions=self.solutions,
                                            headers=self.headers,
-                                           data=self.small_packet_detail
-                                           )
+                                           data=self.small_packet_detail,
+                                           priority_background_color=priority)
 
     def _init_rule(self):
         syncbn_rule_path = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))),
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))),
             "rules",
             "packet.yaml"
         )

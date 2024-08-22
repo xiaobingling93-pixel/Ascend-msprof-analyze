@@ -15,7 +15,7 @@ class TestSynchronizeChecker(unittest.TestCase):
 
     def setUp(self) -> None:
         rule_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
-            os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))))),
+            os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))),
             "advisor", "rules", "synchronize.yaml")
 
         with open(rule_path, "rb") as file:

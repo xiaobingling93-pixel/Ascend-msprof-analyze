@@ -3,7 +3,7 @@ import re
 import logging
 import yaml
 
-from profiler.advisor.dataset.timeline_event_dataset import TimelineEventDataset
+from profiler.advisor.dataset.timeline_event_dataset import ScheduleAnalysisDataset
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.cluster_analyse.common_func.file_manager import FileManager
@@ -22,7 +22,7 @@ class DataloaderChecker:
         self.dataloader_duration_threshold = None
         self._init_rule()
 
-    def check_slow_dataloader(self, event_dataset: TimelineEventDataset):
+    def check_slow_dataloader(self, event_dataset: ScheduleAnalysisDataset):
         """
         :Param event_dataset: dataset of timeline event
         """
@@ -32,7 +32,7 @@ class DataloaderChecker:
             return
         for event in event_dataset.dataloader:
 
-            dataloader_duration = float(event.dur) / 1000
+            dataloader_duration = float(event.dur)
             if dataloader_duration < self.dataloader_duration_threshold:
                 continue
             self.desc = self.desc.format(dataloader_duration=dataloader_duration,
@@ -53,14 +53,16 @@ class DataloaderChecker:
         for optimization in self.optimization_item:
             result.add(OptimizeRecord(optimization))
 
-    def make_render(self, html_render):
+    def make_render(self, html_render, **kwargs):
         if not self.dataloader_issues:
             return
+        priority = kwargs.get("priority")
         html_render.render_template(key="dataloader",
                                     template_dir="templates",
                                     template_name="slow_dataloader.html",
                                     desc=self.desc,
-                                    suggestions=self.suggestions)
+                                    suggestions=self.suggestions,
+                                    priority_background_color=priority)
 
     def _init_rule(self):
         dataloader_rule_path = os.path.join(

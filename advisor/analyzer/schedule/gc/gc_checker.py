@@ -15,7 +15,7 @@
 import logging
 import os
 
-from profiler.advisor.dataset.timeline_event_dataset import TimelineEventDataset
+from profiler.advisor.dataset.timeline_event_dataset import ScheduleAnalysisDataset
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.cluster_analyse.common_func.file_manager import FileManager
@@ -42,7 +42,7 @@ class GcChecker:
         self.headers = ["timestamp", "duration(us)"]
         self._init_rule()
 
-    def check_gc(self, event_dataset: TimelineEventDataset, rank_id=None, stage=None):
+    def check_gc(self, event_dataset: ScheduleAnalysisDataset, rank_id=None, stage=None):
         """
         :Param event_dataset: dataset of timeline event
         """
@@ -81,9 +81,10 @@ class GcChecker:
                 row = [self.rank_id] + row
             result.add_detail(sub_table_name, detail=row)
 
-    def make_render(self, html_render):
+    def make_render(self, html_render, **kwargs):
         if not self.gc_issues:
             return
+        priority = kwargs.get("priority")
         show_num = min(self.gc_topk_num, self.abnormal_gc_count)
         html_render.render_template(key="schedule",
                                     template_dir="templates",
@@ -92,7 +93,8 @@ class GcChecker:
                                     solutions=self.solutions,
                                     headers=self.headers,
                                     datas=self.abnormal_gc_list[:show_num],
-                                    num=show_num)
+                                    num=show_num,
+                                    priority_background_color=priority)
 
     def _init_rule(self):
         gc_rule_path = os.path.join(

@@ -1,11 +1,11 @@
 {% if result|length > 0 %}
 <div class="collapsible">
-  <h2 class="collapsible-header">Affinity API Issues</h2>
+  <h2 class="collapsible-header" style="background-color: {{ priority_background_color }};">Affinity API Issues</h2>
   <div class="collapsible-content">
       <a style="font-weight: bold" id="timeline_api_instruction">The analysis results of following affinity APIs are based on runtime env
-          <span style="font-weight:bold;color:red;">cann-{{ cann_version }}</span>
+          <span style="font-weight:bold;">cann-{{ cann_version }}</span>
           and
-          <span style="font-weight:bold;color:red;">torch-{{ torch_version }}</span>
+          <span style="font-weight:bold;">torch-{{ torch_version }}</span>
       </a>
       <div class="collapsible">
 
@@ -13,7 +13,7 @@
         <a style="font-weight: bold" id="timeline_api_instruction">Suggestion: </a>
         <a>These APIs have no code stack. If parameter 'with_stack=False' was set while profiling, please refer to</a>
         <a href="{{with_stack_doc_url|safe}}" target="_blank">Ascend PyTorch Profiler</a> to set
-            <span style="font-weight:bold;color:red;">'with_stack=True'</span>. Otherwise, ignore following affinity APIs due to backward broadcast lack of stack.
+            <span style="font-weight:bold;">'with_stack=True'</span>. Otherwise, ignore following affinity APIs due to backward broadcast lack of stack.
         {% endif %}
 
       {% for api_name, stacks in result.items() %}
