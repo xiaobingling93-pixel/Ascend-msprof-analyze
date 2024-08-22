@@ -19,7 +19,7 @@ class ResultWriter:
 
     def __init__(self, result_path=None):
         self.result_path = result_path
-        self.workbook = xlsxwriter.Workbook(result_path)
+        self.workbook = xlsxwriter.Workbook(result_path, {"nan_inf_to_errors": True})
 
         self.header_format = None
         self.data_cell_format = None
