@@ -21,6 +21,7 @@ from profiler.advisor.utils.utils import Timer, safe_index, safe_division
 from profiler.advisor.interface.interface import Interface
 from profiler.cluster_analyse.cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
 from profiler.prof_common.path_manager import PathManager
+from profiler.compare_tools.compare_backend.utils.constant import Constant as CompareConstant
 
 logger = logging.getLogger()
 
@@ -127,10 +128,17 @@ class AnalyzerController:
 
         if benchmark_profiling_path:
             # kernel/api 比对
-            job_list += self._single_profiling_comparison(profiling_path, benchmark_profiling_path)
+            compare_profiling_list = [
+                dict(profiling_path=profiling_path, benchmark_profiling_path=benchmark_profiling_path,
+                     compare_mode=CompareConstant.KERNEL_COMPARE),
+                dict(profiling_path=profiling_path, benchmark_profiling_path=benchmark_profiling_path,
+                     compare_mode=CompareConstant.API_COMPARE)
+            ]
+
+            job_list += self._profiling_comparison(compare_profiling_list)
         else:
-            # 单卡性能拆解
             self.overall(profiling_path)
+
         return job_list
 
     def cluster_analysis(self, profiling_path, benchmark_profiling_path=None):
@@ -144,11 +152,11 @@ class AnalyzerController:
             logger.info("Start cluster %s analysis", dimension)
             job_list += getattr(self, dimension_analysis_func_name)(profiling_path)
 
+        self.overall(profiling_path)
+
         if benchmark_profiling_path:
             # 两个集群profiling比对分析
             job_list += self._cluster_profiling_comparison(profiling_path, benchmark_profiling_path)
-        else:
-            self.overall(profiling_path)
         return job_list
 
     def overall(self, profiling_path):
@@ -393,6 +401,9 @@ class AnalyzerController:
             return
 
         self._is_cluster = self._is_cluster_profiling(profiling_path)
+        if benchmark_profiling_path:
+            _ = self._is_cluster_profiling(benchmark_profiling_path)
+
         if not self._is_cluster:
             job_list = self.single_rank_analysis(profiling_path, benchmark_profiling_path)
         else:
@@ -436,11 +447,21 @@ class AnalyzerController:
         job_list = []
         return job_list
 
-    def _single_profiling_comparison(self, profiling_path, benchmark_profiling_path, step=None,
-                                     benchmark_step=None):
-        # TODO 基于compare tools 对比计算下发
-        kwargs = copy.deepcopy(self.kwargs)
-        return []
+    def _profiling_comparison(self, compare_profiling_list):
+        job_list = []
+
+        for index, _kwargs in enumerate(compare_profiling_list):
+            kwargs = copy.deepcopy(self.kwargs)
+            kwargs.update(_kwargs)
+            compare_profiling_list[index] = kwargs
+
+        compare_kwargs = {"profiling_path": kwargs.get("profiling_path"),
+                          "compare_profiling_list": compare_profiling_list}
+
+        interface = Interface(**compare_kwargs)
+        job_list.append((Interface.COMPARISON, SupportedScopes.COMPARISON, interface, compare_kwargs))
+
+        return job_list
 
     def _cluster_profiling_comparison(self, profiling_path, benchmark_profiling_path):
         # 从计算、下发和通信三个维度对集群profiling数据进行对比
@@ -472,8 +493,10 @@ class AnalyzerController:
 
         if isinstance(target_cluster_analyzer, SlowRankAnalyzer):
             comparison_dims = [SlowRankAnalyzer.COMPUTE, SlowRankAnalyzer.FREE]
+            comparison_modes = [CompareConstant.KERNEL_COMPARE, CompareConstant.API_COMPARE]
         elif isinstance(target_cluster_analyzer, SlowLinkAnalyzer):
             comparison_dims = [SlowLinkAnalyzer.SDMA, SlowLinkAnalyzer.RDMA]
+            comparison_modes = [None, None]
         else:
             return job_list
 
@@ -486,7 +509,8 @@ class AnalyzerController:
                 "The product of ranks and steps of Benchmark profiling is not equals to target profiling, skip cluster comparison.")
             return job_list
 
-        for dimension in comparison_dims:
+        compare_profiling_list = []
+        for dimension, compare_mode in zip(comparison_dims, comparison_modes):
             step, benchmark_step, rank_id_for_comparison = AnalyzerController._get_step_rank_for_cluster_statistic_diff(
                 target_data,
                 benchmark_data,
@@ -494,18 +518,27 @@ class AnalyzerController:
                 dimension,
                 get_max=get_max
             )
+
             rank_profiling_path = self._get_profiling_path_by_rank(profiling_path, rank_id_for_comparison)
             rank_benchmark_profiling_path = self._get_profiling_path_by_rank(
                 benchmark_profiling_path,
                 rank_id_for_comparison
             )
 
-            job_list += self._single_profiling_comparison(
-                rank_profiling_path,
-                rank_benchmark_profiling_path,
-                step,
-                benchmark_step
+            if rank_id_for_comparison is None:
+                # rank id为空则无法获取对应rank的profiling路径，无法进行比较
+                continue
+
+            compare_profiling_list.append(
+                dict(profiling_path=rank_profiling_path, benchmark_profiling_path=rank_benchmark_profiling_path,
+                     step=str(step) if step else step, benchmark_step=str(benchmark_step) if step else step,
+                     rank=rank_id_for_comparison, benchmark_rank=rank_id_for_comparison, compare_mode=compare_mode)
             )
+
+        if not compare_profiling_list:
+            return job_list
+
+        job_list += self._profiling_comparison(compare_profiling_list)
         return job_list
 
     def _is_cluster_profiling(self, profiling_path):

@@ -41,6 +41,7 @@ from profiler.advisor.analyzer.computation.ai_core_freq.ai_core_freq_analyzer im
 from profiler.advisor.analyzer.memory.memory_analyzer import MemoryAnalyzer
 from profiler.advisor.analyzer.communication.packet.packet_analyzer import PacketAnalyzer
 from profiler.advisor.analyzer.schedule.gc.gc_analyzer import GcAnalyzer
+from profiler.advisor.analyzer.comparison.comparison_analyzer import ComparisonAnalyzer
 
 
 class Interface:
@@ -50,6 +51,7 @@ class Interface:
     OVERALL = "overall"
     CLUSTER = "cluster"
     MEMORY = "memory"
+    COMPARISON = "comparison"
 
     supported_analyzer = {
         SCHEDULE: OrderedDict({
@@ -76,7 +78,8 @@ class Interface:
             SupportedScopes.SLOW_RANK: SlowRankAnalyzer,
             SupportedScopes.SLOW_LINK: SlowLinkAnalyzer
         }),
-        MEMORY: OrderedDict({SupportedScopes.MEMORY: MemoryAnalyzer})
+        MEMORY: OrderedDict({SupportedScopes.MEMORY: MemoryAnalyzer}),
+        COMPARISON: OrderedDict({SupportedScopes.COMPARISON: ComparisonAnalyzer})
     }
 
     all_dimension = list(supported_analyzer.keys())

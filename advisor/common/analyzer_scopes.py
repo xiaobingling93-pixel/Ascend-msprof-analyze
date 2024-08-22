@@ -36,3 +36,4 @@ class SupportedScopes:
     MEMORY = "memory"
     STAGE_COMPUTE = "stage_compute"
     GC_ANALYSIS = "gc_analysis"
+    COMPARISON = "comparison"
