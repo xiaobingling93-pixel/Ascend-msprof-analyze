@@ -167,3 +167,20 @@ class ArgsManager:
 
         if self._args.output_path:
             self.check_output_path(PathManager.get_realpath(self._args.output_path))
+
+    def set_compare_type(self, compare_type: str):
+        self._args.enable_profiling_compare = False
+        self._args.enable_operator_compare = False
+        self._args.enable_api_compare = False
+        self._args.enable_kernel_compare = False
+        if compare_type == Constant.OVERALL_COMPARE:
+            self._args.enable_profiling_compare = True
+        elif compare_type == Constant.OPERATOR_COMPARE:
+            self._args.enable_operator_compare = True
+        elif compare_type == Constant.API_COMPARE:
+            self._args.enable_api_compare = True
+        elif compare_type == Constant.KERNEL_COMPARE:
+            self._args.enable_kernel_compare = True
+        else:
+            msg = f"Invalid compare_type: {compare_type}, please check it."
+            raise RuntimeError(msg)
