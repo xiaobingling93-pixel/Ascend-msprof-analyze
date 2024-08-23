@@ -53,6 +53,7 @@ class ComparisonGenerator:
     def run_interface(self, compare_type: str) -> dict:
         try:
             self._args_manager.init()
+            self._args_manager.set_compare_type(compare_type)
             self.load_data()
             interface = self.INTERFACE_DICT.get(compare_type)
             if interface:
