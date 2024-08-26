@@ -50,11 +50,11 @@ experimental_config = torch_npu.profiler._ExperimentalConfig(
 
    参数说明：
    
-   | 参数名                | 说明                                                         | 是否必选 |
-   | --------------------- | ------------------------------------------------------------ | -------- |
-   | --collection_path或-d | 性能数据汇集目录，运行分析脚本之后会在该目录下自动创建cluster_analysis_output文件夹，保存分析数据。 | 是       |
-   | --mode或-m            | 数据解析模式，取值详见“**--mode参数说明**”表。               | 否       |
-
+   | 参数名               | 说明                                                         | 是否必选 |
+   | -------------------- | ------------------------------------------------------------ | -------- |
+   | --profiling_path或-d | 性能数据汇集目录。未配置-o参数时，运行分析脚本之后会在该目录下自动创建cluster_analysis_output文件夹，保存分析数据。 | 是       |
+   | --output_path或-o    | 自定义输出路径，运行分析脚本之后会在该目录下自动创建cluster_analysis_output文件夹，保存分析数据。 | 否       |
+   | --mode或-m           | 数据解析模式，取值详见“**--mode参数说明**”表。               | 否       |
    
    --mode参数说明：
    
@@ -145,7 +145,6 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 #### cluster_analysis.db
 
 解析analysis.db或ascend_pytorch_profiler_{rank_id}.db生成的交付件，根据数据解析模式不同而解析不同的数据，可以使用MindStudio Insight工具展示。
-
 
 
 
