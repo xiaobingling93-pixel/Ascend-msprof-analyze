@@ -27,8 +27,8 @@ class TimelineEvent(AdvisorDict):
         if not self_ts or not event_ts:
             return False
 
-        self_dur = self.dur if self.dur else 0.0
-        event_dur = event.dur if event.dur else 0.0
+        self_dur = self.dur if not isinstance(self.dur, dict) else 0.0
+        event_dur = event.dur if not isinstance(event.dur, dict) else 0.0
 
         return Decimal(self_ts) <= Decimal(event_ts) and Decimal(self_ts) + Decimal(self_dur) >= Decimal(
             event_ts) + Decimal(event_dur)

@@ -13,11 +13,12 @@ sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__f
 from profiler.advisor.analyzer.cluster.slow_rank_analyzer import SlowRankAnalyzer
 from profiler.advisor.analyzer.cluster.slow_link_analyzer import SlowLinkAnalyzer
 from profiler.advisor.analyzer.computation.pp_stage_computation_analyzer import PPStageComputationAnalyzer
+from profiler.advisor.analyzer.overall.overall_summary_analyzer import OverallSummaryAnalyzer
 from profiler.advisor.config.config import Config
 from profiler.advisor.common.analyzer_scopes import SupportedScopes
 from profiler.advisor.common.async_analysis_status import AsyncAnalysisStatus
 from profiler.advisor.dataset.cluster.cluster_dataset import ClusterDataset
-from profiler.advisor.utils.utils import Timer, safe_index, safe_division
+from profiler.advisor.utils.utils import Timer, safe_index_value, safe_division, safe_index
 from profiler.advisor.interface.interface import Interface
 from profiler.cluster_analyse.cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
 from profiler.prof_common.path_manager import PathManager
@@ -56,12 +57,13 @@ class AnalyzerController:
             logger.error("Error dimension %s for cluster statistics data, optionals are %s.", dimension, headers)
             return None, None, None
 
-        dimension_index = safe_index(headers, dimension)
+        dimension_index = safe_index_value(headers, dimension)
         diff_record = []
         # 对比目标profiling和benchmark profiling 每张卡的计算和下发和带宽，取计算、下发、带宽差异最大的卡进行下一步分析
         for target_row_data, benchmark_row_data in zip(target_cluster_statistic_data, benchmark_cluster_statistic_data):
             target_data = safe_index(target_row_data, dimension_index)
             benchmark_data = safe_index(benchmark_row_data, dimension_index)
+
             if not isinstance(target_data, (int, float)) or not isinstance(benchmark_data, (int, float)):
                 continue
             diff_record.append(target_data - benchmark_data)
@@ -71,14 +73,16 @@ class AnalyzerController:
             return None, None, None
 
         value = max(diff_record) if get_max else min(diff_record)
-        value_index = safe_index(diff_record, value)
+        value_index = safe_index_value(diff_record, value)
 
-        step_value_index = safe_index(headers, "step")
-        rank_id_value_index = safe_index(headers, "rank_id")
+        step_value_index = safe_index_value(headers, "step")
+        rank_id_value_index = safe_index_value(headers, "rank_id")
+
         step = safe_index(safe_index(target_cluster_statistic_data, value_index, []), step_value_index)
         benchmark_step = safe_index(safe_index(benchmark_cluster_statistic_data, value_index, []), step_value_index)
         target_rank_id = safe_index(safe_index(target_cluster_statistic_data, value_index, []), rank_id_value_index)
-        benchmark_rank_id = safe_index(safe_index(target_cluster_statistic_data, value_index, []), rank_id_value_index)
+        benchmark_rank_id = safe_index(safe_index(benchmark_cluster_statistic_data, value_index, []),
+                                       rank_id_value_index)
 
         if target_rank_id != benchmark_rank_id:
             logger.error(
@@ -168,11 +172,11 @@ class AnalyzerController:
             self.slow_rank_analyzer.optimize(template_key=Interface.OVERALL)
             self.slow_link_analyzer.optimize(template_key=Interface.OVERALL)
         else:
-            from profiler.advisor.analyzer.overall.overall_summary_analyzer import OverallSummaryAnalyzer
             overall_analyzer = OverallSummaryAnalyzer(profiling_path)
             overall_analyzer.optimize()
 
-    def schedule_analysis(self, profiling_path, benchmark_profiling_path=None, step=None, benchmark_step=None):
+    def schedule_analysis(self, profiling_path, benchmark_profiling_path=None, step=None, benchmark_step=None,
+                          **kwargs):
         # 任意单卡的下发分析
 
         kwargs = copy.deepcopy(self.kwargs)
@@ -190,7 +194,7 @@ class AnalyzerController:
         return job_list
 
     def computation_analysis(self, profiling_path, benchmark_profiling_path=None, step=None,
-                             benchmark_step=None, stage=None):
+                             benchmark_step=None, stage=None, **kwargs):
         # 任意单卡的计算分析
 
         kwargs = copy.deepcopy(self.kwargs)
@@ -250,15 +254,25 @@ class AnalyzerController:
         job_list = []
         global_step_rank = self.slow_rank_analyzer.get_global_step_rank(SlowRankAnalyzer.FREE)
         slow_rank_id = global_step_rank.get("maximum", {}).get("rank_id") or self.default_rank_id
+        fast_rank_id = global_step_rank.get("minimum", {}).get("rank_id") or self.default_rank_id
         slow_step = global_step_rank.get("maximum", {}).get("step")
-        analysis_profiling_path = self._get_profiling_path_by_rank(profiling_path, slow_rank_id)
+        fast_step = global_step_rank.get("minimum", {}).get("step")
 
         info_msg = f"Maximum free for rank {slow_rank_id}"
         if slow_step:
             info_msg += f" and step {slow_step}"
         logger.info(info_msg)
 
-        job_list += self.schedule_analysis(analysis_profiling_path, step=slow_step)
+        kwargs = dict(profiling_path=self._get_profiling_path_by_rank(profiling_path, slow_rank_id),
+                      benchmark_profiling_path=self._get_profiling_path_by_rank(profiling_path, fast_rank_id),
+                      step=slow_step, benchmark_step=fast_step,
+                      rank=slow_rank_id, benchmark_rank=fast_rank_id,
+                      compare_mode=CompareConstant.API_COMPARE)
+
+        job_list += self.schedule_analysis(**kwargs)
+
+        if self.kwargs.get("benchmark_profiling_path") is None and slow_rank_id != fast_rank_id:
+            job_list += self._profiling_comparison([kwargs])
         return job_list
 
     def cluster_communication_analysis(self, profiling_path):
@@ -310,6 +324,8 @@ class AnalyzerController:
             for stage, step_rank_info in stage_step_rank.items():
                 rank_id = step_rank_info.get("maximum", {}).get("rank_id")
                 step = step_rank_info.get("maximum", {}).get("step")
+                benchmark_rank_id = step_rank_info.get("minimum", {}).get("rank_id")
+                benchmark_step = step_rank_info.get("minimum", {}).get("step")
 
                 info_msg = f"For {stage}, slow rank is {rank_id}"
                 if step:
@@ -318,16 +334,20 @@ class AnalyzerController:
 
                 stages_profiling_path.append(
                     dict(
-                        stage=stage,
-                        rank_id=rank_id,
-                        step=step,
-                        profiling_path=self._get_profiling_path_by_rank(profiling_path, rank_id)
+                        stage=stage, rank=rank_id, step=step, benchmark_rank=benchmark_rank_id,
+                        benchmark_step=benchmark_step,
+                        profiling_path=self._get_profiling_path_by_rank(profiling_path, rank_id),
+                        benchmark_profiling_path=self._get_profiling_path_by_rank(profiling_path, benchmark_rank_id),
+                        compare_mode=CompareConstant.KERNEL_COMPARE
                     )
                 )
             Interface.add_analyzer(Interface.COMPUTATION, SupportedScopes.STAGE_COMPUTE, PPStageComputationAnalyzer)
-            kwargs = {"stages_profiling_path": stages_profiling_path, "profiling_path": profiling_path}
+            compute_analysis_kwargs = {"stages_profiling_path": stages_profiling_path, "profiling_path": profiling_path}
 
-            job_list.append((Interface.COMPUTATION, SupportedScopes.STAGE_COMPUTE, Interface(**kwargs), kwargs))
+            job_list.append((Interface.COMPUTATION, SupportedScopes.STAGE_COMPUTE, Interface(**compute_analysis_kwargs),
+                             compute_analysis_kwargs))
+            if self.kwargs.get("benchmark_profiling_path") is None:
+                job_list += self._profiling_comparison(stages_profiling_path)
         else:
             # 不区分stage，对所有卡取Min max进行分析
             logger.info("Without pipeline parallel stage, Global analysis steps and ranks is %s",
@@ -339,21 +359,23 @@ class AnalyzerController:
             fast_step = global_step_rank.get("minimum", {}).get("step")
 
             info_msg = f"Maximum computation time for rank {slow_rank_id}"
-            if slow_step:
+            if slow_step is not None:
                 info_msg += f" and step {slow_step}, "
-            if fast_rank_id:
+            if fast_rank_id is not None:
                 info_msg += f"minimum computation time for rank {fast_rank_id}"
-            if fast_step:
+            if fast_step is not None:
                 info_msg += f" and step {fast_step}"
             logger.info(info_msg)
 
-            job_list += self.computation_analysis(
-                self._get_profiling_path_by_rank(profiling_path, slow_rank_id),
-                self._get_profiling_path_by_rank(profiling_path, fast_rank_id),
-                slow_step,
-                fast_step
-            )
+            kwargs = dict(profiling_path=self._get_profiling_path_by_rank(profiling_path, slow_rank_id),
+                          benchmark_profiling_path=self._get_profiling_path_by_rank(profiling_path, fast_rank_id),
+                          step=slow_step, benchmark_step=fast_step, rank=slow_rank_id, benchmark_rank=fast_rank_id,
+                          compare_mode=CompareConstant.KERNEL_COMPARE)
+            job_list += self.computation_analysis(**kwargs)
 
+            rank_id_valid = slow_rank_id is not None and fast_rank_id is not None and fast_rank_id != slow_rank_id
+            if self.kwargs.get("benchmark_profiling_path") is None and rank_id_valid:
+                job_list += self._profiling_comparison([kwargs])
         return job_list
 
     def cluster_memory_analysis(self, profiling_path):
@@ -402,11 +424,14 @@ class AnalyzerController:
 
         self._is_cluster = self._is_cluster_profiling(profiling_path)
         if benchmark_profiling_path:
+            # 构建benchmark profiling的map，用于根据rank获取profiling路径，否则无法进行比对
             _ = self._is_cluster_profiling(benchmark_profiling_path)
 
         if not self._is_cluster:
             job_list = self.single_rank_analysis(profiling_path, benchmark_profiling_path)
         else:
+            self.slow_rank_analyzer = SlowRankAnalyzer(profiling_path)
+            self.slow_link_analyzer = SlowLinkAnalyzer(profiling_path)
             job_list = self.cluster_analysis(profiling_path, benchmark_profiling_path)
 
         for i, (dimension, scope, interface, kwargs) in enumerate(job_list[::-1]):
@@ -495,7 +520,7 @@ class AnalyzerController:
             comparison_dims = [SlowRankAnalyzer.COMPUTE, SlowRankAnalyzer.FREE]
             comparison_modes = [CompareConstant.KERNEL_COMPARE, CompareConstant.API_COMPARE]
         elif isinstance(target_cluster_analyzer, SlowLinkAnalyzer):
-            comparison_dims = [SlowLinkAnalyzer.SDMA, SlowLinkAnalyzer.RDMA]
+            comparison_dims = [SlowLinkAnalyzer.SDMA_BANDWIDTH, SlowLinkAnalyzer.RDMA_BANDWIDTH]
             comparison_modes = [None, None]
         else:
             return job_list
@@ -531,7 +556,7 @@ class AnalyzerController:
 
             compare_profiling_list.append(
                 dict(profiling_path=rank_profiling_path, benchmark_profiling_path=rank_benchmark_profiling_path,
-                     step=str(step) if step else step, benchmark_step=str(benchmark_step) if step else step,
+                     step=step, benchmark_step=benchmark_step,
                      rank=rank_id_for_comparison, benchmark_rank=rank_id_for_comparison, compare_mode=compare_mode)
             )
 
@@ -553,8 +578,6 @@ class AnalyzerController:
 
         self.default_rank_id = list(self.cluster_local_data_map[profiling_path].keys())[0]
 
-        self.slow_rank_analyzer = SlowRankAnalyzer(profiling_path)
-        self.slow_link_analyzer = SlowLinkAnalyzer(profiling_path)
         return len(self.cluster_local_data_map[profiling_path]) >= self.CLUSTER_RANK_THRESHOLD
 
     def _get_profiling_path_by_rank(self, profiling_path, rank_id=None):

@@ -2,7 +2,7 @@ import logging
 
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
-from profiler.advisor.utils.utils import safe_index, convert_to_float
+from profiler.advisor.utils.utils import safe_index_value, convert_to_float
 from profiler.compare_tools.compare_backend.utils.constant import Constant as CompareConstant
 from profiler.compare_tools.compare_interface.comparison_interface import ComparisonInterface
 
@@ -21,8 +21,8 @@ class ComparisonChecker:
 
         self.profiling_path = profiling_path
         self.benchmark_profiling_path = benchmark_profiling_path
-        self.step = step
-        self.benchmark_step = benchmark_step
+        self.step = str(step) if step is not None else step
+        self.benchmark_step = str(benchmark_step) if benchmark_step is not None else benchmark_step
         self.rank = rank
         self.benchmark_rank = benchmark_rank
         self.compare_mode = None
@@ -79,7 +79,10 @@ class ComparisonChecker:
             return
 
         headers = self.format_result.get(self.compare_mode, {}).get("headers", [])
-        diff_avg_index = safe_index(headers, self.DIFF_AVG_RATIO)
+        diff_avg_index = safe_index_value(headers, self.DIFF_AVG_RATIO)
+        if diff_avg_index is None:
+            logger.warning("'%s' not exsits in headers of comparison result, skip render html.", self.DIFF_AVG_RATIO)
+            return
         rows = self.format_result.get(self.compare_mode, {}).get("rows", [])
         sorted_rows = sorted(rows,
                              key=lambda x: convert_to_float(x[diff_avg_index]) if diff_avg_index < len(x) else -1.0,

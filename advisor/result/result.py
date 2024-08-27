@@ -50,6 +50,11 @@ class ResultWriter:
         if len(sheet_name) > self.MAX_SHEET_NAME_LENGTH:
             sheet_name = sheet_name[:self.MAX_SHEET_NAME_LENGTH]
 
+        worksheet_name_list = [worksheet.name for worksheet in  self.workbook.worksheets()]
+        if sheet_name.lower() in [name.lower() for name in worksheet_name_list]:
+            logger.warning("Exists worksheets %s, skip add duplicate worksheet with name '%s'", worksheet_name_list, sheet_name)
+            return
+
         sheet = self.workbook.add_worksheet(sheet_name)
 
         if headers:
