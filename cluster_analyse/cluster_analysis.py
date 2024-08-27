@@ -15,6 +15,7 @@
 
 import argparse
 import os
+import logging
 
 from cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
 from cluster_data_preprocess.mindspore_data_preprocessor import MindsporeDataPreprocessor
@@ -25,6 +26,8 @@ from common_func.path_manager import PathManager
 from analysis.analysis_facade import AnalysisFacade
 
 COMM_FEATURE_LIST = ['all', 'communication_time', 'communication_matrix']
+logger = logging.getLogger()
+
 
 class Interface:
     ASCEND_PT = "ascend_pt"
@@ -100,8 +103,10 @@ def cluster_analysis_main(args=None):
         Constant.ANALYSIS_MODE: args_parsed.mode,
         Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: args_parsed.output_path
     }
-
-    Interface(parameter).run()
+    try:
+        Interface(parameter).run()
+    except Exception as e:
+        logger.error(e)
 
 if __name__ == "__main__":
     cluster_analysis_main()
