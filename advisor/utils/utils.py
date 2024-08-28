@@ -110,7 +110,8 @@ def singleton(cls):
         members = inspect.getmembers(base_class)
 
         # 过滤出函数对象
-        function_objs = [member[1] for member in members if inspect.isfunction(member[1]) or inspect.ismethod(member[1])]
+        function_objs = [member[1] for member in members if
+                         inspect.isfunction(member[1]) or inspect.ismethod(member[1])]
         for function_obj in function_objs:
             if inspect.isfunction(function_obj) and not is_static_func(function_obj):
                 continue
@@ -410,7 +411,8 @@ def join_prof_path(root_dir: str, sub_dir: str) -> str:
         for root, _, _ in os.walk(root_dir, onerror=walk_error_handler):
             if re.match(sub_dir, os.path.basename(root)):
                 return root
-        logger.debug("Fail to get profiling path %s from local path %s by regular expression matching", sub_dir, root_dir)
+        logger.debug("Fail to get profiling path %s from local path %s by regular expression matching", sub_dir,
+                     root_dir)
     else:
         sub_dir = os.path.join(root_dir, sub_dir)
         if os.path.exists(sub_dir):
@@ -585,7 +587,7 @@ def check_path_valid(path):
         logger.error(f"The file is not readable. path:%ss", path)
         return False
     elif os.path.getsize(path) > const.MAX_FILE_SIZE:
-        logger.error(f"The file size exceeds the limit. path:%ss, MAX_FILE_SIZE:%ss B",path, const.MAX_FILE_SIZE)
+        logger.error(f"The file size exceeds the limit. path:%ss, MAX_FILE_SIZE:%ss B", path, const.MAX_FILE_SIZE)
         return False
     return True
 
@@ -623,11 +625,17 @@ def convert_to_float(num):
     return 0
 
 
-def safe_index(array, value, return_index_if_error=None):
+def safe_index_value(array, value, return_index_if_error=None):
     if value in array:
         return array.index(value)
 
     return return_index_if_error
+
+
+def safe_index(array, index, return_value_if_error=None):
+    if index < len(array):
+        return array[index]
+    return return_value_if_error
 
 
 def convert_to_int(data: any) -> int:
