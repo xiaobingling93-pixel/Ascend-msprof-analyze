@@ -33,14 +33,13 @@ logger = logging.getLogger()
 class ClusterDataset(Dataset):
 
     def __init__(self, collection_path, data: dict, **kwargs) -> None:
-        self.cluster_analysis_output_path = kwargs.get(Constant.CLUSTER_ANALYSIS_OUTPUT_PATH, collection_path)
         super().__init__(collection_path, data)
 
     def is_cluster_analysis_output_exist(self):
         """
         check whether input path is valid
         """
-        for filename in os.listdir(self.cluster_analysis_output_path):
+        for filename in os.listdir(self.collection_path):
             if filename == 'cluster_analysis_output':
                 logger.info("[INFO]Cluster has been analyzed "
                             "because of the existence of cluster analysis output directory.")
@@ -53,8 +52,7 @@ class ClusterDataset(Dataset):
             return
         parameter = {
             Constant.COLLECTION_PATH: self.collection_path,
-            Constant.ANALYSIS_MODE: "all",
-            Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: self.cluster_analysis_output_path
+            Constant.ANALYSIS_MODE: "all"
         }
         print("[INFO] cluster analysis is in the process, please wait...")
         try:
@@ -87,7 +85,7 @@ class ClusterStepTraceTimeDataset(ClusterDataset):
     def __init__(self, collection_path: str, data: dict, **kwargs):
         self._step_dict = defaultdict()
         self._stages = []
-        super().__init__(collection_path, data, **kwargs)
+        super().__init__(collection_path, data)
 
     def _parse(self):
         self.cluster_analyze()
@@ -152,7 +150,7 @@ class ClusterCommunicationDataset(ClusterDataset):
             self.SDMA_SIZE_MB: 0,
         })
         self.hccl_dict = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
-        super().__init__(collection_path, data,  **kwargs)
+        super().__init__(collection_path, data)
 
     @staticmethod
     def compute_ratio(dividend: float, divisor: float):
