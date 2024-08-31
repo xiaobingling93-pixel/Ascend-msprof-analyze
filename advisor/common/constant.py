@@ -13,6 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+import stat
+
 # timeline
 DEQUEUE = "Dequeue"
 DEQUEUE_SEP = "@"
@@ -156,3 +159,11 @@ MAX_FILE_SIZE = 10 ** 10
 MAX_NUM_PROCESSES = 4
 DEFAULT_STEP = "-1"
 STEP_RANK_SEP = "_"
+
+
+MAX_READ_LINE_BYTES = 8196 * 1024
+MAX_READ_FILE_BYTES = 64 * 1024 * 1024 * 1024
+MAX_READ_DB_FILE_BYTES = 8 * 1024 * 1024 * 1024
+
+WRITE_MODES = stat.S_IWUSR | stat.S_IRUSR | stat.S_IRGRP
+WRITE_FLAGS = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
