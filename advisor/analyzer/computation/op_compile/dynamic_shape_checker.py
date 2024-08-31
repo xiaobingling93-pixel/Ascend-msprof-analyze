@@ -4,6 +4,7 @@ from typing import List
 
 from profiler.advisor.analyzer.computation.operator_checker import OperatorChecker
 from profiler.advisor.common import constant
+from profiler.advisor.config.config import Config
 from profiler.advisor.dataset.profiling.info_collection import OpInfo
 from profiler.advisor.result.item import OptimizeItem, StatisticsItem, OptimizeRecord
 
@@ -55,7 +56,7 @@ class DynamicShapeChecker(OperatorChecker):
             release_suggestion = copy.deepcopy(suggestion)
             if release_suggestion == DynamicShapeChecker.ENABLE_COMPILED_SUGGESTION:
                 release_suggestion += \
-                    f"for details please refer to link : <a href={constant.ENABLE_COMPILED_TUNE_URL}>LINK</a>"
+                    f"for details please refer to link : <a href={Config().enable_compiled_tune_url}>LINK</a>"
             release_suggestion_list.append(release_suggestion.replace('\n', '<br>'))
         format_result = {"record": record.__dict__, "suggestion": '<br> '.join(release_suggestion_list)}
         return format_result
