@@ -94,8 +94,7 @@ def cluster_analysis_main(args=None):
     parser.add_argument('-m', '--mode', choices=COMM_FEATURE_LIST,
                         default='all', help="different analysis mode")
     parser.add_argument('-o', '--output_path', type=str, help='Path of cluster analysis output')
-    args_parsed, unknown = parser.parse_known_args(args=args)
-
+    args_parsed, _ = parser.parse_known_args(args=args)
     parameter = {
         Constant.COLLECTION_PATH: args_parsed.collection_path,
         Constant.ANALYSIS_MODE: args_parsed.mode,
