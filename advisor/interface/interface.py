@@ -85,7 +85,7 @@ class Interface:
     all_dimension = list(supported_analyzer.keys())
 
     def __init__(self, **kwargs):
-        self.collection_path = os.path.realpath(kwargs.get("profiling_path"))
+        self.collection_path = os.path.abspath(kwargs.get("profiling_path"))
 
     @staticmethod
     def get_scope(dimension):

@@ -23,7 +23,7 @@ class AdviceBase:
     ADVICE = "advice"
 
     def __init__(self, collection_path: str):
-        self.collection_path = os.path.realpath(collection_path)
+        self.collection_path = os.path.abspath(collection_path)
         self.bottelneck = ''
         self.output_format_data = {
             self.DATA: [],

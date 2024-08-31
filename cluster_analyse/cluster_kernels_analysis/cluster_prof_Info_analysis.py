@@ -287,7 +287,7 @@ class DeliverableGenerator:
         if os.path.islink(params.get('dir')):
             print(f"The file: \"{params.get('dir')}\" is link. Please check the path.")
             return
-        prof_path = os.path.realpath(params.get('dir'))
+        prof_path = os.path.abspath(params.get('dir'))
         PathManager.input_path_common_check(prof_path)
         if params.get('type') == "all":
             self.analyzers = [TimeToCsvAnalyzer(chip_type, prof_path), StatisticalInfoToHtmlAnalyzer(chip_type, params.get("top_n"), prof_path)]
