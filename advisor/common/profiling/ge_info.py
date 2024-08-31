@@ -6,9 +6,11 @@ import os
 from typing import Any, List
 
 from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 
 from profiler.advisor.dataset.profiling.db_manager import ConnectionManager
 from profiler.advisor.dataset.profiling.profiling_parser import ProfilingParser
+from profiler.advisor.utils.utils import check_path_valid
 
 logger = logging.getLogger()
 
@@ -33,9 +35,14 @@ class GeInfo(ProfilingParser):
         ge info
         """
         db_path, db_file = os.path.split(profiling_db_file)
+        check_path_valid(db_path)
         if not ConnectionManager.check_db_exists(db_path, [db_file]):
             return False
-        conn = ConnectionManager(db_path, db_file)
+        try:
+            conn = ConnectionManager(db_path, db_file)
+        except SQLAlchemyError as e:
+            logger.error("Database error: %s", e)
+            return False
         if conn.check_table_exists(['TaskInfo']):
             with conn().connect() as sql_conn:
                 self.op_state_info_list = sql_conn.execute(text("select op_name, op_state from TaskInfo")).fetchall()
