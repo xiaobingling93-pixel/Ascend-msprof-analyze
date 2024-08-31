@@ -13,6 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from abc import ABC, abstractmethod
+import logging
+
+logger = logging.getLogger()
 
 
 class ParallelAlgorithm(ABC):
@@ -30,6 +33,22 @@ class MegatronAlgorithm(ParallelAlgorithm):
                  context_parallel_size: int = 1,
                  expert_model_parallel_size: int = 1,
                  **kwargs):
+        # Check for zero and adjust parallel sizes to avoid division by zero
+        if tensor_model_parallel_size == 0:
+            tensor_model_parallel_size = 1
+            logger.error("tensor_model_parallel_size cannot be zero.")
+
+        if pipeline_model_parallel_size == 0:
+            pipeline_model_parallel_size = 1
+            logger.error("pipeline_model_parallel_size cannot be zero.")
+
+        if data_parallel_size == 0:
+            data_parallel_size = 1
+            logger.error("data_parallel_size cannot be zero.")
+
+        if expert_model_parallel_size == 0:
+            expert_model_parallel_size = 1
+            logger.error("expert_model_parallel_size cannot be zero.")
 
         if data_parallel_size % expert_model_parallel_size != 0:
             raise RuntimeError(
