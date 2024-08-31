@@ -89,13 +89,13 @@ class Interface:
 
 def cluster_analysis_main(args=None):
     parser = argparse.ArgumentParser(description="cluster analysis module")
-    parser.add_argument('-d', '--collection_path', type=str, required=True, help="profiling data path")
+    parser.add_argument('-d', '--profiling_path', type=str, required=True, help="profiling data path")
     parser.add_argument('-m', '--mode', choices=COMM_FEATURE_LIST,
                         default='all', help="different analysis mode")
     parser.add_argument('-o', '--output_path', type=str, help='Path of cluster analysis output')
     args_parsed, _ = parser.parse_known_args(args=args)
     parameter = {
-        Constant.COLLECTION_PATH: args_parsed.collection_path,
+        Constant.COLLECTION_PATH: args_parsed.profiling_path,
         Constant.ANALYSIS_MODE: args_parsed.mode,
         Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: args_parsed.output_path
     }
