@@ -579,16 +579,33 @@ def get_file_path_by_walk(root, filename):
     return file_path
 
 
-def check_path_valid(path):
-    if os.path.islink(os.path.abspath(path)):
-        logger.error("fThe path is detected as a soft connection. path:%ss", path)
-        return False
-    elif not os.access(path, os.R_OK):
-        logger.error(f"The file is not readable. path:%ss", path)
-        return False
-    elif os.path.getsize(path) > const.MAX_FILE_SIZE:
-        logger.error(f"The file size exceeds the limit. path:%ss, MAX_FILE_SIZE:%ss B", path, const.MAX_FILE_SIZE)
-        return False
+def check_path_valid(path: str, is_file: bool = True, max_size: int = const.MAX_READ_FILE_BYTES) -> bool:
+    """
+    check the path is valid or not
+    :param path: file path
+    :param is_file: file or not
+    :param max_size: file's max size
+    :return: bool
+    """
+    if path == "":
+        raise FileNotFoundError("The path is empty. Please enter a valid path.")
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"The path \"{path}\" does not exist. Please check that the path exists.")
+    if is_file:
+        if not os.path.isfile(path):
+            raise FileNotFoundError(f"The path \"{path}\" is not a file. Please check the path.")
+        if os.path.islink(path):
+            raise FileNotFoundError(f"The path \"{path}\" is link. Please check the path.")
+        if os.path.getsize(path) > max_size:
+            raise OSError(f"The path \"{path}\" is too large to read. Please check the path.")
+    else:
+        if not os.path.isdir(path):
+            raise FileNotFoundError(f"The path \"{path}\" is not a directory. Please check the path.")
+        if os.path.islink(path):
+            raise FileNotFoundError(f"The path \"{path}\" is link. Please check the path.")
+    if not os.access(path, os.R_OK):
+        raise PermissionError(f"The path \"{path}\" does not have permission to read. "
+                              f"Please check that the path is readable.")
     return True
 
 

@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import List, Tuple, Dict
 
 from profiler.cluster_analyse.common_func.file_manager import FileManager
+from profiler.advisor.utils.file import FileOpen
 
 logger = logging.getLogger()
 
@@ -220,9 +221,9 @@ class HostGraphParser:
     def _parse(self, graph_file):
         # pylint:disable=broad-except
         graph_list = []
-        with open(graph_file, "r", encoding="gbk") as file:
+        with FileOpen(graph_file, "r") as file:
             try:
-                graph_list = self._parse_line(file, graph_list)
+                graph_list = self._parse_line(file.file_reader, graph_list)
             except Exception:
                 logger.error(
                     "Parse line %s of file %s failed, make sure the format is correct.", self.line_no, graph_file
