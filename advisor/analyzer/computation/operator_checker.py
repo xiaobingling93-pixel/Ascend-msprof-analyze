@@ -34,11 +34,11 @@ class OperatorChecker(VersionControl):
     MSLite_OPERATOR_TUNE_SUGGESTION = f"Optimize operator by AOE in mindspore lite framework, such as:\n" \
                                       f"converter_lite --fmk=ONNX --optimize=ascend_oriented --saveType=MINDIR " \
                                       f"--modelFile=$user_model.onnx --outputFile=user_model --configFile=./config.txt\n"
-    _tune_op_list: List[str] = []
 
     def __init__(self, cann_version: str):
         self.cann_version = cann_version
         self._op_list: List[OpInfo] = []
+        self._tune_op_list: List[str] = []
 
     @staticmethod
     def get_ratio(op_info: OpInfo, attr: str) -> float:
@@ -56,7 +56,7 @@ class OperatorChecker(VersionControl):
         :return: checker name
         """
         return cls._PROBLEM
-        
+
     def check(self, profiling_data: ProfilingDataset) -> bool:
         """
         check if any operator need optimize
@@ -282,7 +282,7 @@ class OperatorChecker(VersionControl):
             logger.warning(self.SKIP_CHECK_MSG, self._CHECKER, "op summary")
             return False
         return True
-    
+
     def get_details(self) -> list:
         """
         get details of operator to be optimized
