@@ -95,7 +95,7 @@ def cluster_analysis_main(args=None):
     parser.add_argument('-o', '--output_path', type=str, help='Path of cluster analysis output')
     args_parsed, unknown = parser.parse_known_args(args=args)
     if unknown:
-        print(f"Unknown arguments provided: {unknown}")
+        print(f"Unknown arguments are provided: {unknown}")
     parameter = {
         Constant.COLLECTION_PATH: args_parsed.collection_path,
         Constant.ANALYSIS_MODE: args_parsed.mode,
