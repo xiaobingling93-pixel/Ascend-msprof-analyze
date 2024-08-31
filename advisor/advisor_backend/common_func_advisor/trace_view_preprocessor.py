@@ -104,7 +104,7 @@ class TraceViewPreProcessor:
         check whether op is hcom send or recv op
         """
         # eg: hcom_BatchSendRecv__101_0_1
-        p1 = re.compile(r'hcom_\w+SendRecv__\d+')
+        p1 = re.compile(r'^hcom_\w+SendRecv__\d+')
         # eg: hcom_send__101_0_1
         p2 = re.compile(r'hcom_send__\d+')
         # eg: hcom_receive__101_0_1
