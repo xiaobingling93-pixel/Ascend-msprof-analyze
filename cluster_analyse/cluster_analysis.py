@@ -67,6 +67,7 @@ class Interface:
     def run(self):
         PathManager.check_input_directory_path(self.collection_path)
         PathManager.check_path_owner_consistent(self.collection_path)
+        PathManager.make_dir_safety(self.cluster_analysis_output_path)
         PathManager.check_path_writeable(self.cluster_analysis_output_path)
         data_map, data_type = self.allocate_prof_data()
         if not data_map:
