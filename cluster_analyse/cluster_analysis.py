@@ -87,6 +87,7 @@ class Interface:
         comm_data_dict = CommunicationGroupGenerator(params).generate()
         params[Constant.COMM_DATA_DICT] = comm_data_dict
         AnalysisFacade(params).cluster_analyze()
+        print(f"[INFO] The cluster analysis result file has been generated: {self.cluster_analysis_output_path}")
 
 def cluster_analysis_main(args=None):
     parser = argparse.ArgumentParser(description="cluster analysis module")
