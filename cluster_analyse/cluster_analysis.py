@@ -15,6 +15,7 @@
 
 import argparse
 import os
+import logging
 
 from cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
 from cluster_data_preprocess.mindspore_data_preprocessor import MindsporeDataPreprocessor
@@ -95,7 +96,8 @@ def cluster_analysis_main(args=None):
     parser.add_argument('-o', '--output_path', type=str, help='Path of cluster analysis output')
     args_parsed, unknown = parser.parse_known_args(args=args)
     if unknown:
-        print(f"Unknown arguments are provided: {unknown}")
+        logger = logging.getLogger()
+        logger.warning(f"Unknown arguments are provided: {unknown}")
     parameter = {
         Constant.COLLECTION_PATH: args_parsed.collection_path,
         Constant.ANALYSIS_MODE: args_parsed.mode,
