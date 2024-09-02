@@ -1,6 +1,7 @@
 import logging
 
 from profiler.advisor.common import constant as const
+from profiler.advisor.config.config import Config
 from profiler.advisor.dataset.timeline_event_dataset import ScheduleAnalysisDataset
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
@@ -84,7 +85,7 @@ class SynchronizeStreamChecker(TimelineBaseChecker):
                                     desc=self.desc,
                                     solutions=self.solutions,
                                     result=format_result_for_html,
-                                    with_stack_doc_url=const.TIMELINE_WITH_STACK_DOC_URL,
+                                    with_stack_doc_url=Config().timeline_with_stack_doc_url,
                                     empty_stacks=self.empty_stacks,
                                     framework_black_list=self.framework_black_list,
                                     priority_background_color=priority)

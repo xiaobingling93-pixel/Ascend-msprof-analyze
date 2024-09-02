@@ -150,7 +150,7 @@ class OperatorChecker(VersionControl):
                 logger.warning(
                     "Skip dynamic shape check because of not containing ge_info.db file in host filefloder.\n"
                     "To enable dynamic shape check, please try to set data_simplification=False in experimental_config.\n"
-                    "More details please refer to link : %s", constant.ASCEND_PROFILER_URL)
+                    "More details please refer to link : %s", Config().ascend_profiler_url)
         else:
             # CANN 8.0.RC1 之后 op_state 属性从 op_summary 文件中获取
             if hasattr(profiling_database, "op_summary"):
@@ -176,14 +176,14 @@ class OperatorChecker(VersionControl):
             release_suggestion = copy.deepcopy(suggestion)
             if release_suggestion == OperatorChecker.PyTorch_OPERATOR_TUNE_SUGGESTION:
                 release_suggestion += \
-                    (f"for details please refer to link : <a href={constant.PyTorch_AOE_OPERATOR_TUNE_URL}>LINK</a>")
+                    (f"for details please refer to link : <a href={Config().pytorch_aoe_operator_tune_url}>LINK</a>")
             elif release_suggestion == OperatorChecker.MSLite_OPERATOR_TUNE_SUGGESTION:
                 release_suggestion += \
                     (f"\nThe config file for MSLite AOE usage is as follows:\n" \
                      f"[ascend_context]\n" \
                      f"aoe_mode=\"operator tuning\"\n" \
                      f"--tune_ops_file={Config().tune_ops_file}\n"
-                     f"\nFor details please refer to link : <a href={constant.MSLite_Infer_AOE_OPEATOR_TUNE_URL}>LINK</a>")
+                     f"\nFor details please refer to link : <a href={Config().mslite_infer_aoe_operator_tune_url}>LINK</a>")
             release_suggestion_list.append(release_suggestion.replace('\n', '<br>'))
         format_result = {"record": record.__dict__,
                          "suggestion": fill('<br> '.join(release_suggestion_list), width=200),
