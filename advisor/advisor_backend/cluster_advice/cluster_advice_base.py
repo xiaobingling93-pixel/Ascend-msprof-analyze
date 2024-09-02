@@ -14,10 +14,13 @@
 # limitations under the License.
 
 import os
+import logging
 from abc import abstractmethod
 from common_func.constant import Constant
 from advice_base import AdviceBase
 from cluster_analysis import Interface
+
+logger = logging.getLogger()
 
 
 class ClusterAdviceBase(AdviceBase):
@@ -37,11 +40,11 @@ class ClusterAdviceBase(AdviceBase):
         """
         for file in os.listdir(self.collection_path):
             if file == 'cluster_analysis_output':
-                print("[INFO]Cluster has been analyzed "
-                      "because of the existence of cluster analysis output directory.")
-                print("[INFO]Skip Cluster analyze backend.")
+                logger.info("Cluster has been analyzed "
+                            "because of the existence of cluster analysis output directory.")
+                logger.info("Skip Cluster analyze backend.")
                 return
-        print("[INFO] cluster analysis is in the process, please wait...")
+        logger.info("cluster analysis is in the process, please wait...")
         self.cluster_analyze()
 
     def cluster_analyze(self):
