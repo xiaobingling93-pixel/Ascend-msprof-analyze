@@ -6,6 +6,7 @@ import logging
 
 from profiler.advisor.config.config import Config
 from profiler.advisor.utils.utils import get_file_path_from_directory
+from profiler.cluster_analyse.common_func.file_manager import FileManager
 
 logger = logging.getLogger()
 
@@ -40,9 +41,8 @@ class DeviceInfoParser:
         if info_file.endswith("done"):
             return False  # skip info.json.0.done
         try:
-            with open(info_file, encoding="utf-8") as file:
-                info = json.load(file)
-        except (IOError, ValueError) as error:
+            info = FileManager.read_json_file(info_file)
+        except RuntimeError as error:
             logger.error("Parse json info file %s failed : %s", info_file, error)
             return False
         if "DeviceInfo" not in info:

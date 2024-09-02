@@ -1,8 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-import os.path
+import os
+from configparser import ConfigParser
 
 from setuptools import find_packages, setup  # type: ignore
+
+from prof_common.path_manager import PathManager
 
 extras = {
     "test": [
@@ -23,6 +26,20 @@ tests_requires.extend(set(requires))
 with open('version.txt', 'r') as f:
     version = f.read().strip()
 
+config_file_path = "config/config.ini"
+PathManager.check_input_file_path(config_file_path)
+PathManager.check_file_size(config_file_path)
+config = ConfigParser(allow_no_value=True)
+config.read(config_file_path)
+try:
+    url = config.get("URL", "msprof_analyze_url")
+except Exception as e:
+    raise RuntimeError("The configuration file is incomplete and not configured msprof_analyze_url information.") from e
+try:
+    author_email = config.get("EMAIL", "ms_email")
+except Exception as e:
+    raise RuntimeError("The configuration file is incomplete and not configured ms_email information.") from e
+
 root_path = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
 setup(
     name="msprof-analyze",
@@ -31,9 +48,9 @@ setup(
     long_description="msprof-analyze provides statistics, analysis, and related tuning suggestions for the "
                      "performance data collected in training and large model scenarios. The main functional modules"
                      " include: performance comparison, performance analysis, and cluster analysis.",
-    url="https://gitee.com/ascend/mstt/tree/master/profiler",
+    url=url,
     author="MindStudio",
-    author_email="pmail_mindstudio@huawei.com",
+    author_email=author_email,
     package_dir={"": root_path},
     packages=find_packages(root_path),
     include_package_data=False,

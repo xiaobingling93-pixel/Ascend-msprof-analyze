@@ -21,7 +21,7 @@ def main():
     parser.add_argument("--enable_api_compare", default=False, action='store_true', help="开启host api性能比较")
     parser.add_argument("--enable_kernel_compare", default=False, action='store_true', help="开启kernel性能比较")
     parser.add_argument("--disable_details", default=False, action='store_true', help="不展示比对明细")
-    parser.add_argument("--output_path", type=str, default='', help="性能数据比对结果的存放路径")
+    parser.add_argument('-o', "--output_path", type=str, default='', help="性能数据比对结果的存放路径")
     parser.add_argument("--max_kernel_num", type=int, help="每个torch op的kernel数量限制")
     parser.add_argument("--op_name_map", type=ast.literal_eval, default={},
                         help="配置GPU与NPU等价的算子名称映射关系，以字典的形式传入")

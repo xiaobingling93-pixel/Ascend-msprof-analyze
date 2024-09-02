@@ -13,6 +13,8 @@ class BlockDimChecker(OperatorChecker):
     _SUGGESTION: List[str] = []
     _CHECKER = "block dim"
     _PROBLEM = "block dim"
+    _aicore_num = 0
+    _aiv_num = 0
     _description = "some operator does not make full use of {} ai core"
     _ITEMS = [
         "op_name", "op_type", "task_type", "task_duration", "income", "block_dim", "mix_block_dim", "input_shapes",
@@ -35,9 +37,16 @@ class BlockDimChecker(OperatorChecker):
             logger.warning(self.SKIP_CHECK_MSG, self._CHECKER, "block dim in op summary")
             return False
         if Config().get_config("ai_core_num"):
-            self._aicore_num = int(Config().get_config("ai_core_num"))
+            try:
+                self._aicore_num = int(Config().get_config("ai_core_num"))
+            except ValueError as e:
+                logger.warning("get ai_core_num failed, please check info.json： %s", e)
+                return False
         if Config().get_config("aiv_num"):
-            self._aiv_num = int(Config().get_config("aiv_num"))
+            try:
+                self._aiv_num = int(Config().get_config("aiv_num"))
+            except ValueError as e:
+                logger.warning("get aiv_num failed, please check info.json： %s", e)
         self._description = self._description.format(self._aicore_num)
         if self._aiv_num:
             self._description += f" or {self._aiv_num} ai vector core"

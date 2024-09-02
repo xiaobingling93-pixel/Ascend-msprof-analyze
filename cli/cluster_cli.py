@@ -38,5 +38,5 @@ context_settings['ignore_unknown_options'] = True
               help='Path of cluster analysis output')
 @click.argument('args', nargs=-1)
 def cluster_cli(profiling_path, mode, cluster_analysis_output_path, args) -> None:
-    required_args = ('-d', profiling_path, '-m', mode, '-cp', cluster_analysis_output_path)
+    required_args = ('-d', profiling_path, '-m', mode, '-o', cluster_analysis_output_path)
     cluster_analysis_main(required_args + args)

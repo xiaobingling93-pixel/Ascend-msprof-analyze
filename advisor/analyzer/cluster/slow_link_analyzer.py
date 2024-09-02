@@ -22,7 +22,7 @@ from profiler.advisor.common import constant
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.advisor.dataset.cluster.cluster_dataset import ClusterCommunicationDataset
-from profiler.advisor.utils.utils import safe_index
+from profiler.advisor.utils.utils import safe_index_value
 
 logger = logging.getLogger()
 
@@ -154,7 +154,7 @@ class SlowLinkAnalyzer(BaseAnalyzer):
 
         headers = self.format_datas.get("headers")
 
-        bindwidth_index = safe_index(headers, bindwidth_key_map.get(bindwidth_type))
+        bindwidth_index = safe_index_value(headers, bindwidth_key_map.get(bindwidth_type))
 
         if bindwidth_index is not None:
             data_list = [tuple_list[bindwidth_index] for tuple_list in self.format_datas.get("data", [])]
@@ -167,8 +167,8 @@ class SlowLinkAnalyzer(BaseAnalyzer):
             max_bandwidth_index = data_list.index(max_bandwidth)
             min_bandwidth_index = data_list.index(min_bandwidth)
 
-            rank_id_index = safe_index(headers, "rank_id")
-            step_index = safe_index(headers, "step")
+            rank_id_index = safe_index_value(headers, "rank_id")
+            step_index = safe_index_value(headers, "step")
 
             if rank_id_index is None:
                 return global_step_rank

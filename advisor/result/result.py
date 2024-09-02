@@ -1,7 +1,6 @@
 import json
 import os
 import stat
-from textwrap import fill
 from collections import OrderedDict
 
 import click
@@ -11,6 +10,8 @@ from prettytable import ALL, PrettyTable
 from profiler.advisor.common import constant as const
 from profiler.advisor.utils.utils import singleton, logger
 from profiler.advisor.config.config import Config
+from profiler.advisor.utils.file import FdOpen, check_dir_writable
+from profiler.cluster_analyse.common_func.file_manager import FileManager
 
 
 class ResultWriter:
@@ -19,6 +20,7 @@ class ResultWriter:
 
     def __init__(self, result_path=None):
         self.result_path = result_path
+        check_dir_writable(os.path.dirname(result_path))
         self.workbook = xlsxwriter.Workbook(result_path, {"nan_inf_to_errors": True})
 
         self.header_format = None
@@ -49,6 +51,11 @@ class ResultWriter:
     def add_data(self, sheet_name, headers, data_list):
         if len(sheet_name) > self.MAX_SHEET_NAME_LENGTH:
             sheet_name = sheet_name[:self.MAX_SHEET_NAME_LENGTH]
+
+        worksheet_name_list = [worksheet.name for worksheet in  self.workbook.worksheets()]
+        if sheet_name.lower() in [name.lower() for name in worksheet_name_list]:
+            logger.warning("Exists worksheets %s, skip add duplicate worksheet with name '%s'", worksheet_name_list, sheet_name)
+            return
 
         sheet = self.workbook.add_worksheet(sheet_name)
 
@@ -165,12 +172,11 @@ class OptimizeResult:
             return
         tune_op_dict = {"tune_ops_name": self._tune_op_list}
         tune_ops_file = Config().tune_ops_file
+        path = os.path.dirname(tune_ops_file)
+        file_name = os.path.basename(tune_ops_file)
         try:
-
-            with os.fdopen(os.open(tune_ops_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, stat.S_IWUSR | stat.S_IRUSR),
-                           'w', encoding="utf-8") as op_tune_file:
-                json.dump(tune_op_dict, op_tune_file)
-        except OSError as error:
+            FileManager.create_json_file(path, tune_op_dict, file_name, True)
+        except RuntimeError as error:
             logger.error("Dump op_list to %s failed, %s", tune_ops_file, error)
             return
         logger.info("Save tune op name list to %s", tune_ops_file)

@@ -45,4 +45,4 @@ class FusionOPAnalyzer(BaseAnalyzer):
             else:
                 checker.find_fusion_matched_issues_with_times(graph_data, profiling_data)
             checker.make_record(self.result)
-            self.html = checker.make_render(self.html_render, add_render_list)
+            self.html = checker.make_render(self.html_render)
