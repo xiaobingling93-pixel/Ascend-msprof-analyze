@@ -25,6 +25,8 @@ from common_func.file_manager import FileManager
 from common_func.path_manager import PathManager
 from analysis.analysis_facade import AnalysisFacade
 
+logger = logging.getLogger()
+
 COMM_FEATURE_LIST = ['all', 'communication_time', 'communication_matrix']
 
 class Interface:
@@ -96,7 +98,6 @@ def cluster_analysis_main(args=None):
     parser.add_argument('-o', '--output_path', type=str, help='Path of cluster analysis output')
     args_parsed, unknown = parser.parse_known_args(args=args)
     if unknown:
-        logger = logging.getLogger()
         logger.warning(f"Unknown arguments are provided: {unknown}")
     parameter = {
         Constant.COLLECTION_PATH: args_parsed.collection_path,
