@@ -36,19 +36,19 @@ class MegatronAlgorithm(ParallelAlgorithm):
         # Check for zero and adjust parallel sizes to avoid division by zero
         if tensor_model_parallel_size == 0:
             tensor_model_parallel_size = 1
-            logger.error("tensor_model_parallel_size cannot be zero.")
+            logger.error("tensor_model_parallel_size cannot be 0 and has been set to 1 to continue.")
 
         if pipeline_model_parallel_size == 0:
             pipeline_model_parallel_size = 1
-            logger.error("pipeline_model_parallel_size cannot be zero.")
+            logger.error("pipeline_model_parallel_size cannot be 0 and has been set to 1 to continue.")
 
         if data_parallel_size == 0:
             data_parallel_size = 1
-            logger.error("data_parallel_size cannot be zero.")
+            logger.error("data_parallel_size cannot be 0 and has been set to 1 to continue.")
 
         if expert_model_parallel_size == 0:
             expert_model_parallel_size = 1
-            logger.error("expert_model_parallel_size cannot be zero.")
+            logger.error("expert_model_parallel_size cannot be 0 and has been set to 1 to continue.")
 
         if data_parallel_size % expert_model_parallel_size != 0:
             raise RuntimeError(
