@@ -69,6 +69,9 @@ class BlockDimChecker(OperatorChecker):
             return False
         block_dim = int(op_info.block_dim)
         core_num = self.get_core_num(op_info)
+        if core_num == 0:
+            logger.error("The aicore number is zero. BlockDimChecker is skipped. Please check the info.json file.")
+            return False
         if block_dim % core_num == 0:
             return False
         if op_info.task_type == "MIX_AIC" and hasattr(op_info, "mix_block_dim") \
