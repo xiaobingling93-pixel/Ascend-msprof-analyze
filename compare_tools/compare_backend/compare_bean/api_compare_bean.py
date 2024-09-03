@@ -17,9 +17,9 @@ class ApiInfo:
         for data in self._data_list:
             self.total_dur += data.api_dur
             self.self_time += data.api_self_time
-        self.total_dur /= 1000.0
-        self.self_time /= 1000.0
-        self.avg_dur = self.total_dur / self.number if self.number else 0.0
+        self.total_dur = round(self.total_dur / 1000.0, 2)
+        self.self_time = round(self.self_time / 1000.0, 2)
+        self.avg_dur = round(self.total_dur / self.number, 2) if self.number else 0.0
 
 
 class ApiCompareBean:

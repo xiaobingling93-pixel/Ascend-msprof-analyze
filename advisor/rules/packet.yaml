@@ -1,6 +1,6 @@
 problem: "Excessive small communication packets may cause host delivery bottlenecks.\n"
-sdma_problem: "In the SDMA communication, {abnormal_sdma_ratio} of the communication data volume is less than {min_sdma_size} MB, and the total time is {abnormal_sdma_time} ms.\n"
-rdma_problem: "In the RDMA communication, {abnormal_rdma_ratio} of the communication data volume is less than {min_rdma_size} MB, and the total time is {abnormal_rdma_time} ms."
+sdma_problem: "In the SDMA communication, {abnormal_ratio} of the communication data volume is less than {min_size} MB, and the total time is {abnormal_time} ms.\n"
+rdma_problem: "In the RDMA communication, {abnormal_ratio} of the communication data volume is less than {min_size} MB, and the total time is {abnormal_time} ms."
 min_sdma_size: 16 #M
 min_rdma_size: 1 #M
 min_sdma_ratio: 0.2
