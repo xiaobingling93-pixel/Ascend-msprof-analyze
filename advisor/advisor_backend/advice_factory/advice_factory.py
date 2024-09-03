@@ -19,7 +19,7 @@ from common_func.path_manager import PathManager
 
 class AdviceFactory:
     def __init__(self, collection_path: str):
-        self.collection_path = os.path.realpath(collection_path)
+        self.collection_path = os.path.abspath(collection_path)
 
     @staticmethod
     def run_advice(self, advice: str, kwargs: dict):
