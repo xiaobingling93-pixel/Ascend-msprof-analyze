@@ -158,6 +158,7 @@ class PathManager:
     def remove_path_safety(cls, path: str):
         base_name = os.path.basename(path)
         msg = f"Failed to remove path: {base_name}"
+        cls.check_path_writeable(path)
         if os.path.islink(path):
             raise RuntimeError(msg)
         if os.path.exists(path):
