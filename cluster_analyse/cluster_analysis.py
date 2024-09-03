@@ -15,7 +15,6 @@
 
 import argparse
 import os
-import logging
 
 from cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
 from cluster_data_preprocess.mindspore_data_preprocessor import MindsporeDataPreprocessor
@@ -24,8 +23,6 @@ from common_func.constant import Constant
 from common_func.file_manager import FileManager
 from common_func.path_manager import PathManager
 from analysis.analysis_facade import AnalysisFacade
-
-logger = logging.getLogger()
 
 COMM_FEATURE_LIST = ['all', 'communication_time', 'communication_matrix']
 
@@ -96,9 +93,7 @@ def cluster_analysis_main(args=None):
     parser.add_argument('-m', '--mode', choices=COMM_FEATURE_LIST,
                         default='all', help="different analysis mode")
     parser.add_argument('-o', '--output_path', type=str, help='Path of cluster analysis output')
-    args_parsed, unknown = parser.parse_known_args(args=args)
-    if unknown:
-        logger.warning("Unknown arguments are provided: %s", unknown)
+    args_parsed = parser.parse_args(args = args)
     parameter = {
         Constant.COLLECTION_PATH: args_parsed.collection_path,
         Constant.ANALYSIS_MODE: args_parsed.mode,
