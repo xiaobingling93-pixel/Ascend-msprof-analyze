@@ -86,6 +86,7 @@ class Interface:
             Constant.ANALYSIS_MODE: self.analysis_mode,
             Constant.DATA_TYPE: data_type,
             Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: self.cluster_analysis_output_path,
+            Constant.DATA_SIMPLIFICATION: self.origin_params.get(Constant.DATA_SIMPLIFICATION, False)
         }
         comm_data_dict = CommunicationGroupGenerator(params).generate()
         params[Constant.COMM_DATA_DICT] = comm_data_dict
@@ -97,11 +98,13 @@ def cluster_analysis_main(args=None):
     parser.add_argument('-m', '--mode', choices=COMM_FEATURE_LIST,
                         default='all', help="different analysis mode")
     parser.add_argument('-o', '--output_path', type=str, help='Path of cluster analysis output')
+    parser.add_argument('--data_simplification', default=False, action='store_true', help='data simplification switch for db data')
     args_parsed, _ = parser.parse_known_args(args=args)
     parameter = {
         Constant.COLLECTION_PATH: args_parsed.profiling_path,
         Constant.ANALYSIS_MODE: args_parsed.mode,
-        Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: args_parsed.output_path
+        Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: args_parsed.output_path,
+        Constant.DATA_SIMPLIFICATION: args_parsed.data_simplification
     }
     try:
         Interface(parameter).run()
