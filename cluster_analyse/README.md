@@ -50,11 +50,12 @@ experimental_config = torch_npu.profiler._ExperimentalConfig(
 
    参数说明：
    
-   | 参数名               | 说明                                                         | 是否必选 |
-   | -------------------- | ------------------------------------------------------------ | -------- |
-   | --profiling_path或-d | 性能数据汇集目录。未配置-o参数时，运行分析脚本之后会在该目录下自动创建cluster_analysis_output文件夹，保存分析数据。 | 是       |
-   | --output_path或-o    | 自定义输出路径，运行分析脚本之后会在该目录下自动创建cluster_analysis_output文件夹，保存分析数据。 | 否       |
-   | --mode或-m           | 数据解析模式，取值详见“**--mode参数说明**”表。               | 否       |
+   | 参数名                | 说明                                                         | 是否必选 |
+   | --------------------- | ------------------------------------------------------------ | -------- |
+   | --profiling_path或-d  | 性能数据汇集目录。未配置-o参数时，运行分析脚本之后会在该目录下自动创建cluster_analysis_output文件夹，保存分析数据。 | 是       |
+   | --output_path或-o     | 自定义输出路径，运行分析脚本之后会在该目录下自动创建cluster_analysis_output文件夹，保存分析数据。 | 否       |
+   | --mode或-m            | 数据解析模式，取值详见“**--mode参数说明**”表。               | 否       |
+   | --data_simplification | 数据精简模式。对于数据量过大的性能数据db文件，可以通过配置该参数将数据精简，并提高工具分析效率。 | 否       |
    
    --mode参数说明：
    
@@ -63,7 +64,7 @@ experimental_config = torch_npu.profiler._ExperimentalConfig(
    | communication_matrix | 解析通信矩阵数据。                                           | 否       |
    | communication_time   | 解析通信耗时数据。                                           | 否       |
    | all                  | 同时解析通信矩阵communication_matrix和通信耗时数据communication_time，--mode参数默认值为all。 | 否       |
-
+   
    
 
 ### 交付件
