@@ -92,7 +92,7 @@ class Constant(object):
 
     BWD_LIST = ["bwd", "backward", "back", "grad"]
 
-    CPU_OP_FA_MASK = ("flash_attention", "fusion_attention", "flashattn", "xformers_flash", "efficient_attention")
+    CPU_OP_FA_MASK = ("flash_attention", "fusion_attention", "flashattn", "xformers_flash", "efficient_attention", "flsh2atten")
     CPU_OP_CONV = "aten::conv"
     CPU_OP_MATMUL_MASK = ("aten::addmm", "aten::bmm", "aten::mm", "aten::matmul")
     KERNEL_CUBE_MASK = ("gemm", "conv", "cutlass", "wgrad")
