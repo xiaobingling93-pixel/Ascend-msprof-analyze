@@ -15,6 +15,7 @@
 
 import argparse
 import os
+import logging
 
 from cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
 from cluster_data_preprocess.mindspore_data_preprocessor import MindsporeDataPreprocessor
@@ -25,6 +26,8 @@ from common_func.path_manager import PathManager
 from analysis.analysis_facade import AnalysisFacade
 
 COMM_FEATURE_LIST = ['all', 'communication_time', 'communication_matrix']
+logger = logging.getLogger()
+
 
 class Interface:
     ASCEND_PT = "ascend_pt"
@@ -67,6 +70,7 @@ class Interface:
     def run(self):
         PathManager.check_input_directory_path(self.collection_path)
         PathManager.check_path_owner_consistent(self.collection_path)
+        PathManager.make_dir_safety(self.cluster_analysis_output_path)
         PathManager.check_path_writeable(self.cluster_analysis_output_path)
         data_map, data_type = self.allocate_prof_data()
         if not data_map:
@@ -82,6 +86,7 @@ class Interface:
             Constant.ANALYSIS_MODE: self.analysis_mode,
             Constant.DATA_TYPE: data_type,
             Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: self.cluster_analysis_output_path,
+            Constant.DATA_SIMPLIFICATION: self.origin_params.get(Constant.DATA_SIMPLIFICATION, False)
         }
         comm_data_dict = CommunicationGroupGenerator(params).generate()
         params[Constant.COMM_DATA_DICT] = comm_data_dict
@@ -89,18 +94,22 @@ class Interface:
 
 def cluster_analysis_main(args=None):
     parser = argparse.ArgumentParser(description="cluster analysis module")
-    parser.add_argument('-d', '--collection_path', type=str, required=True, help="profiling data path")
+    parser.add_argument('-d', '--profiling_path', type=str, required=True, help="profiling data path")
     parser.add_argument('-m', '--mode', choices=COMM_FEATURE_LIST,
                         default='all', help="different analysis mode")
     parser.add_argument('-o', '--output_path', type=str, help='Path of cluster analysis output')
+    parser.add_argument('--data_simplification', default=False, action='store_true', help='data simplification switch for db data')
     args_parsed = parser.parse_args(args = args)
     parameter = {
-        Constant.COLLECTION_PATH: args_parsed.collection_path,
+        Constant.COLLECTION_PATH: args_parsed.profiling_path,
         Constant.ANALYSIS_MODE: args_parsed.mode,
-        Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: args_parsed.output_path
+        Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: args_parsed.output_path,
+        Constant.DATA_SIMPLIFICATION: args_parsed.data_simplification
     }
-
-    Interface(parameter).run()
+    try:
+        Interface(parameter).run()
+    except Exception as e:
+        logger.error(e)
 
 if __name__ == "__main__":
     cluster_analysis_main()

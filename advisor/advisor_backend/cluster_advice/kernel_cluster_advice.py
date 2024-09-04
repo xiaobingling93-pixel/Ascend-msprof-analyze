@@ -5,7 +5,7 @@ from common_func.constant import Constant
 from common_func_advisor.constant import Constant as AdvisorConstant
 from cluster_advice.cluster_advice_base import ClusterAdviceBase
 from cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
-
+from profiler.cluster_analyse.common_func.file_manager import FileManager
 
 class KernelClusterAdvice(ClusterAdviceBase):
     COLUMNS_TO_GROUP = ["Name", "Input Shapes", "Input Data Types", "Output Shapes"]
@@ -32,6 +32,7 @@ class KernelClusterAdvice(ClusterAdviceBase):
             kernel_file = os.path.join(profiling_dir_path, Constant.SINGLE_OUTPUT, Constant.KERNEL_DETAILS_CSV)
             if kernel_file:
                 # 判断csv文件大小
+                FileManager.check_file_size(kernel_file)
                 PathManager.check_path_readable(kernel_file)
                 # 读取CSV文件
                 df_temp = pd.read_csv(kernel_file)

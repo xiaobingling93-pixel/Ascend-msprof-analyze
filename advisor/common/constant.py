@@ -13,6 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+import stat
+
 # timeline
 DEQUEUE = "Dequeue"
 DEQUEUE_SEP = "@"
@@ -49,17 +52,7 @@ NO_STACK_REASON_MAP = {
     TIMELINE_BACKWARD_NO_STACK_CODE: "Backward broadcast, without call stacks in profiling.",
     TIMELINE_ACL_TO_NPU_NO_STACK_CODE: "Incoming flow is 'acl_to_npu', without call stacks in profiling."
 }
-TIMELINE_API_DOC_URL = "https://gitee.com/ascend/mstt/blob/master/profiler/advisor/doc/Samples%20of%20Fused%20Operator%20API%20Replacement.md"
 AFFINITY_TRAINING_API = "Affinity training api"
-TIMELINE_WITH_STACK_DOC_URL = "https://www.hiascend.com/document/detail/zh/canncommercial/" \
-                              "70RC1/modeldevpt/ptmigr/AImpug_0067.html"
-PyTorch_AOE_OPERATOR_TUNE_URL = "https://www.hiascend.com/document/detail/zh/canncommercial/" \
-                                "70RC1/devtools/auxiliarydevtool/aoe_16_045.html"
-MSLite_Infer_AOE_OPEATOR_TUNE_URL = "https://www.mindspore.cn/lite/docs/en/master/use/cloud_infer/converter_tool_ascend.html#aoe-auto-tuning"
-ENABLE_COMPILED_TUNE_URL = "https://www.hiascend.com/document/detail/zh/canncommercial/" \
-                           "70RC1/modeldevpt/ptmigr/AImpug_0059.html"
-
-ASCEND_PROFILER_URL = "https://www.hiascend.com/document/detail/zh/canncommercial/70RC1/modeldevpt/ptmigr/AImpug_0067.html"
 TIMELINE_EMPTY_STACKS_PROMPT = "These APIs have no code stack. If parameter 'with_stack=False' while profiling, " \
                                "please refer to {timeline_profiling_doc_url} to set 'with_stack=True'. " \
                                "Otherwise, ignore following affinity APIs due to backward broadcast lack of stack."
@@ -156,3 +149,11 @@ MAX_FILE_SIZE = 10 ** 10
 MAX_NUM_PROCESSES = 4
 DEFAULT_STEP = "-1"
 STEP_RANK_SEP = "_"
+
+
+MAX_READ_LINE_BYTES = 8196 * 1024
+MAX_READ_FILE_BYTES = 64 * 1024 * 1024 * 1024
+MAX_READ_DB_FILE_BYTES = 8 * 1024 * 1024 * 1024
+
+WRITE_MODES = stat.S_IWUSR | stat.S_IRUSR | stat.S_IRGRP
+WRITE_FLAGS = os.O_WRONLY | os.O_CREAT | os.O_TRUNC

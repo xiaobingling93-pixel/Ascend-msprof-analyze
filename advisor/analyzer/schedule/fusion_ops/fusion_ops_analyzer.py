@@ -8,6 +8,7 @@ from profiler.advisor.analyzer.base_analyzer import BaseAnalyzer
 from profiler.advisor.common import constant as const
 from profiler.advisor.common.analyzer_scopes import SupportedScopes
 from profiler.advisor.common.timeline.event import TimelineEvent
+from profiler.advisor.config.config import Config
 from profiler.advisor.dataset.timeline_event_dataset import ScheduleAnalysisDataset
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.advisor.utils.utils import format_timeline_result
@@ -155,7 +156,7 @@ class TimelineFusionOpsAnalyzer(BaseAnalyzer):
         if self.empty_stacks:
             desc += ", but with no stack"
             suggestion = const.TIMELINE_EMPTY_STACKS_PROMPT.format(
-                timeline_profiling_doc_url=const.TIMELINE_WITH_STACK_DOC_URL
+                timeline_profiling_doc_url=Config().timeline_with_stack_doc_url
             )
 
         sheet_name = "Affinity apis"
@@ -188,8 +189,8 @@ class TimelineFusionOpsAnalyzer(BaseAnalyzer):
                                          cann_version=self.cann_version,
                                          torch_version=self.torch_version,
                                          empty_stacks=self.empty_stacks,
-                                         with_stack_doc_url=const.TIMELINE_WITH_STACK_DOC_URL,
-                                         api_doc_url=const.TIMELINE_API_DOC_URL,
+                                         with_stack_doc_url=Config().timeline_with_stack_doc_url,
+                                         api_doc_url=Config().timeline_api_doc_url,
                                          result=format_result_for_html,
                                          priority_background_color=self.get_priority())
 

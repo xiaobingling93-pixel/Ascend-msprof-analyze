@@ -51,7 +51,7 @@ class DetailPerformanceGenerator(BaseGenerator):
             return
         dir_path = self._args.output_path if self._args.output_path else "./"
         file_name = "performance_comparison_result_{}.xlsx".format(datetime.utcnow().strftime("%Y%m%d%H%M%S"))
-        result_file_path = os.path.realpath(os.path.join(dir_path, file_name))
+        result_file_path = os.path.abspath(os.path.join(dir_path, file_name))
         ExcelView(self._result_data, result_file_path, self._args).generate_view()
         print(f"[INFO] The comparison result file has been generated: {result_file_path}")
 

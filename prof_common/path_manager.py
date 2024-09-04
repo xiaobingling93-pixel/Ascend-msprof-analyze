@@ -17,6 +17,8 @@ import re
 import shutil
 import platform
 
+from .constant import Constant
+
 
 class PathManager:
     MAX_PATH_LENGTH = 4096
@@ -149,6 +151,7 @@ class PathManager:
     def remove_path_safety(cls, path: str):
         base_name = os.path.basename(path)
         msg = f"Failed to remove path: {base_name}"
+        cls.check_path_writeable(path)
         if os.path.islink(path):
             raise RuntimeError(msg)
         if os.path.exists(path):
@@ -189,3 +192,14 @@ class PathManager:
             msg = f"Invalid input path which is a soft link."
             raise RuntimeError(msg)
         return os.path.realpath(path)
+
+    @classmethod
+    def check_file_size(cls, file_path: str):
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"The file {file_path} does not exists.")
+        file_size = os.path.getsize(file_path)
+        if file_size > Constant.MAX_FILE_SIZE_5_GB:
+            check_msg = input(
+                f"The file({file_path}) size exceeds the preset max value. Continue reading the file? [y/n]")
+            if check_msg.lower() != "y":
+                raise RuntimeError(f"[WARNING] The user choose not to read the file: {file_path}")

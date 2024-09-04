@@ -41,9 +41,9 @@ class ClusterDataset(Dataset):
         """
         for filename in os.listdir(self.collection_path):
             if filename == 'cluster_analysis_output':
-                logger.info("[INFO]Cluster has been analyzed "
+                logger.info("Cluster has been analyzed "
                             "because of the existence of cluster analysis output directory.")
-                logger.info("[INFO]Skip Cluster analyze backend.")
+                logger.info("Skip Cluster analyze backend.")
                 return True
         return False
 
@@ -54,7 +54,7 @@ class ClusterDataset(Dataset):
             Constant.COLLECTION_PATH: self.collection_path,
             Constant.ANALYSIS_MODE: "all"
         }
-        print("[INFO] cluster analysis is in the process, please wait...")
+        logger.info("cluster analysis is in the process, please wait...")
         try:
             Interface(parameter).run()
         except Exception as e:
@@ -92,7 +92,7 @@ class ClusterStepTraceTimeDataset(ClusterDataset):
         try:
             step_data = self.load_csv_data(const.CLUSTER_STEP_TIME_CSV, ClusterStepTraceTimeBean)
         except RuntimeError as e:
-            print("捕获到异常：", e)
+            logger.error("捕获到异常：%s", e)
             self._step_dict = None
             return False
         self._step_dict = self.format_data(step_data)
@@ -164,7 +164,7 @@ class ClusterCommunicationDataset(ClusterDataset):
         try:
             communication_json = self.load_json_data(const.CLUSTER_COMM_JSON)
         except RuntimeError as e:
-            print("捕获到异常：", e)
+            logger.error("捕获到异常：%s", e)
             self.rank_bw_dict = None
             return False
         self.process(communication_json)

@@ -54,6 +54,7 @@ class FormDataProcessor:
             if "mindstudio_profiler_output" in f:
                 continue
             # 判断csv文件大小
+            PathManager.check_file_size(f)
             PathManager.check_path_readable(f)
             # 读取CSV文件
             df = pd.read_csv(f)
@@ -81,6 +82,8 @@ class FormDataProcessor:
 
     def getChipType(self):
         file = self.files[0]
+        PathManager.check_file_size(file)
+        PathManager.check_path_readable(file)
         df = pd.read_csv(file)
         if 'aiv_time(us)' in df.columns:
             return "ASCEND_NEW"
@@ -159,10 +162,10 @@ class OpSummaryAnalyzerBase:
         # 创建结果文件
         self.result_dir = os.path.join(dir_path, "result")
         PathManager.check_path_length(self.result_dir)
-        if os.path.exists(self.result_dir):
-            shutil.rmtree(self.result_dir, onerror=self.on_rm_error)
+        PathManager.remove_path_safety(self.result_dir)
         PathManager.check_path_writeable(dir_path)
         PathManager.make_dir_safety(self.result_dir)
+        PathManager.check_path_writeable(self.result_dir)
 
     def getColumnsToGroup(self):
         return self.columns_to_group
@@ -287,7 +290,7 @@ class DeliverableGenerator:
         if os.path.islink(params.get('dir')):
             print(f"The file: \"{params.get('dir')}\" is link. Please check the path.")
             return
-        prof_path = os.path.realpath(params.get('dir'))
+        prof_path = os.path.abspath(params.get('dir'))
         PathManager.input_path_common_check(prof_path)
         if params.get('type') == "all":
             self.analyzers = [TimeToCsvAnalyzer(chip_type, prof_path), StatisticalInfoToHtmlAnalyzer(chip_type, params.get("top_n"), prof_path)]

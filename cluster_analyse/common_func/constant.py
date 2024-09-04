@@ -110,3 +110,12 @@ class Constant(object):
 
     # metadata key
     DISTRIBUTED_ARGS = "distributed_args"
+
+    # mode
+    ALL = "all"
+    COMMUNICATION_TIME = "communication_time"
+    COMMUNICATION_MATRIX = "communication_matrix"
+    
+    STEP = "step"
+
+    DATA_SIMPLIFICATION = "data_simplification"

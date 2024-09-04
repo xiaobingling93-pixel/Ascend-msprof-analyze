@@ -96,6 +96,8 @@ class SlowLinkAdvice(ClusterAdviceBase):
 
     def produce_bottleneck(self, link_type: str):
         data_list = [rank_dict.get(link_type, 0) for rank_id, rank_dict in self.rank_bw_dict.items()]
+        if len(data_list) == 0:
+            raise ValueError("Cannot calculate avg_bw, data_list is empty!")
         avg_bw = round(sum(data_list) / len(data_list), 3)
         if avg_bw == 0:
             return

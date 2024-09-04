@@ -28,6 +28,7 @@
 python3 bind_core.py -app="inferenec/train cmd"
 ```
 -app或--application：配置训练或推理程序的执行命令，执行命令前后加引号。
+-t或--time：设置绑核之前的等待时间，单位为秒。
 
 该方式会自动拉起训练或推理任务，检测任务进程，并实施绑核。
 

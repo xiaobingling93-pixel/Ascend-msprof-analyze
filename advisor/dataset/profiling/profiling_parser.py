@@ -6,6 +6,7 @@ from typing import List, Dict
 
 from profiler.advisor.dataset.profiling.info_collection import logger
 from profiler.advisor.utils.utils import get_file_path_from_directory, SafeOpen, format_excel_title
+from profiler.cluster_analyse.common_func.file_manager import FileManager
 
 
 class ProfilingParser:
@@ -19,7 +20,7 @@ class ProfilingParser:
 
     def __init__(self, path: str) -> None:
         self._path = path
-        self._raw_data: List[List[str]] = []
+        self._raw_data: Dict = dict()
         self._filename = ""
 
     @staticmethod
@@ -77,6 +78,11 @@ class ProfilingParser:
 
     def _parse_csv(self, file, check_csv=True) -> bool:
         logger.debug("Parse file %s", file)
+        try:
+            FileManager.check_file_size(file)
+        except RuntimeError as e:
+            logger.error("File size check failed: %s", e)
+            return False
         self._filename = os.path.splitext(os.path.basename(file))[0]
         with SafeOpen(file, encoding="utf-8") as csv_file:
             try:
@@ -101,9 +107,8 @@ class ProfilingParser:
         logger.debug("Parse file %s", file)
         self._filename = os.path.splitext(os.path.basename(file))[0]
         try:
-            with open(file, encoding="utf-8") as json_file:
-                self._raw_data = json.load(json_file)
-        except (OSError, ValueError) as error:
+            self._raw_data = FileManager.read_json_file(file)
+        except RuntimeError as error:
             logger.error("Parse json file %s failed : %s", file, error)
             return False
         return True

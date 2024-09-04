@@ -30,7 +30,7 @@ from advisor_backend.advice_factory.overall_advice_factory import OverallAdviceF
 
 class Interface:
     def __init__(self, collection_path: str):
-        self.collection_path = os.path.realpath(collection_path)
+        self.collection_path = os.path.abspath(collection_path)
         self._factory_controller = FactoryController(collection_path)
 
     def get_data(self: any, mode: str, advice: str, **kwargs):
@@ -50,7 +50,7 @@ class FactoryController:
     }
 
     def __init__(self, collection_path: str):
-        self.collection_path = os.path.realpath(collection_path)
+        self.collection_path = os.path.abspath(collection_path)
         self.temp_input_path = None
 
     def create_advice_factory(self, mode: str, input_path: str):
