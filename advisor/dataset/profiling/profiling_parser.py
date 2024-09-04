@@ -78,6 +78,11 @@ class ProfilingParser:
 
     def _parse_csv(self, file, check_csv=True) -> bool:
         logger.debug("Parse file %s", file)
+        try:
+            FileManager.check_file_size(file)
+        except RuntimeError as e:
+            logger.error("File size check failed: %s", e)
+            return False
         self._filename = os.path.splitext(os.path.basename(file))[0]
         with SafeOpen(file, encoding="utf-8") as csv_file:
             try:
