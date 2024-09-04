@@ -70,8 +70,6 @@ class Interface:
     def run(self):
         PathManager.check_input_directory_path(self.collection_path)
         PathManager.check_path_owner_consistent(self.collection_path)
-        PathManager.make_dir_safety(self.cluster_analysis_output_path)
-        PathManager.check_path_writeable(self.cluster_analysis_output_path)
         data_map, data_type = self.allocate_prof_data()
         if not data_map:
             print("[WARNING] Can not get rank info or profiling data.")
@@ -79,7 +77,9 @@ class Interface:
         if data_type == Constant.INVALID:
             print("[ERROR] The current folder contains both DB and other files. Please check.")
             return
+        PathManager.check_input_directory_path(self.cluster_analysis_output_path)
         FileManager.create_output_dir(self.cluster_analysis_output_path)
+        PathManager.check_path_writeable(self.cluster_analysis_output_path)
         params = {
             Constant.COLLECTION_PATH: self.collection_path,
             Constant.DATA_MAP: data_map,
