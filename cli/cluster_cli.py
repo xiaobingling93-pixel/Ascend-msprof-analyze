@@ -34,7 +34,7 @@ context_settings['ignore_unknown_options'] = True
 @click.option('--profiling_path', '-d', type=click.Path(), required=True,
               help='path of the profiling data')
 @click.option('--mode', '-m', type=click.Choice(COMM_FEATURE_LIST), default='all')
-@click.option('--output_path', '-o', 'cluster_analysis_output_path', type=click.Path(), default='all',
+@click.option('--output_path', '-o', 'cluster_analysis_output_path', type=click.Path(), default='',
               help='Path of cluster analysis output')
 @click.argument('args', nargs=-1)
 def cluster_cli(profiling_path, mode, cluster_analysis_output_path, args) -> None:
