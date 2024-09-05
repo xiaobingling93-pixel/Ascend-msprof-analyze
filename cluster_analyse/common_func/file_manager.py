@@ -128,8 +128,7 @@ class FileManager:
             if not os.path.exists(output_path):
                 PathManager.make_dir_safety(output_path)
             return
-        if os.path.exists(output_path):
-            PathManager.remove_path_safety(output_path)
+        PathManager.remove_path_safety(output_path)
         PathManager.make_dir_safety(output_path)
 
     @classmethod

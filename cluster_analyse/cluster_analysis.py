@@ -47,7 +47,7 @@ class Interface:
 
     def get_cluster_analysis_output_path(self, params):
         cluster_analysis_output_path = params.get(Constant.CLUSTER_ANALYSIS_OUTPUT_PATH)
-        if cluster_analysis_output_path:
+        if cluster_analysis_output_path and cluster_analysis_output_path != "None":
             return PathManager.get_realpath(cluster_analysis_output_path)
         return self.collection_path
     def allocate_prof_data(self):
