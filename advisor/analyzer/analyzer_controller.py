@@ -31,6 +31,10 @@ class AnalyzerController:
     CLUSTER_RANK_THRESHOLD = 2
     SDMA_SUPPORT_SCOPES = [SupportedScopes.BANDWIDTH_CONTENTION_DETECTION]
     RDMA_SUPPORT_SCOPES = [SupportedScopes.PACKET]
+    COMMUNICATION_MAPPING = {
+        SlowLinkAnalyzer.SDMA: SDMA_SUPPORT_SCOPES,
+        SlowLinkAnalyzer.RDMA: RDMA_SUPPORT_SCOPES
+    }
 
     def __init__(self):
         self.dimensions = Interface.all_dimension
@@ -244,13 +248,10 @@ class AnalyzerController:
             logger.error("Error transit type %s, optionals are %s", bandwidth_type, supported_trans_type)
             return job_list
 
-        bandwidth_type_list = [bandwidth_type] if bandwidth_type is not None else supported_trans_type
-
-        for bandwidth_type in bandwidth_type_list:
-            job_list += getattr(self, f"_communication_{bandwidth_type.lower()}_analysis")(profiling_path,
-                                                                                           benchmark_profiling_path,
-                                                                                           step, benchmark_step,
-                                                                                           scope)
+        job_list += self._communication_analysis(profiling_path=profiling_path,
+                                                 benchmark_profiling_path=benchmark_profiling_path,
+                                                 step=step, benchmark_step=benchmark_step,
+                                                 scope=scope, bandwidth_type=bandwidth_type)
 
         return job_list
 
@@ -452,36 +453,39 @@ class AnalyzerController:
                 break
         self._get_analysis_success_resp(pid, resp)
 
-    def _communication_rdma_analysis(self, profiling_path, benchmark_profiling_path=None, step=None,
-                                     benchmark_step=None, scope=None):
-        # 小包分析
+    def _get_scopes(self, scope=None, bandwidth_type=SlowLinkAnalyzer.SDMA):
+        """
+        Args:
+            scope: analyzer type
+            bandwidth_type: analysis standard
+        Returns:
+            scope lists
+        """
+        scopes = []
+        if scope:
+            if scope in self.COMMUNICATION_MAPPING.get(bandwidth_type, self.SDMA_SUPPORT_SCOPES):
+                scopes.append(scope)
+            return scopes
+        for dimension in [Interface.COMMUNICATION]:
+            for scope_ in Interface.get_scope(dimension):
+                if scope_ in self.SDMA_SUPPORT_SCOPES or scope_ in self.RDMA_SUPPORT_SCOPES:
+                    scopes.append(scope_)
+        return scopes
+
+    def _communication_analysis(self, **child_kwargs):
         kwargs = copy.deepcopy(self.kwargs)
         job_list = []
 
-        kwargs["profiling_path"] = profiling_path
-        kwargs["benchmark_profiling_path"] = benchmark_profiling_path
-        kwargs["step"] = step
-        kwargs["benchmark_step"] = benchmark_step
+        kwargs["profiling_path"] = child_kwargs.get("profiling_path", "")
+        kwargs["benchmark_profiling_path"] = child_kwargs.get("benchmark_profiling_path", "")
+        kwargs["step"] = child_kwargs.get("step", -1)
+        kwargs["benchmark_step"] = child_kwargs.get("benchmark_step", -1)
+        bandwidth_type = child_kwargs.get("bandwidth_type", SlowLinkAnalyzer.SDMA)
+        scope = child_kwargs.get("scope", None)
 
-        if scope in self.RDMA_SUPPORT_SCOPES:
+        for scope_ in self._get_scopes(scope, bandwidth_type):
             interface = Interface(**kwargs)
-            job_list.append((Interface.COMMUNICATION, scope, interface, kwargs))
-
-        return job_list
-
-    def _communication_sdma_analysis(self, profiling_path, benchmark_profiling_path=None, step=None,
-                                     benchmark_step=None, scope=None):
-        kwargs = copy.deepcopy(self.kwargs)
-        job_list = []
-
-        kwargs["profiling_path"] = profiling_path
-        kwargs["benchmark_profiling_path"] = benchmark_profiling_path
-        kwargs["step"] = step
-        kwargs["benchmark_step"] = benchmark_step
-
-        if scope in self.SDMA_SUPPORT_SCOPES:
-            interface = Interface(**kwargs)
-            job_list.append((Interface.COMMUNICATION, scope, interface, kwargs))
+            job_list.append((Interface.COMMUNICATION, scope_, interface, kwargs))
 
         return job_list
 
