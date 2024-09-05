@@ -61,9 +61,9 @@ class Statistic:
         dst_headers.extend(src_headers)
         datas.extend([self.count, self.abnormal_count, self.abnormal_ratio, self.abnormal_duration])
         self.desc = self.desc.format(
-            abnormal_sdma_ratio=f"{round(self.abnormal_ratio, 4):.2%}",
-            min_sdma_size=self.min_size,
-            abnormal_sdma_time=round(self.abnormal_duration, 4))
+            abnormal_ratio=f"{round(self.abnormal_ratio, 4):.2%}",
+            min_size=self.min_size,
+            abnormal_time=round(self.abnormal_duration, 4))
         return True
 
 

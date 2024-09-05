@@ -70,8 +70,6 @@ class Interface:
     def run(self):
         PathManager.check_input_directory_path(self.collection_path)
         PathManager.check_path_owner_consistent(self.collection_path)
-        PathManager.make_dir_safety(self.cluster_analysis_output_path)
-        PathManager.check_path_writeable(self.cluster_analysis_output_path)
         data_map, data_type = self.allocate_prof_data()
         if not data_map:
             print("[WARNING] Can not get rank info or profiling data.")
@@ -79,7 +77,9 @@ class Interface:
         if data_type == Constant.INVALID:
             print("[ERROR] The current folder contains both DB and other files. Please check.")
             return
+        PathManager.check_input_directory_path(self.cluster_analysis_output_path)
         FileManager.create_output_dir(self.cluster_analysis_output_path)
+        PathManager.check_path_writeable(self.cluster_analysis_output_path)
         params = {
             Constant.COLLECTION_PATH: self.collection_path,
             Constant.DATA_MAP: data_map,
@@ -91,6 +91,7 @@ class Interface:
         comm_data_dict = CommunicationGroupGenerator(params).generate()
         params[Constant.COMM_DATA_DICT] = comm_data_dict
         AnalysisFacade(params).cluster_analyze()
+        print(f"[INFO] The cluster analysis result file has been generated: {self.cluster_analysis_output_path}")
 
 def cluster_analysis_main(args=None):
     parser = argparse.ArgumentParser(description="cluster analysis module")
@@ -99,7 +100,7 @@ def cluster_analysis_main(args=None):
                         default='all', help="different analysis mode")
     parser.add_argument('-o', '--output_path', type=str, help='Path of cluster analysis output')
     parser.add_argument('--data_simplification', default=False, action='store_true', help='data simplification switch for db data')
-    args_parsed, _ = parser.parse_known_args(args=args)
+    args_parsed = parser.parse_args(args = args)
     parameter = {
         Constant.COLLECTION_PATH: args_parsed.profiling_path,
         Constant.ANALYSIS_MODE: args_parsed.mode,

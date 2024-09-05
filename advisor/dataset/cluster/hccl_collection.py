@@ -26,7 +26,8 @@ class HcclInfo():
         self._step = step
         self._rank = rank
         self._name = op.split("@")[0]
-        self._elapse_time = self.get_elapse_time(rank_dict, "Elapse Time(ms)")
+        self._ts = self.get_communication_time_info(rank_dict, "Start Timestamp(us)")
+        self._elapse_time = self.get_communication_time_info(rank_dict, "Elapse Time(ms)")
         self._sdma_info = self.get_communication_info(rank_dict, "SDMA")
         self._rdma_info = self.get_communication_info(rank_dict, "RDMA")
 
@@ -58,15 +59,19 @@ class HcclInfo():
     def elapse_time(self):
         return self._elapse_time
 
+    @property
+    def ts(self):
+        return self._ts
+
     @staticmethod
     def get_communication_info(rank_dict: dict, name: str):
         communication_bandwidth_info = rank_dict.get('Communication Bandwidth Info', dict())
         return communication_bandwidth_info.get(name, dict())
 
     @staticmethod
-    def get_elapse_time(rank_dict: dict, name: str):
+    def get_communication_time_info(rank_dict: dict, name: str):
         communication_time_info = rank_dict.get('Communication Time Info', dict())
-        return communication_time_info.get(name, "")
+        return communication_time_info.get(name, 0)
 
     def get_rdma_transmit_time(self):
         return self.rdma_info.get('Transit Time(ms)', 0)

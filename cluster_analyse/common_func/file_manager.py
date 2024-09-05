@@ -73,10 +73,10 @@ class FileManager:
             raise RuntimeError(f"The file({base_name}) size exceeds the preset max value.")
 
         try:
-            with open(file_path, "r") as yaml_file:
+            with open(file_path, "r", encoding="utf-8") as yaml_file:
                 result_data = yaml.safe_load(yaml_file)
         except Exception as e:
-            raise RuntimeError(f"Failed to read the file: {base_name}") from e
+            raise RuntimeError(f"Failed to read the file: {base_name}, reason is {str(e)}") from e
         return result_data
 
     @classmethod
@@ -90,8 +90,8 @@ class FileManager:
         PathManager.check_path_writeable(output_path)
         try:
             with os.fdopen(
-                os.open(output_file, os.O_WRONLY | os.O_CREAT, cls.DATA_FILE_AUTHORITY),
-                'w', newline=""
+                    os.open(output_file, os.O_WRONLY | os.O_CREAT, cls.DATA_FILE_AUTHORITY),
+                    'w', newline=""
             ) as file:
                 writer = csv.writer(file)
                 if headers:
@@ -114,7 +114,7 @@ class FileManager:
         base_name = os.path.basename(output_file)
         try:
             with os.fdopen(
-                os.open(output_file, os.O_WRONLY | os.O_CREAT, cls.DATA_FILE_AUTHORITY), 'w'
+                    os.open(output_file, os.O_WRONLY | os.O_CREAT, cls.DATA_FILE_AUTHORITY), 'w'
             ) as file:
                 file.write(json.dumps(data))
         except Exception as e:

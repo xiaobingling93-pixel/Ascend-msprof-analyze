@@ -78,6 +78,9 @@ msprof-analyze的advisor功能是将Ascend PyTorch Profiler或者msprof采集的
 |communication| packet_analysis                       |通信小包检测                          |
 | scheduling | timeline_fusion_ops                   | 亲和API替换调优                      |
 |            | timeline_op_dispatch                  | 识别算子下发问题(路径3/路径5)            |
+| | gc_analysis | 识别异常垃圾回收事件。需要Ascend PyTorch Profiler采集时开启experimental_config下的gc_delect_threshold功能。 |
+| memory | memory_analysis | 识别异常的内存申请释放操作 |
+| comparison | comparison_analysis | 识别标杆和待比对性能数据的Kernel和API数据（无标杆场景是集群内部快慢卡的性能数据对比，有标杆场景是两个集群之间存在明显耗时差异的相同卡之间的性能数据对比） |
 
 - all
 
@@ -123,30 +126,96 @@ msprof-analyze的advisor功能是将Ascend PyTorch Profiler或者msprof采集的
 | --debug                            | 工具执行报错时可打开此开关，将会展示详细保存堆栈信息。       | 否       |
 | -h，-H<br/>--help                  | 在需要查询当前命令附属子命令或相关参数时，给出帮助建议。     | 否       |
 
-### 报告解析
+### 报告解析（无标杆）
 
-如下图所示，工具会从集群、单卡性能拆解、调度和计算等维度进行问题诊断并给出相应的调优建议。
+无标杆是指执行msprof-analyze advisor时，未配置-bp参数，指定基准性能数据进行比对。
+
+如下图所示，工具会从集群、单卡性能拆解、调度和计算等维度进行问题诊断并给出相应的调优建议。并通过红、黄、绿色块表示问题优先级，分别为High（高）、Medium（中）、Low（低）。
 
 ![输入图片说明](./img/cluster.png)
 
-cluster模块的分析
-1. 包含快慢卡和快慢链路分析，仅识别问题，不提供调优建议。
-2. 通信重传检测分析，识别发生重传的通信域并提供调优建议。  
-如下图示例，识别到当前训练任务的通信和下发（free较多说明存在任务下发存在问题）存在问题。
+#### overall模块的分析
 
-![cluster_1](./img/cluster_1.png)
-如下图所示，识别到当前训练任务存在通信重传问题，并提供调优建议
+overall模块仅识别问题，不提供调优建议。
+
+- 无标杆单卡场景的overall模块的Environment Variable Issues是对环境变量的设置做出推荐。
+
+  ![env_var.png](./img/env_var.png)
+
+- 无标杆单卡场景的overall模块的overall summary分析包含当前训练任务慢卡的性能拆解，按照计算、通信和下发三个维度进行耗时的统计，可以基于该分析识别到训练性能瓶颈是计算、通信还是下发问题，同样不提供调优建议。
+
+  ![输入图片说明](./img/overall_0.png)
+
+  ![输入图片说明](./img/overall.png)
+
+- 无标杆集群场景的overall模块包含快慢卡和快慢链路分析。
+
+  ![cluster_1](./img/cluster_1.png)
+
+  ![cluster_3](./img/cluster_3.png)
+
+  ![cluster_4](./img/cluster_4.png)
+
+  ![cluster_5](./img/cluster_5.png)
+
+#### comparison
+
+comparison模块内容如下图示例，识别标杆和待比对性能数据的Kernel和API数据，无标杆场景的comparison是集群内部快慢卡的性能数据对比。包括：
+
+- Kernel compare of Rank* Step* and Rank* Step*：Kernel的总耗时、平均耗时、最大耗时、最小耗时和执行次数，以及标杆的对应数据，最后计算Diff Total Ratio（标杆总耗时/总耗时）和Diff Avg Ratio（标杆平均耗时/平均耗时）。
+
+  Diff Total Ratio和Diff Avg Ratio大于1则表示当前环境性能更优，小于1则表示当前环境有待优化，等于1则表示当前环境与标杆环境性能接近。
+
+  ![comparison2](./img/comparison2.png)
+
+- Api compare of Rank* Step* and Rank* Step*：API的总耗时、API自身耗时（除去API调用的子API的耗时）、平均耗时和执行次数，以及标杆的对应数据，最后计算Diff Total Ratio（标杆总耗时/总耗时）、Diff Self Ratio（标杆API自身耗时/API自身耗时）、Diff Avg Ratio（标杆平均耗时/平均耗时）和Diff Calls Ratio（标杆执行次数/执行次数）。
+
+  Diff Total Ratio、Diff Self Ratio、Diff Avg Ratio和Diff Calls Ratio大于1则表示当前环境性能更优，小于1则表示当前环境有待优化，等于1则表示当前环境与标杆环境性能接近。
+
+  ![comparison3](./img/comparison3.png)
+
+`mstt_advisor_{timestamp}.html`文件的comparison模块内容仅展示Kernel和API的Top 10条数据，详细数据需要查看`mstt_advisor_{timestamp}.xlsx`文件。
+
+#### performance problem analysis模块的分析
+
+performance problem analysis模块包含如下子模块。
+
+memory模块分析内存的异常申请释放操作。
+
+![memory](./img/memory.png)
+
+communication模块从通信维度进行分析，目前支持通信小算子检测。
+
+![communication](./img/communication.png)
+
+通信重传检测分析，识别发生重传的通信域并提供调优建议。
+
+如下图所示，识别到当前训练任务存在通信重传问题，并提供调优建议。
+
 ![cluster_2](./img/cluster_2.png)
-overall模块的分析包含当前训练任务慢卡的性能拆解，按照计算、通信和下发三个维度进行耗时的统计，可以基于该分析识别到训练性能瓶颈是计算、通信还是下发问题，同样不提供调优建议。
 
-![输入图片说明](./img/overall_0.png)
+computation模块从device计算性能维度进行分析，能够识别AI CPU、计算bound、动态Shape、AI Core算子降频分析等问题并给出相应建议。此处不再详细展开，按照报告进行调优即可。示例如下：
 
-![输入图片说明](./img/overall.png)
+![computation_1](./img/computation_1.png)
 
-overall模块的environment_variable_analysis是对环境变量的设置做出推荐
-![env_var.png](img%2Fenv_var.png)
+当存在pp stage（流水线并行）时，computation会按stage分析，每个stage就是一个流水线切分，比如0\~7卡为stage-0、8\~15卡为stage-1。
 
-schedule模块包含亲和API、aclOpCompile、syncBatchNorm、SynchronizeStream等多项检测。
+![computation_2](./img/computation_2.png)
+
+schedule模块包GC Analysis、含亲和API、aclOpCompile、syncBatchNorm、SynchronizeStream等多项检测。
+
+如下图示例，GC Analysis提示存在异常垃圾回收事件，用户可以通过有效的Python内存管理、使用gc_set_threshold()调整垃圾回收阈值、使用gc.disable()禁用gc等方法处理GC问题。
+
+![gc](./img/gc.png)
+
+如下图示例，Affinity API Issues提示存在可以替换的亲和API并给出对应的堆栈，用户可以根据堆栈找到需要修改的代码，并给出修改案例（API instruction超链接）。
+
+![schedule_3](./img/schedule_3.png)
+
+如下图示例，Synchronize Stream Issues提示存在耗时较多的同步流，并给出触发同步流的堆栈，需要根据堆栈来修改对应代码消除同步流。
+
+![schedule_2](./img/schedule_2.png)
+
 如下图示例，Operator Dispatch Issues提示需要在运行脚本的最开头添加如下代码用于消除aclOpCompile：
 
 ```python
@@ -156,20 +225,33 @@ torch_npu.npu.config.allow_internal_format = False
 
 ![输入图片说明](./img/schedule_1.png)
 
-如下图示例，Synchronize Stream Issues提示存在耗时较多的同步流，并给出触发同步流的堆栈，需要根据堆栈来修改对应代码消除同步流。
+### 报告解析（有标杆）
 
-![schedule_2](./img/schedule_2.png)
+有标杆是指执行msprof-analyze advisor时，配置-bp参数，指定基准性能数据进行比对。
 
-如下图示例，Affinity API Issues提示存在可以替换的亲和API并给出对应的堆栈，用户可以根据堆栈找到需要修改的代码，并给出修改案例（API instruction超链接）。
+有标杆单卡场景：不进行overall模块的分析，performance problem analysis模块与有标杆场景下的performance problem analysis模块结果一致。
 
-![schedule_3](./img/schedule_3.png)
+有标杆集群场景：
 
-computation模块从device计算性能维度进行分析，能够识别AI CPU、计算bound、动态Shape、AI Core算子降频分析等问题并给出相应建议。此处不再详细展开，按照报告进行调优即可。
+- overall模块进行快慢卡和快慢链路分析，与无标杆集群场景一致，请参见**“报告解析（无标杆）** > **overall模块的分析**”。
+- 提供Environment Variable Issues，与无标杆单卡场景一致，请参见**“报告解析（无标杆）** > **overall模块的分析**”。
+- 有标杆集群场景同样提供comparison模块（无标杆场景是集群内部快慢卡的性能数据对比，有标杆场景是两个集群之间存在明显耗时差异的相同卡之间的性能数据对比）。
 
-![computation_1](./img/computation_1.png)
+comparison模块内容如下图示例，识别标杆和待比对性能数据的Kernel和API数据，包括：
 
-communication模块从通信维度进行分析，目前支持通信小算子检测。
-![communication](./img/communication.png)
+- Kernel compare of Target and Benchmark：Kernel的总耗时、平均耗时、最大耗时、最小耗时和执行次数，以及标杆的对应数据，最后计算Diff Total Ratio（标杆总耗时/总耗时）和Diff Avg Ratio（标杆平均耗时/平均耗时）。
+
+  Diff Total Ratio和Diff Avg Ratio大于1则表示当前环境性能更优，小于1则表示当前环境有待优化，等于1则表示当前环境与标杆环境性能接近。
+
+  ![comparison](./img/comparison.png)
+
+- Api compare of Target and Benchmark：API的总耗时、API自身耗时（除去API调用的子API的耗时）、平均耗时和执行次数，以及标杆的对应数据，最后计算Diff Total Ratio（标杆总耗时/总耗时）、Diff Self Ratio（标杆API自身耗时/API自身耗时）、Diff Avg Ratio（标杆平均耗时/平均耗时）和Diff Calls Ratio（标杆执行次数/执行次数）。
+
+  Diff Total Ratio、Diff Self Ratio、Diff Avg Ratio和Diff Calls Ratio大于1则表示当前环境性能更优，小于1则表示当前环境有待优化，等于1则表示当前环境与标杆环境性能接近。
+
+  ![comparison1](./img/comparison1.png)
+
+`mstt_advisor_{timestamp}.html`文件的comparison模块内容仅展示Kernel和API的Top 10条数据，详细数据需要查看`mstt_advisor_{timestamp}.xlsx`文件。
 
 ## 工具使用（Jupyter Notebook方式）
 

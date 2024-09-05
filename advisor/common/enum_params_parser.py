@@ -11,6 +11,8 @@ logger = logging.getLogger()
 
 @singleton
 class EnumParamsParser():
+    # 枚举变量抽象成yaml文件，统一管理，便于第三方服务对接advisor时调用当前类查询所有枚举变量参数的默认值和可选值
+
     ARGUMENTS = "arguments"
     ENVS = "envs"
     OPTIONS = "options"

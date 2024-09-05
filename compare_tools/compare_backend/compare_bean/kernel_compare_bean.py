@@ -1,6 +1,7 @@
 from compare_backend.utils.common_func import calculate_diff_ratio
 from compare_backend.utils.constant import Constant
 from compare_backend.utils.excel_config import ExcelConfig
+from profiler.advisor.utils.utils import convert_to_float
 
 
 class KernelCompareInfo:
@@ -15,10 +16,10 @@ class KernelCompareInfo:
             return
         self._kernel_type = data_list[0]
         self._input_shapes = data_list[1]
-        self._total_dur = data_list[2]
+        self._total_dur = round(convert_to_float(data_list[2]), 2)
         self._number = data_list[3]
-        self._max_dur = data_list[4]
-        self._min_dur = data_list[5]
+        self._max_dur = round(convert_to_float(data_list[4]), 2)
+        self._min_dur = round(convert_to_float(data_list[5]), 2)
 
     @property
     def kernel_type(self):
@@ -46,7 +47,7 @@ class KernelCompareInfo:
     
     @property
     def avg_dur(self):
-        return self._total_dur / self._number if self._total_dur and self._number else 0.0
+        return round(self._total_dur / self._number, 2) if self._total_dur and self._number else 0.0
 
 
 class KernelCompareBean:

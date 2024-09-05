@@ -49,9 +49,9 @@ class MemoryOpsChecker:
             for solution in rule.get("solutions", []):
                 if memory_op_name not in solution:
                     continue
-                suggestion = solution.get(memory_op_name, {}).get("desc")
-
-                self.suggestions.append(f"{suggestion} for optimize memory operator {memory_op_name}")
+                suggestions = solution.get(memory_op_name, {}).get("desc")
+                for suggestion in suggestions:
+                    self.suggestions.append(f"For {memory_op_name}: {suggestion}")
 
     def make_record(self, result: OptimizeResult):
         """

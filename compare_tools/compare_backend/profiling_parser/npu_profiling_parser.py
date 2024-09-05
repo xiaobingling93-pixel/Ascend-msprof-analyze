@@ -194,9 +194,9 @@ class NPUProfilingParser(BaseProfilingParser):
         self.__add_sdma_time()
         self.__add_overlap_analysis_time()
         self.__add_communication_wait_time()
-        self._result_data.overall_metrics.calculate_other_time()
         self._result_data.overall_metrics.calculate_schedule_time()
         self._result_data.overall_metrics.trans_time_to_s()
+        self._result_data.overall_metrics.calculate_other_time()
         self._update_bandwidth()
 
     def __add_communication_wait_time(self):

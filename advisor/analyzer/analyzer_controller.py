@@ -117,6 +117,13 @@ class AnalyzerController:
 
         resp = {"id": pid}
         output_path = kwargs.get("output_path")
+
+        PathManager.check_input_directory_path(output_path)
+        if os.path.exists(output_path):
+            PathManager.check_path_owner_consistent(output_path)
+        else:
+            PathManager.make_dir_safety(output_path)
+
         try:
             if output_path:
                 Config().set_config("_work_path", output_path)
