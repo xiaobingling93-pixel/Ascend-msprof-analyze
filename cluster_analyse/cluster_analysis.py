@@ -100,7 +100,7 @@ def cluster_analysis_main(args=None):
                         default='all', help="different analysis mode")
     parser.add_argument('-o', '--output_path', type=str, help='Path of cluster analysis output')
     parser.add_argument('--data_simplification', default=False, action='store_true', help='data simplification switch for db data')
-    args_parsed, _ = parser.parse_known_args(args=args)
+    args_parsed = parser.parse_args(args = args)
     parameter = {
         Constant.COLLECTION_PATH: args_parsed.profiling_path,
         Constant.ANALYSIS_MODE: args_parsed.mode,
