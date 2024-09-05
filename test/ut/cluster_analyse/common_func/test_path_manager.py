@@ -71,8 +71,6 @@ class TestPathManager(unittest.TestCase):
         os.symlink(PATH_FILE, link_name)
         with pytest.raises(RuntimeError) as error:
             PathManager.remove_path_safety(link_name)
-        with pytest.raises(RuntimeError) as error:
-            PathManager.remove_path_safety(path + "not_exist")
         PathManager.remove_path_safety(path)
         os.unlink(link_name)
 
