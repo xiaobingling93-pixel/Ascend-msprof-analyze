@@ -7,6 +7,7 @@ from profiler.advisor.common.profiling.ge_info import GeInfo
 from profiler.advisor.common.profiling.msprof import Msprof
 from profiler.advisor.common.profiling.op_summary import OpSummary
 from profiler.advisor.common.profiling.tasktime import TaskTime
+from profiler.advisor.common.enum_params_parser import EnumParamsParser
 from profiler.advisor.dataset.dataset import Dataset
 from profiler.advisor.dataset.profiling.device_info import DeviceInfoParser
 from profiler.advisor.utils.utils import join_prof_path
@@ -20,8 +21,8 @@ class ProfilingDataset(Dataset):
     PROF_TYPE = ""
 
     def __init__(self, collection_path, data: dict, **kwargs) -> None:
-        self.cann_version = kwargs.get("cann_version", constant.DEFAULT_CANN_VERSION)
-        self.PROF_TYPE = kwargs.get("profiling_type", constant.DEFAULT_PROFILING_TYPE)
+        self.cann_version = kwargs.get(constant.CANN_VERSION, EnumParamsParser().get_default(constant.CANN_VERSION))
+        self.PROF_TYPE = kwargs.get(constant.PROFILING_TYPE, EnumParamsParser().get_default(constant.PROFILING_TYPE))
         self.patterns = self.parse_pattern()
         self.current_version_pattern = self.get_current_version_pattern()
         super().__init__(collection_path, data)

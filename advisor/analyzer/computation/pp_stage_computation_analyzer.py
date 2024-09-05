@@ -7,7 +7,7 @@ from profiler.advisor.common.analyzer_scopes import SupportedScopes
 from profiler.advisor.display.html.render import HTMLRender
 from profiler.advisor.display.html.priority_background_color import PriorityBackgroundColor
 from profiler.advisor.interface.interface import Interface
-from profiler.advisor.utils.utils import ParallelJob
+from profiler.advisor.utils.utils import ParallelJob, get_analyze_processes
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.advisor.common import constant as const
@@ -33,8 +33,7 @@ class PPStageComputationAnalyzer(BaseAnalyzer):
         return sheet_name
 
     def optimize(self, stages_profiling_path, **kwargs):
-        pp_stage_processes = min(int(os.getenv("PP_STAGE_ANALYSIS_PROCESSES", 0)), len(stages_profiling_path),
-                                 const.MAX_NUM_PROCESSES)
+        pp_stage_processes = min(get_analyze_processes(), len(stages_profiling_path))
         if pp_stage_processes <= 1:
             for stage_profiling_path in stages_profiling_path:
                 self._optimize(**stage_profiling_path)
@@ -60,7 +59,7 @@ class PPStageComputationAnalyzer(BaseAnalyzer):
         pass
 
     def _optimize(self, profiling_path, **kwargs):
-        stage_html_record = dict(stage=kwargs.get("stage"), rank_id=kwargs.get("rank_id"), step=kwargs.get("step"))
+        stage_html_record = dict(stage=kwargs.get("stage"), rank_id=kwargs.get("rank"), step=kwargs.get("step"))
         kwargs["add_render_list"] = False
 
         # stage 并行分析时，避免调用本身，即SupportedScopes.STAGE_COMPUTE
@@ -78,7 +77,7 @@ class PPStageComputationAnalyzer(BaseAnalyzer):
                     stage_html_record["html_list"] = []
                 stage_html_record["html_list"].append(analyzer.html)
         self._stages_rendered_html.append(stage_html_record)
-        self._multiprocess_result[f"rank {kwargs.get('rank_id')}".capitalize()] = result.data
+        self._multiprocess_result[f"rank {kwargs.get('rank')}".capitalize()] = result.data
 
     def _merge_multiprocess_result(self):
         self.result = OptimizeResult()

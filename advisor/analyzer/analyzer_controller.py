@@ -3,9 +3,12 @@ import logging
 import json
 import sys
 import os
+import platform
 import multiprocessing as mp
-from pathlib import Path
 from multiprocessing import Manager
+from pathlib import Path
+
+import psutil
 
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "compare_tools"))
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "cluster_analyse"))
@@ -17,13 +20,14 @@ from profiler.advisor.analyzer.overall.overall_summary_analyzer import OverallSu
 from profiler.advisor.config.config import Config
 from profiler.advisor.common.analyzer_scopes import SupportedScopes
 from profiler.advisor.common.async_analysis_status import AsyncAnalysisStatus
-from profiler.advisor.dataset.cluster.cluster_dataset import ClusterDataset
 from profiler.advisor.utils.utils import Timer, safe_index_value, safe_division, safe_index
 from profiler.advisor.interface.interface import Interface
 from profiler.cluster_analyse.cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
 from profiler.prof_common.path_manager import PathManager
 from profiler.compare_tools.compare_backend.utils.constant import Constant as CompareConstant
 
+# 以spawn模式启动多进程，避免fork主进程资源。如果主进程逻辑较为复杂，fork可能会导致异常。
+mp.set_start_method("spawn", force=True)
 logger = logging.getLogger()
 
 
@@ -40,6 +44,15 @@ class AnalyzerController:
         self.rank_id_map = {}
         self._is_cluster = False
         self.analysis_process_resp = Manager().dict()
+
+    @staticmethod
+    def _set_analysis_process_priority(pid):
+        # 将分析进程优先级设置为最低，避免因为分析进程阻塞其他任务进程，unix上19表示最低优先级
+        p = psutil.Process(pid)
+        if platform.system().lower() == "windows":
+            p.nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
+        elif platform.system().lower() == "linux":
+            p.nice(19)
 
     @staticmethod
     def _check_profiling_path_valid(profiling_path):
@@ -91,11 +104,25 @@ class AnalyzerController:
 
         return step, benchmark_step, target_rank_id
 
+    @staticmethod
+    def _init_async_analysis_env(kwargs):
+        envs = kwargs.get("async_analysis_env", {})
+        for key, value in envs.items():
+            os.environ[key] = value
+
     def do_analysis(self, dimensions, **kwargs):
         pid = os.getpid()
+        AnalyzerController._set_analysis_process_priority(pid)
+        AnalyzerController._init_async_analysis_env(kwargs)
+
         resp = {"id": pid}
+        output_path = kwargs.get("output_path")
         try:
-            self._do_analysis(dimensions, pid=pid, resp=resp, **kwargs)
+            if output_path:
+                Config().set_config("_work_path", output_path)
+            Config().set_log_path(f"mstt_advisor_{Timer().strftime}.xlsx")
+
+            self._do_analysis(dimensions, pid=pid, async_resp=resp, **kwargs)
         except Exception as e:
             self._update_analysis_process_resp(pid, resp, status_code=AsyncAnalysisStatus.FAILED_STATUS_CODE,
                                                status=AsyncAnalysisStatus.FAILED, error_msg=str(e))
@@ -107,6 +134,9 @@ class AnalyzerController:
         async_analysis_process = mp.Process(target=self.do_analysis, args=(dimensions,), kwargs=kwargs,
                                             name="Async advisor performance analysis")
         async_analysis_process.start()
+        self._update_analysis_process_resp(async_analysis_process.pid, {"id": async_analysis_process.pid},
+                                           status_code=AsyncAnalysisStatus.NON_FAILED_STATUS_CODE,
+                                           status=AsyncAnalysisStatus.ANALYZING)
         return async_analysis_process
 
     def get_response_by_pid(self, pid):
@@ -145,7 +175,7 @@ class AnalyzerController:
 
         return job_list
 
-    def cluster_analysis(self, profiling_path, benchmark_profiling_path=None):
+    def do_cluster_analysis(self, profiling_path, benchmark_profiling_path=None):
         job_list = []
 
         # 单集群profiling分析：下发、通信、计算、显存/内存
@@ -395,28 +425,26 @@ class AnalyzerController:
         job_list += self.memory_analysis(analysis_profiling_path, step=slow_step)
         return job_list
 
-    def _do_analysis(self, dimensions, **kwargs):
+    def _do_analysis(self, dimensions, pid=0, async_resp=None, **kwargs):
         self.dimensions = dimensions
         self.kwargs = kwargs
         result_list = []
         profiling_path = self.kwargs.get("profiling_path")
         benchmark_profiling_path = self.kwargs.get("benchmark_profiling_path")
-        pid = self.kwargs.get("pid")
-        resp = self.kwargs.get("resp")
 
-        self._update_analysis_process_resp(pid, resp, status_code=AsyncAnalysisStatus.NON_FAILED_STATUS_CODE,
+        self._update_analysis_process_resp(pid, async_resp, status_code=AsyncAnalysisStatus.NON_FAILED_STATUS_CODE,
                                            status=AsyncAnalysisStatus.ANALYZING)
 
         if not self._check_profiling_path_valid(profiling_path):
             error_msg = f"Got invalid argument '-d/--profiling_path' {profiling_path}, skip analysis"
-            self._update_analysis_process_resp(pid, resp, error_msg=error_msg,
+            self._update_analysis_process_resp(pid, async_resp, error_msg=error_msg,
                                                status_code=AsyncAnalysisStatus.FAILED_STATUS_CODE,
                                                status=AsyncAnalysisStatus.FAILED)
             logger.error(error_msg)
             return
         if benchmark_profiling_path and not self._check_profiling_path_valid(benchmark_profiling_path):
             error_msg = f"Got invalid argument '-bp/--benchmark_profiling_path' {benchmark_profiling_path}, skip analysis"
-            self._update_analysis_process_resp(pid, resp, error_msg=error_msg,
+            self._update_analysis_process_resp(pid, async_resp, error_msg=error_msg,
                                                status_code=AsyncAnalysisStatus.FAILED_STATUS_CODE,
                                                status=AsyncAnalysisStatus.FAILED)
             logger.error(error_msg)
@@ -432,7 +460,7 @@ class AnalyzerController:
         else:
             self.slow_rank_analyzer = SlowRankAnalyzer(profiling_path)
             self.slow_link_analyzer = SlowLinkAnalyzer(profiling_path)
-            job_list = self.cluster_analysis(profiling_path, benchmark_profiling_path)
+            job_list = self.do_cluster_analysis(profiling_path, benchmark_profiling_path)
 
         for i, (dimension, scope, interface, kwargs) in enumerate(job_list[::-1]):
             result_list.append(
@@ -444,7 +472,7 @@ class AnalyzerController:
             if result and hasattr(result, "show"):
                 result.show()
                 break
-        self._get_analysis_success_resp(pid, resp)
+        self._get_analysis_success_resp(pid, async_resp)
 
     def _communication_rdma_analysis(self, profiling_path, benchmark_profiling_path=None, step=None,
                                      benchmark_step=None):

@@ -41,7 +41,7 @@ class BaseTimelineEventDataset:
                                                                lambda file: file.endswith("trace_view.json"))
         self.dataset_len = None
         self.step = kwargs.get("step")
-        self.step_duration = None
+        self.step_duration = 0.0
         if not build_dataset:
             return
 
@@ -196,6 +196,7 @@ class ScheduleAnalysisDataset(BaseTimelineEventDataset):
         self.aten = formated_atens
 
 
+@singleton
 class ComputationAnalysisDataset(BaseTimelineEventDataset):
     collector_map = OrderedDict(
         StepCollector=StepCollector(),
