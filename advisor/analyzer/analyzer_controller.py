@@ -33,6 +33,12 @@ logger = logging.getLogger()
 
 class AnalyzerController:
     CLUSTER_RANK_THRESHOLD = 2
+    SDMA_SUPPORT_SCOPES = [SupportedScopes.BANDWIDTH_CONTENTION_DETECTION]
+    RDMA_SUPPORT_SCOPES = [SupportedScopes.PACKET]
+    COMMUNICATION_MAPPING = {
+        SlowLinkAnalyzer.SDMA: SDMA_SUPPORT_SCOPES,
+        SlowLinkAnalyzer.RDMA: RDMA_SUPPORT_SCOPES
+    }
 
     def __init__(self):
         self.dimensions = Interface.all_dimension
@@ -48,11 +54,14 @@ class AnalyzerController:
     @staticmethod
     def _set_analysis_process_priority(pid):
         # 将分析进程优先级设置为最低，避免因为分析进程阻塞其他任务进程，unix上19表示最低优先级
+        unix_process_lowest_priority = 19
+        windows_platform = "windows"
+        linux_platform = "linux"
         p = psutil.Process(pid)
-        if platform.system().lower() == "windows":
+        if platform.system().lower() == windows_platform:
             p.nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
-        elif platform.system().lower() == "linux":
-            p.nice(19)
+        elif platform.system().lower() == linux_platform:
+            p.nice(unix_process_lowest_priority)
 
     @staticmethod
     def _check_profiling_path_valid(profiling_path):
@@ -118,14 +127,15 @@ class AnalyzerController:
         resp = {"id": pid}
         output_path = kwargs.get("output_path")
 
-        PathManager.check_input_directory_path(output_path)
-        if os.path.exists(output_path):
-            PathManager.check_path_owner_consistent(output_path)
-        else:
-            PathManager.make_dir_safety(output_path)
-
         try:
             if output_path:
+
+                PathManager.check_input_directory_path(output_path)
+                if os.path.exists(output_path):
+                    PathManager.check_path_owner_consistent(output_path)
+                else:
+                    PathManager.make_dir_safety(output_path)
+
                 Config().set_config("_work_path", output_path)
             Config().set_log_path(f"mstt_advisor_{Timer().strftime}.xlsx")
 
@@ -267,21 +277,22 @@ class AnalyzerController:
                 job_list.append((dimension, scope, interface, kwargs))
         return job_list
 
-    def communication_analysis(self, profiling_path, benchmark_profiling_path=None, step=None,
-                               benchmark_step=None, bandwidth_type=None):
+    def communication_analysis(self, profiling_path, benchmark_profiling_path=None, **kwargs):
 
         job_list = []
         supported_trans_type = [SlowLinkAnalyzer.SDMA, SlowLinkAnalyzer.RDMA]
+        step = kwargs.get("step", None)
+        benchmark_step = kwargs.get("benchmark_step", None)
+        bandwidth_type = kwargs.get("bandwidth_type", None)
+        scope = kwargs.get("scope", None)
         if bandwidth_type is not None and bandwidth_type not in supported_trans_type:
             logger.error("Error transit type %s, optionals are %s", bandwidth_type, supported_trans_type)
             return job_list
 
-        bandwidth_type_list = [bandwidth_type] if bandwidth_type is not None else supported_trans_type
-
-        for bandwidth_type in bandwidth_type_list:
-            job_list += getattr(self, f"_communication_{bandwidth_type.lower()}_analysis")(profiling_path,
-                                                                                           benchmark_profiling_path,
-                                                                                           step, benchmark_step)
+        job_list += self._communication_analysis(profiling_path=profiling_path,
+                                                 benchmark_profiling_path=benchmark_profiling_path,
+                                                 step=step, benchmark_step=benchmark_step,
+                                                 scope=scope, bandwidth_type=bandwidth_type)
 
         return job_list
 
@@ -353,66 +364,9 @@ class AnalyzerController:
         stage_step_rank = self.slow_rank_analyzer.get_stage_step_rank(SlowRankAnalyzer.COMPUTE)
 
         if stage_step_rank:
-            # 对不同pp stage取min max进行分析
-            logger.info("Analysis steps and ranks of different pipeline parallel stages are %s",
-                        json.dumps(stage_step_rank))
-
-            stages_profiling_path = []
-            for stage, step_rank_info in stage_step_rank.items():
-                rank_id = step_rank_info.get("maximum", {}).get("rank_id")
-                step = step_rank_info.get("maximum", {}).get("step")
-                benchmark_rank_id = step_rank_info.get("minimum", {}).get("rank_id")
-                benchmark_step = step_rank_info.get("minimum", {}).get("step")
-
-                info_msg = f"For {stage}, slow rank is {rank_id}"
-                if step:
-                    info_msg += f", step is {step}"
-                logger.info(info_msg)
-
-                stages_profiling_path.append(
-                    dict(
-                        stage=stage, rank=rank_id, step=step, benchmark_rank=benchmark_rank_id,
-                        benchmark_step=benchmark_step,
-                        profiling_path=self._get_profiling_path_by_rank(profiling_path, rank_id),
-                        benchmark_profiling_path=self._get_profiling_path_by_rank(profiling_path, benchmark_rank_id),
-                        compare_mode=CompareConstant.KERNEL_COMPARE
-                    )
-                )
-            Interface.add_analyzer(Interface.COMPUTATION, SupportedScopes.STAGE_COMPUTE, PPStageComputationAnalyzer)
-            compute_analysis_kwargs = {"stages_profiling_path": stages_profiling_path, "profiling_path": profiling_path}
-
-            job_list.append((Interface.COMPUTATION, SupportedScopes.STAGE_COMPUTE, Interface(**compute_analysis_kwargs),
-                             compute_analysis_kwargs))
-            if self.kwargs.get("benchmark_profiling_path") is None:
-                job_list += self._profiling_comparison(stages_profiling_path)
+            job_list = self._stage_computation_analysis(profiling_path, stage_step_rank, job_list)
         else:
-            # 不区分stage，对所有卡取Min max进行分析
-            logger.info("Without pipeline parallel stage, Global analysis steps and ranks is %s",
-                        json.dumps(global_step_rank))
-            slow_rank_id = global_step_rank.get("maximum", {}).get("rank_id") or self.default_rank_id
-            slow_step = global_step_rank.get("maximum", {}).get("step")
-            # 如果没有标杆profiling数据的rank id，说明没有快慢卡问题，直接对默认rank id进行分析，因此这里取值为None
-            fast_rank_id = global_step_rank.get("minimum", {}).get("rank_id")
-            fast_step = global_step_rank.get("minimum", {}).get("step")
-
-            info_msg = f"Maximum computation time for rank {slow_rank_id}"
-            if slow_step is not None:
-                info_msg += f" and step {slow_step}, "
-            if fast_rank_id is not None:
-                info_msg += f"minimum computation time for rank {fast_rank_id}"
-            if fast_step is not None:
-                info_msg += f" and step {fast_step}"
-            logger.info(info_msg)
-
-            kwargs = dict(profiling_path=self._get_profiling_path_by_rank(profiling_path, slow_rank_id),
-                          benchmark_profiling_path=self._get_profiling_path_by_rank(profiling_path, fast_rank_id),
-                          step=slow_step, benchmark_step=fast_step, rank=slow_rank_id, benchmark_rank=fast_rank_id,
-                          compare_mode=CompareConstant.KERNEL_COMPARE)
-            job_list += self.computation_analysis(**kwargs)
-
-            rank_id_valid = slow_rank_id is not None and fast_rank_id is not None and fast_rank_id != slow_rank_id
-            if self.kwargs.get("benchmark_profiling_path") is None and rank_id_valid:
-                job_list += self._profiling_comparison([kwargs])
+            job_list = self._global_computation_analysis(profiling_path, global_step_rank, job_list)
         return job_list
 
     def cluster_memory_analysis(self, profiling_path):
@@ -438,9 +392,6 @@ class AnalyzerController:
         result_list = []
         profiling_path = self.kwargs.get("profiling_path")
         benchmark_profiling_path = self.kwargs.get("benchmark_profiling_path")
-
-        self._update_analysis_process_resp(pid, async_resp, status_code=AsyncAnalysisStatus.NON_FAILED_STATUS_CODE,
-                                           status=AsyncAnalysisStatus.ANALYZING)
 
         if not self._check_profiling_path_valid(profiling_path):
             error_msg = f"Got invalid argument '-d/--profiling_path' {profiling_path}, skip analysis"
@@ -481,30 +432,40 @@ class AnalyzerController:
                 break
         self._get_analysis_success_resp(pid, async_resp)
 
-    def _communication_rdma_analysis(self, profiling_path, benchmark_profiling_path=None, step=None,
-                                     benchmark_step=None):
-        # 小包分析
-        kwargs = copy.deepcopy(self.kwargs)
-        job_list = []
-
-        kwargs["profiling_path"] = profiling_path
-        kwargs["benchmark_profiling_path"] = benchmark_profiling_path
-        kwargs["step"] = step
-        kwargs["benchmark_step"] = benchmark_step
-
+    def _get_scopes(self, scope=None, bandwidth_type=SlowLinkAnalyzer.SDMA):
+        """
+        Args:
+            scope: analyzer type
+            bandwidth_type: analysis standard
+        Returns:
+            scope lists
+        """
+        scopes = []
+        if scope:
+            if scope in self.COMMUNICATION_MAPPING.get(bandwidth_type, self.SDMA_SUPPORT_SCOPES):
+                scopes.append(scope)
+            return scopes
         for dimension in [Interface.COMMUNICATION]:
-            for scope in Interface.get_scope(dimension):
-                if scope != SupportedScopes.PACKET:
-                    continue
-                interface = Interface(**kwargs)
-                job_list.append((dimension, scope, interface, kwargs))
+            for scope_ in Interface.get_scope(dimension):
+                if scope_ in self.SDMA_SUPPORT_SCOPES or scope_ in self.RDMA_SUPPORT_SCOPES:
+                    scopes.append(scope_)
+        return scopes
 
-        return job_list
-
-    def _communication_sdma_analysis(self, profiling_path, benchmark_profiling_path=None, step=None,
-                                     benchmark_step=None):
+    def _communication_analysis(self, **child_kwargs):
         kwargs = copy.deepcopy(self.kwargs)
         job_list = []
+
+        kwargs["profiling_path"] = child_kwargs.get("profiling_path", "")
+        kwargs["benchmark_profiling_path"] = child_kwargs.get("benchmark_profiling_path", "")
+        kwargs["step"] = child_kwargs.get("step", -1)
+        kwargs["benchmark_step"] = child_kwargs.get("benchmark_step", -1)
+        bandwidth_type = child_kwargs.get("bandwidth_type", SlowLinkAnalyzer.SDMA)
+        scope = child_kwargs.get("scope", None)
+
+        for scope_ in self._get_scopes(scope, bandwidth_type):
+            interface = Interface(**kwargs)
+            job_list.append((Interface.COMMUNICATION, scope_, interface, kwargs))
+
         return job_list
 
     def _profiling_comparison(self, compare_profiling_list):
@@ -642,7 +603,74 @@ class AnalyzerController:
 
     def _get_analysis_success_resp(self, pid, resp):
         html_path = os.path.join(Config().work_path, f"mstt_advisor_{Timer().strftime}.html")
-        xlsx_path = os.path.join(Config().work_path, f"mstt_advisor_{Timer().strftime}.xlsx")
+        xlsx_path = os.path.join(Config().work_path, "log", f"mstt_advisor_{Timer().strftime}.xlsx")
         result_files = {"html": html_path, "xlsx": xlsx_path}
         self._update_analysis_process_resp(pid, resp, status_code=AsyncAnalysisStatus.NON_FAILED_STATUS_CODE,
                                            status=AsyncAnalysisStatus.SUCCESS, result_files=result_files)
+
+    def _stage_computation_analysis(self, profiling_path, stage_step_rank, job_list):
+        # 对不同pp stage取min max进行分析
+        logger.info("Steps and ranks to be analyzed of different pipeline parallel stages are %s",
+                    json.dumps(stage_step_rank))
+
+        stages_profiling_path = []
+        for stage, step_rank_info in stage_step_rank.items():
+            rank_id = step_rank_info.get("maximum", {}).get("rank_id")
+            step = step_rank_info.get("maximum", {}).get("step")
+            benchmark_rank_id = step_rank_info.get("minimum", {}).get("rank_id")
+            benchmark_step = step_rank_info.get("minimum", {}).get("step")
+
+            info_msg = f"For {stage}, slow rank is {rank_id}"
+            if step:
+                info_msg += f", step is {step}"
+            logger.info(info_msg)
+
+            stages_profiling_path.append(
+                dict(
+                    stage=stage, rank=rank_id, step=step, benchmark_rank=benchmark_rank_id,
+                    benchmark_step=benchmark_step,
+                    profiling_path=self._get_profiling_path_by_rank(profiling_path, rank_id),
+                    benchmark_profiling_path=self._get_profiling_path_by_rank(profiling_path, benchmark_rank_id),
+                    compare_mode=CompareConstant.KERNEL_COMPARE
+                )
+            )
+        Interface.add_analyzer(Interface.COMPUTATION, SupportedScopes.STAGE_COMPUTE, PPStageComputationAnalyzer)
+        compute_analysis_kwargs = {"stages_profiling_path": stages_profiling_path, "profiling_path": profiling_path}
+
+        job_list.append((Interface.COMPUTATION, SupportedScopes.STAGE_COMPUTE, Interface(**compute_analysis_kwargs),
+                         compute_analysis_kwargs))
+        if self.kwargs.get("benchmark_profiling_path") is None:
+            logger.info("Enable computation comparison of fast and slow rank/step in different pp stages")
+            job_list += self._profiling_comparison(stages_profiling_path)
+        return job_list
+
+    def _global_computation_analysis(self, profiling_path, global_step_rank, job_list):
+        # 不区分stage，对所有卡取Min max进行分析
+        logger.info("Without pipeline parallel stage, steps and ranks to be analyzed are %s",
+                    json.dumps(global_step_rank))
+        slow_rank_id = global_step_rank.get("maximum", {}).get("rank_id") or self.default_rank_id
+        slow_step = global_step_rank.get("maximum", {}).get("step")
+        # 如果没有标杆profiling数据的rank id，说明没有快慢卡问题，直接对默认rank id进行分析，因此这里取值为None
+        fast_rank_id = global_step_rank.get("minimum", {}).get("rank_id")
+        fast_step = global_step_rank.get("minimum", {}).get("step")
+
+        info_msg = f"Maximum computation time for rank {slow_rank_id}"
+        if slow_step is not None:
+            info_msg += f" and step {slow_step}, "
+        if fast_rank_id is not None:
+            info_msg += f"minimum computation time for rank {fast_rank_id}"
+        if fast_step is not None:
+            info_msg += f" and step {fast_step}"
+        logger.info(info_msg)
+
+        kwargs = dict(profiling_path=self._get_profiling_path_by_rank(profiling_path, slow_rank_id),
+                      benchmark_profiling_path=self._get_profiling_path_by_rank(profiling_path, fast_rank_id),
+                      step=slow_step, benchmark_step=fast_step, rank=slow_rank_id, benchmark_rank=fast_rank_id,
+                      compare_mode=CompareConstant.KERNEL_COMPARE)
+        job_list += self.computation_analysis(**kwargs)
+
+        rank_id_valid = slow_rank_id is not None and fast_rank_id is not None and fast_rank_id != slow_rank_id
+        if self.kwargs.get("benchmark_profiling_path") is None and rank_id_valid:
+            logger.info("Enable computation comparison of fast and slow rank/step")
+            job_list += self._profiling_comparison([kwargs])
+        return job_list

@@ -140,14 +140,10 @@ class OperatorChecker(VersionControl):
 
     def is_dynamic_shape(self, profiling_database: ProfilingDataset) -> bool:
         cann800_major_version = 8
-        less_than_cann800_list = []
-        for cann_version in EnumParamsParser().get_options(constant.CANN_VERSION):
-            if not cann_version:
-                continue
-            major_version = cann_version.split(".")[0]
-            if convert_to_float(major_version) < cann800_major_version:
-                less_than_cann800_list.append(cann_version)
-
+        less_than_cann800_list = EnumParamsParser().get_options(
+            constant.CANN_VERSION,
+            filter_func=lambda x: convert_to_float(x.split(".")[0]) < cann800_major_version
+        )
         # CANN 8.0.RC1 之前从 ge_info 中获取 op_state 属性，进行动态 shape 逻辑判断
         if self.cann_version in less_than_cann800_list:
             if hasattr(profiling_database, "ge_info"):
@@ -168,8 +164,8 @@ class OperatorChecker(VersionControl):
                     return True
             else:
                 logger.warning(
-                        "Skip dynamic shape check because of not containing op_summary.csv file in current filefloder."
-                    )
+                    "Skip dynamic shape check because of not containing op_summary.csv file in current filefloder."
+                )
         return False
 
     def format_operator_result(self, record, limit):

@@ -156,16 +156,17 @@ class PathManager:
 
     @classmethod
     def remove_path_safety(cls, path: str):
+        if not os.path.exists(path):
+            return
         base_name = os.path.basename(path)
         msg = f"Failed to remove path: {base_name}"
         cls.check_path_writeable(path)
         if os.path.islink(path):
             raise RuntimeError(msg)
-        if os.path.exists(path):
-            try:
-                shutil.rmtree(path)
-            except Exception as err:
-                raise RuntimeError(msg) from err
+        try:
+            shutil.rmtree(path)
+        except Exception as err:
+            raise RuntimeError(msg) from err
 
     @classmethod
     def make_dir_safety(cls, path: str):

@@ -33,7 +33,7 @@ class EnumParamsParser():
     def get_envs_keys(self):
         return list(self.enum_params.get(self.ENVS, {}).keys())
 
-    def get_options(self, key):
+    def get_options(self, key, filter_func=None):
         options = []
         for param_type in [self.ARGUMENTS, self.ENVS]:
             if key not in self.enum_params.get(param_type, {}):
@@ -42,6 +42,9 @@ class EnumParamsParser():
 
         if not options:
             logger.error("Key %s not exists, optionals are %s", key, self.get_keys())
+
+        if filter_func is not None and callable(filter_func):
+            options = [value for value in options if filter_func(value)]
 
         return options
 
