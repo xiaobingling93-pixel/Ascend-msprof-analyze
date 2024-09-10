@@ -33,7 +33,7 @@ class AICoreFreqAnalyzer(BaseAnalyzer):
 
         add_render_list = kwargs.get("add_render_list", True)
         ai_core_freq_checker = AICoreFreqChecker()
-        ai_core_freq_checker.check_ai_core_freq(self.dataset, rank_id=kwargs.get("rank_id"), stage=kwargs.get("stage"))
+        ai_core_freq_checker.check_ai_core_freq(self.dataset, rank_id=kwargs.get("rank"), stage=kwargs.get("stage"))
         ai_core_freq_checker.make_record(self.result)
         self.html = ai_core_freq_checker.make_render(self.html_render, add_render_list, priority=self.get_priority())
         return self.result

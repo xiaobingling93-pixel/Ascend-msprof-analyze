@@ -1,0 +1,35 @@
+arguments:
+  cann_version:
+    options:
+      - 6.3.RC2
+      - 7.0.RC1
+      - 7.0.0
+      - 8.0.RC1
+    default: 8.0.RC1
+
+  torch_version:
+    options:
+      - 1.11.0
+      - 2.1.0
+    default: 2.1.0
+
+  analysis_dimensions:
+    options:
+      - [ computation, communication, schedule, memory ]
+      - [ communication ]
+      - [ schedule ]
+      - [ computation ]
+      - [ memory ]
+    default: [ computation, communication, schedule, memory ]
+
+  profiling_type:
+    options:
+      - ascend_pytorch_profiler
+      - mslite
+      - msprof
+    default: ascend_pytorch_profiler
+
+envs:
+  ADVISOR_ANALYZE_PROCESSES:
+    options: [ 1, 2, 3, 4, 5, 6, 7, 8 ]
+    default: 1

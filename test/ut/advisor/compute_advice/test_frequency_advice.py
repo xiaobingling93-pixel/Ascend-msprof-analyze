@@ -6,6 +6,7 @@ import json
 import unittest
 from profiler.advisor.interface.interface import Interface
 from profiler.advisor.common.analyzer_scopes import SupportedScopes
+from profiler.advisor.dataset.timeline_event_dataset import ComputationAnalysisDataset
 
 
 class TestFrequencyAdvice(unittest.TestCase):
@@ -103,7 +104,6 @@ class TestFrequencyAdvice(unittest.TestCase):
             *basic_info, py_event1, py_event2
         ]
         with os.fdopen(os.open(f"{TestFrequencyAdvice.OUTPUT_DIR}/trace_view.json",
-        # with os.fdopen(os.open(f"{TestFrequencyAdvice.OUTPUT_DIR}/msprof_20240415174455.json",
                                os.O_WRONLY | os.O_CREAT, stat.S_IWUSR | stat.S_IRUSR), 'w') as fp:
             fp.write(json.dumps(raw_data))
 
@@ -133,6 +133,7 @@ class TestFrequencyAdvice(unittest.TestCase):
         result = interface.get_result(dimension, scope, render_html=1, output_dict=False, profiling_path=self.TMP_DIR)
         self.assertEqual(0, len(result.data.get("AI Core Frequency", [])))
         result.clear()
+        ComputationAnalysisDataset.reset_all_instances()
 
     def test_run_should_run_success_when_trace_view_contain_frequency_data(self):
         self.create_info_json()
@@ -141,5 +142,6 @@ class TestFrequencyAdvice(unittest.TestCase):
         dimension = "computation"
         scope = SupportedScopes.FREQ_ANALYSIS
         result = interface.get_result(dimension, scope, render_html=1, output_dict=False, profiling_path=self.TMP_DIR)
-        self.assertEqual(2, len(result.data.get("AI Core Frequency", dict).get("data", [])))
+        self.assertEqual(2, len(result.data.get("AI Core Frequency", dict()).get("data", [])))
         result.clear()
+        ComputationAnalysisDataset.reset_all_instances()

@@ -34,7 +34,7 @@ class ProfilingAnalyzer(BaseAnalyzer, ABC):
         """
         profiling_data = self.get_first_data_by_key(self.dataset_list, ProfilingDataset.get_key())
         checker = self.checker
-        rank_id = kwargs.get("rank_id")
+        rank_id = kwargs.get("rank")
 
         add_render_list = kwargs.get("add_render_list", True)
 

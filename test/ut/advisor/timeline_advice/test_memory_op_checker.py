@@ -42,7 +42,7 @@ class TestMemOpChecker(unittest.TestCase):
         checker.check_memory_ops(dataset)
         self.assertTrue(checker.memory_issues)
 
-    def _get_mock_dataset(self, mem_op_num, mem_op_total_dur=10000, is_empty_dataset=False):
+    def _get_mock_dataset(self, mem_op_num, mem_op_total_dur=1000, is_empty_dataset=False):
         dataset = TimelineEvent()
         if is_empty_dataset:
             return dataset

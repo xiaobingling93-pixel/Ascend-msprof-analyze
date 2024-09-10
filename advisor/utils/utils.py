@@ -69,16 +69,21 @@ def singleton(cls):
     _instance = {}
 
     def _singleton(*args: any, **kw: any) -> any:
+        # 适配多进程异步调用场景，确保不同子进程的单例类互相隔离
+        pid = os.getpid()
+        if pid not in _instance:
+            _instance[pid] = {}
+
         collection_path = kw.get("collection_path")
         if not collection_path:
             collection_path = get_class_absolute_path(cls)
-        if cls in _instance and collection_path in _instance[cls]:
-            return _instance[cls].get(collection_path)
-        if cls not in _instance:
-            _instance[cls] = {collection_path: cls(*args, **kw)}
+        if cls in _instance[pid] and collection_path in _instance[pid][cls]:
+            return _instance[pid][cls].get(collection_path)
+        if cls not in _instance[pid]:
+            _instance[pid][cls] = {collection_path: cls(*args, **kw)}
         else:
-            _instance[cls][collection_path] = cls(*args, **kw)
-        return _instance[cls].get(collection_path)
+            _instance[pid][cls][collection_path] = cls(*args, **kw)
+        return _instance[pid][cls].get(collection_path)
 
     def reset_all_instances():
         """
@@ -182,7 +187,7 @@ class Timer:
 
 def get_analyze_processes():
     # n_processes not exposed to user through att-advisor command arguments now
-    return min(int(os.getenv(const.MA_ADVISOR_ANALYZE_PROCESSES, 1)), const.MA_ADVISOR_MAX_PROCESSES)
+    return min(int(os.getenv(const.ADVISOR_ANALYZE_PROCESSES, 1)), const.ADVISOR_MAX_PROCESSES)
 
 
 def format_timeline_result(result: dict, dump_html=False):

@@ -4,18 +4,19 @@ from textwrap import fill
 from typing import List
 
 from profiler.advisor.common import constant
+from profiler.advisor.common.enum_params_parser import EnumParamsParser
 from profiler.advisor.common.version_control import VersionControl
 from profiler.advisor.config.config import Config
 from profiler.advisor.dataset.profiling.info_collection import OpInfo
 from profiler.advisor.dataset.profiling.profiling_dataset import ProfilingDataset
 from profiler.advisor.result.item import OptimizeItem, StatisticsItem, OptimizeRecord
-from profiler.advisor.utils.utils import safe_division
+from profiler.advisor.utils.utils import safe_division, convert_to_float
 
 logger = logging.getLogger()
 
 
 class OperatorChecker(VersionControl):
-    _SUPPORT_VERSIONS = constant.SUPPORTED_CANN_VERSION
+    _SUPPORT_VERSIONS = EnumParamsParser().get_options(constant.CANN_VERSION)
     _MAX_TUNE_OP_NUM = constant.OPERATOR_OUT_TOPK
     _MIN_TASK_DURATION = 0
     _MIN_TASK_DURATION_RATIO = 1.0
@@ -138,7 +139,11 @@ class OperatorChecker(VersionControl):
         return True
 
     def is_dynamic_shape(self, profiling_database: ProfilingDataset) -> bool:
-        less_than_cann800_list = [constant.CANN_VERSION_C30, constant.CANN_VERSION_C13, constant.CANN_VERSION_C15]
+        cann800_major_version = 8
+        less_than_cann800_list = EnumParamsParser().get_options(
+            constant.CANN_VERSION,
+            filter_func=lambda x: convert_to_float(x.split(".")[0]) < cann800_major_version
+        )
         # CANN 8.0.RC1 之前从 ge_info 中获取 op_state 属性，进行动态 shape 逻辑判断
         if self.cann_version in less_than_cann800_list:
             if hasattr(profiling_database, "ge_info"):
@@ -159,8 +164,8 @@ class OperatorChecker(VersionControl):
                     return True
             else:
                 logger.warning(
-                        "Skip dynamic shape check because of not containing op_summary.csv file in current filefloder."
-                    )
+                    "Skip dynamic shape check because of not containing op_summary.csv file in current filefloder."
+                )
         return False
 
     def format_operator_result(self, record, limit):
@@ -305,7 +310,7 @@ class OperatorChecker(VersionControl):
         return details
 
     def format_suggestion_content(self, profiling_data: ProfilingDataset) -> None:
-        if profiling_data.PROF_TYPE == constant.ASCEND_PYTORCH_PROFILER:
+        if profiling_data.PROF_TYPE == EnumParamsParser().profiling_type.ascend_pytorch_profiler:
             self._SUGGESTION.append(self.PyTorch_OPERATOR_TUNE_SUGGESTION)
-        elif profiling_data.PROF_TYPE == constant.MSLITE:
+        elif profiling_data.PROF_TYPE == EnumParamsParser.profiling_type.mslite:
             self._SUGGESTION.append(self.MSLite_OPERATOR_TUNE_SUGGESTION)

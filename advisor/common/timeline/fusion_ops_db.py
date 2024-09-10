@@ -2,6 +2,7 @@ import logging
 import os
 
 from profiler.advisor.common import constant
+from profiler.advisor.common.enum_params_parser import EnumParamsParser
 from profiler.advisor.common.timeline.fusion_ops_rule import OpRule
 from profiler.advisor.common.timeline.fusion_ops_rule_handler import TimelineOpRuleHandler
 from profiler.advisor.utils.log import get_log_level
@@ -50,8 +51,8 @@ class FusionOperatorDB:
     def __init__(self, file_path=None, cann_version=None, torch_version=None):
         self.timeline_fusion_ops_yaml_path = os.path.normpath(get_timeline_fusion_ops_yaml_path())
 
-        self.cann_version = cann_version or constant.DEFAULT_CANN_VERSION
-        self.torch_version = torch_version or constant.DEFAULT_TORCH_VERSION
+        self.cann_version = cann_version or EnumParamsParser().get_default(constant.CANN_VERSION)
+        self.torch_version = torch_version or EnumParamsParser().get_default(constant.TORCH_VERSION)
 
         self._supported_version_dict = {}
 

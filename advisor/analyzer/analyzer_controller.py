@@ -3,9 +3,12 @@ import logging
 import json
 import sys
 import os
+import platform
 import multiprocessing as mp
-from pathlib import Path
 from multiprocessing import Manager
+from pathlib import Path
+
+import psutil
 
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "compare_tools"))
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "cluster_analyse"))
@@ -17,13 +20,14 @@ from profiler.advisor.analyzer.overall.overall_summary_analyzer import OverallSu
 from profiler.advisor.config.config import Config
 from profiler.advisor.common.analyzer_scopes import SupportedScopes
 from profiler.advisor.common.async_analysis_status import AsyncAnalysisStatus
-from profiler.advisor.dataset.cluster.cluster_dataset import ClusterDataset
 from profiler.advisor.utils.utils import Timer, safe_index_value, safe_division, safe_index
 from profiler.advisor.interface.interface import Interface
 from profiler.cluster_analyse.cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
 from profiler.prof_common.path_manager import PathManager
 from profiler.compare_tools.compare_backend.utils.constant import Constant as CompareConstant
 
+# 以spawn模式启动多进程，避免fork主进程资源。如果主进程逻辑较为复杂，fork可能会导致异常。
+mp.set_start_method("spawn", force=True)
 logger = logging.getLogger()
 
 
@@ -46,6 +50,18 @@ class AnalyzerController:
         self.rank_id_map = {}
         self._is_cluster = False
         self.analysis_process_resp = Manager().dict()
+
+    @staticmethod
+    def _set_analysis_process_priority(pid):
+        # 将分析进程优先级设置为最低，避免因为分析进程阻塞其他任务进程，unix上19表示最低优先级
+        unix_process_lowest_priority = 19
+        windows_platform = "windows"
+        linux_platform = "linux"
+        p = psutil.Process(pid)
+        if platform.system().lower() == windows_platform:
+            p.nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
+        elif platform.system().lower() == linux_platform:
+            p.nice(unix_process_lowest_priority)
 
     @staticmethod
     def _check_profiling_path_valid(profiling_path):
@@ -97,11 +113,33 @@ class AnalyzerController:
 
         return step, benchmark_step, target_rank_id
 
+    @staticmethod
+    def _init_async_analysis_env(kwargs):
+        envs = kwargs.get("async_analysis_env", {})
+        for key, value in envs.items():
+            os.environ[key] = value
+
     def do_analysis(self, dimensions, **kwargs):
         pid = os.getpid()
+        AnalyzerController._set_analysis_process_priority(pid)
+        AnalyzerController._init_async_analysis_env(kwargs)
+
         resp = {"id": pid}
+        output_path = kwargs.get("output_path")
+
         try:
-            self._do_analysis(dimensions, pid=pid, resp=resp, **kwargs)
+            if output_path:
+
+                PathManager.check_input_directory_path(output_path)
+                if os.path.exists(output_path):
+                    PathManager.check_path_owner_consistent(output_path)
+                else:
+                    PathManager.make_dir_safety(output_path)
+
+                Config().set_config("_work_path", output_path)
+            Config().set_log_path(f"mstt_advisor_{Timer().strftime}.xlsx")
+
+            self._do_analysis(dimensions, pid=pid, async_resp=resp, **kwargs)
         except Exception as e:
             self._update_analysis_process_resp(pid, resp, status_code=AsyncAnalysisStatus.FAILED_STATUS_CODE,
                                                status=AsyncAnalysisStatus.FAILED, error_msg=str(e))
@@ -113,6 +151,9 @@ class AnalyzerController:
         async_analysis_process = mp.Process(target=self.do_analysis, args=(dimensions,), kwargs=kwargs,
                                             name="Async advisor performance analysis")
         async_analysis_process.start()
+        self._update_analysis_process_resp(async_analysis_process.pid, {"id": async_analysis_process.pid},
+                                           status_code=AsyncAnalysisStatus.NON_FAILED_STATUS_CODE,
+                                           status=AsyncAnalysisStatus.ANALYZING)
         return async_analysis_process
 
     def get_response_by_pid(self, pid):
@@ -151,7 +192,7 @@ class AnalyzerController:
 
         return job_list
 
-    def cluster_analysis(self, profiling_path, benchmark_profiling_path=None):
+    def do_cluster_analysis(self, profiling_path, benchmark_profiling_path=None):
         job_list = []
 
         # 单集群profiling分析：下发、通信、计算、显存/内存
@@ -311,7 +352,7 @@ class AnalyzerController:
                         logger.info(info_msg)
 
                         job_list += self.communication_analysis(analysis_profiling_path, step=step,
-                                                                bandwidth_type=bandwidth_type, scope=scope)
+                                                                bandwidth_type=bandwidth_type)
 
         return job_list
 
@@ -323,66 +364,9 @@ class AnalyzerController:
         stage_step_rank = self.slow_rank_analyzer.get_stage_step_rank(SlowRankAnalyzer.COMPUTE)
 
         if stage_step_rank:
-            # 对不同pp stage取min max进行分析
-            logger.info("Analysis steps and ranks of different pipeline parallel stages are %s",
-                        json.dumps(stage_step_rank))
-
-            stages_profiling_path = []
-            for stage, step_rank_info in stage_step_rank.items():
-                rank_id = step_rank_info.get("maximum", {}).get("rank_id")
-                step = step_rank_info.get("maximum", {}).get("step")
-                benchmark_rank_id = step_rank_info.get("minimum", {}).get("rank_id")
-                benchmark_step = step_rank_info.get("minimum", {}).get("step")
-
-                info_msg = f"For {stage}, slow rank is {rank_id}"
-                if step:
-                    info_msg += f", step is {step}"
-                logger.info(info_msg)
-
-                stages_profiling_path.append(
-                    dict(
-                        stage=stage, rank=rank_id, step=step, benchmark_rank=benchmark_rank_id,
-                        benchmark_step=benchmark_step,
-                        profiling_path=self._get_profiling_path_by_rank(profiling_path, rank_id),
-                        benchmark_profiling_path=self._get_profiling_path_by_rank(profiling_path, benchmark_rank_id),
-                        compare_mode=CompareConstant.KERNEL_COMPARE
-                    )
-                )
-            Interface.add_analyzer(Interface.COMPUTATION, SupportedScopes.STAGE_COMPUTE, PPStageComputationAnalyzer)
-            compute_analysis_kwargs = {"stages_profiling_path": stages_profiling_path, "profiling_path": profiling_path}
-
-            job_list.append((Interface.COMPUTATION, SupportedScopes.STAGE_COMPUTE, Interface(**compute_analysis_kwargs),
-                             compute_analysis_kwargs))
-            if self.kwargs.get("benchmark_profiling_path") is None:
-                job_list += self._profiling_comparison(stages_profiling_path)
+            job_list = self._stage_computation_analysis(profiling_path, stage_step_rank, job_list)
         else:
-            # 不区分stage，对所有卡取Min max进行分析
-            logger.info("Without pipeline parallel stage, Global analysis steps and ranks is %s",
-                        json.dumps(global_step_rank))
-            slow_rank_id = global_step_rank.get("maximum", {}).get("rank_id") or self.default_rank_id
-            slow_step = global_step_rank.get("maximum", {}).get("step")
-            # 如果没有标杆profiling数据的rank id，说明没有快慢卡问题，直接对默认rank id进行分析，因此这里取值为None
-            fast_rank_id = global_step_rank.get("minimum", {}).get("rank_id")
-            fast_step = global_step_rank.get("minimum", {}).get("step")
-
-            info_msg = f"Maximum computation time for rank {slow_rank_id}"
-            if slow_step is not None:
-                info_msg += f" and step {slow_step}, "
-            if fast_rank_id is not None:
-                info_msg += f"minimum computation time for rank {fast_rank_id}"
-            if fast_step is not None:
-                info_msg += f" and step {fast_step}"
-            logger.info(info_msg)
-
-            kwargs = dict(profiling_path=self._get_profiling_path_by_rank(profiling_path, slow_rank_id),
-                          benchmark_profiling_path=self._get_profiling_path_by_rank(profiling_path, fast_rank_id),
-                          step=slow_step, benchmark_step=fast_step, rank=slow_rank_id, benchmark_rank=fast_rank_id,
-                          compare_mode=CompareConstant.KERNEL_COMPARE)
-            job_list += self.computation_analysis(**kwargs)
-
-            rank_id_valid = slow_rank_id is not None and fast_rank_id is not None and fast_rank_id != slow_rank_id
-            if self.kwargs.get("benchmark_profiling_path") is None and rank_id_valid:
-                job_list += self._profiling_comparison([kwargs])
+            job_list = self._global_computation_analysis(profiling_path, global_step_rank, job_list)
         return job_list
 
     def cluster_memory_analysis(self, profiling_path):
@@ -402,28 +386,23 @@ class AnalyzerController:
         job_list += self.memory_analysis(analysis_profiling_path, step=slow_step)
         return job_list
 
-    def _do_analysis(self, dimensions, **kwargs):
+    def _do_analysis(self, dimensions, pid=0, async_resp=None, **kwargs):
         self.dimensions = dimensions
         self.kwargs = kwargs
         result_list = []
         profiling_path = self.kwargs.get("profiling_path")
         benchmark_profiling_path = self.kwargs.get("benchmark_profiling_path")
-        pid = self.kwargs.get("pid")
-        resp = self.kwargs.get("resp")
-
-        self._update_analysis_process_resp(pid, resp, status_code=AsyncAnalysisStatus.NON_FAILED_STATUS_CODE,
-                                           status=AsyncAnalysisStatus.ANALYZING)
 
         if not self._check_profiling_path_valid(profiling_path):
             error_msg = f"Got invalid argument '-d/--profiling_path' {profiling_path}, skip analysis"
-            self._update_analysis_process_resp(pid, resp, error_msg=error_msg,
+            self._update_analysis_process_resp(pid, async_resp, error_msg=error_msg,
                                                status_code=AsyncAnalysisStatus.FAILED_STATUS_CODE,
                                                status=AsyncAnalysisStatus.FAILED)
             logger.error(error_msg)
             return
         if benchmark_profiling_path and not self._check_profiling_path_valid(benchmark_profiling_path):
             error_msg = f"Got invalid argument '-bp/--benchmark_profiling_path' {benchmark_profiling_path}, skip analysis"
-            self._update_analysis_process_resp(pid, resp, error_msg=error_msg,
+            self._update_analysis_process_resp(pid, async_resp, error_msg=error_msg,
                                                status_code=AsyncAnalysisStatus.FAILED_STATUS_CODE,
                                                status=AsyncAnalysisStatus.FAILED)
             logger.error(error_msg)
@@ -439,7 +418,7 @@ class AnalyzerController:
         else:
             self.slow_rank_analyzer = SlowRankAnalyzer(profiling_path)
             self.slow_link_analyzer = SlowLinkAnalyzer(profiling_path)
-            job_list = self.cluster_analysis(profiling_path, benchmark_profiling_path)
+            job_list = self.do_cluster_analysis(profiling_path, benchmark_profiling_path)
 
         for i, (dimension, scope, interface, kwargs) in enumerate(job_list[::-1]):
             result_list.append(
@@ -451,7 +430,7 @@ class AnalyzerController:
             if result and hasattr(result, "show"):
                 result.show()
                 break
-        self._get_analysis_success_resp(pid, resp)
+        self._get_analysis_success_resp(pid, async_resp)
 
     def _get_scopes(self, scope=None, bandwidth_type=SlowLinkAnalyzer.SDMA):
         """
@@ -624,7 +603,74 @@ class AnalyzerController:
 
     def _get_analysis_success_resp(self, pid, resp):
         html_path = os.path.join(Config().work_path, f"mstt_advisor_{Timer().strftime}.html")
-        xlsx_path = os.path.join(Config().work_path, f"mstt_advisor_{Timer().strftime}.xlsx")
+        xlsx_path = os.path.join(Config().work_path, "log", f"mstt_advisor_{Timer().strftime}.xlsx")
         result_files = {"html": html_path, "xlsx": xlsx_path}
         self._update_analysis_process_resp(pid, resp, status_code=AsyncAnalysisStatus.NON_FAILED_STATUS_CODE,
                                            status=AsyncAnalysisStatus.SUCCESS, result_files=result_files)
+
+    def _stage_computation_analysis(self, profiling_path, stage_step_rank, job_list):
+        # 对不同pp stage取min max进行分析
+        logger.info("Steps and ranks to be analyzed of different pipeline parallel stages are %s",
+                    json.dumps(stage_step_rank))
+
+        stages_profiling_path = []
+        for stage, step_rank_info in stage_step_rank.items():
+            rank_id = step_rank_info.get("maximum", {}).get("rank_id")
+            step = step_rank_info.get("maximum", {}).get("step")
+            benchmark_rank_id = step_rank_info.get("minimum", {}).get("rank_id")
+            benchmark_step = step_rank_info.get("minimum", {}).get("step")
+
+            info_msg = f"For {stage}, slow rank is {rank_id}"
+            if step:
+                info_msg += f", step is {step}"
+            logger.info(info_msg)
+
+            stages_profiling_path.append(
+                dict(
+                    stage=stage, rank=rank_id, step=step, benchmark_rank=benchmark_rank_id,
+                    benchmark_step=benchmark_step,
+                    profiling_path=self._get_profiling_path_by_rank(profiling_path, rank_id),
+                    benchmark_profiling_path=self._get_profiling_path_by_rank(profiling_path, benchmark_rank_id),
+                    compare_mode=CompareConstant.KERNEL_COMPARE
+                )
+            )
+        Interface.add_analyzer(Interface.COMPUTATION, SupportedScopes.STAGE_COMPUTE, PPStageComputationAnalyzer)
+        compute_analysis_kwargs = {"stages_profiling_path": stages_profiling_path, "profiling_path": profiling_path}
+
+        job_list.append((Interface.COMPUTATION, SupportedScopes.STAGE_COMPUTE, Interface(**compute_analysis_kwargs),
+                         compute_analysis_kwargs))
+        if self.kwargs.get("benchmark_profiling_path") is None:
+            logger.info("Enable computation comparison of fast and slow rank/step in different pp stages")
+            job_list += self._profiling_comparison(stages_profiling_path)
+        return job_list
+
+    def _global_computation_analysis(self, profiling_path, global_step_rank, job_list):
+        # 不区分stage，对所有卡取Min max进行分析
+        logger.info("Without pipeline parallel stage, steps and ranks to be analyzed are %s",
+                    json.dumps(global_step_rank))
+        slow_rank_id = global_step_rank.get("maximum", {}).get("rank_id") or self.default_rank_id
+        slow_step = global_step_rank.get("maximum", {}).get("step")
+        # 如果没有标杆profiling数据的rank id，说明没有快慢卡问题，直接对默认rank id进行分析，因此这里取值为None
+        fast_rank_id = global_step_rank.get("minimum", {}).get("rank_id")
+        fast_step = global_step_rank.get("minimum", {}).get("step")
+
+        info_msg = f"Maximum computation time for rank {slow_rank_id}"
+        if slow_step is not None:
+            info_msg += f" and step {slow_step}, "
+        if fast_rank_id is not None:
+            info_msg += f"minimum computation time for rank {fast_rank_id}"
+        if fast_step is not None:
+            info_msg += f" and step {fast_step}"
+        logger.info(info_msg)
+
+        kwargs = dict(profiling_path=self._get_profiling_path_by_rank(profiling_path, slow_rank_id),
+                      benchmark_profiling_path=self._get_profiling_path_by_rank(profiling_path, fast_rank_id),
+                      step=slow_step, benchmark_step=fast_step, rank=slow_rank_id, benchmark_rank=fast_rank_id,
+                      compare_mode=CompareConstant.KERNEL_COMPARE)
+        job_list += self.computation_analysis(**kwargs)
+
+        rank_id_valid = slow_rank_id is not None and fast_rank_id is not None and fast_rank_id != slow_rank_id
+        if self.kwargs.get("benchmark_profiling_path") is None and rank_id_valid:
+            logger.info("Enable computation comparison of fast and slow rank/step")
+            job_list += self._profiling_comparison([kwargs])
+        return job_list
