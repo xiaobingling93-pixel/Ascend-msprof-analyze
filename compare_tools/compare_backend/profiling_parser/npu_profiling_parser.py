@@ -222,6 +222,7 @@ class NPUProfilingParser(BaseProfilingParser):
             else:
                 last_4_task_mode_dict[task_event.tid] = f"{last_4_task_mode[1:]}O" if last_4_task_mode else "OOOO"
         uncovered_communication_events = list(filter(lambda x: x.is_comm_not_overlap(), self._overlap_analysis))
+        uncovered_communication_events.sort(key=lambda x: x.start_time)
         group_comm_time_dict = {}
         for comm_tid, tid_list in self._group_comm_tid_dict.items():
             min_wait_time = float("inf")
