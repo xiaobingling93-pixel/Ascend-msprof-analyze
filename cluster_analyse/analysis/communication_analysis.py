@@ -141,7 +141,7 @@ class CommunicationAnalysisOptimized(BaseAnalysis):
         return data_dict
     
     def run(self):
-        if not self._communication_ops:
+        if not self._communication_ops[0] or not self._communication_ops[1]:
             return
         self._aggregate_time = self._format_time_data(self._communication_ops[0])
         self._aggregate_bandwidth = self._format_bandwidth_data(self._communication_ops[1])
