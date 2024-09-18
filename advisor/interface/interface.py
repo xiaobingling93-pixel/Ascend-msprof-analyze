@@ -15,6 +15,7 @@
 import os
 from collections import OrderedDict
 import sys
+import logging
 
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))),
                              "cluster_analyse"))
@@ -45,6 +46,7 @@ from profiler.advisor.analyzer.communication.contention.bandwidth_contention_ana
 from profiler.advisor.analyzer.schedule.gc.gc_analyzer import GcAnalyzer
 from profiler.advisor.analyzer.comparison.comparison_analyzer import ComparisonAnalyzer
 
+logger = logging.getLogger()
 
 class Interface:
     SCHEDULE = "schedule"
