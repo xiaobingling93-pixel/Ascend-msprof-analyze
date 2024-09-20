@@ -26,24 +26,25 @@ from profiler.compare_tools.compare_backend.comparison_generator import Comparis
 @click.command(context_settings=Constant.CONTEXT_SETTINGS, name="compare",
                short_help='Compare the performance differences between GPUs and NPUs.')
 @click.option('--profiling_path', '-d', 'comparison_profiling_path', type=click.Path(), required=True,
-              help='path of the profiling data')
-@click.option('--benchmark_profiling_path', '-bp', 'base_profiling_path', type=click.Path(), required=True)
-@click.option('--enable_profiling_compare', is_flag=True)
-@click.option('--enable_operator_compare', is_flag=True)
-@click.option('--enable_memory_compare', is_flag=True)
-@click.option('--enable_communication_compare', is_flag=True)
-@click.option('--enable_api_compare', is_flag=True)
-@click.option('--enable_kernel_compare', is_flag=True)
-@click.option('--disable_details', is_flag=True)
-@click.option('--output_path', '-o', 'output_path', type=click.Path())
-@click.option('--max_kernel_num', 'max_kernel_num', type=int, help="The number of kernels per torch op is limited.")
+              help='Path of the profiling data')
+@click.option('--benchmark_profiling_path', '-bp', 'base_profiling_path', type=click.Path(), required=True,
+              help="Path of the benchmark data")
+@click.option('--enable_profiling_compare', is_flag=True, help="Enable overall performance comparison")
+@click.option('--enable_operator_compare', is_flag=True, help="Enable operator performance comparison")
+@click.option('--enable_memory_compare', is_flag=True, help="Enable operator memory comparison")
+@click.option('--enable_communication_compare', is_flag=True, help="Enable communication performance comparison")
+@click.option('--enable_api_compare', is_flag=True, help="Enable API performance comparison")
+@click.option('--enable_kernel_compare', is_flag=True, help="Enable kernel performance comparison")
+@click.option('--disable_details', is_flag=True, help="Hide detailed comparison")
+@click.option('--output_path', '-o', 'output_path', type=click.Path(), help="Path of comparison result")
+@click.option('--max_kernel_num', 'max_kernel_num', type=int, help="The number of kernels per torch op is limited")
 @click.option('--op_name_map', type=ast.literal_eval, default='{}',
-              help="The mapping of operator names equivalent to GPUs and NPUs in the form of dictionaries.",
+              help="The mapping of operator names equivalent to GPUs and NPUs in the form of dictionaries",
               required=False)
-@click.option('--use_input_shape', is_flag=True)
-@click.option('--gpu_flow_cat', type=str, default='', help="Identifier of the GPU connection.")
-@click.option('--base_step', type=str, default='', help="基准性能数据指定比对step")
-@click.option('--comparison_step', type=str, default='', help="比较性能数据指定比对step")
+@click.option('--use_input_shape', is_flag=True, help="Enable precise matching of operators")
+@click.option('--gpu_flow_cat', type=str, default='', help="Identifier of the GPU connection")
+@click.option('--base_step', type=str, default='', help="Comparison step for performance data to be compared")
+@click.option('--comparison_step', type=str, default='', help="Comparison step for benchmark performance data")
 
 def compare_cli(**kwargs) -> None:
     args = AnalyzeDict(kwargs)
