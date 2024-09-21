@@ -143,6 +143,13 @@ class ArgsManager:
         if not isinstance(self._args.op_name_map, dict):
             raise RuntimeError(
                 "Invalid param, --op_name_map must be dict, for example: --op_name_map={'name1':'name2'}")
+        op_names = list(self._args.op_name_map.keys()) + list(self._args.op_name_map.values())
+        if any(not isinstance(op_name, str) for op_name in op_names):
+            raise RuntimeError("Invalid param, key/value in --op_name_map must be string")
+        if any(len(op_name) > Constant.MAX_OP_NAME_LEN for op_name in op_names):
+            msg = f"Invalid param, the length of key/value in --op_name_map exceeded the maximum value" \
+                  f" {Constant.MAX_OP_NAME_LEN}"
+            raise RuntimeError(msg)
         if self._args.gpu_flow_cat and len(self._args.gpu_flow_cat) > Constant.MAX_FLOW_CAT_LEN:
             msg = f"Invalid param, --gpu_flow_cat exceeded the maximum value {Constant.MAX_FLOW_CAT_LEN}"
             raise RuntimeError(msg)
