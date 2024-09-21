@@ -390,8 +390,10 @@ class AnalyzerController:
         self.dimensions = dimensions
         self.kwargs = kwargs
         result_list = []
-        profiling_path = self.kwargs.get("profiling_path")
+        profiling_path = PathManager.get_realpath(self.kwargs.get("profiling_path"))
         benchmark_profiling_path = self.kwargs.get("benchmark_profiling_path")
+        if benchmark_profiling_path:
+            benchmark_profiling_path = PathManager.get_realpath(benchmark_profiling_path)
 
         if not self._check_profiling_path_valid(profiling_path):
             error_msg = f"Got invalid argument '-d/--profiling_path' {profiling_path}, skip analysis"

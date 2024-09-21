@@ -80,10 +80,7 @@ class PathManager:
             msg = f"Invalid input path which is a soft link."
             raise RuntimeError(msg)
 
-        if platform.system().lower() == cls.WINDOWS:
-            pattern = r'(\.|:|\\|/|_|-|\s|[~0-9a-zA-Z\u4e00-\u9fa5])+'
-        else:
-            pattern = r'(\.|/|_|-|\s|[~0-9a-zA-Z])+'
+        pattern = r'(\.|:|\\|/|_|-|\s|[~0-9a-zA-Z\u4e00-\u9fa5])+'
         if not re.fullmatch(pattern, path):
             msg = f"Invalid input path."
             raise RuntimeError(msg)
@@ -191,7 +188,7 @@ class PathManager:
         if os.path.islink(path):
             msg = f"Invalid input path which is a soft link."
             raise RuntimeError(msg)
-        return os.path.realpath(path)
+        return os.path.abspath(path)
 
     @classmethod
     def check_file_size(cls, file_path: str):
