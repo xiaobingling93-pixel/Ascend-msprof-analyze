@@ -1,11 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import os
-from configparser import ConfigParser
 
 from setuptools import find_packages, setup  # type: ignore
 
 from prof_common.path_manager import PathManager
+from advisor.config.config import SafeConfigReader
 
 extras = {
     "test": [
@@ -14,6 +14,11 @@ extras = {
         "pytest-cov==2.12.0",
         "mock==4.0.3",
     ]
+}
+
+sections = {
+    'URL': ['msprof_analyze_url'],
+    'EMAIL': ['ms_email']
 }
 
 with open('requirements/build.txt', 'r') as f:
@@ -29,8 +34,9 @@ with open('version.txt', 'r') as f:
 config_file_path = "config/config.ini"
 PathManager.check_input_file_path(config_file_path)
 PathManager.check_file_size(config_file_path)
-config = ConfigParser(allow_no_value=True)
-config.read(config_file_path)
+reader = SafeConfigReader(config_file_path)
+reader.validate(sections)
+config = reader.get_config()
 try:
     url = config.get("URL", "msprof_analyze_url")
 except Exception as e:
