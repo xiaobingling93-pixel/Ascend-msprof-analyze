@@ -34,7 +34,6 @@ class BindCoreManager():
         self.find_running_pid_times = self.DEFAULT_FIND_RUNNING_PID_TIMES
         self.npu_affinity_cpu_dict = {}
         self.log_file = ''
-        self._init_log_file()
 
     @staticmethod
     def _launch_process(cmd: list):
@@ -43,6 +42,18 @@ class BindCoreManager():
             subprocess.Popen(cmd.split(), shell=False)
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f'Failed to run cmd: {cmd}') from e
+
+    def run(self):
+        self._init_log_file()
+        self.args_parse()
+
+        if not bind_core_manager.get_npu_info():
+            print('[ERROR] Failed to get current npus info')
+            exit()
+        if not bind_core_manager.get_running_pid_on_npu():
+            exit()
+
+        bind_core_manager.run_bind_core()
 
     def get_running_pid_on_npu(self) -> bool:
         no_running_pids_on_npu_msg = '[INFO] Now there is no running process on all NPUs, stop bind cores'
@@ -133,11 +144,11 @@ class BindCoreManager():
             time.sleep(2)
         # if time is set, wait for setting time before bind cores
         if args.time:
-            if args.time < 0:
-                raise RuntimeError("Invalid parm, the value of --time cannot be less than 0")
-            elif args.time > BindCoreManager.MAX_WAIT_TIME_BEFORE_BIND_CORE:
-                msg = f"Invalid param, the value of --time exceeds the maximum limit of {BindCoreManager.MAX_WAIT_TIME_BEFORE_BIND_CORE}"
-                raise RuntimeError(msg)
+            if args.time < 0 or args.time > BindCoreManager.MAX_WAIT_TIME_BEFORE_BIND_CORE:
+                args.time = 0
+                msg = f"Invalid parameter. The value of --time is not within the range " \
+                      f"[0, {BindCoreManager.MAX_WAIT_TIME_BEFORE_BIND_CORE}]. --time has been set to 0 to continue."
+                print(f'[WARNING] {msg}')
             time.sleep(args.time)
 
     def _init_log_file(self):
@@ -207,14 +218,11 @@ class BindCoreManager():
 
 if __name__ == '__main__':
     print('[INFO] Begin to run bind-cores script...')
+
     bind_core_manager = BindCoreManager()
-    bind_core_manager.args_parse()
+    try:
+        bind_core_manager.run()
+    except Exception as exception:
+        print(f'[ERROR] {exception}')
 
-    if not bind_core_manager.get_npu_info():
-        print('[ERROR] Failed to get current npus info')
-        exit()
-
-    if not bind_core_manager.get_running_pid_on_npu():
-        exit()
-    bind_core_manager.run_bind_core()
     print('[INFO] End to run bind-cores script, the log is saved in {}'.format(bind_core_manager.log_file))
