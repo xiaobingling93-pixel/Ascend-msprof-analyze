@@ -26,6 +26,7 @@ class PathManager:
 
 class BindCoreManager():
     DEFAULT_FIND_RUNNING_PID_TIMES = 5
+    MAX_WAIT_TIME_BEFORE_BIND_CORE = 10000  # Time Unit: second
 
     def __init__(self):
         self.npu_id_list = []
@@ -132,6 +133,11 @@ class BindCoreManager():
             time.sleep(2)
         # if time is set, wait for setting time before bind cores
         if args.time:
+            if args.time < 0:
+                raise RuntimeError("Invalid parm, the value of --time cannot be less than 0")
+            elif args.time > BindCoreManager.MAX_WAIT_TIME_BEFORE_BIND_CORE:
+                msg = f"Invalid param, the value of --time exceeds the maximum limit of {BindCoreManager.MAX_WAIT_TIME_BEFORE_BIND_CORE}"
+                raise RuntimeError(msg)
             time.sleep(args.time)
 
     def _init_log_file(self):
