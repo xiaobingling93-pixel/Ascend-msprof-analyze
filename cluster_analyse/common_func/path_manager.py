@@ -18,7 +18,6 @@ import re
 import shutil
 import platform
 
-from sympy.unify.usympy import illegal
 
 
 class PathManager:
