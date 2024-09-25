@@ -120,8 +120,6 @@ class CommunicationAnalysisOptimized(BaseAnalysis):
         self._communication_group = param.get(Constant.COMM_DATA_DICT, {}).get(Constant.COMMUNICATION_GROUP)
         self._aggregate_time = {}
         self._aggregate_bandwidth = {}
-        self._total_transit_size = {}
-        self._total_transit_time = {}
         self._output_time = []
         self._output_bandwidth = []
         
@@ -135,9 +133,10 @@ class CommunicationAnalysisOptimized(BaseAnalysis):
     def _format_time_data(communication_data):
         data_dict = {}
         for single_op in communication_data:
-            formated_data = CommunicationTimeBean(single_op)
-            data_dict.setdefault(formated_data.step_id, {}).\
-                setdefault(formated_data.rank_id, []).extend([formated_data])
+            formatted_data = CommunicationTimeBean(single_op)
+            data_dict.setdefault(formatted_data.step_id, {}).\
+                setdefault(formatted_data.rank_id, {}).\
+                setdefault(formatted_data.group_name, []).extend([formatted_data])
         return data_dict
     
     def run(self):
@@ -147,27 +146,15 @@ class CommunicationAnalysisOptimized(BaseAnalysis):
         self._aggregate_bandwidth = self._format_bandwidth_data(self._communication_ops[1])
         self._compute_total_info()
         self._dump_data()
-    
-    def _update_total_bandwidth_data(self, formated_data: any):
-        step_id = formated_data.step_id
-        if self._total_transit_size.get(step_id) is None:
-            self._total_transit_size.setdefault(step_id, 0.0)
-        else:
-            self._total_transit_size[step_id] += formated_data.transit_size
-        if self._total_transit_time.get(step_id) is None:
-            self._total_transit_time.setdefault(step_id, 0.0)
-        else:
-            self._total_transit_time[step_id] += formated_data.transit_time
 
     def _format_bandwidth_data(self, communication_data: dict):
         data_dict = {}
         for single_op in communication_data:
-            formated_data = CommunicationBandwidthBean(single_op)
-            data_dict.setdefault(formated_data.step_id, {}).\
-                setdefault(formated_data.rank_id, {}).\
-                setdefault(formated_data.transport_type, {}).\
-                setdefault(formated_data.package_size, []).extend([formated_data])
-            self._update_total_bandwidth_data(formated_data)
+            formatted_data = CommunicationBandwidthBean(single_op)
+            data_dict.setdefault(formatted_data.step_id, {}).\
+                setdefault(formatted_data.rank_id, {}).\
+                setdefault(formatted_data.transport_type, {}).\
+                setdefault(formatted_data.package_size, []).extend([formatted_data])
         return data_dict
 
     def _dump_data(self):
@@ -186,25 +173,36 @@ class CommunicationAnalysisOptimized(BaseAnalysis):
             return
         for step_id, rank_dict in self._aggregate_time.items():
             for rank_id, communication_op_info in rank_dict.items():
-                total_dict = {
-                    TableConstant.RANK_ID: rank_id,
-                    TableConstant.STEP: step_id,
-                    TableConstant.GROUP_NAME: '',
-                    TableConstant.HCCL_OP_NAME: Constant.TOTAL_OP_INFO
-                }
-                total_time_info = CommunicationTimeBean(total_dict)
-                for com_info_dict in communication_op_info:
-                    total_time_info += com_info_dict
-                    self._output_time.append(com_info_dict.convert_output())
-                total_time_info.compute_ratio()
-                communication_op_info.append(total_time_info)
-                self._output_time.append(total_time_info.convert_output())
+                rank_set_dict = {}
+                for group_name, single_group_op_info in communication_op_info.items():
+                    total_dict = {
+                        TableConstant.RANK_ID: rank_id,
+                        TableConstant.STEP: step_id,
+                        TableConstant.GROUP_NAME: group_name,
+                        TableConstant.HCCL_OP_NAME: Constant.TOTAL_OP_INFO
+                    }
+                    total_time_info = CommunicationTimeBean(total_dict)
+                    for com_info_dict in single_group_op_info:
+                        total_time_info += com_info_dict
+                        self._output_time.append(com_info_dict.convert_output())
+                    rank_set = str(self.collective_group_dict.get(group_name))
+                    if not rank_set:
+                        logger.warning(f"failed to find rank set with group name:{group_name}.")
+                        continue
+                    if rank_set_dict.get(rank_set):
+                        rank_set_dict[rank_set] += total_time_info
+                    else:
+                        rank_set_dict[rank_set] = total_time_info
+                for rank_set, total_time_info in rank_set_dict.items():
+                    total_time_info.compute_ratio()
+                    self._output_time.append(total_time_info.convert_output())
         for step_id, rank_dict in self._aggregate_bandwidth.items():
-            total_transit_size = self._total_transit_size.get(step_id)
-            total_transit_time = self._total_transit_time.get(step_id)
-            total_bandwidth = total_transit_size / total_transit_time if total_transit_time else 0.0
             for rank_id, communication_op_info in rank_dict.items():
                 for transport_type, bandwidth_info in communication_op_info.items():
+                    total_transit_size = 0.0
+                    total_transit_time = 0.0
+                    total_info = []
+                    op_group_set = set()
                     for package_size, package_info in bandwidth_info.items():
                         total_dict = {
                             TableConstant.RANK_ID: rank_id,
@@ -212,14 +210,24 @@ class CommunicationAnalysisOptimized(BaseAnalysis):
                             TableConstant.GROUP_NAME: '',
                             TableConstant.HCCL_OP_NAME: Constant.TOTAL_OP_INFO,
                             TableConstant.TRANSPORT_TYPE: transport_type,
-                            TableConstant.TRANSIT_SIZE: total_transit_size,
-                            TableConstant.TRANSIT_TIME: total_transit_time,
-                            TableConstant.BANDWIDTH: total_bandwidth,
+                            TableConstant.TRANSIT_SIZE: 0.0,
+                            TableConstant.TRANSIT_TIME: 0.0,
+                            TableConstant.BANDWIDTH: 0.0,
                             TableConstant.PACKAGE_SIZE: package_size
                         }
                         total_bandwidth_info = CommunicationBandwidthBean(total_dict)
                         for bandwidth_package_info in package_info:
                             total_bandwidth_info += bandwidth_package_info
                             self._output_bandwidth.append(bandwidth_package_info.convert_output())
-                        package_info.append(total_bandwidth_info.convert_output())
-                        self._output_bandwidth.append(total_bandwidth_info.convert_output())
+                            op_group = bandwidth_package_info.hccl_op_name + "@" + bandwidth_package_info.group_name
+                            if op_group not in op_group_set:
+                                op_group_set.add(op_group)
+                                total_transit_size += bandwidth_package_info.transit_size
+                                total_transit_time += bandwidth_package_info.transit_time
+                        total_info.append(total_bandwidth_info)
+                    total_bandwidth = total_transit_size / total_transit_time if total_transit_time else 0.0
+                    for single_total_info in total_info:
+                        single_total_info.set_transit_size(total_transit_size)
+                        single_total_info.set_transit_time(total_transit_time)
+                        single_total_info.set_bandwidth(total_bandwidth)
+                        self._output_bandwidth.append(single_total_info.convert_output())
