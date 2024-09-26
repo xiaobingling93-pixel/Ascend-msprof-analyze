@@ -69,7 +69,7 @@ class Interface:
         return (pt_data_map, data_type) if pt_data_map else (ms_data_map, Constant.TEXT)
     def run(self):
         PathManager.check_input_directory_path(self.collection_path)
-        PathManager.check_path_owner_consistent(self.collection_path)
+        PathManager.check_path_owner_consistent([self.collection_path])
         data_map, data_type = self.allocate_prof_data()
         if not data_map:
             print("[WARNING] Can not get rank info or profiling data.")
