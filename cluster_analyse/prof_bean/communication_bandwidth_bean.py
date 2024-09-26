@@ -94,6 +94,6 @@ class CommunicationBandwidthBean:
     def convert_output(self):
         return [
             self._step_id, self._rank_id, self._hccl_op_name, self._group_name,
-            self._transport_type, self._transit_size, self._transit_time, self._bandwidth,
+            self._transport_type, self._transit_size, self._transit_time, round(self._bandwidth, 4),
             self._large_packet_ratio, self._package_size, self._count, self._total_duration
             ]

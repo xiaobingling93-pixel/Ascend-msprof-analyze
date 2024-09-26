@@ -187,13 +187,13 @@ class CommunicationAnalysisOptimized(BaseAnalysis):
                         self._output_time.append(com_info_dict.convert_output())
                     rank_set = str(self.collective_group_dict.get(group_name))
                     if not rank_set:
-                        logger.warning(f"failed to find rank set with group name:{group_name}.")
+                        logger.warning("failed to find rank set with group name: %s.", group_name)
                         continue
                     if rank_set_dict.get(rank_set):
                         rank_set_dict[rank_set] += total_time_info
                     else:
                         rank_set_dict[rank_set] = total_time_info
-                for rank_set, total_time_info in rank_set_dict.items():
+                for _, total_time_info in rank_set_dict.items():
                     total_time_info.compute_ratio()
                     self._output_time.append(total_time_info.convert_output())
         for step_id, rank_dict in self._aggregate_bandwidth.items():

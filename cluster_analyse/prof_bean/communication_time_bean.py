@@ -70,5 +70,5 @@ class CommunicationTimeBean:
         return [
             self._step_id, self._rank_id, self._hccl_op_name, self._group_name,
             self._start_time, self._elapsed_time, self._transit_time, self._wait_time, self._synchronization_time,
-            self._idle_time, self._sync_ratio, self._wait_ratio
+            self._idle_time, round(self._sync_ratio, 4), round(self._wait_ratio, 4)
             ]
