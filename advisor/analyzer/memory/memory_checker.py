@@ -73,4 +73,5 @@ class MemoryOpsChecker:
                                     template_name="memory.html",
                                     desc=self.desc,
                                     suggestions=self.suggestions,
-                                    priority_background_color=priority)
+                                    priority_background_color=priority,
+                                    rank=kwargs.get("rank"))

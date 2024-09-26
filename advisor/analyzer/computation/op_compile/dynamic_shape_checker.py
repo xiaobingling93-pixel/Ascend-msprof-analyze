@@ -12,8 +12,9 @@ logger = logging.getLogger()
 
 
 class DynamicShapeChecker(OperatorChecker):
-    ENABLE_COMPILED_SUGGESTION = "Optimize by enabling compiled operator, such as:\n" \
-                                 "`torch_npu.npu.set_compile_mode(jit_compile=False)`\n"
+    ENABLE_COMPILED_SUGGESTION = "Please place the following code at the entrance of the python script to disable jit compile. " \
+                                 "Code: `torch_npu.npu.set_compile_mode(jit_compile=False); " \
+                                 "torch_npu.npu.config.allow_internal_format = False`"
     _SUGGESTION: List[str] = [ENABLE_COMPILED_SUGGESTION]
     _CHECKER = "dynamic shape operator"
     _PROBLEM = "Dynamic shape operator"
@@ -28,13 +29,13 @@ class DynamicShapeChecker(OperatorChecker):
     def check(self, profiling_database) -> bool:
         return self.is_dynamic_shape(profiling_database)
 
-    def make_record(self, profiling_database, rank_id=None) -> OptimizeRecord:
+    def make_record(self, profiling_database, rank=None) -> OptimizeRecord:
         """
         make record for what and how to optimize
         """
 
-        if rank_id is not None:
-            self._PROBLEM = f"rank {rank_id} ".capitalize() + self._PROBLEM.lower()
+        if rank is not None:
+            self._PROBLEM = f"rank {rank} ".capitalize() + self._PROBLEM.lower()
         optimization_item = OptimizeItem(
             self._PROBLEM,
             self._description,
@@ -56,7 +57,7 @@ class DynamicShapeChecker(OperatorChecker):
             release_suggestion = copy.deepcopy(suggestion)
             if release_suggestion == DynamicShapeChecker.ENABLE_COMPILED_SUGGESTION:
                 release_suggestion += \
-                    f"for details please refer to link : <a href={Config().enable_compiled_tune_url}>LINK</a>"
+                    f"for details please refer to link : <a href={Config().enable_compiled_tune_url} target='_blank'>LINK</a>"
             release_suggestion_list.append(release_suggestion.replace('\n', '<br>'))
         format_result = {"record": record.__dict__, "suggestion": '<br> '.join(release_suggestion_list)}
         return format_result
@@ -68,4 +69,5 @@ class DynamicShapeChecker(OperatorChecker):
                                            template_name="operator_dynamic_shape.html",
                                            format_result=self.format_operator_result(record),
                                            add_render_list=add_render_list,
-                                           priority_background_color=priority)
+                                           priority_background_color=priority,
+                                           rank=kwargs.get("rank"))

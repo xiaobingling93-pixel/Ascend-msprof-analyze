@@ -1,7 +1,11 @@
-problem: "Abnormal garbage collection (GC) event is detected for {gc_count} times, and the total time is {gc_total_time} ms\n. 
+gc_problem_with_count: "Abnormal garbage collection (GC) event is detected for {gc_count} times, and the total time is {gc_total_time} ms\n.
 The GC operation is time-consuming and blocks the entire process.  As a result, some steps in the model training process take a longer time than other steps."
-gc_threshold: 1000 #us
+gc_problem_with_free: "Nearly no host tasks within {free_duration_time} microseconds(us) of free time, which is likely caused by abnormal garbage collection (GC) of Python"
+gc_threshold: 10 #us
 top_num: 10
+max_free_threshold: 200000 # us
+max_acl_event_num_ratio: 0.0001 # max 10 events per 100 ms
+max_acl_event_time_ratio: 0.01 # total time of acl events no larger than 0.01 * free duration
 solutions:
   - memory management:
       desc: "implement effective Python memory management; release memory promptly when not in use to avoid long-term retention; avoid circular references between objects."

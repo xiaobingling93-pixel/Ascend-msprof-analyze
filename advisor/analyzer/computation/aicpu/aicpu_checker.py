@@ -157,7 +157,8 @@ class AicpuChecker(OperatorChecker):
                                            format_result=self.format_operator_result(record,
                                                                                      constant.OPERATOR_LIST_UNLIMIT),
                                            add_render_list=add_render_list,
-                                           priority_background_color=priority)
+                                           priority_background_color=priority,
+                                           rank=kwargs.get("rank"))
 
     def format_operator_result(self, record, limit):
         """

@@ -23,7 +23,9 @@ from profiler.advisor.dataset.timeline_op_collector.timeline_op_collector import
     AclToNpuCollector,
     OpStackCollector,
     StepCollector,
-    GcCollector
+    GcCollector,
+    FreeEventsCollector,
+    AclEventsCollector
 )
 
 logger = logging.getLogger()
@@ -162,7 +164,9 @@ class ScheduleAnalysisDataset(BaseTimelineEventDataset):
         SyncBNCollector=SyncBNCollector(),
         AtenCollector=AtenCollector(),
         OptimizerCollector=OptimizerCollector(),
-        GcCollector=GcCollector()
+        GcCollector=GcCollector(),
+        FreeEventsCollector=FreeEventsCollector(),
+        AclEventsCollector=AclEventsCollector()
     )
 
     def __init__(self, collection_path, data: dict, build_dataset=True, **kwargs) -> None:

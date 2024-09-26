@@ -29,12 +29,18 @@ class TestSynchronizeChecker(unittest.TestCase):
         self.assertFalse(checker.synchronize_issues)
 
     def test_max_synchronize_stream(self):
-        dataset = self._get_mock_dataset(100, [], is_empty_dataset=False)
+        dataset = self._get_mock_dataset(10, [], is_empty_dataset=False)
         checker = SynchronizeStreamChecker()
         checker.check_synchronize(dataset)
         self.assertFalse(checker.synchronize_issues)
 
-    def _get_mock_dataset(self, total_count, slow_synchronize_stream, is_empty_dataset=False):
+    def test_synchonize_stream_ratio(self):
+        dataset = self._get_mock_dataset(10, [], is_empty_dataset=False, aten_num=10)
+        checker = SynchronizeStreamChecker()
+        checker.check_synchronize(dataset)
+        self.assertTrue(checker.synchronize_issues)
+
+    def _get_mock_dataset(self, total_count, slow_synchronize_stream, is_empty_dataset=False, aten_num=0):
         dataset = TimelineEvent()
         if is_empty_dataset:
             return dataset
@@ -43,9 +49,11 @@ class TestSynchronizeChecker(unittest.TestCase):
             dict(
                 total_count=total_count,
                 slow_synchronize_stream=slow_synchronize_stream,
-                rule=dict(max_synchronize_num=10, problem="", solutions=[]),
+                rule=dict(max_synchronize_num=100, problem="", solutions=[],
+                          max_synchronize_num_ratio=0.3, slow_synchronize_threshold=10, ),
             )
         )
+        dataset["aten"] = ["aten"] * aten_num
         return dataset
 
 
