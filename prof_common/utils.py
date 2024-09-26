@@ -4,7 +4,7 @@ from email.utils import parseaddr
 from typing import Dict, List
 from urllib.parse import urlparse
 
-from profiler.prof_common.path_manager import PathManager
+from .path_manager import PathManager
 
 logger = logging.getLogger()
 
