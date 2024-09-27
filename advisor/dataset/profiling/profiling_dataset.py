@@ -33,15 +33,19 @@ class ProfilingDataset(Dataset):
             self._info = info
         ret = False
         if self.current_version_pattern is not None:
-            self.build_from_pattern(self.current_version_pattern["dirs_pattern"], self.collection_path)
+            self.build_from_pattern(self.current_version_pattern.get("dirs_pattern"), self.collection_path, 0)
             ret = True
 
         return ret
 
-    def build_from_pattern(self, dirs_pattern, current_path):
+    def build_from_pattern(self, dirs_pattern, current_path, depth):
+        if depth > constant.DEPTH_LIMIT:
+            logger.error("Recursion depth exceeds limit!")
+            return
+        depth += 1
         if isinstance(dirs_pattern, dict):
             for key, value in dirs_pattern.items():
-                self.build_from_pattern(value, join_prof_path(current_path, key))
+                self.build_from_pattern(value, join_prof_path(current_path, key), depth)
         elif isinstance(dirs_pattern, list):
             for item in dirs_pattern:
                 if hasattr(self, item) and getattr(self, item):
