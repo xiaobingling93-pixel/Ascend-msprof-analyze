@@ -44,12 +44,14 @@ class OptimizerAdvice(TimelineAdviceBase):
         return self.output_format_data
 
     def process(self):
-        if not self.preparse_data[self.PREPARSE_TYPE.OPTIMIZER]:
+        if not self.preparse_data[self.PreParseType.OPTIMIZER]:
             return
 
-        self.cur_data = list(set([entry.get("name", None) for entry in self.preparse_data[self.PREPARSE_TYPE.OPTIMIZER]]))
+        self.cur_data = list(set([entry.get("name", None) \
+                                  for entry in self.preparse_data[self.PreParseType.OPTIMIZER]]))
         for index, opt_name in enumerate(self.cur_data):
-            self.cur_advice += f"You can choose {self.OPTIMIZER_MAP.get(opt_name)} to replace the current Optimizer: {opt_name}."
+            self.cur_advice += \
+                f"You can choose {self.OPTIMIZER_MAP.get(opt_name)} to replace the current Optimizer: {opt_name}."
             if index != len(self.cur_data) - 1:
                 self.cur_advice += "\n"
         self.cur_bottleneck = self.cur_advice

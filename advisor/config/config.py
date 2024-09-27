@@ -178,7 +178,7 @@ class Config:
     def set_log_path(self, result_file: str, log_path: str = None):
         self.log_path = log_path if log_path is not None else os.path.join(self._work_path, "log")
         os.makedirs(self.log_path, exist_ok=True)
-        self.config.set(self,"ANALYSE","analysis_result_file",os.path.join(self.log_path, result_file))
+        self.config.set("ANALYSE","analysis_result_file",os.path.join(self.log_path, result_file))
         self._analysis_result_file = os.path.join(self.log_path, result_file)
 
     def remove_log(self):
