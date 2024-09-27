@@ -1,9 +1,25 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """
 advisor config
 """
 
-import logging
 import os
+import logging
+
 
 from profiler.advisor.utils.utils import Timer
 from profiler.advisor.utils.utils import singleton
@@ -46,11 +62,6 @@ class Config:
             os.path.join(self._work_path, f"operator_tuning_file_{Timer().strftime}.cfg"))
         self.log_path = None
 
-    def _normalize_path(self, file) -> str:
-        if not file.startswith("/"):
-            file = os.path.join(self._work_path, file)
-        return os.path.abspath(file)
-
     @property
     def work_path(self) -> str:
         """
@@ -67,24 +78,6 @@ class Config:
         """
         return self._root_path
 
-    def set_config(self, key, value) -> None:
-        """
-        set config value
-        :param key: config key
-        :param value: config value
-        """
-        setattr(self, key, value)
-
-    def get_config(self, key) -> str:
-        """
-        get value of config
-        :param key: config key
-        :return: config value
-        """
-        try:
-            return getattr(self, key)
-        except AttributeError:
-            return ""
 
     @property
     def analysis_result_file(self) -> str:
@@ -158,10 +151,34 @@ class Config:
         except Exception:
             return ""
 
+    def _normalize_path(self, file) -> str:
+        if not file.startswith("/"):
+            file = os.path.join(self._work_path, file)
+        return os.path.abspath(file)
+
+    def set_config(self, key, value) -> None:
+        """
+        set config value
+        :param key: config key
+        :param value: config value
+        """
+        setattr(self, key, value)
+
+    def get_config(self, key) -> str:
+        """
+        get value of config
+        :param key: config key
+        :return: config value
+        """
+        try:
+            return getattr(self, key)
+        except AttributeError:
+            return ""
+
     def set_log_path(self, result_file: str, log_path: str = None):
         self.log_path = log_path if log_path is not None else os.path.join(self._work_path, "log")
         os.makedirs(self.log_path, exist_ok=True)
-        self.config._analysis_result_file = os.path.join(self.log_path, result_file)
+        self.config.set(self,"ANALYSE","analysis_result_file",os.path.join(self.log_path, result_file))
         self._analysis_result_file = os.path.join(self.log_path, result_file)
 
     def remove_log(self):
