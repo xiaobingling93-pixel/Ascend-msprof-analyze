@@ -14,8 +14,7 @@
 # limitations under the License.
 
 import os
-
-from common_func.constant import Constant
+ 
 from common_func.file_manager import FileManager
 from communication_group.base_communication_group import BaseCommunicationGroup
 
