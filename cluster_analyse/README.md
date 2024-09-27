@@ -36,7 +36,7 @@ experimental_config = torch_npu.profiler._ExperimentalConfig(
 
 1. 参见《[性能工具](../README.md)》完成工具安装。建议安装最新版本。
 
-2. 将所有卡的数据拷贝并汇集到一个目录下，在本目录下运行以下命令即可生成cluster_analysis_output文件夹。
+2. 将所有卡的数据拷贝并汇集到一个目录下，运行以下命令，在该目录下即可生成cluster_analysis_output文件夹。
 
    ```bash
    msprof-analyze cluster -d {cluster profiling data path} -m {mode}
@@ -133,9 +133,9 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 ```
 **Tips**：可以根据rank互联的带宽以及链路类型，判断是否有慢链路的问题。
 
-- "LOCAL"是片内拷贝，速率非常快，不需要考虑。
-- “HCCS”或“PCIE”是节点内片间拷贝，速度在18GB左右或以上比较正常。
-- “RDMA”是节点间拷贝，910A速度在12GB左右或以上。
+- "LOCAL"是片内拷贝，速度最高。
+- “HCCS”或“PCIE”是节点内片间拷贝，速度居中。
+- “RDMA”是节点间拷贝，速度最低。
 
 #### cluster_communication.json
 
@@ -147,5 +147,6 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 
 解析analysis.db或ascend_pytorch_profiler_{rank_id}.db生成的交付件，根据数据解析模式不同而解析不同的数据，可以使用MindStudio Insight工具展示。
 
+#### communication_group.json
 
-
+记录通信域信息，解析analysis.db生成的交付件，collective表示集合通信域，P2P表示点对点通信，用户无须关注该文件。

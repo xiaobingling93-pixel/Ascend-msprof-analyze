@@ -1,6 +1,6 @@
 # advisor
 
-msprof-analyze的advisor功能是将Ascend PyTorch Profiler或者msprof采集的PyThon场景性能数据进行分析，并输出性能调优建议（当前暂不支持对db格式文件分析）。
+msprof-analyze的advisor功能是将Ascend PyTorch Profiler或者msprof采集的性能数据进行分析，并输出性能调优建议（当前暂不支持对db格式文件分析）。
 
 性能数据采集方法请参见《[性能分析工具](https://www.hiascend.com/document/detail/zh/mindstudio/70RC1/mscommandtoolug/mscommandug/atlasprofiling_16_0001.html)》。
 
@@ -62,37 +62,48 @@ msprof-analyze的advisor功能是将Ascend PyTorch Profiler或者msprof采集的
 
 #### 命令功能介绍
 
-| dimension  | mode                                  | 参数释义                             |
-| ---------- |---------------------------------------| ------------------------------------ |
-| overall    | overall_summary                       | 计算、通信、空闲等维度对性能数据进行拆解 |
-|            | environment_variable_analysis | 环境变量设置推荐             |
-| cluster    | slow_rank                             | 慢卡识别                             |
-|            | slow_link                             | 慢链路识别                           |
-|            | communication_retransmission_analysis |通信重传检测                          |
-| computing  | aicpu                                 | AI CPU调优                           |
-|            | dynamic_shape_analysis                | 识别动态Shape算子                    |
-|            | block_dim_analysis                    | block dim算子调优                    |
-|            | operator_no_bound_analysis            | operator no bound                    |
-|            | graph                                 | 融合算子图调优                        |
-|            | freq_analysis                         | AI Core算子降频分析                  |
-|communication| packet_analysis                       |通信小包检测                          |
-| scheduling | timeline_fusion_ops                   | 亲和API替换调优                      |
-|            | timeline_op_dispatch                  | 识别算子下发问题(路径3/路径5)            |
-| | gc_analysis | 识别异常垃圾回收事件。需要Ascend PyTorch Profiler采集时开启experimental_config下的gc_delect_threshold功能。 |
-| memory | memory_analysis | 识别异常的内存申请释放操作 |
-| comparison | comparison_analysis | 识别标杆和待比对性能数据的Kernel和API数据（无标杆场景是集群内部快慢卡的性能数据对比，有标杆场景是两个集群之间存在明显耗时差异的相同卡之间的性能数据对比） |
+msprof-analyze advisor命令行包含如下三个参数：
 
 - all
 
-  总体性能瓶颈：包含上表中所有功能。
+  总体性能瓶颈：包含下表中所有功能。
 
 - computation
 
-  计算瓶颈：包含上表中computing功能。
+  计算瓶颈：包含下表中computing和Kernel compare功能。
 
 - schedule
 
-  调度瓶颈：包含上表中scheduling功能。
+  调度瓶颈：包含下表中scheduling和API compare功能。
+
+下表中字段为advisor的完整功能点，由all、computation和schedule控制启动。
+
+| dimension  | mode                                  | 参数释义                             |
+| ---------- |---------------------------------------| ------------------------------------ |
+| overall    | overall summary                       | 计算、通信、空闲等维度对性能数据进行拆解 |
+|            | environment_variable_analysis | 环境变量设置推荐             |
+| cluster    | slow rank                             | 慢卡识别                             |
+|            | slow link                             | 慢链路识别                           |
+| computing  | AICPU operator                    | AI CPU调优                           |
+|            | Dynamic shape operator        | 识别动态Shape算子                    |
+|            | block dim                    | block dim算子调优                    |
+|            | operator no bound            | 算子瓶颈分析                |
+|            | fusion issue                      | 融合算子图调优                        |
+|            | AI Core Frequency | AI Core算子降频分析                  |
+|communication| Packet analysis                       |通信小包检测                          |
+|| bandwidth contention analysis |通信计算带宽抢占检测 |
+|| Communication retransmission analysis |通信重传检测 |
+| scheduling | Affinity apis              | 亲和API替换调优                      |
+|            | Operator dispatch          | 识别算子下发问题(路径3/路径5)            |
+| | SyncBatchNorm | BatchNorm同步检测 |
+| | SynchronizeStream | 流同步检测 |
+| | Slow dataloader | 异常dataloader检测 |
+| | gc | 识别异常垃圾回收事件。需要Ascend PyTorch Profiler采集时开启experimental_config下的gc_delect_threshold功能 |
+| memory | Memory | 识别异常的内存申请释放操作 |
+| comparison | Kernel compare of Rank\* Step\* and Rank\* Step\* | 识别标杆和待比对性能数据的Kernel数据（无标杆场景是集群内部快慢卡的性能数据对比，有标杆场景是两个集群之间存在明显耗时差异的相同卡之间的性能数据对比） |
+|  | API compare of Rank\* Step\* and Rank\* Step\* | 识别标杆和待比对性能数据的API数据（无标杆场景是集群内部快慢卡的性能数据对比，有标杆场景是两个集群之间存在明显耗时差异的相同卡之间的性能数据对比） |
+
+集群场景时自动进行cluster和overall的environment_variable_analysis解析，单卡时自动进行overall解析。
 
 #### 命令格式
 
@@ -121,7 +132,7 @@ msprof-analyze的advisor功能是将Ascend PyTorch Profiler或者msprof采集的
 | -d<br>--profiling_path             | 性能数据文件或目录所在路径，Ascend PyTorch Profiler采集场景指定为`*_ascend_pt`性能数据结果目录，其他场景指定为`PROF_XXX`性能数据结果目录。建议通过Ascend PyTorch Profiler获取性能数据。<br/>advisor依赖Profiling工具解析后的timeline数据（.json）、summary（.csv）数据以及info.json*文件，请确保指定的“profiling_path”目录下存在以上文件。 | 是       |
 | -bp<br/>--benchmark_profiling_path | 基准性能数据所在目录，用于性能比对。性能数据通过Profiling工具采集获取。<br>**computation和schedule不支持该参数。** | 否       |
 | -o<br/>--output_path               | 分析结果输出路径，完成advisor分析操作后会在该目录下保存分析结果数据。默认未配置，为当前目录。 | 否       |
-| -cv<br/>--cann_version             | 使用Profiling工具采集时对应的CANN软件版本，可通过在环境中执行如下命令获取其version字段，目前配套的兼容版本为“6.3.RC2”，“7.0.RC1”、“7.0.0”、“8.0.RC1”，此字段不填默认按“8.0.RC1”版本数据进行处理，其余版本采集的Profiling数据在分析时可能会导致不可知问题：`cat /usr/local/Ascend/ascend-toolkit/latest/aarch64-linux/ascend_toolkit_install.info` | 否       |
+| -cv<br/>--cann_version             | 使用Profiling工具采集时对应的CANN软件版本。目前配套的兼容版本为“6.3.RC2”，“7.0.RC1”、“7.0.0”、“8.0.RC1”，此字段不填默认按“8.0.RC1”版本数据进行处理，其余版本采集的Profiling数据在分析时可能会导致不可知问题。可通过在环境中执行如下命令获取其version字段：`cat /usr/local/Ascend/ascend-toolkit/latest/aarch64-linux/ascend_toolkit_install.info` | 否       |
 | -tv<br/>--torch_version            | 运行环境的torch版本，默认为1.11.0，支持torch1.11.0和torch2.1.0，当运行环境torch版本为其他版本如torch1.11.3时，可以忽略小版本号差异选择相近的torch版本如1.11.0。 | 否       |
 | -pt<br/>--profiling_type           | 配置性能数据采集使用的Profiling工具类型。可取值：<br>        ascend_pytorch_profiler：使用Ascend PyThon Profiler接口方式采集的性能数据时配置，默认值。<br/>        msprof：使用msprof命令行方式采集的性能数据时配置。功能完善中，暂不建议使用。<br/>        mslite：使用[Benchmark](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)工具采集的性能数据时配置。不建议使用。<br>**schedule不支持该参数。** | 否       |
 | --debug                            | 工具执行报错时可打开此开关，将会展示详细保存堆栈信息。       | 否       |
@@ -129,7 +140,7 @@ msprof-analyze的advisor功能是将Ascend PyTorch Profiler或者msprof采集的
 
 ### 报告解析（无标杆）
 
-无标杆是指执行msprof-analyze advisor时，未配置-bp参数，指定基准性能数据进行比对。
+无标杆是指执行msprof-analyze advisor时，未配置-bp参数，会根据性能数据中的computing time和free time判断是否进行kernel和API性能数据的对比，以慢卡数据为标杆数据，快卡数据为待比对数据。
 
 如下图所示，工具会从集群、单卡性能拆解、调度和计算等维度进行问题诊断并给出相应的调优建议。并通过红、黄、绿色块表示问题优先级，分别为High（高）、Medium（中）、Low（低）。
 
@@ -165,17 +176,21 @@ overall模块仅识别问题，不提供调优建议。
 
 comparison模块内容如下图示例，识别标杆和待比对性能数据的Kernel和API数据，无标杆场景的comparison是集群内部快慢卡的性能数据对比。包括：
 
-- Kernel compare of Rank* Step* and Rank* Step*：Kernel的总耗时、平均耗时、最大耗时、最小耗时和执行次数，以及标杆的对应数据，最后计算Diff Total Ratio（标杆总耗时/总耗时）和Diff Avg Ratio（标杆平均耗时/平均耗时）。
+- Kernel compare of Rank* Step* and Rank* Step*：Kernel的待比对总耗时、待比对平均耗时、待比对最大耗时、待比对最小耗时和待比对执行次数，以及标杆的对应数据，最后计算Diff Total Ratio（标杆总耗时/待比对总耗时）和Diff Avg Ratio（标杆平均耗时/待比对平均耗时）。
 
   Diff Total Ratio和Diff Avg Ratio大于1则表示当前环境性能更优，小于1则表示当前环境有待优化，等于1则表示当前环境与标杆环境性能接近。
 
   ![comparison2](./img/comparison2.png)
 
-- Api compare of Rank* Step* and Rank* Step*：API的总耗时、API自身耗时（除去API调用的子API的耗时）、平均耗时和执行次数，以及标杆的对应数据，最后计算Diff Total Ratio（标杆总耗时/总耗时）、Diff Self Ratio（标杆API自身耗时/API自身耗时）、Diff Avg Ratio（标杆平均耗时/平均耗时）和Diff Calls Ratio（标杆执行次数/执行次数）。
+  其中inf表示分母为0（未获取到待对比数据或待对比数据为0），None表示未获取到数据。
+
+- Api compare of Rank* Step* and Rank* Step*：API的待比对总耗时、待比对API自身耗时（除去API调用的子API的耗时）、待比对平均耗时和待比对执行次数，以及标杆的对应数据，最后计算Diff Total Ratio（标杆总耗时/待比对总耗时）、Diff Self Ratio（标杆API自身耗时/待比对API自身耗时）、Diff Avg Ratio（标杆平均耗时/待比对平均耗时）和Diff Calls Ratio（标杆执行次数/待比对执行次数）。
 
   Diff Total Ratio、Diff Self Ratio、Diff Avg Ratio和Diff Calls Ratio大于1则表示当前环境性能更优，小于1则表示当前环境有待优化，等于1则表示当前环境与标杆环境性能接近。
 
   ![comparison3](./img/comparison3.png)
+  
+  其中inf表示分母为0（未获取到待对比数据或待对比数据为0），None表示未获取到数据。
 
 `mstt_advisor_{timestamp}.html`文件的comparison模块内容仅展示Kernel和API的Top 10条数据，详细数据需要查看`mstt_advisor_{timestamp}.xlsx`文件。
 
@@ -233,8 +248,8 @@ schedule模块包GC Analysis、含亲和API、aclOpCompile、syncBatchNorm、Syn
 
 在Python中，gc模块提供了对垃圾回收器的控制。
 
-- `gc. set_threshold(threshold0, thresholdl, threshold2)`：这个函数用于设置垃圾回收的阈值。垃圾回收器将所有对象分为三代（0代、1代和2代），每一代的对象在经历垃圾回收后会被移到下一代。`threshold0`控制第0代的垃圾回收频率，`threshold1`控制第1代的垃圾回收频率，`threshold2`控制第2代的垃圾回收频率。将`threshold0`设为0可以禁用垃圾回收。
-- `gc. disable ()`：这个函数用于禁用自动垃圾回收。调用`gc. disable ()`后，垃圾回收器将不会自动运行，直到手动调用`gc.enable（）`。
+- `gc.set_threshold(threshold0, thresholdl, threshold2)`：这个函数用于设置垃圾回收的阈值。垃圾回收器将所有对象分为三代（0代、1代和2代），每一代的对象在经历垃圾回收后会被移到下一代。`threshold0`控制第0代的垃圾回收频率，`threshold1`控制第1代的垃圾回收频率，`threshold2`控制第2代的垃圾回收频率。将`threshold0`设为0可以禁用垃圾回收。
+- `gc.disable ()`：这个函数用于禁用自动垃圾回收。调用`gc.disable ()`后，垃圾回收器将不会自动运行，直到手动调用`gc.enable（）`。
 
 如下图示例，Affinity API Issues提示存在可以替换的亲和API并给出对应的堆栈，用户可以根据堆栈找到需要修改的代码，并给出修改案例（API instruction超链接）。
 
@@ -267,23 +282,27 @@ torch_npu.npu.config.allow_internal_format = False
 
 有标杆集群场景：
 
-- overall模块进行快慢卡和快慢链路分析，与无标杆集群场景一致，请参见**“报告解析（无标杆）** > **overall模块的分析**”。
-- 提供Environment Variable Issues，与无标杆单卡场景一致，请参见**“报告解析（无标杆）** > **overall模块的分析**”。
+- overall模块进行快慢卡和快慢链路分析，与无标杆集群场景一致，请参见“**报告解析（无标杆）** > **overall模块的分析**”。
+- 提供Environment Variable Issues，与无标杆单卡场景一致，请参见“**报告解析（无标杆）** > **overall模块的分析**”。
 - 有标杆集群场景同样提供comparison模块（无标杆场景是集群内部快慢卡的性能数据对比，有标杆场景是两个集群之间存在明显耗时差异的相同卡之间的性能数据对比）。
 
 comparison模块内容如下图示例，识别标杆和待比对性能数据的Kernel和API数据，包括：
 
-- Kernel compare of Target and Benchmark：Kernel的总耗时、平均耗时、最大耗时、最小耗时和执行次数，以及标杆的对应数据，最后计算Diff Total Ratio（标杆总耗时/总耗时）和Diff Avg Ratio（标杆平均耗时/平均耗时）。
+- Kernel compare of Target and Benchmark：Kernel的待比对总耗时、待比对平均耗时、待比对最大耗时、待比对最小耗时和待比对执行次数，以及标杆的对应数据，最后计算Diff Total Ratio（标杆总耗时/待比对总耗时）和Diff Avg Ratio（标杆平均耗时/待比对平均耗时）。
 
   Diff Total Ratio和Diff Avg Ratio大于1则表示当前环境性能更优，小于1则表示当前环境有待优化，等于1则表示当前环境与标杆环境性能接近。
 
   ![comparison](./img/comparison.png)
 
-- Api compare of Target and Benchmark：API的总耗时、API自身耗时（除去API调用的子API的耗时）、平均耗时和执行次数，以及标杆的对应数据，最后计算Diff Total Ratio（标杆总耗时/总耗时）、Diff Self Ratio（标杆API自身耗时/API自身耗时）、Diff Avg Ratio（标杆平均耗时/平均耗时）和Diff Calls Ratio（标杆执行次数/执行次数）。
+  其中inf表示分母为0（未获取到待对比数据或待对比数据为0），None表示未获取到数据。
+
+- Api compare of Target and Benchmark：API的待比对总耗时、待比对API自身耗时（除去API调用的子API的耗时）、待比对平均耗时和待比对执行次数，以及标杆的对应数据，最后计算Diff Total Ratio（标杆总耗时/待比对总耗时）、Diff Self Ratio（标杆API自身耗时/待比对API自身耗时）、Diff Avg Ratio（标杆平均耗时/待比对平均耗时）和Diff Calls Ratio（标杆执行次数/待比对执行次数）。
 
   Diff Total Ratio、Diff Self Ratio、Diff Avg Ratio和Diff Calls Ratio大于1则表示当前环境性能更优，小于1则表示当前环境有待优化，等于1则表示当前环境与标杆环境性能接近。
 
   ![comparison1](./img/comparison1.png)
+  
+  其中inf表示分母为0（未获取到待对比数据或待对比数据为0），None表示未获取到数据。
 
 `mstt_advisor_{timestamp}.html`文件的comparison模块内容仅展示Kernel和API的Top 10条数据，详细数据需要查看`mstt_advisor_{timestamp}.xlsx`文件。
 

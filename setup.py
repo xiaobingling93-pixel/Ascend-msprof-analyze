@@ -5,7 +5,7 @@ import os
 from setuptools import find_packages, setup  # type: ignore
 
 from prof_common.path_manager import PathManager
-from advisor.config.config import SafeConfigReader
+from prof_common.utils import SafeConfigReader
 
 extras = {
     "test": [
