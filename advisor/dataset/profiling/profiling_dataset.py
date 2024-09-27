@@ -1,3 +1,18 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0 
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import logging
 import os
 
@@ -18,25 +33,15 @@ logger = logging.getLogger()
 
 
 class ProfilingDataset(Dataset):
-    PROF_TYPE = ""
+    prof_type = ""
 
     def __init__(self, collection_path, data: dict, **kwargs) -> None:
         self.cann_version = kwargs.get(constant.CANN_VERSION, EnumParamsParser().get_default(constant.CANN_VERSION))
-        self.PROF_TYPE = kwargs.get(constant.PROFILING_TYPE, EnumParamsParser().get_default(constant.PROFILING_TYPE))
+        self.prof_type = kwargs.get(constant.PROFILING_TYPE, EnumParamsParser().get_default(constant.PROFILING_TYPE))
         self.patterns = self.parse_pattern()
         self.current_version_pattern = self.get_current_version_pattern()
+        self._info = None
         super().__init__(collection_path, data)
-
-    def _parse(self):
-        info = DeviceInfoParser(self.collection_path)
-        if info.parse_data():
-            self._info = info
-        ret = False
-        if self.current_version_pattern is not None:
-            self.build_from_pattern(self.current_version_pattern.get("dirs_pattern"), self.collection_path, 0)
-            ret = True
-
-        return ret
 
     def build_from_pattern(self, dirs_pattern, current_path, depth):
         if depth > constant.DEPTH_LIMIT:
@@ -62,7 +67,9 @@ class ProfilingDataset(Dataset):
                     setattr(self, item, data_object)
                 else:
                     logger.info("Skip parse %s with file pattern %s from local path %s", 
-                                   self.current_version_pattern.get('class_attr').get(item), file_pattern_list, current_path)
+                                self.current_version_pattern.get('class_attr').get(item),
+                                file_pattern_list, current_path
+                    )
         else:
             logger.warning(f"Unsupported arguments : %s to build %s", dirs_pattern, self.__class__.__name__)
 
@@ -84,8 +91,20 @@ class ProfilingDataset(Dataset):
 
         patterns = FileManager.read_yaml_file(config_path)
 
-        return patterns
+        return patterns if patterns else []
 
     def collection_path(self):
         """collection_path"""
         return self.collection_path
+    
+    def _parse(self):
+        info = DeviceInfoParser(self.collection_path)
+        if info.parse_data():
+            self._info = info
+        ret = False
+        dirs_pattern = self.current_version_pattern.get("dirs_pattern")
+        if dirs_pattern is not None:
+            self.build_from_pattern(dirs_pattern, self.collection_path, 0)
+            ret = True
+
+        return ret
