@@ -65,11 +65,24 @@ class AnalyzerController:
 
     @staticmethod
     def _check_profiling_path_valid(profiling_path):
+        ascend_ms = "ascend_ms"
         PathManager.input_path_common_check(profiling_path)
 
         if not Path(profiling_path).exists():
             logger.error("Profiling path is not existed. Invalid profiling path: %s", profiling_path)
             return False
+
+        ascend_ms_dirs = [] #目前不支持的ms数据路径存放此处
+        for root, dirs, files in os.walk(profiling_path):
+            for dir_name in dirs:
+                if dir_name.endswith(ascend_ms):
+                    ascend_ms_dirs.append(os.path.join(root, dir_name))
+
+        if not ascend_ms:
+            logger.error("Advisor does not support data from Mindspore now, specifically the following\
+            file paths: %s", str(ascend_ms_dirs))
+            return False
+
         return True
 
     @staticmethod
