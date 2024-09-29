@@ -38,7 +38,7 @@ class OpScheduleAdvice(TimelineAdviceBase):
         cpt_data = self.preparse_data[self.PreParseType.OVERLAP_CPT]
         free_data = self.preparse_data[self.PreParseType.OVERLAP_FREE]
         if not cpt_data or not free_data:
-            logger.error("[ERROR] Fail to find Overlap data.")
+            logger.error("Fail to find Overlap data.")
             return
 
         op_dur = [entry.get("dur", 0) for entry in cpt_data]

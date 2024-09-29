@@ -83,9 +83,7 @@ class PathManager:
 
         pattern = r'(\.|:|\\|/|_|-|\s|[~0-9a-zA-Z\u4e00-\u9fa5])+'
         if not re.fullmatch(pattern, path):
-            illegal_pattern = r'([^\.\:\\\/\_\-\s~0-9a-zA-Z\u4e00-\u9fa5])+'
-            invalidObj = re.search(illegal_pattern, path).group()
-            msg = f"Invalid path which has illagal characters \"{invalidObj}\"."
+            msg = f"Invalid input path."
             raise RuntimeError(msg)
 
         path_split_list = path.split("/")

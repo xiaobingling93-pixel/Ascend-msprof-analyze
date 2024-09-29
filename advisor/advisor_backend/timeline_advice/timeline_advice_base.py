@@ -53,20 +53,20 @@ class TimelineAdviceBase(AdviceBase):
         check whether input path is valid
         """
         if not os.path.exists(self.collection_path):
-            logger.error("[ERROR] Path: %s is not exist.",str(self.collection_path))
+            logger.error("Path: %s is not exist.",str(self.collection_path))
             return False
         if os.path.isdir(self.collection_path) and self.collection_path.endswith("ascend_pt"):
             self.trace_view_path = os.path.join(self.collection_path, "ASCEND_PROFILER_OUTPUT", "trace_view.json")
             if not os.path.exists(self.trace_view_path):
-                logger.error("[ERROR] trace_view.json is not exist in the Path: %s."\
+                logger.error("trace_view.json is not exist in the Path: %s."\
                              ,str(os.path.join(self.collection_path, "ASCEND_PROFILER_OUTPUT")))
                 return False
         elif os.path.isfile(self.collection_path) and os.path.basename(self.collection_path) == "trace_view.json":
             self.trace_view_path = self.collection_path
         else:
-            logger.error("[ERROR] Please input ascend_pt or trace_view.json.")
+            logger.error("Please input ascend_pt or trace_view.json.")
             return False
-        logger.info("[INFO] Start to analyse the target file: %s",str(self.trace_view_path))
+        logger.info("Start to analyse the target file: %s",str(self.trace_view_path))
         return True
 
     @abstractmethod
