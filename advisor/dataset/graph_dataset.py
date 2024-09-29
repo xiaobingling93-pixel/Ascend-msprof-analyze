@@ -1,3 +1,18 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import logging
 from typing import List
 
@@ -18,17 +33,6 @@ class GraphDataset(Dataset):
     def __init__(self, collection_path, data: dict = None, **kwargs) -> None:
         self.graph_files: List[HostGraphParser] = []
         super().__init__(collection_path, data)
-
-    def _parse(self):
-        graph_list = get_file_path_from_directory(self.collection_path,
-                                                  lambda file: file.endswith(
-                                                      load_parameter(self.FILE_PATTERN, "_Build.txt")))
-
-        for graph_file_path in graph_list[-1:]:
-            logger.info("Prepare to parse %s as default graph.", graph_file_path)
-            graph_file = HostGraphParser(graph_file_path)
-            self.graph_files.append(graph_file)
-        return self.graph_files
 
     @lazy_property
     def graphs(self) -> List[Graph]:
@@ -51,3 +55,13 @@ class GraphDataset(Dataset):
     def is_empty(self) -> bool:
         """check empty graph dataset"""
         return len(self.graph_files) == 0 
+    
+    def _parse(self):
+        def is_matching_file(file):
+            return file.endswith(load_parameter(self.FILE_PATTERN, "Build.txt"))
+        graph_list = get_file_path_from_directory(self.collection_path, is_matching_file)
+        for graph_file_path in graph_list[-1:]:
+            logger.info("Prepare to parse %s as default graph.", graph_file_path)
+            graph_file = HostGraphParser(graph_file_path)
+            self.graph_files.append(graph_file)
+        return self.graph_files

@@ -1,3 +1,18 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """
 profiling info
 """
@@ -14,6 +29,7 @@ class Info:
     op info
     """
     _attr_pre_fix_list = [""]
+    FFTS_TYPE = "ffts_type"
 
     def add_attr(self, key: str, value: str):
         """
@@ -116,7 +132,7 @@ class OpInfo(Info):
             if hasattr(self, attr):
                 try:
                     if float(getattr(self, attr)) > 0:
-                        if hasattr(self, "ffts_type") and getattr(self, "ffts_type") == "1":
+                        if hasattr(self, self.FFTS_TYPE) and getattr(self, self.FFTS_TYPE) == "1":
                             logger.warning(
                                 "ffts type of op %s is vector buf mac ratio is not 0", getattr(self, "op_name")
                             )
@@ -124,7 +140,7 @@ class OpInfo(Info):
                 except ValueError:
                     pass
         # not cube op
-        if hasattr(self, "ffts_type") and getattr(self, "ffts_type") == "0":
+        if hasattr(self, self.FFTS_TYPE) and getattr(self, self.FFTS_TYPE) == "0":
             logger.warning("ffts type of op %s is cube but mac ratio is 0", getattr(self, "op_name"))
         return False
 
