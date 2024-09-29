@@ -50,9 +50,6 @@ class GcChecker:
         """
         :Param event_dataset: dataset of timeline event
         """
-        if not hasattr(event_dataset, "gc_events"):
-            logger.debug("Skip gc checker, because no gc event found")
-            return
         self.rank = rank
         self.stage = stage
 
@@ -142,7 +139,7 @@ class GcChecker:
                     free_include_acl_events[free_event_name] = {}
 
                 if "acl_event_count" not in free_include_acl_events[free_event_name]:
-                    free_include_acl_events[free_event_name]["acl_event_count"] = 0.0
+                    free_include_acl_events[free_event_name]["acl_event_count"] = 0
                 free_include_acl_events[free_event_name]["acl_event_count"] += 1
 
                 if "acl_event_dur" not in free_include_acl_events[free_event_name]:
@@ -160,7 +157,7 @@ class GcChecker:
             free_event_name = f"{const.FREE}-{index}"
             free_duration = convert_to_float(free_event.dur)
             acl_event_dur = free_include_acl_events.get(free_event_name, {}).get("acl_event_dur", 0.0)
-            acl_event_count = free_include_acl_events.get(free_event_name, {}).get("acl_event_count", 0.0)
+            acl_event_count = free_include_acl_events.get(free_event_name, {}).get("acl_event_count", 0)
             if safe_division(acl_event_dur, free_duration) < self.max_acl_event_time_ratio and safe_division(
                     acl_event_count, free_duration) < self.max_acl_event_num_ratio:
                 self.gc_issues = True

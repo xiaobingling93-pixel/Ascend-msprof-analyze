@@ -459,7 +459,7 @@ class AnalyzerController:
             if result and hasattr(result, "show"):
                 result.show()
                 break
-        self._get_analysis_success_resp(pid, async_resp)
+        self._get_analysis_finished_resp(pid, async_resp)
 
     def _get_scopes(self, scope=None, bandwidth_type=SlowLinkAnalyzer.SDMA):
         """
@@ -500,7 +500,7 @@ class AnalyzerController:
     def _profiling_comparison(self, compare_profiling_list):
         job_list = []
         disable_profiling_comparison = os.getenv(const.DISABLE_PROFILING_COMPARISON)
-        if disable_profiling_comparison is not None and disable_profiling_comparison.lower()=="true":
+        if disable_profiling_comparison is not None and disable_profiling_comparison.lower() == "true":
             logger.info(
                 "Skip profiling comparison due to longer processing time due to env 'DISABLE_PROFILING_COMPARISON'")
             return job_list
@@ -635,12 +635,18 @@ class AnalyzerController:
             resp.update(kwargs)
         self.analysis_process_resp[pid] = resp
 
-    def _get_analysis_success_resp(self, pid, resp):
-        html_path = os.path.join(Config().work_path, f"mstt_advisor_{Timer().strftime}.html")
-        xlsx_path = os.path.join(Config().work_path, "log", f"mstt_advisor_{Timer().strftime}.xlsx")
-        result_files = {"html": html_path, "xlsx": xlsx_path}
-        self._update_analysis_process_resp(pid, resp, status_code=AsyncAnalysisStatus.NON_FAILED_STATUS_CODE,
-                                           status=AsyncAnalysisStatus.SUCCESS, result_files=result_files)
+    def _get_analysis_finished_resp(self, pid, resp):
+        advisor_output_file_prefix = f"mstt_advisor_{Timer().strftime}"
+        html_path = os.path.join(Config().work_path, f"{advisor_output_file_prefix}.html")
+        xlsx_path = os.path.join(Config().work_path, "log", f"{advisor_output_file_prefix}.xlsx")
+        if os.path.exists(html_path) and os.path.exists(xlsx_path):
+            result_files = {"html": html_path, "xlsx": xlsx_path}
+            self._update_analysis_process_resp(pid, resp, status_code=AsyncAnalysisStatus.NON_FAILED_STATUS_CODE,
+                                               status=AsyncAnalysisStatus.SUCCESS, result_files=result_files)
+        else:
+            self._update_analysis_process_resp(pid, resp, status_code=AsyncAnalysisStatus.BAD_REQUEST_STATUS_CODE,
+                                               status=AsyncAnalysisStatus.FAILED,
+                                               error_msg="No optimization suggestions, please check your input path.")
 
     def _stage_computation_analysis(self, profiling_path, stage_step_rank, job_list):
         # 对不同pp stage取min max进行分析

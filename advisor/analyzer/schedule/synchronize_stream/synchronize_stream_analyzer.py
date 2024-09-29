@@ -23,7 +23,7 @@ class SynchronizeStreamAnalyzer(BaseAnalyzer):
     @BaseAnalyzer.check_data((ScheduleAnalysisDataset.get_key(),))
     def optimize(self, **kwargs):
         synchronize_stream_checker = SynchronizeStreamChecker()
-        synchronize_stream_checker.check_synchronize(self.timeline_event_dataset, kwargs.get("profiling_with_stack"))
+        synchronize_stream_checker.check_synchronize(self.timeline_event_dataset)
         synchronize_stream_checker.make_record(self.result)
         synchronize_stream_checker.make_render(self.html_render, priority=self.get_priority(synchronize_stream_checker),
                                                rank=kwargs.get("rank"))

@@ -87,44 +87,16 @@ class SynchronizeStreamCollector(BaseOpCollector):
 
     def __init__(self):
         super().__init__()
-        self._synchronize_stream_count = 0
-        self._slow_synchronize_stream = []
-        self.rule = SynchronizeStreamCollector._load_rule()
-
-    @property
-    def total_count(self):
-        return self._synchronize_stream_count
-
-    @property
-    def slow_synchronize_stream(self):
-        return self._slow_synchronize_stream
-
-    @staticmethod
-    def _load_rule():
-        sync_stream_rule_path = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))),
-            "rules",
-            "synchronize.yaml")
-
-        sync_stream_rule = FileManager.read_yaml_file(sync_stream_rule_path)
-        return sync_stream_rule
-
-    def update_sync_stream_count(self):
-        self._synchronize_stream_count += 1
-
-    def append_slow_sync_stream(self, event):
-        if float(event.dur) / 1000 >= self.rule.get("slow_synchronize_threshold", 10):
-            self._slow_synchronize_stream.append(event)
-
-    def unset(self):
-        self._synchronize_stream_count = 0
-        self._slow_synchronize_stream = []
+        self.require_filter_by_step = False
 
     def add_op(self, event):
-        return self.op_list
+        if event.name.startswith(const.SYNC_STREAM) or event.name.startswith(const.NODE_LAUNCH):
+            self.op_list.append(event)
 
     def post_process(self, *args, **kwargs):
-        self.attribute_to_dataset["synchronize_stream"] = self
+        self.op_list.sort(key=lambda x: x.ts)
+
+        self.attribute_to_dataset["synchronize_stream"] = self.op_list
 
 
 class MemCollector(BaseOpCollector):

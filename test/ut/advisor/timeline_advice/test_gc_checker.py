@@ -27,4 +27,4 @@ class TestGcChecker(unittest.TestCase):
 
         checker.max_acl_event_num_ratio = 0.001
         free_event = checker.get_free_events_include_gc(large_free_events, acl_events)
-        self.assertIsNone(free_event)
+        self.assertEqual(free_event, {})

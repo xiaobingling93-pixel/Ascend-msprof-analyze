@@ -1,4 +1,5 @@
 import logging
+import os
 
 from profiler.advisor.analyzer.schedule.timeline_base_checker import TimelineBaseChecker
 from profiler.advisor.common import constant as const
@@ -8,6 +9,7 @@ from profiler.advisor.display.html.priority_background_color import PriorityBack
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.advisor.utils.utils import format_timeline_result, safe_division
+from profiler.cluster_analyse.common_func.file_manager import FileManager
 
 logger = logging.getLogger()
 
@@ -21,60 +23,44 @@ class SynchronizeStreamChecker(TimelineBaseChecker):
         self.desc = ""
         self.suggestions = []
         self.solutions = []
-        self.max_synchronize_num = 0
-        self.max_synchronize_num_ratio = 0
-        self.step_synchronize_num = 0
-        self.step_synchronize_num_ratio = 0
+        self.min_co_occurrence_ratio = 0
         self.priority = None
+        self._init_rule()
 
-    def check_synchronize(self, event_dataset: ScheduleAnalysisDataset, profiling_with_stack=None):
-        """
-        :Param event_dataset: dataset of timeline event
-        """
+    def check_synchronize(self, event_dataset: ScheduleAnalysisDataset):
         if not hasattr(event_dataset, "synchronize_stream") or not getattr(event_dataset, "synchronize_stream"):
             logger.info("Skip synchronize stream checker, because no synchronize stream found")
             return
 
-        self.step_synchronize_num = event_dataset.synchronize_stream.total_count
-        self._cal_synchronize_stream_num_ratio(event_dataset)
+        node_launch_num = 0
+        co_occurrence_num = 0
+        synchronize_num = 0
+        synchronize_stream = event_dataset.synchronize_stream
+        for index, op in enumerate(synchronize_stream):
+            if op.name.startswith(const.NODE_LAUNCH):
+                node_launch_num += 1
+            if op.name.startswith(const.SYNC_STREAM):
+                synchronize_num += 1
 
-        slow_synchronize_stream = event_dataset.synchronize_stream.slow_synchronize_stream
-        total_slow_synchronize_time = sum((float(sync_stream.dur) for sync_stream in slow_synchronize_stream))
+                # 统计nodeLaunch 和 synchronizeStream 一前一后连续出现次数
+                if index > 0 and synchronize_stream[index - 1].name.startswith(const.NODE_LAUNCH):
+                    co_occurrence_num += 1
 
-        synchronize_stream_rule = event_dataset.synchronize_stream.rule
-        self.max_synchronize_num = synchronize_stream_rule.get("max_synchronize_num")
-        self.max_synchronize_num_ratio = synchronize_stream_rule.get("max_synchronize_num_ratio")
+        # 当共现次数很多时，则大概率设置了ASCEND_LAUNCH_BLOCKING环境变量
+        co_occurrence_ratio = round(safe_division(co_occurrence_num, node_launch_num), 4)
+        if co_occurrence_ratio > self.min_co_occurrence_ratio:
+            self.synchronize_issues = True
 
-        is_reach_max_ratio_limit = self.step_synchronize_num_ratio >= self.max_synchronize_num_ratio
-        is_reach_max_num_limit = self.step_synchronize_num >= self.max_synchronize_num
-        is_reach_max_slow_num_limit = len(slow_synchronize_stream) > 0
+        self.priority = self.get_priority()
 
-        self.priority = self.get_priority(is_reach_max_ratio_limit, is_reach_max_num_limit, is_reach_max_slow_num_limit)
-        self.synchronize_issues = is_reach_max_ratio_limit or is_reach_max_num_limit or is_reach_max_slow_num_limit
+        self.desc = self.desc.format(synchronize_num=synchronize_num,
+                                     node_launch_num=node_launch_num,
+                                     co_occur_ratio=co_occurrence_ratio)
 
-        if not self.synchronize_issues:
-            return
-
-        for sync_stream in slow_synchronize_stream:
-            if sync_stream.name not in self._matched_op_index:
-                self._matched_op_index[sync_stream.name] = []
-            self._matched_op_index[sync_stream.name].append(sync_stream.dataset_index)
-        self.query_stack(event_dataset, profiling_with_stack)
-
-        self.desc = synchronize_stream_rule.get("problem")
-        self.desc = self.desc.format(synchronize_num=self.step_synchronize_num,
-                                     synchronize_aten_ratio=self.step_synchronize_num_ratio,
-                                     slow_synchronize_num=len(slow_synchronize_stream),
-                                     total_synchronize_stream_time=total_slow_synchronize_time)
-
-        solutions = synchronize_stream_rule.get("solutions")
+        solutions = []
         for solution in solutions:
             renderer_solution = {}
             for key, val in solution.items():
-                if self.empty_stacks and self.framework_black_list:
-                    # 如果堆栈源于torch, torch_npu等框架，则不提示修改的代码
-                    if "modify code" in key.lower():
-                        continue
                 self.suggestions.append(f"{key}, {val.get('desc')}")
                 renderer_solution.update({key: val})
             self.solutions.append(renderer_solution)
@@ -108,13 +94,22 @@ class SynchronizeStreamChecker(TimelineBaseChecker):
                                     priority_background_color=priority,
                                     rank=rank)
 
-    def get_priority(self, is_reach_max_ratio_limit=None, is_reach_max_num_limit=None,
-                     is_reach_max_slow_num_limit=None):
-        if is_reach_max_ratio_limit or is_reach_max_num_limit:
-            return PriorityBackgroundColor.high
-        return PriorityBackgroundColor.low
+    def get_priority(self):
+        return PriorityBackgroundColor.high
 
-    def _cal_synchronize_stream_num_ratio(self, event_dataset):
-        if event_dataset.aten:
-            self.step_synchronize_num_ratio = round(safe_division(self.step_synchronize_num, len(event_dataset.aten)),
-                                                    4)
+    def _init_rule(self):
+        synchronize_rule_path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))),
+            "rules",
+            "synchronize.yaml"
+        )
+
+        synchronize_rule = FileManager.read_yaml_file(synchronize_rule_path)
+
+        self.min_co_occurrence_ratio = synchronize_rule.get("min_co_occurrence_ratio")
+        self.desc = synchronize_rule.get("problem")
+
+        self.solutions = synchronize_rule.get("solutions")
+        for solution in self.solutions:
+            for key, val in solution.items():
+                self.suggestions.append(f"{key}, {val.get('desc')}")

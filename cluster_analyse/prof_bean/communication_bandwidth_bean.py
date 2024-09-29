@@ -40,9 +40,9 @@ class CommunicationBandwidthBean:
             TableConstant.GROUP_NAME: self._group_name,
             TableConstant.HCCL_OP_NAME: self._hccl_op_name,
             TableConstant.TRANSPORT_TYPE: self._transport_type,
-            TableConstant.TRANSIT_SIZE: self._transit_size + other._transit_size,
-            TableConstant.TRANSIT_TIME: self._transit_time + other._transit_time,
-            TableConstant.BANDWIDTH: self._bandwidth + other._bandwidth,
+            TableConstant.TRANSIT_SIZE: self._transit_size,
+            TableConstant.TRANSIT_TIME: self._transit_time,
+            TableConstant.BANDWIDTH: self._bandwidth,
             TableConstant.LARGE_PACKET_RATIO: 0,
             TableConstant.PACKAGE_SIZE: self._package_size,
             TableConstant.COUNT: self._count + other._count,
@@ -74,9 +74,26 @@ class CommunicationBandwidthBean:
     def transit_size(self):
         return self._transit_size
 
+    @property
+    def group_name(self):
+        return self._group_name
+
+    @property
+    def hccl_op_name(self):
+        return self._hccl_op_name
+
+    def set_transit_size(self, value: float):
+        self._transit_size = value
+    
+    def set_transit_time(self, value: float):
+        self._transit_time = value
+    
+    def set_bandwidth(self, value: float):
+        self._bandwidth = value
+
     def convert_output(self):
         return [
             self._step_id, self._rank_id, self._hccl_op_name, self._group_name,
-            self._transport_type, self._transit_size, self._transit_time, self._bandwidth,
+            self._transport_type, self._transit_size, self._transit_time, round(self._bandwidth, 4),
             self._large_packet_ratio, self._package_size, self._count, self._total_duration
             ]

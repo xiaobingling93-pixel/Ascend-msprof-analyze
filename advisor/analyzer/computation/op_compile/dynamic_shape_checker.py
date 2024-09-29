@@ -12,8 +12,8 @@ logger = logging.getLogger()
 
 
 class DynamicShapeChecker(OperatorChecker):
-    ENABLE_COMPILED_SUGGESTION = "Please place the following code at the entrance of the python script to disable jit compile. " \
-                                 "Code: `torch_npu.npu.set_compile_mode(jit_compile=False); " \
+    ENABLE_COMPILED_SUGGESTION = "Please place the following code at the entrance of the python script to disable jit compile.\n " \
+                                 "Code: `torch_npu.npu.set_compile_mode(jit_compile=False);\n " \
                                  "torch_npu.npu.config.allow_internal_format = False`"
     _SUGGESTION: List[str] = [ENABLE_COMPILED_SUGGESTION]
     _CHECKER = "dynamic shape operator"

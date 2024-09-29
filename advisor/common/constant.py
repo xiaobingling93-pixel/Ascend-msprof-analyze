@@ -31,6 +31,7 @@ FREE = "free"
 OP_COMPILE_NAME = "AscendCL@aclopCompileAndExecute"
 OP_COMPILE_ID = "aclopCompileAndExecute"
 SYNC_STREAM = "AscendCL@aclrtSynchronizeStream"
+NODE_LAUNCH = "Node@launch"
 MAX_OP_COMPILE_NUM = 20
 ACL_TO_NPU = "acl_to_npu"
 TASK_TYPE = "Task Type"
