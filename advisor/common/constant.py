@@ -125,8 +125,9 @@ BOTTLENECK = "bottleneck"
 DATA = "data"
 ADVISOR_ANALYSIS_OUTPUT_DIR = "advisor_analysis_result"
 DEFAULT_PROCESSES = 8
-CLUSTER_ANALYSIS_FILE_PATTERN = [r'profiler_info_\d+\.json', "step_trace_time.csv", "communication.json",
-                                 "communication_matrix.json"]
+CLUSTER_ANALYSIS_FILE_PATTERN = [
+    r'profiler_info_\d+\.json', "step_trace_time.csv", "communication.json", "communication_matrix.json"
+]
 ANALYSIS_OUTPUT_PATH = "ANALYSIS_OUTPUT_PATH"
 DEFAULT_RANK_FOR_PROFILING_ANALYSIS = 0
 PROFILER_INFO_FILE_PATTERN = r"profiler_info_(\d+)\.json"
