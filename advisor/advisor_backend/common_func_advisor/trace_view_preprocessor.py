@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import re
 import sys
 from typing import Optional
@@ -20,6 +21,8 @@ from dataclasses import dataclass
 
 from common_func_advisor.constant import Constant
 
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 @dataclass
 class FineTraceViewData:
@@ -103,11 +106,11 @@ class TraceViewPreProcessor:
         """
         check whether op is hcom send or recv op
         """
-        # eg: hcom_BatchSendRecv__101_0_1
+        # for example, hcom_BatchSendRecv__101_0_1
         p1 = re.compile(r'^hcom_\w+SendRecv__\d+')
-        # eg: hcom_send__101_0_1
+        # for example, hcom_send__101_0_1
         p2 = re.compile(r'hcom_send__\d+')
-        # eg: hcom_receive__101_0_1
+        # for example, hcom_receive__101_0_1
         p3 = re.compile(r'hcom_receive__\d+')
         return bool(p1.match(op_name)) or bool(p2.match(op_name)) or bool(p3.match(op_name))
 
@@ -157,7 +160,7 @@ class TraceViewPreProcessor:
         preprocess raw data
         """
         if not raw_data:
-            print("[ERROR] No raw data found in trace view data.")
+            logger.error("[ERROR] No raw data found in trace view data.")
             return None
 
         raw_fp_tids, raw_bp_tids, raw_hcom_tids = set(), set(), set()
@@ -189,7 +192,7 @@ class TraceViewPreProcessor:
         fine_data.hcom_tids = list(raw_hcom_tids)
 
         if not unique_fp_tid or not unique_bp_tid:
-            print("[INFO] No fp or bp tid found in trace view data.")
+            logger.info("[INFO] No fp or bp tid found in trace view data.")
         else:
             fine_data.fp_tid, fine_data.bp_tid = unique_fp_tid[0], unique_bp_tid[0]
 
