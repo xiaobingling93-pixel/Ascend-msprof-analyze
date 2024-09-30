@@ -65,31 +65,36 @@ class AnalyzerController:
 
     @staticmethod
     def _check_profiling_path_valid(profiling_path):
-        ascend_ms = "ascend_ms"
         PathManager.input_path_common_check(profiling_path)
 
         if not Path(profiling_path).exists():
             logger.error("Profiling path is not existed. Invalid profiling path: %s", profiling_path)
             return False
 
-        ascend_ms_dirs = [] #目前不支持的ms数据路径存放此处
+        return True
+
+    @staticmethod
+    def _whether_include_mindspore_prof(profiling_path):
+        # 暂不支持Mindspore数据，支持后可删除该限制
+        ASCEND_MS = "ascend_ms"
+
+        has_ascend_ms_dirs = False
         for root, dirs, _ in os.walk(profiling_path):
-            if root.endswith(ascend_ms):
-                ascend_ms_dirs.append(root)
+            if root.endswith(ASCEND_MS):
+                has_ascend_ms_dirs = True
                 break
             for dir_name in dirs:
-                if dir_name.endswith(ascend_ms):
-                    ascend_ms_dirs.append(os.path.join(root, dir_name))
+                if dir_name.endswith(ASCEND_MS):
+                    has_ascend_ms_dirs = True
                     break
-            if ascend_ms_dirs:
+            if has_ascend_ms_dirs:
                 break
 
-        if ascend_ms_dirs:
-            logger.error("Advisor does not support data from MindSpore now, specifically the following "
-                         "file paths: %s", str(ascend_ms_dirs))
-            return False
+        if has_ascend_ms_dirs:
+            logger.error("Advisor does not support data from MindSpore now, existing dirs end with 'ascend_ms'")
+            return True
 
-        return True
+        return False
 
     @staticmethod
     def _get_step_rank_for_cluster_statistic_diff(target_cluster_statistic_data, benchmark_cluster_statistic_data,
@@ -421,6 +426,16 @@ class AnalyzerController:
                                                status=AsyncAnalysisStatus.FAILED)
             logger.error(error_msg)
             return
+
+        # 暂不支持Mindspore数据，支持后可删除该限制
+        if self._whether_include_mindspore_prof(profiling_path):
+            error_msg = f"Got *_ascend_ms dirs from {profiling_path}, skip analysis"
+            self._update_analysis_process_resp(pid, async_resp, error_msg=error_msg,
+                                               status_code=AsyncAnalysisStatus.FAILED_STATUS_CODE,
+                                               status=AsyncAnalysisStatus.FAILED)
+            logger.error(error_msg)
+            return
+
         if benchmark_profiling_path and not self._check_profiling_path_valid(benchmark_profiling_path):
             error_msg = f"Got invalid argument '-bp/--benchmark_profiling_path' {benchmark_profiling_path}, skip analysis"
             self._update_analysis_process_resp(pid, async_resp, error_msg=error_msg,
