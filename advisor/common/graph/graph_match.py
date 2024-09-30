@@ -27,16 +27,21 @@ class IsomorphismsIterArgsConfig:
     def __init__(self,
                  query_graph: nx.Graph,
                  host_graph: nx.Graph,
+                 *args,
                  directed: bool = None,
                  _node_attr_fun: Callable = None,
                  _node_struct_fun: Callable = None,
-                 _edge_attr_fun: Callable = None, ):
+                 _edge_attr_fun: Callable = None,
+                 **kwargs
+                 ):
         self.query_graph = query_graph
         self.host_graph = host_graph
         self.directed = directed
         self.node_attr_fun = _node_attr_fun
         self.node_struct_fun = _node_struct_fun
         self.edge_attr_fun = _edge_attr_fun
+        self.args = args
+        self.kwargs = kwargs
 
 
 class CandidateArgsConfig:
