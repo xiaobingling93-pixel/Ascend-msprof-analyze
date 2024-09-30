@@ -74,13 +74,19 @@ class AnalyzerController:
 
         ascend_ms_dirs = [] #目前不支持的ms数据路径存放此处
         for root, dirs, files in os.walk(profiling_path):
+            if root.endswith(ascend_ms):
+                ascend_ms_dirs.append(root)
+                break
             for dir_name in dirs:
                 if dir_name.endswith(ascend_ms):
                     ascend_ms_dirs.append(os.path.join(root, dir_name))
+                    break
+            if ascend_ms_dirs:
+                break
 
-        if not ascend_ms:
-            logger.error("Advisor does not support data from Mindspore now, specifically the following\
-            file paths: %s", str(ascend_ms_dirs))
+        if ascend_ms_dirs:
+            logger.error("Advisor does not support data from MindSpore now, specifically the following "
+                         "file paths: %s", str(ascend_ms_dirs))
             return False
 
         return True
