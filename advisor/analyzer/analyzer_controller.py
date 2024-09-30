@@ -73,7 +73,7 @@ class AnalyzerController:
             return False
 
         ascend_ms_dirs = [] #目前不支持的ms数据路径存放此处
-        for root, dirs, files in os.walk(profiling_path):
+        for root, dirs, _ in os.walk(profiling_path):
             if root.endswith(ascend_ms):
                 ascend_ms_dirs.append(root)
                 break
