@@ -157,7 +157,7 @@ class TraceViewJson:
 
     # 加载pid, tid头
     def _load_format(self, traces: List[Dict]):
-        for i, trace in enumerate(traces):
+        for _, trace in enumerate(traces):
             if trace.get('name') == 'process_name':
                 if not trace.get('args') or not trace.get('args').get('name') or not trace.get('pid'):
                     continue
@@ -176,7 +176,7 @@ class TraceViewJson:
         python_pid = self.processes.get("Python").pid
         cann_pid = self.processes.get("CANN").pid
         ascend_hardware_pid = self.processes.get("Ascend Hardware").pid
-        for i, trace in enumerate(traces):
+        for _, trace in enumerate(traces):
             if trace.get('ph') != 'X':
                 continue
             if not check_events(trace):
@@ -196,7 +196,7 @@ class TraceViewJson:
         flow_events_table_by_id = dict()
 
         python_pid = self.processes.get("Python")
-        for i, trace in enumerate(traces):
+        for _, trace in enumerate(traces):
             if trace.get('ph') != 's' and trace.get('ph') != 'f' and trace.get('pid') != python_pid:
                 continue
             if not check_events(trace):

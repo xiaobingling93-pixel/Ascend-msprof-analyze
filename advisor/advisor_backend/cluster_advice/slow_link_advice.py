@@ -35,12 +35,13 @@ class SlowLinkAdvice(ClusterAdviceBase):
 
     def __init__(self, collection_path: str, kwargs: dict = None):
         super().__init__(collection_path)
-        self.rank_bw_dict = defaultdict(lambda: {
+        default_value = {
             self.RDMA_TIME_MS: 0,
             self.RDMA_SIZE_MB: 0,
             self.SDMA_TIME_MS: 0,
             self.SDMA_SIZE_MB: 0,
-        })
+        }
+        self.rank_bw_dict = defaultdict(lambda: default_value)
 
     @staticmethod
     def compute_ratio(dividend: float, divisor: float):
@@ -88,7 +89,7 @@ class SlowLinkAdvice(ClusterAdviceBase):
                     self.rank_bw_dict[rank][self.RDMA_SIZE_MB] += bw_dict.get(self.TRANSIT_SIZE)
                     self.rank_bw_dict[rank][self.RDMA_TIME_MS] += bw_dict.get(self.TRANSIT_TIME)
 
-        for rank, rank_dict in self.rank_bw_dict.items():
+        for rank, _ in self.rank_bw_dict.items():
             self.rank_bw_dict[rank][self.RDMA_BANDWIDTH] = self.compute_ratio(
                 self.rank_bw_dict[rank][self.RDMA_SIZE_MB], self.rank_bw_dict[rank][self.RDMA_TIME_MS])
             self.rank_bw_dict[rank][self.SDMA_BANDWIDTH] = self.compute_ratio(
