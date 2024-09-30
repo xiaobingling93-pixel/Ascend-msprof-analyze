@@ -14,7 +14,7 @@
 # limitations under the License.
 
 import os
-import logging
+
 from abc import abstractmethod
 from dataclasses import dataclass
 from dataclasses import field
@@ -24,9 +24,9 @@ from typing import List
 import pandas as pd
 
 from common_func.file_manager import FileManager
+from profiler.advisor.advisor_backend.logger import Logger
 
-
-logger = logging.getLogger()
+logger = Logger()
 
 @dataclass
 class TraceObj:
@@ -100,18 +100,18 @@ class TraceViewJson:
     
     def get_call_stack(self, data: pd.DataFrame, index_id: int, ts_col: str) -> str:
         if ts_col not in data.columns.tolist():
-            logger.error("[ERROR] No %s col found in data columns.",str(ts_col))
+            logger.error("No %s col found in data columns.",str(ts_col))
             return ""
         row = data.loc[index_id]
         timestamp = row[ts_col]
         flow_event = self.get_torch_2_npu_flow_event(timestamp)
         if not flow_event.valid():
-            logger.error("[ERROR] Get flow event failed for pattern %s.",str(row['pattern']))
+            logger.error("Get flow event failed for pattern %s.",str(row['pattern']))
             return ""
         flow_event_s_key = flow_event.s_point_ts
         python_dur_events = self.get_python_dur_events_contain_ts(flow_event_s_key)
         if not python_dur_events:
-            logger.error("[ERROR] No python dur event found for pattern %s.",str(row['pattern']))
+            logger.error("No python dur event found for pattern %s.",str(row['pattern']))
             return ""
         # 保持新老版本callstack兼容性
         if python_dur_events[0].args.get("Call stack"):
@@ -126,7 +126,7 @@ class TraceViewJson:
 
     def get_torch_2_npu_flow_event(self, end_time) -> FlowEvent:
         if not self.torch_2_npu_flow_events or not self.torch_2_npu_flow_events.get(end_time):
-            logger.error("[ERROR] Find flow event failed for ts: %s",str(end_time))
+            logger.error("Find flow event failed for ts: %s",str(end_time))
             return FlowEvent()
         return self.torch_2_npu_flow_events.get(end_time)
 
@@ -140,7 +140,7 @@ class TraceViewJson:
     def _load_obj(self, traces):
         self._load_format(traces)
         if not self._check_format():
-            logger.error("[ERROR] parse json failed for error format")
+            logger.error("parse json failed for error format")
             return
         self._load_duration_events(traces)
         self._load_torch_to_npu_flow_events(traces)
@@ -151,7 +151,7 @@ class TraceViewJson:
         for check_process in check_processes:
             if check_process in self.processes:
                 continue
-            logger.error("[ERROR] %s process not found in json.",str(check_process))
+            logger.error("%s process not found in json.",str(check_process))
             return False
         return True
 

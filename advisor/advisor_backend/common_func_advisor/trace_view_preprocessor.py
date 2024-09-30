@@ -13,16 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
+
 import re
 import sys
 from typing import Optional
 from dataclasses import dataclass
 
 from common_func_advisor.constant import Constant
+from profiler.advisor.advisor_backend.logger import Logger
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+logger = Logger()
+
 
 @dataclass
 class FineTraceViewData:
@@ -160,7 +161,7 @@ class TraceViewPreProcessor:
         preprocess raw data
         """
         if not raw_data:
-            logger.error("[ERROR] No raw data found in trace view data.")
+            logger.error("No raw data found in trace view data.")
             return None
 
         raw_fp_tids, raw_bp_tids, raw_hcom_tids = set(), set(), set()
@@ -192,7 +193,7 @@ class TraceViewPreProcessor:
         fine_data.hcom_tids = list(raw_hcom_tids)
 
         if not unique_fp_tid or not unique_bp_tid:
-            logger.info("[INFO] No fp or bp tid found in trace view data.")
+            logger.info("No fp or bp tid found in trace view data.")
         else:
             fine_data.fp_tid, fine_data.bp_tid = unique_fp_tid[0], unique_bp_tid[0]
 

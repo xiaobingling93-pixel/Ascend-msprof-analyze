@@ -32,6 +32,10 @@ from common_func_advisor.trace_view_preprocessor import FineTraceViewData
 from common_func_advisor.trace_view_preprocessor import TraceViewPreProcessor
 from cluster_advice.cluster_advice_base import ClusterAdviceBase
 from cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
+from profiler.advisor.advisor_backend.logger import Logger
+
+logger = Logger()
+
 
 
 @dataclass
@@ -62,19 +66,6 @@ class PipelineTraceViewer:
         FP: FP_COLOR,
         BP: BP_COLOR
     }
-
-    def _gen_trace_pair(self, name: str, start_ts: str, end_ts: str, pid: str, tid: str) -> Dict:
-        data = {
-            Constant.OP_NAME: name,
-            Constant.CNAME: self.COLORS.get(name, self.BUBBLE),
-            Constant.PH: Constant.PH_X,
-            Constant.PID: pid,
-            Constant.OP_TID: tid,
-            Constant.TS: start_ts,
-            Constant.DUR: str(Decimal(end_ts) - Decimal(start_ts))
-        }
-
-        return data
 
     def gen_stage_bubble_trace_data(self, rank_id: int, timeslice_list: List[PipelineTimeSlice]) -> List[Dict]:
         """
@@ -120,6 +111,18 @@ class PipelineTraceViewer:
 
         return trace_data
 
+    def _gen_trace_pair(self, name: str, start_ts: str, end_ts: str, pid: str, tid: str) -> Dict:
+        data = {
+            Constant.OP_NAME: name,
+            Constant.CNAME: self.COLORS.get(name, self.BUBBLE),
+            Constant.PH: Constant.PH_X,
+            Constant.PID: pid,
+            Constant.OP_TID: tid,
+            Constant.TS: start_ts,
+            Constant.DUR: str(Decimal(end_ts) - Decimal(start_ts))
+        }
+
+        return data
 
 class ClusterPipelineAdvice(ClusterAdviceBase):
     BUBBLE = "Bubble"
@@ -136,35 +139,6 @@ class ClusterPipelineAdvice(ClusterAdviceBase):
         self.cur_bottleneck = {}
         self.cur_advices = ""
 
-    def run(self) -> dict:
-        """
-        Unified entrance interface
-        """
-        self.rank_prof_dirs = self.get_rank_prof_dirs(self.rank_ids)
-        if not self.rank_prof_dirs:
-            print("[ERROR] No rank profiling data found, please check the rank ids or dir path.")
-            return {}
-
-        self.process()
-        self.output()
-        self.identify_bottleneck()
-        return self.output_format_data
-
-    def process(self) -> None:
-        """
-        process all rank profiling data by using multi-process
-        """
-        start_time = time.time()
-        print(f"[INFO] Start to process {len(self.rank_prof_dirs)} rank profiling data with {self.worker_num} workers.")
-        with multiprocessing.Pool(self.worker_num) as pool:
-            results = pool.map(self.work, self.rank_prof_dirs.items())
-
-        for (rank_id, _), (res, show_fp_bp) in zip(self.rank_prof_dirs.items(), results):
-            if show_fp_bp:
-                self.cur_data += PipelineTraceViewer().gen_fp_bp_trace_data(rank_id, res)
-            else:
-                self.cur_data += PipelineTraceViewer().gen_stage_bubble_trace_data(rank_id, res)
-        print(f"[INFO] Pipline view data process finished, cost {time.time() - start_time:.2f}s.")
 
     @staticmethod
     def _align_trace_bound(results: List) -> None:
@@ -180,76 +154,6 @@ class ClusterPipelineAdvice(ClusterAdviceBase):
         for res in results:
             res[0].start = min(start_list)
             res[-1].end = max(end_list)
-
-    def work(self, kv: Tuple[int, str]) -> Tuple[List[PipelineTimeSlice], bool]:
-        """
-        single process worker function
-        """
-        show_fp_bp = False
-        rank_id, rank_prof_dir = kv
-        print(f"[INFO] [Rank {rank_id}] Start to process rank profiling data.")
-        json_path = os.path.join(rank_prof_dir, Constant.ASCEND_PROFILER_OUTPUT, Constant.TRACE_VIEW_JSON)
-        fine_data = self.load_trace_view_data(json_path)
-        if not fine_data.hcom_ops or not fine_data.hcom_tids:
-            print(f"[ERROR] [Rank {rank_id}] No hcom send recv ops found, make sure the trace view data is pipeline "
-                  f"parallel sense.")
-            return [], show_fp_bp
-
-        timeslice_list = self.get_pipeline_timeslice(fine_data.hcom_ops, fine_data.hcom_tids, fine_data.min_ts,
-                                                     fine_data.max_ts)
-        if not fine_data.fp_ops or not fine_data.bp_ops:
-            print(f"[INFO] [Rank {rank_id}] No frameWork data in trace view, only show stage and bubble.")
-        elif len(fine_data.hcom_tids) > 1:
-            print(f"[WARN] [Rank {rank_id}] More than one hcom tid found, only show stage and bubble.")
-        else:
-            print(f"[INFO] [Rank {rank_id}] Found frameWork data in trace view, show fp bp and bubble.")
-            bp_ops = self.get_fp_bp_bound_ops(fine_data)
-            self.update_stage_fp_bp(timeslice_list, bp_ops)
-            show_fp_bp = True
-        print(f"[INFO] [Rank {rank_id}] Rank profiling data process finished.")
-
-        return timeslice_list, show_fp_bp
-
-    def identify_bottleneck(self) -> None:
-        pass
-
-    def output(self) -> None:
-        """
-        output result
-        """
-        self.cur_data.append(
-            {
-                Constant.OP_NAME: Constant.PROCESS_NAME,
-                Constant.PH: Constant.PH_META,
-                Constant.PID: self.PIPELINE_VIEW,
-                Constant.OP_TID: self.PIPELINE_VIEW,
-                Constant.ARGS: {
-                    Constant.OP_NAME: self.PIPELINE_VIEW
-                }
-            }
-        )
-        self.output_format_data[self.DATA] = self.cur_data
-        self.output_format_data[self.BOTTLENECK] = self.cur_bottleneck
-        self.output_format_data[self.ADVICE] = self.cur_advices
-
-    def get_rank_prof_dirs(self, rank_ids: list) -> Dict[int, str]:
-        """
-        get rank profiling directories by rank ids
-        """
-        rank_prof_dirs = defaultdict(str)
-        prof_dirs = []
-        for prof_dir in os.listdir(self.collection_path):
-            if prof_dir.endswith(Constant.PT_PROF_SUFFIX):
-                prof_dirs.append(os.path.join(self.collection_path, prof_dir))
-
-        data_map = PytorchDataPreprocessor(prof_dirs).get_data_map()
-        for rank_id in rank_ids:
-            if rank_id in data_map:
-                rank_prof_dirs[rank_id] = data_map[rank_id]
-            else:
-                print(f'[Warning] Rank {rank_id} not found in {self.collection_path}')
-
-        return rank_prof_dirs
 
     @staticmethod
     def load_trace_view_data(json_path) -> Optional[FineTraceViewData]:
@@ -368,6 +272,111 @@ class ClusterPipelineAdvice(ClusterAdviceBase):
 
         return res
 
+    def run(self) -> dict:
+        """
+        Unified entrance interface
+        """
+        self.rank_prof_dirs = self.get_rank_prof_dirs(self.rank_ids)
+        if not self.rank_prof_dirs:
+            logger.error("No rank profiling data found, please check the rank ids or dir path.")
+            return {}
+
+        self.process()
+        self.output()
+        self.identify_bottleneck()
+        return self.output_format_data
+
+    def process(self) -> None:
+        """
+        process all rank profiling data by using multi-process
+        """
+        start_time = time.time()
+        logger.info("Start to process %s rank profiling data with %s workers."
+                    ,str(len(self.rank_prof_dirs)),str(self.worker_num))
+        with multiprocessing.Pool(self.worker_num) as pool:
+            results = pool.map(self.work, self.rank_prof_dirs.items())
+
+        for (rank_id, _), (res, show_fp_bp) in zip(self.rank_prof_dirs.items(), results):
+            if show_fp_bp:
+                self.cur_data += PipelineTraceViewer().gen_fp_bp_trace_data(rank_id, res)
+            else:
+                self.cur_data += PipelineTraceViewer().gen_stage_bubble_trace_data(rank_id, res)
+        time_cost = time.time() - start_time
+        logger.info("Pipline view data process finished, cost %2f s.",time_cost)
+
+    def work(self, kv: Tuple[int, str]) -> Tuple[List[PipelineTimeSlice], bool]:
+        """
+        single process worker function
+        """
+        show_fp_bp = False
+        rank_id, rank_prof_dir = kv
+        logger.info("[Rank %s] Start to process rank profiling data.",rank_id)
+        json_path = os.path.join(rank_prof_dir, Constant.ASCEND_PROFILER_OUTPUT, Constant.TRACE_VIEW_JSON)
+        fine_data = self.load_trace_view_data(json_path)
+        if not fine_data.hcom_ops or not fine_data.hcom_tids:
+            logger.error("[Rank %s] No hcom send recv ops found, make sure the trace view data is "
+                         "pipeline parallel sense.",str(rank_id))
+            return [], show_fp_bp
+
+        timeslice_list = self.get_pipeline_timeslice(fine_data.hcom_ops, fine_data.hcom_tids, fine_data.min_ts,
+                                                     fine_data.max_ts)
+        if not fine_data.fp_ops or not fine_data.bp_ops:
+            logger.info("[Rank %s] No frameWork data in trace view, only show stage and bubble."
+                        ,str(rank_id))
+        elif len(fine_data.hcom_tids) > 1:
+            logger.warning("[Rank %s] More than one hcom tid found, only show stage and bubble."
+                           ,str(rank_id))
+        else:
+            logger.info("[Rank %s] Found frameWork data in trace view, show fp bp and bubble."
+                        ,rank_id)
+            bp_ops = self.get_fp_bp_bound_ops(fine_data)
+            self.update_stage_fp_bp(timeslice_list, bp_ops)
+            show_fp_bp = True
+        logger.info("[Rank %s] Rank profiling data process finished.",str(rank_id))
+
+        return timeslice_list, show_fp_bp
+
+    def identify_bottleneck(self) -> None:
+        pass
+
+    def output(self) -> None:
+        """
+        output result
+        """
+        self.cur_data.append(
+            {
+                Constant.OP_NAME: Constant.PROCESS_NAME,
+                Constant.PH: Constant.PH_META,
+                Constant.PID: self.PIPELINE_VIEW,
+                Constant.OP_TID: self.PIPELINE_VIEW,
+                Constant.ARGS: {
+                    Constant.OP_NAME: self.PIPELINE_VIEW
+                }
+            }
+        )
+        self.output_format_data[self.DATA] = self.cur_data
+        self.output_format_data[self.BOTTLENECK] = self.cur_bottleneck
+        self.output_format_data[self.ADVICE] = self.cur_advices
+
+    def get_rank_prof_dirs(self, rank_ids: list) -> Dict[int, str]:
+        """
+        get rank profiling directories by rank ids
+        """
+        rank_prof_dirs = defaultdict(str)
+        prof_dirs = []
+        for prof_dir in os.listdir(self.collection_path):
+            if prof_dir.endswith(Constant.PT_PROF_SUFFIX):
+                prof_dirs.append(os.path.join(self.collection_path, prof_dir))
+
+        data_map = PytorchDataPreprocessor(prof_dirs).get_data_map()
+        for rank_id in rank_ids:
+            if rank_id in data_map:
+                rank_prof_dirs[rank_id] = data_map[rank_id]
+            else:
+                logger.warning('Rank %s not found in %s',str(self.collection_path))
+
+        return rank_prof_dirs
+
     def get_fp_bp_bound_ops(self, fine_data: FineTraceViewData) -> List[List[dict]]:
         """
         get fp and bp bound ops by using double queue alternating pop algorithm and
@@ -391,7 +400,7 @@ class ClusterPipelineAdvice(ClusterAdviceBase):
         timeslice_list = []
         last_op_end = None
         if len(hcom_tids) > 1:
-            print("[WARN] More than one hcom tid found, default to show minimal tid pipeline view.")
+            logger.warning("More than one hcom tid found, default to show minimal tid pipeline view.")
 
         for op in hcom_ops:
             if op[Constant.OP_TID] == min(hcom_tids):
