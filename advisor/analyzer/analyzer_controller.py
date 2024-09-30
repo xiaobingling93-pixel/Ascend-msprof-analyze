@@ -1,3 +1,17 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import copy
 import logging
 import json
@@ -403,7 +417,8 @@ class AnalyzerController:
             logger.error(error_msg)
             return
         if benchmark_profiling_path and not self._check_profiling_path_valid(benchmark_profiling_path):
-            error_msg = f"Got invalid argument '-bp/--benchmark_profiling_path' {benchmark_profiling_path}, skip analysis"
+            error_msg = (f"Got invalid argument '-bp/--benchmark_profiling_path' {benchmark_profiling_path},"
+                         f" skip analysis")
             self._update_analysis_process_resp(pid, async_resp, error_msg=error_msg,
                                                status_code=AsyncAnalysisStatus.FAILED_STATUS_CODE,
                                                status=AsyncAnalysisStatus.FAILED)
@@ -478,8 +493,10 @@ class AnalyzerController:
             kwargs.update(_kwargs)
             compare_profiling_list[index] = kwargs
 
-        compare_kwargs = {"profiling_path": kwargs.get("profiling_path"),
-                          "compare_profiling_list": compare_profiling_list}
+        compare_kwargs = {
+            "profiling_path": kwargs.get("profiling_path"),
+            "compare_profiling_list": compare_profiling_list,
+        }
 
         interface = Interface(**compare_kwargs)
         job_list.append((Interface.COMPARISON, SupportedScopes.COMPARISON, interface, compare_kwargs))
@@ -529,7 +546,8 @@ class AnalyzerController:
 
         if len(target_data) != len(benchmark_data):
             logger.warning(
-                "The product of ranks and steps of Benchmark profiling is not equals to target profiling, skip cluster comparison.")
+                "The product of ranks and steps of Benchmark profiling is not equals to target profiling,"
+                " skip cluster comparison.")
             return job_list
 
         compare_profiling_list = []

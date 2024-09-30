@@ -12,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import logging
 import os
 
 from profiler.advisor.analyzer.base_analyzer import BaseAnalyzer
@@ -93,7 +94,7 @@ class OverallSummaryAnalyzer(BaseAnalyzer):
             if os.path.exists(self.benchmark_profiling_path):
                 self._has_benchmark_profiling = True
             else:
-                print(f"[WARNING] Invalid path which not exists: {self.benchmark_profiling_path}.")
+                logging.info(f"[WARNING] Invalid path which not exists: {self.benchmark_profiling_path}.")
         return os.path.exists(self.collection_path)
 
     def process(self):
@@ -238,7 +239,7 @@ class OverallSummaryAnalyzer(BaseAnalyzer):
 
 
 def get_profile_path(collection_path):
-    for root, dirs, files in os.walk(collection_path):
+    for root, _, files in os.walk(collection_path):
         for file in files:
             if file.startswith("profiler_info"):
                 return root

@@ -64,7 +64,8 @@ class SlowRankAnalyzer(BaseAnalyzer):
     def optimize(self, **kwargs):
         if self.step_trace_dict is None:
             logger.error(
-                "Slow rank analysis failed, please ensure file 'step_trace_time.csv' exists in your profiling directory %s",
+                "Slow rank analysis failed, "
+                "please ensure file 'step_trace_time.csv' exists in your profiling directory %s",
                 constant.ASCEND_PROFILER_OUTPUT)
             return self.result
         self.process()
@@ -213,10 +214,14 @@ class SlowRankAnalyzer(BaseAnalyzer):
 
             stage_key = f"stage-{index}"
             stage_step_rank[stage_key] = {}
-            stage_step_rank[stage_key]["maximum"] = {"rank_id": tmp_rank_list[max_time_index],
-                                                     "step": tmp_step_list[max_time_index]}
-            stage_step_rank[stage_key]["minimum"] = {"rank_id": tmp_rank_list[min_time_index],
-                                                     "step": tmp_step_list[min_time_index]}
+            stage_step_rank[stage_key]["maximum"] = {
+                "rank_id": tmp_rank_list[max_time_index],
+                "step": tmp_step_list[max_time_index],
+            }
+            stage_step_rank[stage_key]["minimum"] = {
+                "rank_id": tmp_rank_list[min_time_index],
+                "step": tmp_step_list[min_time_index],
+            }
 
         return stage_step_rank
 

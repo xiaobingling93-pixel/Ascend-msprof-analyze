@@ -1,3 +1,17 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import logging
 from typing import List
 
@@ -123,7 +137,8 @@ class OpStackFinder:
                 self._task_id_record[dst_op_index] = []
             self._task_id_record[dst_op_index].append([task_id, op_name, task_type])
 
-    def _query_index_by_torch_to_npu(self, event_dataset, torch_to_npu_event):
+    @staticmethod
+    def _query_index_by_torch_to_npu(event_dataset, torch_to_npu_event):
         dst_op_event_key = torch_to_npu_event.ts
         dst_op_event = event_dataset.ops_with_stack.get(dst_op_event_key)
 
@@ -132,7 +147,8 @@ class OpStackFinder:
 
         return int(dst_op_event.get("dataset_index"))
 
-    def _query_index_by_acl_to_npu(self, acl_to_npu_event):
+    @staticmethod
+    def _query_index_by_acl_to_npu(acl_to_npu_event):
         if acl_to_npu_event:
             return const.TIMELINE_ACL_TO_NPU_NO_STACK_CODE
 

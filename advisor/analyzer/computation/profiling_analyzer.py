@@ -1,3 +1,17 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import logging
 from abc import ABC
 
@@ -64,12 +78,12 @@ class ProfilingAnalyzer(BaseAnalyzer, ABC):
 
         return self.result
 
-    def get_priority(self, checker):
-        if "aicpu" not in checker.__class__.__name__.lower():
+    def get_priority(self,max_mem_op_dur):
+        if "aicpu" not in max_mem_op_dur.__class__.__name__.lower():
             return PriorityBackgroundColor.low
 
-        aicpu_duration = getattr(checker, "aicpu_task_duration", 0.0)
-        total_duration = getattr(checker, "total_task_duration", 0.0)
+        aicpu_duration = getattr(max_mem_op_dur, "aicpu_task_duration", 0.0)
+        total_duration = getattr(max_mem_op_dur, "total_task_duration", 0.0)
         return self.get_priority_by_time_ratio(aicpu_duration, total_duration)
 
 
