@@ -56,15 +56,19 @@ class CommunicationTimeBean:
     def step_id(self):
         return self._step_id
     
+    @property
+    def group_name(self):
+        return self._group_name
+    
     def compute_ratio(self):
-        total_duration = self._elapsed_time + self._transit_time + self._wait_time +\
-                         self._synchronization_time +self._idle_time
+        total_duration = self._transit_time + self._synchronization_time
         self._sync_ratio = self._synchronization_time / total_duration if total_duration != 0 else 0
+        total_duration = self._transit_time + self._wait_time
         self._wait_ratio = self._wait_time / total_duration if total_duration != 0 else 0
         
     def convert_output(self):
         return [
             self._step_id, self._rank_id, self._hccl_op_name, self._group_name,
-            self._start_time, self._transit_time, self._wait_time, self._synchronization_time,
-            self._idle_time, self._elapsed_time, self._sync_ratio, self._wait_ratio
+            self._start_time, self._elapsed_time, self._transit_time, self._wait_time, self._synchronization_time,
+            self._idle_time, round(self._sync_ratio, 4), round(self._wait_ratio, 4)
             ]

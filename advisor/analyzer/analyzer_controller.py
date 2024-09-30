@@ -371,7 +371,7 @@ class AnalyzerController:
                         logger.info(info_msg)
 
                         job_list += self.communication_analysis(analysis_profiling_path, step=step,
-                                                                bandwidth_type=bandwidth_type)
+                                                                bandwidth_type=bandwidth_type, scope=scope)
 
         return job_list
 

@@ -96,7 +96,7 @@ class Constant(object):
     CPU_OP_FA_MASK = ("flash_attention", "fusion_attention", "flashattn", "xformers_flash", "efficient_attention", "flash2attn")
     CPU_OP_CONV = "aten::conv"
     CPU_OP_MATMUL_MASK = ("aten::addmm", "aten::bmm", "aten::mm", "aten::matmul")
-    KERNEL_CUBE_MASK = ("gemm", "conv", "cutlass", "wgrad")
+    KERNEL_CUBE_MASK = ("gemm", "conv", "cutlass", "wgrad", "gemvx")
     KERNEL_TRANS_MASK = ("cast", "transdata", "transpose")
 
     IS_BWD = "is_bwd"

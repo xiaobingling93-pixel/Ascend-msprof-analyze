@@ -18,7 +18,6 @@ import argparse
 import re
 import os
 import stat
-import shutil
 import warnings
 from pathlib import Path
 

@@ -1,3 +1,18 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """
 connection manager
 """
@@ -34,6 +49,21 @@ class ConnectionManager:
                 return False
         return True
 
+    @classmethod
+    def get_connection(cls, path, dbs, tables=None, is_host=False):
+        """
+        get connection
+        """
+        if is_host:
+            pattern = r"/device_[0-9]"
+            path = re.sub(pattern, "/host", path)
+        if not cls.check_db_exists(path, dbs):
+            return None
+        conn = cls(path, dbs)
+        if tables and not conn.check_table_exists(tables):
+            return None
+        return conn
+
     def check_table_exists(self, tables:List) -> bool:
         """
         check table exists
@@ -53,18 +83,3 @@ class ConnectionManager:
             if column not in self.metadata.tables[table_name].columns:
                 return False
         return True
-
-    @classmethod
-    def get_connection(cls, path, dbs, tables=None, is_host=False):
-        """
-        get connection
-        """
-        if is_host:
-            pattern = r"/device_[0-9]"
-            path = re.sub(pattern, "/host", path)
-        if not cls.check_db_exists(path, dbs):
-            return None
-        conn = cls(path, dbs)
-        if tables and not conn.check_table_exists(tables):
-            return None
-        return conn
