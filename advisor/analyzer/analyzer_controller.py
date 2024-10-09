@@ -417,8 +417,8 @@ class AnalyzerController:
             logger.error(error_msg)
             return
         if benchmark_profiling_path and not self._check_profiling_path_valid(benchmark_profiling_path):
-            error_msg = (f"Got invalid argument '-bp/--benchmark_profiling_path' {benchmark_profiling_path},"
-                         f" skip analysis")
+            error_msg = (f"Got invalid argument '-bp/--benchmark_profiling_path' {benchmark_profiling_path}, "
+                         f"skip analysis")
             self._update_analysis_process_resp(pid, async_resp, error_msg=error_msg,
                                                status_code=AsyncAnalysisStatus.FAILED_STATUS_CODE,
                                                status=AsyncAnalysisStatus.FAILED)
@@ -546,8 +546,8 @@ class AnalyzerController:
 
         if len(target_data) != len(benchmark_data):
             logger.warning(
-                "The product of ranks and steps of Benchmark profiling is not equals to target profiling,"
-                " skip cluster comparison.")
+                "The product of ranks and steps of Benchmark profiling is not equals to target profiling, "
+                "skip cluster comparison.")
             return job_list
 
         compare_profiling_list = []
