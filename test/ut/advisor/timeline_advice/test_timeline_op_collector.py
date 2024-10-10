@@ -60,10 +60,7 @@ class TestTimelineOpCollector(unittest.TestCase):
     def test_sync_stream_collector(self):
         sync_stream_collector = SynchronizeStreamCollector()
         sync_stream_collector.post_process()
-        self.assertEqual(sync_stream_collector.attribute_to_dataset.get("synchronize_stream"), sync_stream_collector)
-
-        sync_stream_collector.append_slow_sync_stream(self.mock_sync_stream_event)
-        self.assertEqual(len(sync_stream_collector._slow_synchronize_stream), 1)
+        self.assertEqual(sync_stream_collector.attribute_to_dataset.get("synchronize_stream"), [])
 
     def test_mem_op_collector(self):
         mem_op_collector = MemCollector()

@@ -22,7 +22,7 @@ from profiler.advisor.common import constant
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.advisor.dataset.cluster.cluster_dataset import ClusterCommunicationDataset
-from profiler.advisor.utils.utils import safe_index_value
+from profiler.advisor.utils.utils import safe_index_value, convert_to_int
 
 logger = logging.getLogger()
 
@@ -51,6 +51,7 @@ class SlowLinkAnalyzer(BaseAnalyzer):
         self.result = OptimizeResult()
         self.bottelneck = ''
         self.suggestion = ''
+        self.format_datas = {}
         if self.rank_bw_dict is not None:
             self.format_datas = self.format_details()
 
@@ -104,7 +105,7 @@ class SlowLinkAnalyzer(BaseAnalyzer):
 
         data_list = []
         for step_rank, rank_bw in self.rank_bw_dict.items():
-            step_rank_list = list(map(int, step_rank.split(constant.STEP_RANK_SEP)))
+            step_rank_list = list(map(convert_to_int, step_rank.split(constant.STEP_RANK_SEP)))
             value_list = [rank_bw.get(i, 0) for i in headers]
             data_list.append(step_rank_list + value_list)
         data_list.sort(key=lambda x: (x[0], x[1]))  # 按rank_id排序
@@ -147,6 +148,9 @@ class SlowLinkAnalyzer(BaseAnalyzer):
 
     def get_global_step_rank(self, bindwidth_type):
         global_step_rank = {}
+        if not self.format_datas:
+            return global_step_rank
+
         bindwidth_key_map = {self.RDMA: self.RDMA_BANDWIDTH, self.SDMA: self.SDMA_BANDWIDTH}
 
         if bindwidth_type not in bindwidth_key_map:

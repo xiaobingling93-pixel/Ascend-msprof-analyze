@@ -62,7 +62,8 @@ class DataloaderChecker:
                                     template_name="slow_dataloader.html",
                                     desc=self.desc,
                                     suggestions=self.suggestions,
-                                    priority_background_color=priority)
+                                    priority_background_color=priority,
+                                    rank=kwargs.get("rank"))
 
     def _init_rule(self):
         dataloader_rule_path = os.path.join(
