@@ -1,3 +1,18 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import inspect
 import json
 
@@ -59,16 +74,17 @@ def singleton(cls):
     :param cls: any class
     :return: singleton handle
 
-    When using the singleton function, you need to manually specify collection_path='dataSet_path'. Otherwise, the singleton function
-     is initialized by class name.
-    if cls has 'collection_path' property, _instance map will build by class_name and 'collection_path', the default value of
-    collection path is class absolute path.
+    When using the singleton function, you need to manually specify collection_path='dataSet_path'. Otherwise, the 
+    singleton function is initialized by class name.
+    if cls has 'collection_path' property, _instance map will build by class_name and 'collection_path', the 
+    default value of collection path is class absolute path.
 
     _instance = {cls.name: {collection_path: instance}}
     """
     _instance = {}
 
-    def _singleton(*args: any, **kw: any) -> any:
+    @wraps(cls)  # 使用 wraps 装饰器
+    def _singleton(*args, **kw):
         # 适配多进程异步调用场景，确保不同子进程的单例类互相隔离
         pid = os.getpid()
         if pid not in _instance:
@@ -103,8 +119,10 @@ def singleton(cls):
         members = inspect.getmembers(base_class)
 
         # 过滤出函数对象
-        function_objs = [member[1] for member in members if
-                         inspect.isfunction(member[1]) or inspect.ismethod(member[1])]
+        function_objs = [
+            member[1] for member in members 
+            if inspect.isfunction(member[1]) or inspect.ismethod(member[1])
+        ]
         for function_obj in function_objs:
             if inspect.isfunction(function_obj) and not is_static_func(function_obj):
                 continue
@@ -229,7 +247,7 @@ class ParallelJob:
         listen = mp.Process(target=self.listener, args=(completed_queue, len(self.job_params),))
         listen.start()
 
-        for i in range(n_proccesses):
+        for _ in range(n_proccesses):
             p = mp.Process(target=self.parallel_queue, args=(job_queue, completed_queue,))
             processes.append(p)
             p.start()

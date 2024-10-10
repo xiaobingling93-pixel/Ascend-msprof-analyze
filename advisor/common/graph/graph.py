@@ -1,3 +1,19 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+# Copyright (C) 2024-2024. Huawei Technologies Co., Ltd. All rights reserved.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""
 import logging
 from typing import Dict, List, Tuple, Callable, Any, Optional, Union
 
@@ -25,7 +41,7 @@ class Graph:
         self.edges = edges if edges is not None else list()
 
     def build(self):
-        for op_name, node in self.nodes.items():
+        for _, node in self.nodes.items():
             # add node and mark op_name as tag
             self.add_node(node,
                           op_type=node.op_type
@@ -72,7 +88,7 @@ class Graph:
         if pre_node is None or next_node is None:
             raise ValueError(f"Invalid edge from {pre_node} to {pre_node}.")
 
-        self.remove_edge(pre_node, next_node)
+        self.graph.remove_edge(pre_node, next_node)
 
     def get_subgraph(self, nodes: List[HostGraphNode]) -> nx.DiGraph:
         nodes = list(set(nodes))
@@ -86,50 +102,10 @@ class Graph:
         pass
 
     def get_node(self, node: HostGraphNode):
-        if node not in self.graph:
-            return
-
-        return self.graph[node]
+        return self.graph[node] if node in self.graph else None
 
     def get_node_by_name(self, node_name: str):
         return self.nodes.get(node_name, None)
 
     def is_node_exists(self, node: HostGraphNode):
         return node in self.graph
-
-    def draw(self,
-             graph: nx.DiGraph = None,
-             with_labels: bool = False,
-             labels: Dict[HostGraphNode, Any] = None,
-             pos_func: Callable = None,
-             font_weight: str = "bold",
-             savefig: bool = False,
-             node_size: int = 50,
-             **kwargs
-             ):
-        try:
-            import matplotlib.pylab as plt
-        except ImportError:
-            logger.error('Please install matplotlib first by using `pip install matplotlib`.')
-            return
-
-        if graph is None:
-            graph = self.graph
-
-        pos = pos_func(graph) if pos_func is not None else None
-
-        if with_labels:
-            if labels is None:
-                labels = {k: f"{k}\n({v['op_name']})" for k, v in graph.nodes.items()}
-
-        nx.draw(graph,
-                with_labels=with_labels,
-                pos=pos,
-                node_size=node_size,
-                font_weight=font_weight,
-                labels=labels,
-                **kwargs
-                )
-        if savefig:
-            plt.savefig(self.name + ".png")
-        plt.show()
