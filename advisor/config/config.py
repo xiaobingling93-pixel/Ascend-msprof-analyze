@@ -14,9 +14,6 @@
 # limitations under the License.
 
 
-"""
-advisor config
-"""
 
 import os
 import logging

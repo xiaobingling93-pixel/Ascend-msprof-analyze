@@ -45,7 +45,7 @@ class TimelineFusionOpsAnalyzer(BaseAnalyzer):
 
         logger.info("Finish timeline analysis")
         self.make_record()
-        self.make_render()
+        self.make_render(rank=kwargs.get("rank"))
         return self.result
 
     def find_fusion_ops(self, event_dataset, ops: str, npu_api: str, mode: str):
@@ -180,7 +180,8 @@ class TimelineFusionOpsAnalyzer(BaseAnalyzer):
                     detail = [api_name, *stack]
                     self.result.add_detail(sheet_name, detail=detail)
 
-    def make_render(self):
+    def make_render(self, **kwargs):
+        rank = kwargs.get("rank")
         format_result_for_html = format_timeline_result(dict(self.matched_op_stacks), dump_html=True)
 
         self.html_render.render_template(key="schedule",
@@ -192,7 +193,8 @@ class TimelineFusionOpsAnalyzer(BaseAnalyzer):
                                          with_stack_doc_url=Config().timeline_with_stack_doc_url,
                                          api_doc_url=Config().timeline_api_doc_url,
                                          result=format_result_for_html,
-                                         priority_background_color=self.get_priority())
+                                         priority_background_color=self.get_priority(),
+                                         rank=rank)
 
     def query_stack(self, event_dataset):
         if all([len(matched_index) == 0 for matched_index in self._matched_op_index.values()]):

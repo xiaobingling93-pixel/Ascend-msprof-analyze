@@ -1,3 +1,19 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+# Copyright (C) 2024-2024. Huawei Technologies Co., Ltd. All rights reserved.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""
 import logging
 import os
 
@@ -31,7 +47,8 @@ def get_timeline_fusion_ops_yaml_path():
         logger.warning("The %s does not exist in path: %s. Try to use cloud or default local YAML file.",
                        constant.TIMELINE_FUSION_OPS_YAML_NAME, os.path.normpath(advisor_rule_path))
     # 检查云文件默认保存路径文件夹下是否存在相应文件, 默认路径 ~/rules/cloud/
-    cloud_file_path = os.path.join(os.path.expanduser("~"), constant.CLOUD_RULE_PATH, constant.TIMELINE_FUSION_OPS_YAML_NAME)
+    cloud_file_path = os.path.join(os.path.expanduser("~"), constant.CLOUD_RULE_PATH,
+                                   constant.TIMELINE_FUSION_OPS_YAML_NAME)
     if os.path.exists(cloud_file_path):
         logger.debug("Successfully find The cloud %s file in %s.", constant.TIMELINE_FUSION_OPS_YAML_NAME,
                      cloud_file_path)

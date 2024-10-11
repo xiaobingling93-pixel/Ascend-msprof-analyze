@@ -36,9 +36,9 @@ class GcAnalyzer(BaseAnalyzer):
     @BaseAnalyzer.check_data((ScheduleAnalysisDataset.get_key(),))
     def optimize(self, **kwargs):
         gc_checker = GcChecker()
-        gc_checker.check_gc(self.timeline_event_dataset, rank_id=kwargs.get("rank_id"), stage=kwargs.get("stage"))
+        gc_checker.check_gc(self.timeline_event_dataset, rank=kwargs.get("rank"), stage=kwargs.get("stage"))
         gc_checker.make_record(self.result)
-        gc_checker.make_render(self.html_render, priority=self.get_priority())
+        gc_checker.make_render(self.html_render, priority=self.get_priority(), rank=kwargs.get("rank"))
         return self.result
 
     def get_priority(self):

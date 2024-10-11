@@ -18,6 +18,7 @@ from profiler.advisor.analyzer.cluster.slow_link_analyzer import SlowLinkAnalyze
 from profiler.advisor.analyzer.computation.pp_stage_computation_analyzer import PPStageComputationAnalyzer
 from profiler.advisor.analyzer.overall.overall_summary_analyzer import OverallSummaryAnalyzer
 from profiler.advisor.config.config import Config
+from profiler.advisor.common import constant as const
 from profiler.advisor.common.analyzer_scopes import SupportedScopes
 from profiler.advisor.common.async_analysis_status import AsyncAnalysisStatus
 from profiler.advisor.utils.utils import Timer, safe_index_value, safe_division, safe_index
@@ -141,7 +142,7 @@ class AnalyzerController:
 
             self._do_analysis(dimensions, pid=pid, async_resp=resp, **kwargs)
         except Exception as e:
-            self._update_analysis_process_resp(pid, resp, status_code=AsyncAnalysisStatus.FAILED_STATUS_CODE,
+            self._update_analysis_process_resp(pid, resp, status_code=AsyncAnalysisStatus.INNER_ERROR_STATUS_CODE,
                                                status=AsyncAnalysisStatus.FAILED, error_msg=str(e))
             logger.error(e)
             raise RuntimeError(e)
@@ -157,7 +158,24 @@ class AnalyzerController:
         return async_analysis_process
 
     def get_response_by_pid(self, pid):
-        return self.analysis_process_resp.get(pid)
+        def _is_pid_exists(pid):
+            try:
+                psutil.Process(pid)
+                return True
+            except psutil.NoSuchProcess:
+                return False
+
+        pid_not_exist_response = dict(id=pid, status_code=AsyncAnalysisStatus.NOT_FOUND_STATUS_CODE,
+                                      status=AsyncAnalysisStatus.FAILED,
+                                      error_msg="The advisor task id does not exist")
+        if pid not in self.analysis_process_resp:
+            return pid_not_exist_response
+
+        response = self.analysis_process_resp.get(pid)
+        if response.get("status") not in [AsyncAnalysisStatus.FAILED,
+                                          AsyncAnalysisStatus.SUCCESS] and not _is_pid_exists(pid):
+            return pid_not_exist_response
+        return response
 
     def single_rank_analysis(self, profiling_path, benchmark_profiling_path=None):
         job_list = []
@@ -223,7 +241,7 @@ class AnalyzerController:
             overall_analyzer.optimize()
 
     def schedule_analysis(self, profiling_path, benchmark_profiling_path=None, step=None, benchmark_step=None,
-                          **kwargs):
+                          rank=None, **kwargs):
         # 任意单卡的下发分析
 
         kwargs = copy.deepcopy(self.kwargs)
@@ -233,6 +251,7 @@ class AnalyzerController:
         kwargs["benchmark_profiling_path"] = benchmark_profiling_path
         kwargs["step"] = step
         kwargs["benchmark_step"] = benchmark_step
+        kwargs["rank"] = rank
 
         for dimension in [Interface.SCHEDULE]:
             for scope in Interface.get_scope(dimension):
@@ -250,6 +269,7 @@ class AnalyzerController:
         kwargs["step"] = step
         kwargs["benchmark_step"] = benchmark_step
         kwargs["stage"] = stage
+        kwargs["rank"] = kwargs.get("rank")
         job_list = []
 
         for dimension in [Interface.COMPUTATION]:
@@ -260,7 +280,7 @@ class AnalyzerController:
                 job_list.append((dimension, scope, interface, kwargs))
         return job_list
 
-    def memory_analysis(self, profiling_path, benchmark_profiling_path=None, step=None, benchmark_step=None):
+    def memory_analysis(self, profiling_path, benchmark_profiling_path=None, step=None, benchmark_step=None, rank=None):
         # 任意单卡的内存分析
 
         kwargs = copy.deepcopy(self.kwargs)
@@ -270,6 +290,7 @@ class AnalyzerController:
         kwargs["benchmark_profiling_path"] = benchmark_profiling_path
         kwargs["step"] = step
         kwargs["benchmark_step"] = benchmark_step
+        kwargs["rank"] = rank
 
         for dimension in [Interface.MEMORY]:
             for scope in Interface.get_scope(dimension):
@@ -301,12 +322,18 @@ class AnalyzerController:
 
         job_list = []
         global_step_rank = self.slow_rank_analyzer.get_global_step_rank(SlowRankAnalyzer.FREE)
-        slow_rank_id = global_step_rank.get("maximum", {}).get("rank_id") or self.default_rank_id
+
+        slow_rank_id = global_step_rank.get("maximum", {}).get("rank_id")
+        if slow_rank_id is not None:
+            info_msg = f"Maximum free for rank {slow_rank_id}"
+        else:
+            slow_rank_id = self.default_rank_id
+            info_msg = f"No slow rank with free time, analysis for default rank {slow_rank_id}"
+
         fast_rank_id = global_step_rank.get("minimum", {}).get("rank_id") or self.default_rank_id
         slow_step = global_step_rank.get("maximum", {}).get("step")
         fast_step = global_step_rank.get("minimum", {}).get("step")
 
-        info_msg = f"Maximum free for rank {slow_rank_id}"
         if slow_step:
             info_msg += f" and step {slow_step}"
         logger.info(info_msg)
@@ -398,14 +425,14 @@ class AnalyzerController:
         if not self._check_profiling_path_valid(profiling_path):
             error_msg = f"Got invalid argument '-d/--profiling_path' {profiling_path}, skip analysis"
             self._update_analysis_process_resp(pid, async_resp, error_msg=error_msg,
-                                               status_code=AsyncAnalysisStatus.FAILED_STATUS_CODE,
+                                               status_code=AsyncAnalysisStatus.BAD_REQUEST_STATUS_CODE,
                                                status=AsyncAnalysisStatus.FAILED)
             logger.error(error_msg)
             return
         if benchmark_profiling_path and not self._check_profiling_path_valid(benchmark_profiling_path):
             error_msg = f"Got invalid argument '-bp/--benchmark_profiling_path' {benchmark_profiling_path}, skip analysis"
             self._update_analysis_process_resp(pid, async_resp, error_msg=error_msg,
-                                               status_code=AsyncAnalysisStatus.FAILED_STATUS_CODE,
+                                               status_code=AsyncAnalysisStatus.BAD_REQUEST_STATUS_CODE,
                                                status=AsyncAnalysisStatus.FAILED)
             logger.error(error_msg)
             return
@@ -432,7 +459,7 @@ class AnalyzerController:
             if result and hasattr(result, "show"):
                 result.show()
                 break
-        self._get_analysis_success_resp(pid, async_resp)
+        self._get_analysis_finished_resp(pid, async_resp)
 
     def _get_scopes(self, scope=None, bandwidth_type=SlowLinkAnalyzer.SDMA):
         """
@@ -472,6 +499,11 @@ class AnalyzerController:
 
     def _profiling_comparison(self, compare_profiling_list):
         job_list = []
+        disable_profiling_comparison = os.getenv(const.DISABLE_PROFILING_COMPARISON)
+        if disable_profiling_comparison is not None and disable_profiling_comparison.lower() == "true":
+            logger.info(
+                "Skip profiling comparison due to longer processing time due to env 'DISABLE_PROFILING_COMPARISON'")
+            return job_list
 
         for index, _kwargs in enumerate(compare_profiling_list):
             kwargs = copy.deepcopy(self.kwargs)
@@ -603,12 +635,18 @@ class AnalyzerController:
             resp.update(kwargs)
         self.analysis_process_resp[pid] = resp
 
-    def _get_analysis_success_resp(self, pid, resp):
-        html_path = os.path.join(Config().work_path, f"mstt_advisor_{Timer().strftime}.html")
-        xlsx_path = os.path.join(Config().work_path, "log", f"mstt_advisor_{Timer().strftime}.xlsx")
-        result_files = {"html": html_path, "xlsx": xlsx_path}
-        self._update_analysis_process_resp(pid, resp, status_code=AsyncAnalysisStatus.NON_FAILED_STATUS_CODE,
-                                           status=AsyncAnalysisStatus.SUCCESS, result_files=result_files)
+    def _get_analysis_finished_resp(self, pid, resp):
+        advisor_output_file_prefix = f"mstt_advisor_{Timer().strftime}"
+        html_path = os.path.join(Config().work_path, f"{advisor_output_file_prefix}.html")
+        xlsx_path = os.path.join(Config().work_path, "log", f"{advisor_output_file_prefix}.xlsx")
+        if os.path.exists(html_path) and os.path.exists(xlsx_path):
+            result_files = {"html": html_path, "xlsx": xlsx_path}
+            self._update_analysis_process_resp(pid, resp, status_code=AsyncAnalysisStatus.NON_FAILED_STATUS_CODE,
+                                               status=AsyncAnalysisStatus.SUCCESS, result_files=result_files)
+        else:
+            self._update_analysis_process_resp(pid, resp, status_code=AsyncAnalysisStatus.BAD_REQUEST_STATUS_CODE,
+                                               status=AsyncAnalysisStatus.FAILED,
+                                               error_msg="No optimization suggestions, please check your input path.")
 
     def _stage_computation_analysis(self, profiling_path, stage_step_rank, job_list):
         # 对不同pp stage取min max进行分析
@@ -650,13 +688,17 @@ class AnalyzerController:
         # 不区分stage，对所有卡取Min max进行分析
         logger.info("Without pipeline parallel stage, steps and ranks to be analyzed are %s",
                     json.dumps(global_step_rank))
-        slow_rank_id = global_step_rank.get("maximum", {}).get("rank_id") or self.default_rank_id
+        slow_rank_id = global_step_rank.get("maximum", {}).get("rank_id")
+        if slow_rank_id:
+            info_msg = f"Maximum computation time for rank {slow_rank_id}"
+        else:
+            slow_rank_id = self.default_rank_id
+            info_msg = f"No slow rank with computation time, analysis for default rank {slow_rank_id}"
         slow_step = global_step_rank.get("maximum", {}).get("step")
         # 如果没有标杆profiling数据的rank id，说明没有快慢卡问题，直接对默认rank id进行分析，因此这里取值为None
         fast_rank_id = global_step_rank.get("minimum", {}).get("rank_id")
         fast_step = global_step_rank.get("minimum", {}).get("step")
 
-        info_msg = f"Maximum computation time for rank {slow_rank_id}"
         if slow_step is not None:
             info_msg += f" and step {slow_step}, "
         if fast_rank_id is not None:

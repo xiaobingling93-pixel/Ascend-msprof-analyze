@@ -1,3 +1,18 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import inspect
 import logging
 import traceback
@@ -23,7 +38,9 @@ from profiler.advisor.dataset.timeline_op_collector.timeline_op_collector import
     AclToNpuCollector,
     OpStackCollector,
     StepCollector,
-    GcCollector
+    GcCollector,
+    FreeEventsCollector,
+    AclEventsCollector
 )
 
 logger = logging.getLogger()
@@ -63,8 +80,10 @@ class BaseTimelineEventDataset:
         kwargs = {}
         if func_name == FrequencyCollector.__name__:
             ops_with_task_type = getattr(self, "ops_with_task_type", {}).values()
-            kwargs["ai_core_ops"] = [op for op in ops_with_task_type if
-                                     op.get(const.TASK_TYPE) in [const.AI_CORE, const.MIX_AIC]]
+            kwargs["ai_core_ops"] = [
+                op for op in ops_with_task_type if
+                op.get(const.TASK_TYPE) in [const.AI_CORE, const.MIX_AIC]
+            ]
         return kwargs
 
     def add_event(self, index, event):
@@ -162,7 +181,9 @@ class ScheduleAnalysisDataset(BaseTimelineEventDataset):
         SyncBNCollector=SyncBNCollector(),
         AtenCollector=AtenCollector(),
         OptimizerCollector=OptimizerCollector(),
-        GcCollector=GcCollector()
+        GcCollector=GcCollector(),
+        FreeEventsCollector=FreeEventsCollector(),
+        AclEventsCollector=AclEventsCollector()
     )
 
     def __init__(self, collection_path, data: dict, build_dataset=True, **kwargs) -> None:
@@ -176,7 +197,7 @@ class ScheduleAnalysisDataset(BaseTimelineEventDataset):
         # eliminate sub aten operator of the first level aten operator by 'ts' and 'dur',
         # keep the first level aten operator contiguous
         formated_atens = []
-        if not hasattr(self, "aten") or not hasattr(self, "synchronize_stream"):
+        if not hasattr(self, "aten"):
             return
 
         for event in sorted(self.aten, key=lambda x: x.get("ts", -1)):
@@ -184,15 +205,6 @@ class ScheduleAnalysisDataset(BaseTimelineEventDataset):
                 if not formated_atens or not formated_atens[-1].ts_include(event):
                     formated_atens.append(event)
 
-            elif event.name.startswith(const.SYNC_STREAM):
-                self.synchronize_stream.update_sync_stream_count()
-                if formated_atens and formated_atens[-1].ts_include(event):
-                    # 使用aten算子的索引，用于查询堆栈
-                    event["dataset_index"] = formated_atens[-1].get("dataset_index")
-                    self.synchronize_stream.append_slow_sync_stream(event)
-
-            else:
-                continue
         self.aten = formated_atens
 
 

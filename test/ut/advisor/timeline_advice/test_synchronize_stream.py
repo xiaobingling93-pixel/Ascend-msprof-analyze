@@ -5,6 +5,8 @@ import yaml
 
 from profiler.advisor.analyzer.schedule.synchronize_stream.synchronize_stream_checker import SynchronizeStreamChecker
 from profiler.advisor.common.timeline.event import TimelineEvent
+from profiler.advisor.common import constant as const
+from profiler.advisor.utils.utils import safe_division
 from profiler.test.ut.advisor.advisor_backend.tools.tool import recover_env
 
 
@@ -21,35 +23,41 @@ class TestSynchronizeChecker(unittest.TestCase):
         with open(rule_path, "rb") as file:
             self.rule = yaml.safe_load(file)
 
-    def test_no_synchronize_stream(self):
-        dataset = self._get_mock_dataset(1, [], is_empty_dataset=True)
-
+    def test_check_synchronize_stream(self):
         checker = SynchronizeStreamChecker()
+        ratio = self.rule.get("min_co_occurrence_ratio")
+        co_occurrence_num = 10
+        total_synchronize_stream_num = 10
+        total_node_launch_num = int(safe_division(co_occurrence_num, float(ratio)))
+
+        dataset = self._get_mock_dataset(co_occurrence_num, total_node_launch_num, total_synchronize_stream_num,
+                                         is_empty_dataset=True)
         checker.check_synchronize(dataset)
         self.assertFalse(checker.synchronize_issues)
 
-    def test_max_synchronize_stream(self):
-        dataset = self._get_mock_dataset(100, [], is_empty_dataset=False)
-        checker = SynchronizeStreamChecker()
+        dataset = self._get_mock_dataset(co_occurrence_num, total_node_launch_num, total_synchronize_stream_num)
         checker.check_synchronize(dataset)
         self.assertFalse(checker.synchronize_issues)
 
-    def _get_mock_dataset(self, total_count, slow_synchronize_stream, is_empty_dataset=False):
+        dataset = self._get_mock_dataset(co_occurrence_num, total_node_launch_num - 1, total_synchronize_stream_num)
+        checker.check_synchronize(dataset)
+        self.assertTrue(checker.synchronize_issues)
+
+    def _get_mock_dataset(self, co_occurrence_num, total_node_launch_num, total_synchronize_stream_num,
+                          is_empty_dataset=False):
         dataset = TimelineEvent()
         if is_empty_dataset:
             return dataset
 
-        dataset["synchronize_stream"] = TimelineEvent(
-            dict(
-                total_count=total_count,
-                slow_synchronize_stream=slow_synchronize_stream,
-                rule=dict(max_synchronize_num=10, problem="", solutions=[]),
-            )
-        )
+        co_occurrence_event_list = [TimelineEvent(dict(name=const.NODE_LAUNCH)),
+                                    TimelineEvent(dict(name=const.SYNC_STREAM))] * co_occurrence_num
+
+        synchronize_stream_event_list = [TimelineEvent(dict(name=const.SYNC_STREAM))] * (
+                total_synchronize_stream_num - co_occurrence_num)
+
+        node_launch_event_list = [TimelineEvent(dict(name=const.NODE_LAUNCH))] * (
+                total_node_launch_num - co_occurrence_num)
+
+        dataset[
+            "synchronize_stream"] = co_occurrence_event_list + synchronize_stream_event_list + node_launch_event_list
         return dataset
-
-
-if __name__ == '__main__':
-    tester = TestSynchronizeChecker()
-    tester.test_no_synchronize_stream()
-    tester.test_max_synchronize_stream()

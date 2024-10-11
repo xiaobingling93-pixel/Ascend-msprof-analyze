@@ -59,7 +59,7 @@ class PPStageComputationAnalyzer(BaseAnalyzer):
         pass
 
     def _optimize(self, profiling_path, **kwargs):
-        stage_html_record = dict(stage=kwargs.get("stage"), rank_id=kwargs.get("rank"), step=kwargs.get("step"))
+        stage_html_record = dict(stage=kwargs.get("stage"), rank=kwargs.get("rank"), step=kwargs.get("step"))
         kwargs["add_render_list"] = False
 
         # stage 并行分析时，避免调用本身，即SupportedScopes.STAGE_COMPUTE

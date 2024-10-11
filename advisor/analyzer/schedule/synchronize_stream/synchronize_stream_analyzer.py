@@ -1,11 +1,8 @@
 import logging
 
-from typing import List, Dict, Any
-
 from profiler.advisor.analyzer.base_analyzer import BaseAnalyzer
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.analyzer.schedule.synchronize_stream.synchronize_stream_checker import SynchronizeStreamChecker
-from profiler.advisor.display.html.priority_background_color import PriorityBackgroundColor
 from profiler.advisor.display.html.render import HTMLRender
 from profiler.advisor.dataset.timeline_event_dataset import ScheduleAnalysisDataset
 
@@ -25,13 +22,12 @@ class SynchronizeStreamAnalyzer(BaseAnalyzer):
 
     @BaseAnalyzer.check_data((ScheduleAnalysisDataset.get_key(),))
     def optimize(self, **kwargs):
-
         synchronize_stream_checker = SynchronizeStreamChecker()
-        synchronize_stream_checker.check_synchronize(self.timeline_event_dataset, kwargs.get("profiling_with_stack"))
+        synchronize_stream_checker.check_synchronize(self.timeline_event_dataset)
         synchronize_stream_checker.make_record(self.result)
-        synchronize_stream_checker.make_render(self.html_render, priority=self.get_priority())
+        synchronize_stream_checker.make_render(self.html_render, priority=self.get_priority(synchronize_stream_checker),
+                                               rank=kwargs.get("rank"))
         return self.result
 
-
-    def get_priority(self):
-        return PriorityBackgroundColor.low
+    def get_priority(self, synchronize_stream_checker):
+        return synchronize_stream_checker.priority

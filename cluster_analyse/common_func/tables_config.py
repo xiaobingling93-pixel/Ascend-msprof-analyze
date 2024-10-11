@@ -65,13 +65,13 @@ class TablesConfig:
             ("tp_index", "INTEGER, null")
         ],
         "HostInfoMap": [
-            ("hostUid", "INTEGER, null"),
+            ("hostUid", "TEXT, null"),
             ("hostName", "TEXT, null")
         ],
         "RankDeviceMapMap": [
             ("rankId", "INTEGER, null"),
             ("deviceId", "INTEGER, null"),
-            ("hostUid", "INTEGER, null")
+            ("hostUid", "TEXT, null")
         ],
         "ClusterCommunicationTimeMap": [
             ("step", "TEXT, null"),
