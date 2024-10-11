@@ -35,6 +35,23 @@ class OpStackFinder:
         self.task_type = None
         self.matched_index = set()
 
+    @staticmethod
+    def _query_index_by_torch_to_npu(event_dataset, torch_to_npu_event):
+        dst_op_event_key = torch_to_npu_event.ts
+        dst_op_event = event_dataset.ops_with_stack.get(dst_op_event_key)
+
+        if not dst_op_event:
+            return const.TIMELINE_BACKWARD_NO_STACK_CODE
+
+        return int(dst_op_event.get("dataset_index"))
+
+    @staticmethod
+    def _query_index_by_acl_to_npu(acl_to_npu_event):
+        if acl_to_npu_event:
+            return const.TIMELINE_ACL_TO_NPU_NO_STACK_CODE
+        
+        return const.TIMELINE_BACKWARD_NO_STACK_CODE
+
     def get_api_stack_by_op(self, event_dataset: ComputationAnalysisDataset, op_name: List[str] = None,
                             task_type: str = None,
                             disable_multiprocess=False):
@@ -136,21 +153,6 @@ class OpStackFinder:
             if dst_op_index not in self._task_id_record:
                 self._task_id_record[dst_op_index] = []
             self._task_id_record[dst_op_index].append([task_id, op_name, task_type])
-
-    @staticmethod
-    def _query_index_by_torch_to_npu(event_dataset, torch_to_npu_event):
-        dst_op_event_key = torch_to_npu_event.ts
-        dst_op_event = event_dataset.ops_with_stack.get(dst_op_event_key)
-
-        if not dst_op_event:
-            return const.TIMELINE_BACKWARD_NO_STACK_CODE
-
-        return int(dst_op_event.get("dataset_index"))
-
-    @staticmethod
-    def _query_index_by_acl_to_npu(acl_to_npu_event):
-        if acl_to_npu_event:
-            return const.TIMELINE_ACL_TO_NPU_NO_STACK_CODE
 
     def _query_stacks_multiprocess(self, event_dataset, op_name_list, task_type):
 

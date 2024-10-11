@@ -116,7 +116,7 @@ class TimelineFusionOpsAnalyzer(BaseAnalyzer):
                     detail = [api_name, *stack]
                     self.result.add_detail(sheet_name, detail=detail)
 
-        def make_render(self, **kwargs):
+    def make_render(self, **kwargs):
         rank = kwargs.get("rank")
         format_result_for_html = format_timeline_result(dict(self.matched_op_stacks), dump_html=True)
 
