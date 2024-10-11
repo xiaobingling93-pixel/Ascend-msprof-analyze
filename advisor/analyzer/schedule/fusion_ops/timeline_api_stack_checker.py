@@ -49,7 +49,7 @@ class OpStackFinder:
     def _query_index_by_acl_to_npu(acl_to_npu_event):
         if acl_to_npu_event:
             return const.TIMELINE_ACL_TO_NPU_NO_STACK_CODE
-        
+
         return const.TIMELINE_BACKWARD_NO_STACK_CODE
 
     def get_api_stack_by_op(self, event_dataset: ComputationAnalysisDataset, op_name: List[str] = None,

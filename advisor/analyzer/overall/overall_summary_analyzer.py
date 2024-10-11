@@ -94,7 +94,7 @@ class OverallSummaryAnalyzer(BaseAnalyzer):
             if os.path.exists(self.benchmark_profiling_path):
                 self._has_benchmark_profiling = True
             else:
-                logging.info("Invalid path which not exists: %s.",self.benchmark_profiling_path)
+                logging.info("Invalid path which not exists: %s.", self.benchmark_profiling_path)
         return os.path.exists(self.collection_path)
 
     def process(self):
