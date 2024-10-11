@@ -47,14 +47,13 @@ class AicpuChecker(OperatorChecker):
         self.total_task_duration = 0.0
         self.aicpu_task_duration = 0.0
 
-    def load_aicpu_rules(self, rule_path="rules/aicpu_rules.yaml") -> Dict:
+    def load_aicpu_rules(self, rule_path="rules/aicpu_rules.yaml"):
         if not os.path.isabs(rule_path):
             rule_path = os.path.join(os.path.dirname(__file__),
                                      "../../../", rule_path)
 
         if not os.path.exists(rule_path):
             logger.warning("Skip analyze aicpu issues, because %s does not exist.", rule_path)
-            return {}
 
         self.aicpu_rules = FileManager.read_yaml_file(rule_path)
         self.filter_aicpu_rules(self.aicpu_rules)
@@ -67,7 +66,6 @@ class AicpuChecker(OperatorChecker):
                 continue
 
             self.aicpu_checker[checker_name] = AICPU_CHECKER[checker_name](check_rule)
-        return {}
 
     def filter_aicpu_rules(self, aicpu_rules):
         support_checkers = []
