@@ -123,20 +123,19 @@ class GcChecker:
             free_event_name = f"{const.FREE}-{free_event_index}"
             free_event_start_time = convert_to_float(free_event.ts)
             free_event_end_time = free_event_start_time + convert_to_float(free_event.dur)
+            if free_event_name not in free_include_acl_events:
+                free_include_acl_events[free_event_name] = {}
 
             while acl_event_index < len(acl_events):
                 acl_event = acl_events[acl_event_index]
                 acl_event_start_time = convert_to_float(acl_event.ts)
                 acl_event_end_time = acl_event_start_time + convert_to_float(acl_event.dur)
 
-                if acl_event_start_time < free_event_start_time:
+                if acl_event_end_time < free_event_start_time:
                     acl_event_index += 1
                     continue
-                if acl_event_end_time > free_event_end_time:
+                if acl_event_start_time > free_event_end_time:
                     break
-
-                if free_event_name not in free_include_acl_events:
-                    free_include_acl_events[free_event_name] = {}
 
                 if "acl_event_count" not in free_include_acl_events[free_event_name]:
                     free_include_acl_events[free_event_name]["acl_event_count"] = 0

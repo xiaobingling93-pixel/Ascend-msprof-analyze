@@ -100,7 +100,7 @@ class SynchronizeStreamCollector(BaseOpCollector):
 
 
 class MemCollector(BaseOpCollector):
-    MEMORY_OP_NAME = ["AscendCL@aclMallocMemInner", "AscendCL@aclrtFreePhysical"]
+    MEMORY_OP_NAME = ["AscendCL@aclMallocMemInner", "AscendCL@aclrtFreePhysical", "AscendCL@aclrtFree"]
 
     def __init__(self):
         super().__init__()

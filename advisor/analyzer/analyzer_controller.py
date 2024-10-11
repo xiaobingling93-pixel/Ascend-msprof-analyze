@@ -244,58 +244,58 @@ class AnalyzerController:
                           rank=None, **kwargs):
         # 任意单卡的下发分析
 
-        kwargs = copy.deepcopy(self.kwargs)
+        input_kwargs = copy.deepcopy(self.kwargs)
         job_list = []
 
-        kwargs["profiling_path"] = profiling_path
-        kwargs["benchmark_profiling_path"] = benchmark_profiling_path
-        kwargs["step"] = step
-        kwargs["benchmark_step"] = benchmark_step
-        kwargs["rank"] = rank
+        input_kwargs["profiling_path"] = profiling_path
+        input_kwargs["benchmark_profiling_path"] = benchmark_profiling_path
+        input_kwargs["step"] = step
+        input_kwargs["benchmark_step"] = benchmark_step
+        input_kwargs["rank"] = rank
 
         for dimension in [Interface.SCHEDULE]:
             for scope in Interface.get_scope(dimension):
-                interface = Interface(**kwargs)
-                job_list.append((dimension, scope, interface, kwargs))
+                interface = Interface(**input_kwargs)
+                job_list.append((dimension, scope, interface, input_kwargs))
         return job_list
 
     def computation_analysis(self, profiling_path, benchmark_profiling_path=None, step=None,
                              benchmark_step=None, stage=None, **kwargs):
         # 任意单卡的计算分析
 
-        kwargs = copy.deepcopy(self.kwargs)
-        kwargs["profiling_path"] = profiling_path
-        kwargs["benchmark_profiling_path"] = benchmark_profiling_path
-        kwargs["step"] = step
-        kwargs["benchmark_step"] = benchmark_step
-        kwargs["stage"] = stage
-        kwargs["rank"] = kwargs.get("rank")
+        input_kwargs = copy.deepcopy(self.kwargs)
+        input_kwargs["profiling_path"] = profiling_path
+        input_kwargs["benchmark_profiling_path"] = benchmark_profiling_path
+        input_kwargs["step"] = step
+        input_kwargs["benchmark_step"] = benchmark_step
+        input_kwargs["stage"] = stage
+        input_kwargs["rank"] = kwargs.get("rank")
         job_list = []
 
         for dimension in [Interface.COMPUTATION]:
             for scope in Interface.get_scope(dimension):
                 if scope == SupportedScopes.STAGE_COMPUTE:
                     continue
-                interface = Interface(**kwargs)
-                job_list.append((dimension, scope, interface, kwargs))
+                interface = Interface(**input_kwargs)
+                job_list.append((dimension, scope, interface, input_kwargs))
         return job_list
 
     def memory_analysis(self, profiling_path, benchmark_profiling_path=None, step=None, benchmark_step=None, rank=None):
         # 任意单卡的内存分析
 
-        kwargs = copy.deepcopy(self.kwargs)
+        input_kwargs = copy.deepcopy(self.kwargs)
         job_list = []
 
-        kwargs["profiling_path"] = profiling_path
-        kwargs["benchmark_profiling_path"] = benchmark_profiling_path
-        kwargs["step"] = step
-        kwargs["benchmark_step"] = benchmark_step
-        kwargs["rank"] = rank
+        input_kwargs["profiling_path"] = profiling_path
+        input_kwargs["benchmark_profiling_path"] = benchmark_profiling_path
+        input_kwargs["step"] = step
+        input_kwargs["benchmark_step"] = benchmark_step
+        input_kwargs["rank"] = rank
 
         for dimension in [Interface.MEMORY]:
             for scope in Interface.get_scope(dimension):
-                interface = Interface(**kwargs)
-                job_list.append((dimension, scope, interface, kwargs))
+                interface = Interface(**input_kwargs)
+                job_list.append((dimension, scope, interface, input_kwargs))
         return job_list
 
     def communication_analysis(self, profiling_path, benchmark_profiling_path=None, **kwargs):
@@ -323,18 +323,20 @@ class AnalyzerController:
         job_list = []
         global_step_rank = self.slow_rank_analyzer.get_global_step_rank(SlowRankAnalyzer.FREE)
 
+        info_msg = "For cluster schedule analysis, "
         slow_rank_id = global_step_rank.get("maximum", {}).get("rank_id")
         if slow_rank_id is not None:
-            info_msg = f"Maximum free for rank {slow_rank_id}"
+            info_msg += f"maximum free for rank {slow_rank_id}"
         else:
             slow_rank_id = self.default_rank_id
-            info_msg = f"No slow rank with free time, analysis for default rank {slow_rank_id}"
+            info_msg += f"no slow rank with free time, analysis for default rank {slow_rank_id}"
 
-        fast_rank_id = global_step_rank.get("minimum", {}).get("rank_id") or self.default_rank_id
+        fast_rank_id = global_step_rank.get("minimum", {}).get("rank_id")
+
         slow_step = global_step_rank.get("maximum", {}).get("step")
         fast_step = global_step_rank.get("minimum", {}).get("step")
 
-        if slow_step:
+        if slow_step is not None:
             info_msg += f" and step {slow_step}"
         logger.info(info_msg)
 
@@ -346,7 +348,10 @@ class AnalyzerController:
 
         job_list += self.schedule_analysis(**kwargs)
 
-        if self.kwargs.get("benchmark_profiling_path") is None and slow_rank_id != fast_rank_id:
+        rank_id_valid = slow_rank_id is not None and fast_rank_id is not None and fast_rank_id != slow_rank_id
+        if self.kwargs.get("benchmark_profiling_path") is None and rank_id_valid:
+            # 当用户指定benchmark profiling path时，不进行目标集群profiling的内部快慢卡对比
+            logger.info("Enable schedule comparison of fast and slow rank/step")
             job_list += self._profiling_comparison([kwargs])
         return job_list
 
@@ -369,7 +374,9 @@ class AnalyzerController:
                     for bandwidth_type in [SlowLinkAnalyzer.SDMA, SlowLinkAnalyzer.RDMA]:
                         global_step_rank = self.slow_link_analyzer.get_global_step_rank(bandwidth_type)
                         # 获取带宽最小的卡进行分析
-                        target_rank_id = global_step_rank.get("minimum", {}).get("rank_id") or self.default_rank_id
+                        target_rank_id = global_step_rank.get("minimum", {}).get("rank_id")
+                        if target_rank_id is None:
+                            target_rank_id = self.default_rank_id
                         step = global_step_rank.get("minimum", {}).get("step")
                         analysis_profiling_path = self._get_profiling_path_by_rank(profiling_path, target_rank_id)
 
@@ -401,16 +408,23 @@ class AnalyzerController:
 
         job_list = []
         global_step_rank = self.slow_rank_analyzer.get_global_step_rank(SlowRankAnalyzer.FREE)
-        slow_rank_id = global_step_rank.get("maximum", {}).get("rank_id") or self.default_rank_id
-        slow_step = global_step_rank.get("maximum", {}).get("step")
-        analysis_profiling_path = self._get_profiling_path_by_rank(profiling_path, slow_rank_id)
 
-        info_msg = f"Maximum free for rank {slow_rank_id} "
-        if slow_step:
-            info_msg += f"and step {slow_step}"
+        info_msg = "For cluster memory analysis, "
+        slow_rank_id = global_step_rank.get("maximum", {}).get("rank_id")
+        if slow_rank_id is not None:
+            info_msg += f"maximum free for rank {slow_rank_id}"
+        else:
+            slow_rank_id = self.default_rank_id
+            info_msg += f"no slow rank with free time, analysis for default rank {slow_rank_id}"
+
+        slow_step = global_step_rank.get("maximum", {}).get("step")
+        if slow_step is not None:
+            info_msg += f" and step {slow_step}"
         logger.info(info_msg)
 
-        job_list += self.memory_analysis(analysis_profiling_path, step=slow_step)
+        analysis_profiling_path = self._get_profiling_path_by_rank(profiling_path, slow_rank_id)
+
+        job_list += self.memory_analysis(analysis_profiling_path, step=slow_step, rank=slow_rank_id)
         return job_list
 
     def _do_analysis(self, dimensions, pid=0, async_resp=None, **kwargs):
@@ -440,7 +454,16 @@ class AnalyzerController:
         self._is_cluster = self._is_cluster_profiling(profiling_path)
         if benchmark_profiling_path:
             # 构建benchmark profiling的map，用于根据rank获取profiling路径，否则无法进行比对
-            _ = self._is_cluster_profiling(benchmark_profiling_path)
+            is_benchmark_cluster = self._is_cluster_profiling(benchmark_profiling_path)
+            is_comparison_path_valid = (self._is_cluster and is_benchmark_cluster) or (
+                    not self._is_cluster and not is_benchmark_cluster)
+            if not is_comparison_path_valid:
+                error_msg = f"Only support profiling comparison for '1 npu vs 1 gpu/npu' and 'multi npus vs multi npus'"
+                self._update_analysis_process_resp(pid, async_resp, error_msg=error_msg,
+                                                   status_code=AsyncAnalysisStatus.BAD_REQUEST_STATUS_CODE,
+                                                   status=AsyncAnalysisStatus.FAILED)
+                logger.error(error_msg)
+                return
 
         if not self._is_cluster:
             job_list = self.single_rank_analysis(profiling_path, benchmark_profiling_path)
@@ -597,6 +620,8 @@ class AnalyzerController:
         return job_list
 
     def _is_cluster_profiling(self, profiling_path):
+        if os.path.isfile(profiling_path):
+            return False
         path_list = [os.path.join(profiling_path, dir_name) for dir_name in os.listdir(profiling_path)]
         ascend_pt_dirs = [path for path in path_list if os.path.isdir(path) and path.endswith("ascend_pt")]
         data_processor = PytorchDataPreprocessor(ascend_pt_dirs)
@@ -689,7 +714,7 @@ class AnalyzerController:
         logger.info("Without pipeline parallel stage, steps and ranks to be analyzed are %s",
                     json.dumps(global_step_rank))
         slow_rank_id = global_step_rank.get("maximum", {}).get("rank_id")
-        if slow_rank_id:
+        if slow_rank_id is not None:
             info_msg = f"Maximum computation time for rank {slow_rank_id}"
         else:
             slow_rank_id = self.default_rank_id
@@ -711,10 +736,12 @@ class AnalyzerController:
                       benchmark_profiling_path=self._get_profiling_path_by_rank(profiling_path, fast_rank_id),
                       step=slow_step, benchmark_step=fast_step, rank=slow_rank_id, benchmark_rank=fast_rank_id,
                       compare_mode=CompareConstant.KERNEL_COMPARE)
+
         job_list += self.computation_analysis(**kwargs)
 
         rank_id_valid = slow_rank_id is not None and fast_rank_id is not None and fast_rank_id != slow_rank_id
         if self.kwargs.get("benchmark_profiling_path") is None and rank_id_valid:
+            # 当用户指定benchmark profiling path时，不进行目标集群profiling的内部快慢卡对比
             logger.info("Enable computation comparison of fast and slow rank/step")
             job_list += self._profiling_comparison([kwargs])
         return job_list
