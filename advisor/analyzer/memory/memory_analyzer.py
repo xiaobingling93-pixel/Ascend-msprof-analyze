@@ -39,7 +39,7 @@ class MemoryAnalyzer(BaseAnalyzer):
         memory_checker = MemoryOpsChecker()
         memory_checker.check_memory_ops(self.dataset)
         memory_checker.make_record(self.result)
-        memory_checker.make_render(self.html_render, priority=self.get_priority(memory_checker.max_mem_op_dur))
+        memory_checker.make_render(self.html_render, priority=self.get_priority(memory_checker.max_mem_op_dur), rank=kwargs.get("rank"))
         return self.result
 
     def get_priority(self, max_mem_op_dur):

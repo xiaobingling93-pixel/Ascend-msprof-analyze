@@ -62,12 +62,14 @@ class SyncBNChecker:
             return
 
         priority = kwargs.get("priority")
+        rank = kwargs.get("rank")
         html_render.render_template(key="schedule",
                                     template_dir="templates",
                                     template_name="sync_batchnorm.html",
                                     desc=self.desc,
                                     solutions=self.solutions,
-                                    priority_background_color=priority)
+                                    priority_background_color=priority,
+                                    rank=rank)
 
     def _init_rule(self):
         syncbn_rule_path = os.path.join(

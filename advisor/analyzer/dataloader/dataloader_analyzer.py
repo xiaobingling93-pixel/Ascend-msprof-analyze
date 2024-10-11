@@ -41,7 +41,7 @@ class DataloaderAnalyzer(BaseAnalyzer):
         dataloader_checker = DataloaderChecker()
         dataloader_checker.check_slow_dataloader(self.dataset)
         dataloader_checker.make_record(self.result)
-        dataloader_checker.make_render(self.html_render, priority=self.get_priority())
+        dataloader_checker.make_render(self.html_render, priority=self.get_priority(), rank=kwargs.get("rank"))
         return self.result
 
     def get_priority(self):

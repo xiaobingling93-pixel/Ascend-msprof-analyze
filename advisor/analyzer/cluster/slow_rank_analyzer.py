@@ -20,8 +20,7 @@ from profiler.advisor.common import constant
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.advisor.dataset.cluster.cluster_dataset import ClusterStepTraceTimeDataset
-from profiler.advisor.utils.utils import safe_index_value
-from profiler.advisor.utils.utils import safe_division
+from profiler.advisor.utils.utils import safe_index_value, safe_division, convert_to_int
 
 logger = logging.getLogger()
 
@@ -115,7 +114,7 @@ class SlowRankAnalyzer(BaseAnalyzer):
         data_list = []
         for key, value in self.step_trace_dict.items():
             step, rank_id = key.split(constant.STEP_RANK_SEP)
-            data_list.append([int(step), int(rank_id)] + value)
+            data_list.append([convert_to_int(step), convert_to_int(rank_id)] + value)
             if step and step not in self._steps:
                 self._steps.add(step)
 

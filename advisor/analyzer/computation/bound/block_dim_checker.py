@@ -46,7 +46,8 @@ class BlockDimChecker(OperatorChecker):
                                            format_result=self.format_operator_result(record,
                                                                                      constant.OPERATOR_OUT_TOPK),
                                            add_render_list=add_render_list,
-                                           priority_background_color=priority)
+                                           priority_background_color=priority,
+                                           rank=kwargs.get("rank"))
 
     def get_core_num(self, op_info):
         """

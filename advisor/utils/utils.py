@@ -517,8 +517,8 @@ def safe_index(array, index, return_value_if_error=None):
 
 def convert_to_int(data: any) -> int:
     try:
-        int_value = int(data)
+        int_value = int(convert_to_float(data))
     except ValueError:
-        logger.error(f"Can not convert %ss to float.", data)
+        logger.error(f"Can not convert %s to int.", data)
         return 0
     return int_value

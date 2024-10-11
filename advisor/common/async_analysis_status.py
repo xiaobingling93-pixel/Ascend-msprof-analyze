@@ -21,5 +21,7 @@ class AsyncAnalysisStatus:
     SUCCESS = "success"
     ANALYZING = "analyzing"
 
-    FAILED_STATUS_CODE = 400
+    BAD_REQUEST_STATUS_CODE = 400
+    NOT_FOUND_STATUS_CODE = 404
+    INNER_ERROR_STATUS_CODE = 500
     NON_FAILED_STATUS_CODE = 200

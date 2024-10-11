@@ -39,7 +39,7 @@ class SyncBNAnalyzer(BaseAnalyzer):
         syncbn_checker = SyncBNChecker()
         syncbn_checker.check_syncbn(self.timeline_event_dataset)
         syncbn_checker.make_record(self.result)
-        syncbn_checker.make_render(self.html_render, priority=self.get_priority())
+        syncbn_checker.make_render(self.html_render, priority=self.get_priority(), rank=kwargs.get("rank"))
         return self.result
 
     def get_priority(self):

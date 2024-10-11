@@ -110,15 +110,15 @@ class OperatorChecker(VersionControl):
             return True
         return False
 
-    def make_record(self, profiling_data: ProfilingDataset, rank_id=None):
+    def make_record(self, profiling_data: ProfilingDataset, rank=None):
         """
         Make record for what and how to optimize
         :param profiling_data: profiling data
         :return: optimize record
         """
 
-        if rank_id is not None:
-            self._PROBLEM = f"rank {rank_id} ".capitalize() + self._PROBLEM.lower()
+        if rank is not None:
+            self._PROBLEM = f"rank {rank} ".capitalize() + self._PROBLEM.lower()
 
         task_duration_list = [float(op_info.get_attr("task_duration"))
                               for op_info in self._op_list
@@ -198,7 +198,7 @@ class OperatorChecker(VersionControl):
             release_suggestion = copy.deepcopy(suggestion)
             if release_suggestion == OperatorChecker.PyTorch_OPERATOR_TUNE_SUGGESTION:
                 release_suggestion += \
-                    (f"for details please refer to link : <a href={Config().pytorch_aoe_operator_tune_url}>LINK</a>")
+                    (f"for details please refer to link : <a href={Config().pytorch_aoe_operator_tune_url} target='_blank'>LINK</a>")
             elif release_suggestion == OperatorChecker.MSLite_OPERATOR_TUNE_SUGGESTION:
                 release_suggestion += \
                     (f"\nThe config file for MSLite AOE usage is as follows:\n" \
@@ -206,7 +206,7 @@ class OperatorChecker(VersionControl):
                      f"aoe_mode=\"operator tuning\"\n" \
                      f"--tune_ops_file={Config().tune_ops_file}\n"
                      f"\nFor details please refer to link : <a href="
-                     f"{Config().mslite_infer_aoe_operator_tune_url}>LINK</a>")
+                     f"{Config().mslite_infer_aoe_operator_tune_url} target='_blank'>LINK</a>")
             release_suggestion_list.append(release_suggestion.replace('\n', '<br>'))
         format_result = {
             "record": record.__dict__,

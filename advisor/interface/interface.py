@@ -48,6 +48,7 @@ from profiler.advisor.analyzer.comparison.comparison_analyzer import ComparisonA
 
 logger = logging.getLogger()
 
+
 class Interface:
     SCHEDULE = "schedule"
     COMPUTATION = "computation"
