@@ -16,7 +16,7 @@ import logging
 
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
-from profiler.advisor.utils.utils import safe_index_value, convert_to_float
+from profiler.advisor.utils.utils import safe_index_value, convert_to_float, convert_to_int
 from profiler.compare_tools.compare_backend.utils.constant import Constant as CompareConstant
 from profiler.compare_tools.compare_interface.comparison_interface import ComparisonInterface
 
@@ -37,14 +37,28 @@ class ComparisonChecker:
 
         self.profiling_path = profiling_path
         self.benchmark_profiling_path = benchmark_profiling_path
-        self.step = str(step) if step is not None else step
-        self.benchmark_step = str(benchmark_step) if benchmark_step is not None else benchmark_step
+        self.step = ComparisonChecker.get_valid_step(step)
+        self.benchmark_step = ComparisonChecker.get_valid_step(benchmark_step)
         self.rank = rank
         self.benchmark_rank = benchmark_rank
         self.compare_mode = None
         self.format_result = {}
         self.desc = None
         self.suggestion = None
+
+    @staticmethod
+    def get_valid_step(step):
+        none_step = None
+        if step is None:
+            return none_step
+        if isinstance(step, (int, float)):
+            if step < 0:
+                # 当没有step时，analyzer controller返回step=-1
+                return none_step
+            else:
+                return str(convert_to_int(step))
+        else:
+            return none_step
 
     def compare(self, compare_mode):
         """

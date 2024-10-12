@@ -45,7 +45,7 @@ class MemoryAnalyzer(BaseAnalyzer):
     def get_priority(self, max_mem_op_dur):
         step_duration = getattr(self.dataset, "step_duration", None)
         if step_duration is None:
-            return PriorityBackgroundColor.low
+            return PriorityBackgroundColor.high
         ratio = self.get_priority_by_time_ratio(max_mem_op_dur, step_duration)
 
         return ratio

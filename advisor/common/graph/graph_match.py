@@ -205,7 +205,7 @@ def find_isomorphisms_iter(config: IsomorphismsIterArgsConfig) -> Generator[Dict
 
     :return: Yield mappings from query node IDs to host graph IDs: {query_id: host_id, ...}
     """
-    query_graph: nx.Graph = config.query_graph,
+    query_graph: nx.Graph = config.query_graph
     host_graph: nx.Graph = config.host_graph
     directed: bool = config.directed
     _node_attr_fun: Callable = config.node_attr_fun
