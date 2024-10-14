@@ -12,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
 import multiprocessing
 import logging
 import re
@@ -47,6 +48,12 @@ class TimelineFusionOpsAnalyzer(BaseAnalyzer):
         return PriorityBackgroundColor.low
 
     def optimize(self, **kwargs):
+        disable_affinity_api = os.getenv(const.DISABLE_AFFINITY_API)
+        if disable_affinity_api is not None and disable_affinity_api.lower() == "true":
+            logger.info(
+                "Skip affinity api analysis due to longer processing time due to env 'DISABLE_AFFINITY_API'")
+            return self.result
+
         for mode in [const.ATEN.lower(), const.OPTIMIZER.lower()]:
 
             for op_combined, npu_apis in tqdm(getattr(init_timeline_ops_db(self.cann_version, self.torch_version),

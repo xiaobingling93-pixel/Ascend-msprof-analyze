@@ -35,7 +35,8 @@ from profiler.advisor.config.config import Config
 from profiler.advisor.common import constant as const
 from profiler.advisor.common.analyzer_scopes import SupportedScopes
 from profiler.advisor.common.async_analysis_status import AsyncAnalysisStatus
-from profiler.advisor.utils.utils import Timer, safe_index_value, safe_division, safe_index
+from profiler.advisor.common.enum_params_parser import EnumParamsParser
+from profiler.advisor.utils.utils import Timer, safe_index_value, safe_division, safe_index, convert_to_int
 from profiler.advisor.interface.interface import Interface
 from profiler.cluster_analyse.cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
 from profiler.prof_common.path_manager import PathManager
@@ -44,6 +45,101 @@ from profiler.compare_tools.compare_backend.utils.constant import Constant as Co
 # 以spawn模式启动多进程，避免fork主进程资源。如果主进程逻辑较为复杂，fork可能会导致异常。
 mp.set_start_method("spawn", force=True)
 logger = logging.getLogger()
+
+
+class AsyncParams:
+    """处理用户异步请求的输入参数，包括cli arguments和环境变量两类参数."""
+    user_valid_arguments = {}
+    user_valid_envs = {}
+    user_non_enum_params = {}
+    user_invalid_values = []
+    user_total_params = {}
+
+    @staticmethod
+    def parse_async_list_params(key, value, option_values, key_type, value_type):
+        if isinstance(value, list):
+            value_list = value
+        else:
+            value_list = [_.strip(" ") for _ in str(value).split(",")]
+
+        if sorted(value_list) not in [sorted(option) for option in option_values]:
+            AsyncParams.user_invalid_values.append(
+                {"key": key, "invalid value": value, "optional values": option_values,
+                 "required value type": value_type})
+            return
+        if key_type == EnumParamsParser.ENVS:
+            AsyncParams.user_valid_envs[key.upper()] = ",".join(value_list)
+        elif key_type == EnumParamsParser.ARGUMENTS:
+            AsyncParams.user_valid_arguments[key] = value_list
+
+    @staticmethod
+    def parse_async_int_params(key, value, option_values, key_type, value_type):
+        if convert_to_int(value) not in option_values:
+            AsyncParams.user_invalid_values.append(
+                {"key": key, "invalid value": value, "optional values": option_values,
+                 "required value type": value_type})
+            return
+
+        if key_type == EnumParamsParser.ENVS:
+            AsyncParams.user_valid_envs[key.upper()] = str(convert_to_int(value))
+        elif key_type == EnumParamsParser.ARGUMENTS:
+            AsyncParams.user_valid_arguments[key] = convert_to_int(value)
+
+    @staticmethod
+    def parse_async_str_params(key, value, option_values, key_type, value_type):
+        if str(value) not in option_values:
+            AsyncParams.user_invalid_values.append(
+                {"key": key, "invalid value": value, "optional values": option_values,
+                 "required value type": value_type})
+            return
+        if key_type == EnumParamsParser.ENVS:
+            AsyncParams.user_valid_envs[key.upper()] = str(value)
+        elif key_type == EnumParamsParser.ARGUMENTS:
+            AsyncParams.user_valid_arguments[key] = str(value)
+
+    @staticmethod
+    def parse_async_boolean_params(key, value, option_values, key_type, value_type):
+
+        if str(value).lower() not in ["true", "false"]:
+            AsyncParams.user_invalid_values.append(
+                {"key": key, "invalid value": value, "optional values": option_values,
+                 "required value type": value_type})
+            return
+
+        if key_type == EnumParamsParser.ENVS:
+            AsyncParams.user_valid_envs[key.upper()] = str(value)
+        elif key_type == EnumParamsParser.ARGUMENTS:
+            AsyncParams.user_valid_arguments[key] = str(value).lower() == "true"
+
+    @staticmethod
+    def parse_params(user_async_params):
+        params_parser = EnumParamsParser()
+        valid_env_keys = [key.lower() for key in params_parser.get_envs_keys()]
+        valid_arg_keys = [key.lower() for key in params_parser.get_arguments_keys()]
+
+        for key, value in user_async_params.items():
+            key = key.lower()
+            if key not in valid_env_keys + valid_arg_keys:
+                AsyncParams.user_non_enum_params[key] = value
+                continue
+
+            if key in valid_env_keys:
+                # 环境变量均大写，异步调用入参到analyzer controller时支持用户使用小写配置环境变量
+                option_values = params_parser.get_options(key.upper())
+                value_type = params_parser.get_value_type(key.upper())
+                key_type = params_parser.ENVS
+            else:
+                option_values = params_parser.get_options(key)
+                value_type = params_parser.get_value_type(key)
+                key_type = params_parser.ARGUMENTS
+
+            if hasattr(AsyncParams, f"parse_async_{value_type}_params"):
+                getattr(AsyncParams, f"parse_async_{value_type}_params")(key, value, option_values, key_type,
+                                                                         value_type)
+
+        AsyncParams.user_total_params["async_analysis_env"] = AsyncParams.user_valid_envs
+        AsyncParams.user_total_params.update(AsyncParams.user_valid_arguments)
+        AsyncParams.user_total_params.update(AsyncParams.user_non_enum_params)
 
 
 class AnalyzerController:
@@ -134,13 +230,37 @@ class AnalyzerController:
         for key, value in envs.items():
             os.environ[key] = value
 
+    def format_async_analysis_params(self, pid, async_resp, dimensions, kwargs):
+
+        AsyncParams.parse_params(kwargs)
+        dimensions = AsyncParams.user_total_params.get("analysis_dimensions") or dimensions
+
+        if AsyncParams.user_invalid_values:
+            error_msg = "Got invalid arguments as follows: \n "
+            for index, invalid_value in enumerate(AsyncParams.user_invalid_values):
+                error_msg += f"{index + 1}. Key '{invalid_value.get('key')}', " \
+                             f"invalid value '{invalid_value.get('invalid value')}', " \
+                             f"optional valid values '{invalid_value.get('optional values')}', " \
+                             f"required value type '{invalid_value.get('required value type')}'.\n "
+            self._update_analysis_process_resp(pid, async_resp, error_msg=error_msg,
+                                               status_code=AsyncAnalysisStatus.BAD_REQUEST_STATUS_CODE,
+                                               status=AsyncAnalysisStatus.FAILED)
+            raise ValueError(error_msg)
+
+        logger.warning("User parameters for async analysis is as follows:\n %s",
+                       json.dumps(AsyncParams.user_total_params, indent=4))
+        return dimensions, AsyncParams.user_total_params
+
     def do_analysis(self, dimensions, **kwargs):
         pid = os.getpid()
-        AnalyzerController._set_analysis_process_priority(pid)
-        AnalyzerController._init_async_analysis_env(kwargs)
-
         resp = {"id": pid}
         output_path = kwargs.get("output_path")
+
+        AnalyzerController._set_analysis_process_priority(pid)
+        if kwargs.get("is_async_analysis"):
+            del kwargs["is_async_analysis"]
+            dimensions, kwargs = self.format_async_analysis_params(pid, resp, dimensions, kwargs)
+            AnalyzerController._init_async_analysis_env(kwargs)
 
         try:
             if output_path:
@@ -163,6 +283,8 @@ class AnalyzerController:
 
     def async_do_analysis(self, dimensions, **kwargs):
         # 异步分析，用于部署服务，通过接口查询异步作业状态
+        kwargs["is_async_analysis"] = True
+
         async_analysis_process = mp.Process(target=self.do_analysis, args=(dimensions,), kwargs=kwargs,
                                             name="Async advisor performance analysis")
         async_analysis_process.start()
