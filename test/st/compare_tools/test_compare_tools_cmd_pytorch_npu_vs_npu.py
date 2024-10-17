@@ -1,11 +1,10 @@
 import os
-import re
-import subprocess
 from unittest import TestCase
 
 import pandas as pd
 
 from profiler.prof_common.path_manager import PathManager
+from .utils import execute_cmd, check_result_file
 
 
 class TestCompareToolsCmdPytorchNpuVsNpu(TestCase):
@@ -16,26 +15,17 @@ class TestCompareToolsCmdPytorchNpuVsNpu(TestCase):
                                              "n122-120-121_12322_20240911113658370_ascend_pt")
     OUTPUT_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)), "CompareToolsCmdPytorchNpuVsNpu")
     RESULT_EXCEL = ""
-    RE_MATCH_EXP = r"^performance_comparison_result_\d{1,20}\.xlsx"
     COMMAND_SUCCESS = 0
 
     def setup_class(self):
         PathManager.make_dir_safety(self.OUTPUT_PATH)
         cmd = ["msprof-analyze", "compare", "-d", self.COMPARISON_PROFILING_PATH, "-bp", self.BASE_PROFILING_PATH, "-o",
                self.OUTPUT_PATH]
-        completed_process = subprocess.run(cmd, capture_output=True, shell=False)
-        if completed_process.returncode != self.COMMAND_SUCCESS or not os.path.exists(self.OUTPUT_PATH):
+        if execute_cmd(cmd) != self.COMMAND_SUCCESS or not os.path.exists(self.OUTPUT_PATH):
             self.assertEqual(False, True, msg="comparison task failed.")
-        files = os.listdir(self.OUTPUT_PATH)
-        newest_file = None
-        for file_name in files:
-            if re.match(self.RE_MATCH_EXP, file_name):
-                file_time = file_name.split(".")[0].split("_")[-1]
-                if not newest_file or file_time > newest_file.split(".")[0].split("_")[-1]:
-                    newest_file = file_name
-        if not newest_file:
+        if not check_result_file(self.OUTPUT_PATH):
             self.assertEqual(False, True, msg="comparison result excel is not find.")
-        self.RESULT_EXCEL = os.path.join(self.OUTPUT_PATH, newest_file)
+        self.RESULT_EXCEL = os.path.join(self.OUTPUT_PATH, check_result_file(self.OUTPUT_PATH))
 
     def teardown_class(self):
         PathManager.remove_path_safety(self.OUTPUT_PATH)
@@ -51,13 +41,19 @@ class TestCompareToolsCmdPytorchNpuVsNpu(TestCase):
                     -48.46, -48.46, -8.05]
         df = pd.read_excel(self.RESULT_EXCEL, sheet_name="OverallMetrics", header=2)
         for index, row in df.iterrows():
-            self.assertEqual(duration_exp[index], round(row["Duration(ms)"], 2))
-            self.assertEqual(diff_exp[index], round(row["Diff Duration(ms)"], 2))
+            self.assertEqual(duration_exp[index], round(row["Duration(ms)"], 2),
+                             msg="pytorch npu vs npu compare results 'Duration(ms)"
+                                 "' column is wrong"
+                             )
+            self.assertEqual(diff_exp[index], round(row["Diff Duration(ms)"], 2),
+                             msg="pytorch npu vs npu compare results 'Diff Duration(ms)"
+                                 "' column is wrong"
+                             )
 
     def test_kernel_compare(self):
-        headers = ["Order Id", "Kernel	Input Shape", "Total Duration(us)", "Avg Duration(us)", "Max Duration(us)",
+        headers = ["Order Id", "Kernel", "Input Shape", "Total Duration(us)", "Avg Duration(us)", "Max Duration(us)",
                    "Min Duration(us)", "Calls", "Total Duration(us).1", "Avg Duration(us).1", "Max Duration(us).1",
                    "Min Duration(us).1", "Calls.1", "Diff Total Ratio", "Diff Avg Ratio"]
         df = pd.read_excel(self.RESULT_EXCEL, sheet_name="KernelCompare", header=2)
-        self.assertTrue(df.shape[0], 704)
-        self.assertTrue(headers, df.columns)
+        self.assertEqual(len(df), 704, msg="pytorch npu vs npu compare results quantity is wrong")
+        self.assertEqual(headers, df.columns.tolist(), msg="pytorch npu vs npu compare results headers is wrong")
