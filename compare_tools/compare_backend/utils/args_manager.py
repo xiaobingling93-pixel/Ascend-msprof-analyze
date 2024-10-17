@@ -1,3 +1,20 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+# Copyright (C) 2023-2024. Huawei Technologies Co., Ltd. All rights reserved.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""
+
 import os.path
 import re
 
@@ -11,7 +28,7 @@ class Singleton(object):
         self._cls = cls
         self._instance = {}
 
-    def __call__(self, args = None):
+    def __call__(self, args=None):
         if self._cls not in self._instance:
             self._instance[self._cls] = self._cls(args)
         return self._instance[self._cls]
@@ -119,8 +136,9 @@ class ArgsManager:
                 msg = f"Invalid profiling path suffix: {file_path}"
                 raise RuntimeError(msg)
             json_type = FileReader.check_json_type(file_path)
-            return {Constant.PROFILING_TYPE: json_type, Constant.PROFILING_PATH: file_path,
-                    Constant.TRACE_PATH: file_path}
+            return {
+                Constant.PROFILING_TYPE: json_type, Constant.PROFILING_PATH: file_path, Constant.TRACE_PATH: file_path
+            }
         ascend_output = os.path.join(file_path, "ASCEND_PROFILER_OUTPUT")
         profiler_output = ascend_output if os.path.isdir(ascend_output) else file_path
         json_path = os.path.join(profiler_output, "trace_view.json")
@@ -128,8 +146,10 @@ class ArgsManager:
             msg = (f"The data is not collected by PyTorch Adaptor mode or the data is not parsed. "
                    f"Invalid profiling path: {profiler_output}")
             raise RuntimeError(msg)
-        path_dict = {Constant.PROFILING_TYPE: Constant.NPU, Constant.PROFILING_PATH: file_path,
-                     Constant.TRACE_PATH: json_path, Constant.ASCEND_OUTPUT_PATH: profiler_output}
+        path_dict = {
+            Constant.PROFILING_TYPE: Constant.NPU, Constant.PROFILING_PATH: file_path,
+            Constant.TRACE_PATH: json_path, Constant.ASCEND_OUTPUT_PATH: profiler_output
+        }
         sub_dirs = os.listdir(file_path)
         for dir_name in sub_dirs:
             if dir_name == "profiler_info.json" or re.match(r"profiler_info_[0-9]+\.json", dir_name):

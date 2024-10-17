@@ -1,9 +1,30 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+# Copyright (C) 2023-2024. Huawei Technologies Co., Ltd. All rights reserved.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""
+
 import csv
 import json
 import os
+import logging
 
 from common_func.path_manager import PathManager
 from compare_backend.utils.constant import Constant
+
+
+logger = logging.getLogger()
 
 
 class FileReader:
@@ -19,7 +40,7 @@ class FileReader:
             check_msg = input(
                 f"The file({file_path}) size exceeds the preset max value. Continue reading the file? [y/n]")
             if check_msg.lower() != "y":
-                print(f"[WARNING] The user choose not to read the file: {file_path}")
+                logger.warning("The user choose not to read the file: %s", file_path)
                 return []
         try:
             with open(file_path, "rt") as file:

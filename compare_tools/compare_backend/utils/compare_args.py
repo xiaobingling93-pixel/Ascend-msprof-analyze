@@ -1,3 +1,21 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+# Copyright (C) 2024-2024. Huawei Technologies Co., Ltd. All rights reserved.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""
+
+
 class Args:
     def __init__(self,
                  base_profiling_path: str = "",
@@ -11,7 +29,7 @@ class Args:
                  disable_details: bool = False,
                  output_path: str = "",
                  max_kernel_num: int = None,
-                 op_name_map: dict = {},
+                 op_name_map: dict = None,
                  use_input_shape: bool = False,
                  gpu_flow_cat: str = "",
                  base_step: str = "",
@@ -27,7 +45,7 @@ class Args:
         self.disable_details = disable_details
         self.output_path = output_path
         self.max_kernel_num = max_kernel_num
-        self.op_name_map = op_name_map
+        self.op_name_map = op_name_map if op_name_map is not None else {}
         self.use_input_shape = use_input_shape
         self.gpu_flow_cat = gpu_flow_cat
         self.base_step = base_step
