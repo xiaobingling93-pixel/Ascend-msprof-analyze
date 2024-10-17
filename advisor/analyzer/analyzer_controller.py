@@ -282,7 +282,41 @@ class AnalyzerController:
             raise RuntimeError(e)
 
     def async_do_analysis(self, dimensions, **kwargs):
-        # 异步分析，用于部署服务，通过接口查询异步作业状态
+        """ Deploy a online service to start async analysis job, wrap this api by flask or tornado and so on,
+            then could query the analysis status by restful api.
+            You can view file 'profiler/advisor/config/enum_parameters.yaml' to obtain detailed information for
+            all the args listed below.
+
+        Args:
+            dimensions: analysis dimension, normally set as Interface.all_dimension, support specific dimension analysis
+                such as ['computation'] or ['computation', 'schedule']
+            cann_version: cann version of your runtime, inpact on the analysis of affinity api and AICPU operators
+            torch_version: torch version of your runtime, inpact on the analysis of affinity api
+            analysis_dimensions: can overwite dimensions.
+            advisor_analyze_processes: number of processes to use while the training params pipeline parallel(pp) >1,
+                can reduce the time of analysis.
+            disable_profiling_comparison: disable comparison of operators(including npu computation operator and
+                cpu torch aten operator), can reduce the time of analysis.
+            disable_affinity_api: disable analysis of affinity api, normally set as 'True' while you training job
+                has been trained on NPU for a long time and suddenly shows performance degradation.
+            output_path: analysis output path(including html and xlsx).
+
+        Example:
+            >>> # initialize a global analyzer controller
+            >>> analyzer_controller = AnalyzerController()
+            >>> analysis_kwargs = dict(advisor_analyze_processes=2, disable_profiling_comparison=True)
+            >>>
+            >>> async_analysis_process = analyzer_controller.async_do_analysis(Interface.all_dimension, **analysis_kwargs)
+            >>>
+            >>> # query the job status every second
+            >>> while True:
+            >>>     response = analyzer_controller.get_response_by_pid(async_analysis_process.pid)
+            >>>     print(f'analysis response is {response}')
+            >>>     if response.get("status") in ["success", "failed"]:
+            >>>         async_analysis_process.join()
+            >>>          break
+            >>>     time.sleep(1)
+        """
         kwargs["is_async_analysis"] = True
 
         async_analysis_process = mp.Process(target=self.do_analysis, args=(dimensions,), kwargs=kwargs,
@@ -377,7 +411,7 @@ class AnalyzerController:
             overall_analyzer.optimize()
 
     def schedule_analysis(self, profiling_path, benchmark_profiling_path=None, step=None, benchmark_step=None,
-                          rank=None, **kwargs):
+                          **kwargs):
         # 任意单卡的下发分析
 
         input_kwargs = copy.deepcopy(self.kwargs)
@@ -387,7 +421,8 @@ class AnalyzerController:
         input_kwargs["benchmark_profiling_path"] = benchmark_profiling_path
         input_kwargs["step"] = step
         input_kwargs["benchmark_step"] = benchmark_step
-        input_kwargs["rank"] = rank
+        input_kwargs["rank"] = kwargs.get("rank")
+        input_kwargs["step_duration"] = kwargs.get("step_duration")
 
         for dimension in [Interface.SCHEDULE]:
             for scope in Interface.get_scope(dimension):
@@ -406,6 +441,7 @@ class AnalyzerController:
         input_kwargs["benchmark_step"] = benchmark_step
         input_kwargs["stage"] = stage
         input_kwargs["rank"] = kwargs.get("rank")
+        input_kwargs["step_duration"] = kwargs.get("step_duration")
         job_list = []
 
         for dimension in [Interface.COMPUTATION]:
@@ -416,7 +452,7 @@ class AnalyzerController:
                 job_list.append((dimension, scope, interface, input_kwargs))
         return job_list
 
-    def memory_analysis(self, profiling_path, benchmark_profiling_path=None, step=None, benchmark_step=None, rank=None):
+    def memory_analysis(self, profiling_path, benchmark_profiling_path=None, step=None, benchmark_step=None, **kwargs):
         # 任意单卡的内存分析
 
         input_kwargs = copy.deepcopy(self.kwargs)
@@ -426,7 +462,8 @@ class AnalyzerController:
         input_kwargs["benchmark_profiling_path"] = benchmark_profiling_path
         input_kwargs["step"] = step
         input_kwargs["benchmark_step"] = benchmark_step
-        input_kwargs["rank"] = rank
+        input_kwargs["rank"] = kwargs.get("rank")
+        input_kwargs["step_duration"] = kwargs.get("step_duration")
 
         for dimension in [Interface.MEMORY]:
             for scope in Interface.get_scope(dimension):
@@ -480,12 +517,13 @@ class AnalyzerController:
                       benchmark_profiling_path=self._get_profiling_path_by_rank(profiling_path, fast_rank_id),
                       step=slow_step, benchmark_step=fast_step,
                       rank=slow_rank_id, benchmark_rank=fast_rank_id,
-                      compare_mode=CompareConstant.API_COMPARE)
+                      compare_mode=CompareConstant.API_COMPARE,
+                      step_duration=self.slow_rank_analyzer.get_step_duration(slow_rank_id, slow_step))
 
         job_list += self.schedule_analysis(**kwargs)
 
         rank_id_valid = slow_rank_id is not None and fast_rank_id is not None and fast_rank_id != slow_rank_id
-        if self.kwargs.get("benchmark_profiling_path") is None and rank_id_valid:
+        if not self.kwargs.get("benchmark_profiling_path") and rank_id_valid:
             # 当用户指定benchmark profiling path时，不进行目标集群profiling的内部快慢卡对比
             logger.info("Enable schedule comparison of fast and slow rank/step")
             job_list += self._profiling_comparison([kwargs])
@@ -559,8 +597,9 @@ class AnalyzerController:
         logger.info(info_msg)
 
         analysis_profiling_path = self._get_profiling_path_by_rank(profiling_path, slow_rank_id)
-
-        job_list += self.memory_analysis(analysis_profiling_path, step=slow_step, rank=slow_rank_id)
+        step_duration = self.slow_rank_analyzer.get_step_duration(slow_rank_id, slow_step)
+        job_list += self.memory_analysis(analysis_profiling_path, step=slow_step, rank=slow_rank_id,
+                                         step_duration=step_duration)
         return job_list
 
     def _do_analysis(self, dimensions, pid=0, async_resp=None, **kwargs):
@@ -836,7 +875,8 @@ class AnalyzerController:
                     benchmark_step=benchmark_step,
                     profiling_path=self._get_profiling_path_by_rank(profiling_path, rank_id),
                     benchmark_profiling_path=self._get_profiling_path_by_rank(profiling_path, benchmark_rank_id),
-                    compare_mode=CompareConstant.KERNEL_COMPARE
+                    compare_mode=CompareConstant.KERNEL_COMPARE,
+                    step_duration=self.slow_rank_analyzer.get_step_duration(rank_id, step)
                 )
             )
         Interface.add_analyzer(Interface.COMPUTATION, SupportedScopes.STAGE_COMPUTE, PPStageComputationAnalyzer)
@@ -844,7 +884,7 @@ class AnalyzerController:
 
         job_list.append((Interface.COMPUTATION, SupportedScopes.STAGE_COMPUTE, Interface(**compute_analysis_kwargs),
                          compute_analysis_kwargs))
-        if self.kwargs.get("benchmark_profiling_path") is None:
+        if not self.kwargs.get("benchmark_profiling_path"):
             logger.info("Enable computation comparison of fast and slow rank/step in different pp stages")
             job_list += self._profiling_comparison(stages_profiling_path)
         return job_list
@@ -875,12 +915,13 @@ class AnalyzerController:
         kwargs = dict(profiling_path=self._get_profiling_path_by_rank(profiling_path, slow_rank_id),
                       benchmark_profiling_path=self._get_profiling_path_by_rank(profiling_path, fast_rank_id),
                       step=slow_step, benchmark_step=fast_step, rank=slow_rank_id, benchmark_rank=fast_rank_id,
-                      compare_mode=CompareConstant.KERNEL_COMPARE)
+                      compare_mode=CompareConstant.KERNEL_COMPARE,
+                      step_duration=self.slow_rank_analyzer.get_step_duration(slow_rank_id, slow_step))
 
         job_list += self.computation_analysis(**kwargs)
 
         rank_id_valid = slow_rank_id is not None and fast_rank_id is not None and fast_rank_id != slow_rank_id
-        if self.kwargs.get("benchmark_profiling_path") is None and rank_id_valid:
+        if not self.kwargs.get("benchmark_profiling_path") and rank_id_valid:
             # 当用户指定benchmark profiling path时，不进行目标集群profiling的内部快慢卡对比
             logger.info("Enable computation comparison of fast and slow rank/step")
             job_list += self._profiling_comparison([kwargs])

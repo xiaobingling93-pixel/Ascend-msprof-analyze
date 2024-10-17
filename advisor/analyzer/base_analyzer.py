@@ -112,20 +112,6 @@ class BaseAnalyzer(VersionControl, metaclass=ABCMeta):
                     self.dataset_list[key] = []
                     self.dataset_list[key].append(dataset)
 
-    def init_dataset_list(self) -> None:
-        dataset_cls_list = self.dataset_cls_list
-        if len(dataset_cls_list) == 0:
-            logger.warning(f"Analyzer: %s don't rely on any dataset!", self.__class__.__name__)
-            return
-
-        for dataset_cls in dataset_cls_list:
-            if dataset_cls and callable(dataset_cls):
-                dataset = dataset_cls(collection_path=self.collection_path, data=self.dataset_list, **self.kwargs)
-                key = dataset_cls.get_key()
-                if key not in self.dataset_list:
-                    self.dataset_list[key] = []
-                    self.dataset_list[key].append(dataset)
-
     def get_priority_by_time_ratio(self, dur, step_dur):
         time_ratio = safe_division(dur, step_dur)
         if time_ratio >= self.ANALYZER_HIGH_PRIORITY_TIME_RATIO:

@@ -58,7 +58,7 @@ class BaseTimelineEventDataset:
                                                                lambda file: file.endswith("trace_view.json"))
         self.dataset_len = None
         self.step = kwargs.get("step")
-        self.step_duration = 0.0
+        self.step_duration = kwargs.get("step_duration", 0.0)
         if not build_dataset:
             return
 
