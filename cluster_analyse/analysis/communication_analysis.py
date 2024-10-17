@@ -1,3 +1,18 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import os
 import logging
 from collections import defaultdict
@@ -28,6 +43,13 @@ class CommunicationAnalysis(BaseAnalysis):
             total_dict[size][0] += size_info[0]
             total_dict[size][1] += size_info[1]
 
+    @staticmethod
+    def execute(conn, res_data, table_name):
+        if res_data:
+            res_value = [list(data.values()) for data in res_data]
+            sql = "insert into {} values ({value})".format(table_name, value="?," * (len(res_value[0]) - 1) + "?")
+            DBManager.executemany_sql(conn, sql, res_value)
+
     def run(self):
         if not self.communication_ops:
             return
@@ -45,21 +67,15 @@ class CommunicationAnalysis(BaseAnalysis):
         self.execute(conn, res_comm_bandwidth, self.COMMUNICATION_BANDWIDTH_TABLE)
         DBManager.destroy_db_connect(conn, cursor)
 
-    @staticmethod
-    def execute(conn, res_data, table_name):
-        if res_data:
-            res_value = [list(data.values()) for data in res_data]
-            sql = "insert into {} values ({value})".format(table_name, value="?," * (len(res_value[0]) - 1) + "?")
-            DBManager.executemany_sql(conn, sql, res_value)
-
     def compute_total_info(self, comm_ops: dict):
         if not comm_ops:
             return
-        total_rank_dict = defaultdict(lambda: {
-                Constant.COMMUNICATION_TIME_INFO: defaultdict(float),
-                Constant.COMMUNICATION_BANDWIDTH_INFO: {}
-            })
-        for communication_op, rank_dict in comm_ops.items():
+        default_value = {
+            Constant.COMMUNICATION_TIME_INFO: defaultdict(float),
+            Constant.COMMUNICATION_BANDWIDTH_INFO: {}
+        }
+        total_rank_dict = defaultdict(lambda: {default_value.copy()})
+        for _, rank_dict in comm_ops.items():
             for rank_id, communication_op_info in rank_dict.items():
                 for com_info, com_info_dict in communication_op_info.items():
                     if com_info == Constant.COMMUNICATION_TIME_INFO:
@@ -104,7 +120,7 @@ class CommunicationAnalysis(BaseAnalysis):
                                total_time_info_dict.get(Constant.TRANSIT_TIME_MS, 0))
 
     def compute_bandwidth_ratio(self, total_bandwidth_info_dict: dict):
-        for transport_type, bandwidth_dict in total_bandwidth_info_dict.items():
+        for _, bandwidth_dict in total_bandwidth_info_dict.items():
             bandwidth_dict[Constant.BANDWIDTH_GB_S] = \
                 self.compute_ratio(bandwidth_dict.get(Constant.TRANSIT_SIZE_MB, 0),
                                    bandwidth_dict.get(Constant.TRANSIT_TIME_MS, 0))
@@ -187,7 +203,7 @@ class CommunicationAnalysisOptimized(BaseAnalysis):
                         self._output_time.append(com_info_dict.convert_output())
                     rank_set = str(self.collective_group_dict.get(group_name))
                     if not rank_set:
-                        logger.warning("failed to find rank set with group name: %s.", group_name)
+                        logger.warning("failed to find rank set with group name: %s.", str(group_name))
                         continue
                     if rank_set_dict.get(rank_set):
                         rank_set_dict[rank_set] += total_time_info

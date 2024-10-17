@@ -26,7 +26,8 @@ from common_func.constant import Constant
 
 class AnalysisFacade:
     default_module = {CommunicationAnalysis, StepTraceTimeAnalysis, CommMatrixAnalysis, HostInfoAnalysis}
-    simplified_module = {CommunicationAnalysisOptimized, StepTraceTimeAnalysis, CommMatrixAnalysisOptimized, HostInfoAnalysis}
+    simplified_module = {CommunicationAnalysisOptimized, StepTraceTimeAnalysis,
+                         CommMatrixAnalysisOptimized, HostInfoAnalysis}
 
     def __init__(self, params: dict):
         self.params = params
