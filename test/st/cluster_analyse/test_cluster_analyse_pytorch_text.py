@@ -6,6 +6,7 @@ import pandas as pd
 from unittest import TestCase
 from profiler.prof_common.path_manager import PathManager
 
+
 class TestClusterAnalyseCmdPytorchText(TestCase):
     """
     PyTorch text type cluster data
@@ -15,6 +16,8 @@ class TestClusterAnalyseCmdPytorchText(TestCase):
     CLUSTER_PATH = os.path.join(ST_DATA_PATH, "cluster_data_2")
     OUTPUT_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                                "ClusterAnalyseCmdPytorchText")
+    CLUSTER_ANALYSE = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")),
+                                   "cluster_analyse", "cluster_analysis.py")
     OUTPUT_DATA = os.path.join(OUTPUT_PATH, "cluster_analysis_output")
     RESULT_FILES = {
         "csv": "cluster_step_trace_time.csv",
@@ -31,54 +34,71 @@ class TestClusterAnalyseCmdPytorchText(TestCase):
     def teardown_class(cls):
         logging.info("Pytorch Text Cluster Analyse end.")
 
-    def test_msprof_analyze_all_cmd(self):
-        logging.info("Pytorch Text Cluster Analyse cmd -all.")
-        PathManager.make_dir_safety(self.OUTPUT_PATH)
+    def test_msprof_analyze_all(self):
+        logging.info("Pytorch Text Cluster Analyse -all.")
 
-        self.run_cmd("all")
+        test_methods = [self.run_cmd, self.run_py3]
+        for test_method in test_methods:
+            PathManager.make_dir_safety(self.OUTPUT_PATH)
 
-        result_files = os.listdir(self.OUTPUT_DATA)
-        expect_files = self.RESULT_FILES.values()
-        self.check_files(expect_files, result_files)
+            test_method("all")
 
-        self.trace_time_compare()
-        self.communication_matrix_compare()
-        self.communication_compare()
+            result_files = os.listdir(self.OUTPUT_DATA)
+            expect_files = self.RESULT_FILES.values()
+            self.check_files(expect_files, result_files)
 
-        PathManager.remove_path_safety(self.OUTPUT_PATH)
+            self.trace_time_compare()
+            self.communication_matrix_compare()
+            self.communication_compare()
 
-    def test_msprof_analyze_matrix_cmd(self):
-        logging.info("Pytorch Text Cluster Analyse cmd -communication_matrix.")
-        PathManager.make_dir_safety(self.OUTPUT_PATH)
+            PathManager.remove_path_safety(self.OUTPUT_PATH)
 
-        self.run_cmd("communication_matrix")
+    def test_msprof_analyze_matrix(self):
+        logging.info("Pytorch Text Cluster Analyse -communication_matrix.")
 
-        result_files = os.listdir(self.OUTPUT_DATA)
-        expect_files = [self.RESULT_FILES["csv"], self.RESULT_FILES["bandwidth"]]
-        self.check_files(expect_files, result_files)
+        test_methods = [self.run_cmd, self.run_py3]
+        for test_method in test_methods:
+            PathManager.make_dir_safety(self.OUTPUT_PATH)
 
-        self.trace_time_compare()
-        self.communication_matrix_compare()
+            test_method("communication_matrix")
 
-        PathManager.remove_path_safety(self.OUTPUT_PATH)
+            result_files = os.listdir(self.OUTPUT_DATA)
+            expect_files = [self.RESULT_FILES["csv"], self.RESULT_FILES["bandwidth"]]
+            self.check_files(expect_files, result_files)
 
-    def test_msprof_analyze_time_cmd(self):
-        logging.info("Pytorch Text Cluster Analyse cmd -communication_time.")
-        PathManager.make_dir_safety(self.OUTPUT_PATH)
+            self.trace_time_compare()
+            self.communication_matrix_compare()
 
-        self.run_cmd("communication_time")
+            PathManager.remove_path_safety(self.OUTPUT_PATH)
 
-        result_files = os.listdir(self.OUTPUT_DATA)
-        expect_files = [self.RESULT_FILES["csv"], self.RESULT_FILES["communication"]]
-        self.check_files(expect_files, result_files)
+    def test_msprof_analyze_time(self):
+        logging.info("Pytorch Text Cluster Analyse -communication_time.")
 
-        self.trace_time_compare()
-        self.communication_compare()
+        test_methods = [self.run_cmd, self.run_py3]
+        for test_method in test_methods:
+            PathManager.make_dir_safety(self.OUTPUT_PATH)
 
-        PathManager.remove_path_safety(self.OUTPUT_PATH)
+            test_method("communication_time")
+
+            result_files = os.listdir(self.OUTPUT_DATA)
+            expect_files = [self.RESULT_FILES["csv"], self.RESULT_FILES["communication"]]
+            self.check_files(expect_files, result_files)
+
+            self.trace_time_compare()
+            self.communication_compare()
+
+            PathManager.remove_path_safety(self.OUTPUT_PATH)
 
     def run_cmd(self, mode):
         cmd = ["msprof-analyze", "cluster", "-d", self.CLUSTER_PATH, "-m", mode,
+               "--output_path", self.OUTPUT_PATH]
+        completed_process = subprocess.run(cmd, capture_output=True, shell=False)
+        if (completed_process.returncode != self.COMMAND_SUCCESS
+                or not os.path.exists(self.OUTPUT_DATA)):
+            self.assertEqual(False, True, msg="pytorch text cluster analyse task failed.")
+
+    def run_py3(self, mode):
+        cmd = ["python3", self.CLUSTER_ANALYSE, "-d", self.CLUSTER_PATH, "-m", mode,
                "--output_path", self.OUTPUT_PATH]
         completed_process = subprocess.run(cmd, capture_output=True, shell=False)
         if (completed_process.returncode != self.COMMAND_SUCCESS
