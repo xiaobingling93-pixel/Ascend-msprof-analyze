@@ -37,11 +37,11 @@ class TestClusterAnalyseCmdPytorchText(TestCase):
     def test_msprof_analyze_all(self):
         logging.info("Pytorch Text Cluster Analyse -all.")
 
-        test_methods = [self.run_cmd, self.run_py3]
-        for test_method in test_methods:
+        test_methods = [(self.run_cmd, "all"), (self.run_py3, "all")]
+        for test_method, mode in test_methods:
             PathManager.make_dir_safety(self.OUTPUT_PATH)
 
-            test_method("all")
+            test_method(mode)
 
             result_files = os.listdir(self.OUTPUT_DATA)
             expect_files = self.RESULT_FILES.values()
@@ -56,11 +56,11 @@ class TestClusterAnalyseCmdPytorchText(TestCase):
     def test_msprof_analyze_matrix(self):
         logging.info("Pytorch Text Cluster Analyse -communication_matrix.")
 
-        test_methods = [self.run_cmd, self.run_py3]
-        for test_method in test_methods:
+        test_methods = [(self.run_cmd, "communication_matrix"), (self.run_py3, "communication_matrix")]
+        for test_method, mode in test_methods:
             PathManager.make_dir_safety(self.OUTPUT_PATH)
 
-            test_method("communication_matrix")
+            test_method(mode)
 
             result_files = os.listdir(self.OUTPUT_DATA)
             expect_files = [self.RESULT_FILES["csv"], self.RESULT_FILES["bandwidth"]]
@@ -74,11 +74,11 @@ class TestClusterAnalyseCmdPytorchText(TestCase):
     def test_msprof_analyze_time(self):
         logging.info("Pytorch Text Cluster Analyse -communication_time.")
 
-        test_methods = [self.run_cmd, self.run_py3]
-        for test_method in test_methods:
+        test_methods = [(self.run_cmd, "communication_time"), (self.run_py3, "communication_time")]
+        for test_method, mode in test_methods:
             PathManager.make_dir_safety(self.OUTPUT_PATH)
 
-            test_method("communication_time")
+            test_method(mode)
 
             result_files = os.listdir(self.OUTPUT_DATA)
             expect_files = [self.RESULT_FILES["csv"], self.RESULT_FILES["communication"]]
