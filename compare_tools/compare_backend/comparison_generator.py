@@ -1,3 +1,17 @@
+# Copyright (c) 2023, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 from compare_backend.generator.detail_performance_generator import DetailPerformanceGenerator
 from compare_backend.generator.overall_performance_generator import OverallPerformanceGenerator
 from compare_backend.interface.overall_interface import OverallInterface
@@ -6,6 +20,7 @@ from compare_backend.profiling_parser.gpu_profiling_parser import GPUProfilingPa
 from compare_backend.profiling_parser.npu_profiling_parser import NPUProfilingParser
 from compare_backend.utils.constant import Constant
 from compare_backend.utils.args_manager import ArgsManager
+import logging
 
 
 class ComparisonGenerator:
@@ -22,13 +37,13 @@ class ComparisonGenerator:
             self.load_data()
             self.generate_compare_result()
         except NotImplementedError as e:
-            print(f"[ERROR] {e}")
+            logging.error("%s", e)
         except RuntimeError as e:
-            print(f"[ERROR] {e}")
+            logging.error("%s", e)
         except FileNotFoundError as e:
-            print(f"[ERROR] {e}")
+            logging.error("%s", e)
         except Exception as e:
-            print(f"[ERROR] {e}")
+            logging.error("%s", e)
 
     def load_data(self):
         self._data_dict[Constant.BASE_DATA] = self.PARSER_DICT.get(self._args_manager.base_profiling_type)(
@@ -41,10 +56,14 @@ class ComparisonGenerator:
             self._args_manager.comparison_step).load_data()
 
     def generate_compare_result(self):
-        overall_data = {Constant.BASE_DATA: self._data_dict.get(Constant.BASE_DATA).overall_metrics,
-                        Constant.COMPARISON_DATA: self._data_dict.get(Constant.COMPARISON_DATA).overall_metrics}
-        generator_list = [OverallPerformanceGenerator(overall_data, self._args_manager.args),
-                          DetailPerformanceGenerator(self._data_dict, self._args_manager.args)]
+        overall_data = {
+            Constant.BASE_DATA: self._data_dict.get(Constant.BASE_DATA).overall_metrics,
+            Constant.COMPARISON_DATA: self._data_dict.get(Constant.COMPARISON_DATA).overall_metrics,
+        }
+        generator_list = [
+            OverallPerformanceGenerator(overall_data, self._args_manager.args),
+            DetailPerformanceGenerator(self._data_dict, self._args_manager.args),
+        ]
         for generator in generator_list:
             generator.start()
         for generator in generator_list:
@@ -60,11 +79,11 @@ class ComparisonGenerator:
                 return interface(self._data_dict).run()
             return CompareInterface(self._data_dict, self._args_manager).run()
         except NotImplementedError as e:
-            print(f"[ERROR] {e}")
+            logging.error("%s", e)
         except RuntimeError as e:
-            print(f"[ERROR] {e}")
+            logging.error("%s", e)
         except FileNotFoundError as e:
-            print(f"[ERROR] {e}")
+            logging.error("%s", e)
         except Exception as e:
-            print(f"[ERROR] {e}")
+            logging.error("%s", e)
         return {}

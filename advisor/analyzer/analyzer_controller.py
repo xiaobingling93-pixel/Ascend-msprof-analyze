@@ -303,7 +303,7 @@ class AnalyzerController:
             self._update_analysis_process_resp(pid, resp, status_code=AsyncAnalysisStatus.INNER_ERROR_STATUS_CODE,
                                                status=AsyncAnalysisStatus.FAILED, error_msg=str(e))
             logger.error(e)
-            raise RuntimeError(e)
+            raise RuntimeError("Do analysis error.") from e
 
     def async_do_analysis(self, dimensions, **kwargs):
         # 异步分析，用于部署服务，通过接口查询异步作业状态

@@ -230,14 +230,18 @@ class OperatorChecker(VersionControl):
             op_list = []
         statistic = {}  # str, json
         for op_info in op_list:
-            if statistic.get(op_info.get_attr(op_key)):
-                statistic[op_info.get_attr(op_key)]["summary"]["total_duration"] = float(
-                    statistic[op_info.get_attr(op_key)]["summary"]["total_duration"]) + float(
-                    op_info.get_attr("task_duration", constant.DEFAULT_DURATION_ZERO))
-                statistic[op_info.get_attr(op_key)]["summary"]["counts"] += 1
+            if statistic.get(op_info.get_attr(op_key)).get("summary"):
+                if statistic[op_info.get_attr(op_key)]["summary"].get("total_duration"):
+                    statistic[op_info.get_attr(op_key)]["summary"]["total_duration"] = float(
+                        statistic[op_info.get_attr(op_key)]["summary"]["total_duration"]) + float(
+                        op_info.get_attr("task_duration", constant.DEFAULT_DURATION_ZERO))
+                if statistic[op_info.get_attr(op_key)]["summary"].get("counts"):
+                    statistic[op_info.get_attr(op_key)]["summary"]["counts"] += 1
                 stack_info = op_info.get_attr("stack_info")
                 if stack_info:
                     op_info.stack_info = stack_info.replace('\r\n', '<br/>')
+                if statistic.get(op_info.get_attr(op_key)).get("op_info_list") is None:
+                    statistic[op_info.get_attr(op_key)]["op_info_list"] = []
                 statistic[op_info.get_attr(op_key)]["op_info_list"].append(op_info)
             else:
                 statistic[op_info.get_attr(op_key)] = {"summary": {}, "op_info_list": []}

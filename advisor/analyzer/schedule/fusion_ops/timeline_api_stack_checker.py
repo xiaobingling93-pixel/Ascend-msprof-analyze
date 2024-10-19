@@ -119,7 +119,10 @@ class OpStackFinder:
         if not event_dataset.dataset_len:
             return
         _ = event_dataset.parse_data_with_generator(self._query_stack_by_matched_index)
-            
+
+    def get_stack_record(self):
+        return self._stack_record
+
     def _get_api_stack_by_op(self, event_dataset: ComputationAnalysisDataset, op_name: str, task_type: str):
         for _, src_op_event in event_dataset.ops_with_task_type.items():
 

@@ -102,7 +102,7 @@ class AicpuChecker(OperatorChecker):
             # disable multiprocessing, avoid cost time of enable new process for light task
             api_stack_finder.get_api_stack_by_op(event_dataset, op_name_list, constant.AI_CPU,
                                                  disable_multiprocess=True)
-            return api_stack_finder._stack_record
+            return api_stack_finder.get_stack_record()
 
         self._op_list = []
 
@@ -196,10 +196,12 @@ class AicpuChecker(OperatorChecker):
                 info["op_info_list"] = op_info_list
         return format_result
 
-    def group_by_list(self, op_list, op_key_list: List = ["stack_info", "input_data_types", "output_data_types"],
+    def group_by_list(self, op_list, op_key_list: List = None,
                       limit: int = constant.OPERATOR_LIST_UNLIMIT):
         if op_list is None:
             op_list = []
+        if op_key_list is None:
+            op_key_list = ["stack_info", "input_data_types", "output_data_types"]
 
         # op_key_list 合并添加合并的属性，作为 groupby 的 key value
         op_key = '+'.join(op_key_list)  # str, json
@@ -270,6 +272,7 @@ class CommonChecker(BaserChecker):
             return suggestion.format(",".join(unsupported_dtype_diff).upper(),
                                      op_type,
                                      ",".join(valid_inputs).upper())
+        return None
 
     def build(self):
         for check in self.check_rules:
@@ -294,6 +297,7 @@ class ExampleGuideChecker(BaserChecker):
 
             if getattr(op_info, 'op_type', "UNKNOWN").lower() in supported_op_type:
                 return suggestion if "{}" not in suggestion else suggestion.format(url)
+            return None
 
         for check in self.check_rules:
             (_, check_rule), = check.items()

@@ -1,4 +1,19 @@
+# Copyright (c) 2023, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import os
+import logging
 from datetime import datetime
 
 from compare_backend.comparator.communication_comparator import CommunicationComparator
@@ -35,11 +50,16 @@ class DetailPerformanceGenerator(BaseGenerator):
         self._comparison_step_id = int(args.comparison_step) if args.comparison_step else Constant.VOID_STEP
 
     def compare(self):
-        enable_compare = [self._args.enable_operator_compare, self._args.enable_memory_compare,
-                          self._args.enable_communication_compare, self._args.enable_api_compare,
-                          self._args.enable_kernel_compare, self._args.enable_profiling_compare]
+        enable_compare = [
+            self._args.enable_operator_compare,
+            self._args.enable_memory_compare,
+            self._args.enable_communication_compare,
+            self._args.enable_api_compare,
+            self._args.enable_kernel_compare,
+            self._args.enable_profiling_compare,
+        ]
         if any(enable_compare):
-            print("[INFO] Start to compare performance detail data, please wait.")
+            logging.info("Start to compare performance detail data, please wait.")
             comparator_list = self._create_comparator()
         else:
             comparator_list = []
@@ -53,7 +73,7 @@ class DetailPerformanceGenerator(BaseGenerator):
         file_name = "performance_comparison_result_{}.xlsx".format(datetime.utcnow().strftime("%Y%m%d%H%M%S"))
         result_file_path = os.path.abspath(os.path.join(dir_path, file_name))
         ExcelView(self._result_data, result_file_path, self._args).generate_view()
-        print(f"[INFO] The comparison result file has been generated: {result_file_path}")
+        logging.info("The comparison result file has been generated: %s", result_file_path)
 
     def _create_comparator(self):
         comparator_list = []
@@ -68,7 +88,8 @@ class DetailPerformanceGenerator(BaseGenerator):
         if self._args.enable_communication_compare:
             communication_data = {
                 Constant.BASE_DATA: self._profiling_data_dict.get(Constant.BASE_DATA).communication_dict,
-                Constant.COMPARISON_DATA: self._profiling_data_dict.get(Constant.COMPARISON_DATA).communication_dict}
+                Constant.COMPARISON_DATA: self._profiling_data_dict.get(Constant.COMPARISON_DATA).communication_dict,
+            }
             comparator_list.append(CommunicationComparator(communication_data, CommunicationBean))
 
         # 算子性能比对-module级
@@ -110,13 +131,15 @@ class DetailPerformanceGenerator(BaseGenerator):
         if self._args.enable_api_compare:
             api_compare_result = {
                 Constant.BASE_DATA: base_op_prepare.get_all_layer_ops(),
-                Constant.COMPARISON_DATA: comparison_op_prepare.get_all_layer_ops()}
+                Constant.COMPARISON_DATA: comparison_op_prepare.get_all_layer_ops(),
+            }
             comparator_list.append(ApiCompareComparator(api_compare_result, ApiCompareBean))
         # kernel比对
         if self._args.enable_kernel_compare:
             kernel_compare_result = {
                 Constant.BASE_DATA: self._profiling_data_dict.get(Constant.BASE_DATA).kernel_details,
-                Constant.COMPARISON_DATA: self._profiling_data_dict.get(Constant.COMPARISON_DATA).kernel_details}
+                Constant.COMPARISON_DATA: self._profiling_data_dict.get(Constant.COMPARISON_DATA).kernel_details,
+            }
             comparator_list.append(KernelCompareComparator(kernel_compare_result, KernelCompareBean))
         return comparator_list
 
