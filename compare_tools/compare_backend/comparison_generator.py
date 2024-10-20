@@ -12,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import logging
 from compare_backend.generator.detail_performance_generator import DetailPerformanceGenerator
 from compare_backend.generator.overall_performance_generator import OverallPerformanceGenerator
 from compare_backend.interface.overall_interface import OverallInterface
@@ -20,7 +21,6 @@ from compare_backend.profiling_parser.gpu_profiling_parser import GPUProfilingPa
 from compare_backend.profiling_parser.npu_profiling_parser import NPUProfilingParser
 from compare_backend.utils.constant import Constant
 from compare_backend.utils.args_manager import ArgsManager
-import logging
 
 
 class ComparisonGenerator:

@@ -230,7 +230,7 @@ class OperatorChecker(VersionControl):
             op_list = []
         statistic = {}  # str, json
         for op_info in op_list:
-            if statistic.get(op_info.get_attr(op_key)).get("summary"):
+            if statistic.get(op_info.get_attr(op_key), {}).get("summary"):
                 if statistic[op_info.get_attr(op_key)]["summary"].get("total_duration"):
                     statistic[op_info.get_attr(op_key)]["summary"]["total_duration"] = float(
                         statistic[op_info.get_attr(op_key)]["summary"]["total_duration"]) + float(

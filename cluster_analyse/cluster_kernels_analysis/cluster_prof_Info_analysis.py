@@ -40,6 +40,16 @@ class FormDataProcessor:
         self.form_name = form_name
         self.files = self.get_files_with_prefix_recursive(path, form_name)
 
+    @staticmethod
+    def get_device_id(dir_path):
+        device_id = re.search(r'device_(\d+)', dir_path).group(1)
+        return device_id
+
+    @staticmethod
+    def get_node_id(dir_path):
+        node_id = re.search(r'node(\d+)', dir_path).group(1)
+        return int(node_id)
+
     def get_files_with_prefix_recursive(self, csv_path, match_str):
         matched_ir_files = list(Path(csv_path).rglob(match_str))
         if not matched_ir_files:
@@ -91,16 +101,6 @@ class FormDataProcessor:
         if 'aiv_time(us)' in df.columns:
             return "ASCEND_NEW"
         return "ASCEND_OTHER"
-
-    @staticmethod
-    def get_device_id(dir_path):
-        device_id = re.search(r'device_(\d+)', dir_path).group(1)
-        return device_id
-
-    @staticmethod
-    def get_node_id(dir_path):
-        node_id = re.search(r'node(\d+)', dir_path).group(1)
-        return int(node_id)
 
     def get_rank_num(self):
         return len(self.files)
@@ -172,6 +172,13 @@ class OpSummaryAnalyzerBase:
         PathManager.make_dir_safety(self.result_dir)
         PathManager.check_path_writeable(self.result_dir)
 
+    @staticmethod
+    def on_rm_error(func, path, exc_info):
+        # path contains the path of the file that couldn't be removed
+        # let's just assume that it's read-only and unlink it.
+        os.chmod(path, stat.S_IWRITE)
+        os.unlink(path)
+
     def get_columns_to_group(self):
         return self.columns_to_group
 
@@ -183,13 +190,6 @@ class OpSummaryAnalyzerBase:
         calculate_dict = {self.columns_to_view[i]: self.calculate_fun for i in range(len(self.columns_to_view))}
         view_data = summary_data.groupby(self.attrs_to_group).agg(calculate_dict).reset_index()
         return view_data
-
-    @staticmethod
-    def on_rm_error(func, path, exc_info):
-        # path contains the path of the file that couldn't be removed
-        # let's just assume that it's read-only and unlink it.
-        os.chmod(path, stat.S_IWRITE)
-        os.unlink(path)
 
 
 class TimeToCsvAnalyzer(OpSummaryAnalyzerBase):
