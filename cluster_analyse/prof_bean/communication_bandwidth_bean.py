@@ -91,6 +91,9 @@ class CommunicationBandwidthBean:
     def set_bandwidth(self, value: float):
         self._bandwidth = value
 
+    def set_group_name(self, value: str):
+        self._group_name = value
+
     def convert_output(self):
         return [
             self._step_id, self._rank_id, self._hccl_op_name, self._group_name,
