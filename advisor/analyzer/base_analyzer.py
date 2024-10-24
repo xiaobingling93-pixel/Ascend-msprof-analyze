@@ -91,10 +91,10 @@ class BaseAnalyzer(VersionControl, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def get_priority(self):
+    def get_priority(self, max_mem_op_dur):
         pass
 
-    def init_dataset_list(self)->None:
+    def init_dataset_list(self) -> None:
         dataset_cls_list = self.dataset_cls_list
         if len(dataset_cls_list) == 0:
             logger.warning(f"Analyser: %s don't rely on any dataset!", self.__class__.__name__)

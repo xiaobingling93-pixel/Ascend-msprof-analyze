@@ -50,8 +50,15 @@ class CommunicationRetransmissionChecker:
         self.step_id = kwargs.get("step")
         self.stage = None
         self.group_statistics = defaultdict(GroupStatistic)
-        self.headers = ["Communication group", "Op name", "Step id", "Rank id", "RDMA transmit size(MB)",
-                        "RDMA transmit time(ms)", "RDMA bandwidth"]
+        self.headers = [
+            "Communication group",
+            "Op name",
+            "Step id",
+            "Rank id",
+            "RDMA transmit size(MB)",
+            "RDMA transmit time(ms)",
+            "RDMA bandwidth",
+        ]
         self._init_rule()
 
     def check_possible_retransmission_occurrence(self, hccl_list: List[HcclInfo]):
@@ -95,7 +102,8 @@ class CommunicationRetransmissionChecker:
         optimization_item = OptimizeItem("Communication retransmission analysis", self.desc, self.suggestions)
         result.add(OptimizeRecord(optimization_item))
 
-        sub_table_name = "Comm Retransmission Analysis" if not self.stage else f"Stage-{self.stage}: Comm Retransmission Analysis"
+        sub_table_name = \
+            "Comm Retransmission Analysis" if not self.stage else f"Stage-{self.stage}: Comm Retransmission Analysis"
         result.add_detail(sub_table_name, headers=self.headers)
 
         for row in self.abnormal_rdma_list:

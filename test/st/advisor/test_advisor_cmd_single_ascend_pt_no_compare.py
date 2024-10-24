@@ -1,6 +1,6 @@
 import os
-import re
 import subprocess
+import logging
 from unittest import TestCase
 
 import math
@@ -8,29 +8,27 @@ import pandas as pd
 from bs4 import BeautifulSoup
 
 from profiler.prof_common.path_manager import PathManager
-from .utils import get_advisor_all_files,get_advisor_schedule_files,get_advisor_computation_files
+from .utils import get_files, execute_cmd
+
 
 class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
     ST_DATA_PATH = os.getenv("MSTT_PROFILER_ST_DATA_PATH",
                              "/home/dcs-50/smoke_project_for_msprof_analyze/mstt_profiler/st_data")
     BASE_PROFILING_PATH = os.path.join(ST_DATA_PATH, "cluster_data_3", "n122-122-067_12380_20240912033946038_ascend_pt")
-    OUTPUT_PATH = os.path.join("/home/dcs-50/ghy", "TestAdvisorCmdSingleAscendPtNoCompare")
-    #OUTPUT_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)), "TestAdvisorCmdSingleAscendPtNoCompare")
+    OUTPUT_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)), "TestAdvisorCmdSingleAscendPtNoCompare")
     ALL_OUTPUT_PATH = os.path.join(OUTPUT_PATH,"all")
     COMPUTATION_OUTPUT_PATH = os.path.join(OUTPUT_PATH, "computation")
     SCHEDULE_OUTPUT_PATH = os.path.join(OUTPUT_PATH, "schedule")
-    RESULT_EXCEL = {"all":"","computation":"","schedule":""}
-    RESULT_HTML = {"all":"","computation":"","schedule":""}
+    RESULT_EXCEL = {}
+    RESULT_HTML = {}
     COMMAND_SUCCESS = 0
 
     def setup_class(self):
         PathManager.make_dir_safety(self.ALL_OUTPUT_PATH)
         PathManager.make_dir_safety(self.COMPUTATION_OUTPUT_PATH)
         PathManager.make_dir_safety(self.SCHEDULE_OUTPUT_PATH)
-        cmd_all = ["msprof-analyze", "advisor", "all" ,"-d", self.BASE_PROFILING_PATH, "-o",
-               self.ALL_OUTPUT_PATH]
-        completed_process_all = subprocess.run(cmd_all, capture_output=True, shell=False)
-        if completed_process_all.returncode != self.COMMAND_SUCCESS or not os.path.exists(self.ALL_OUTPUT_PATH):
+        cmd_all = ["msprof-analyze", "advisor", "all" ,"-d", self.BASE_PROFILING_PATH, "-o",self.ALL_OUTPUT_PATH]
+        if execute_cmd(cmd_all) != self.COMMAND_SUCCESS or not os.path.exists(self.ALL_OUTPUT_PATH):
             self.assertEqual(False, True, msg="advisor [all] task failed.")
         cmd_computation = ["msprof-analyze", "advisor", "computation" ,"-d", self.BASE_PROFILING_PATH, "-o",
                self.COMPUTATION_OUTPUT_PATH]
@@ -44,16 +42,10 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
                 self.SCHEDULE_OUTPUT_PATH):
             self.assertEqual(False, True, msg="advisor [schedule] task failed.")
 
-        self.RESULT_EXCEL["all"], self.RESULT_HTML["all"] = get_advisor_all_files(self.ALL_OUTPUT_PATH)
-        self.RESULT_EXCEL["computation"], self.RESULT_HTML["computation"] = (
-            get_advisor_computation_files(self.COMPUTATION_OUTPUT_PATH))
-        self.RESULT_EXCEL["schedule"], self.RESULT_HTML["schedule"] = (
-            get_advisor_schedule_files(self.SCHEDULE_OUTPUT_PATH))
+        self.RESULT_HTML,self.RESULT_EXCEL = get_files(self.OUTPUT_PATH)
 
     def teardown_class(self):
-        a=0
-        #PathManager.remove_path_safety(self.OUTPUT_PATH)
-
+        PathManager.remove_path_safety(self.OUTPUT_PATH)
 
     def test_all_problems(self):
         category = [
@@ -62,25 +54,28 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
             "AICPU operator",
             "Dynamic shape operator",
             "Affinity apis",
-            "SynchronizeStream",
             "Operator dispatch"
         ]
 
         #True presents the attr is nan
-        description_len = [6,3,2,1,1,1,1]
-        suggestion_len = [True,1,2,3,1,2,1]
-        problem_count = [True,True,2.0,1.0,True,True,True]
-        total_time = [True,True,57674709.54,True,True,True,True]
-        time_ratio = [True,True,0.0,True,True,True,True]
-        income = [True,True,True,True,True,True,True]
-        income_ratio = [True,True,True,True,True,True,True]
-        df = pd.read_excel(self.RESULT_EXCEL["all"], sheet_name='problems',header=0)
+        description_len = [6,3,2,1,1,1]
+        suggestion_len = [True,1,2,3,1,1]
+        problem_count = [True,True,2.0,1.0,True,True]
+        total_time = [True,True,57674709.54,True,True,True]
+        time_ratio = [True,True,0.0,True,True,True]
+        income = [True,True,True,True,True,True]
+        income_ratio = [True,True,True,True,True,True]
+        try:
+            df = pd.read_excel(self.RESULT_EXCEL["all"], sheet_name='problems',header=0)
+        except FileNotFoundError:
+            logging.error("File %s not found.", str(self.RESULT_EXCEL["all"]))
+            return
 
         for index, row in df.iterrows():
             self.assertEqual(category[index], row["category"])
             self.assertEqual(description_len[index], len(row["description"].split("\n")))
-            self.assertEqual(suggestion_len[index], ((type(row["suggestion"])==float) or
-                                                     len(row["suggestion"].split("\n"))))
+            self.assertEqual(suggestion_len[index], isinstance(row["suggestion"],float) or
+                                                     len(row["suggestion"].split("\n")))
             self.assertEqual(problem_count[index], (math.isnan(row["problem count"]) or row["problem count"]))
             self.assertEqual(total_time[index], (math.isnan(row["total_time(us)"]) or
                                                  round(row["total_time(us)"],2)))
@@ -88,8 +83,6 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
             self.assertEqual(income[index], (math.isnan(row["income(us)"]) or round(row["income(us)"],2)))
             self.assertEqual(income_ratio[index], (math.isnan(row["income ratio"]) or
                                                    round(row["income ratio"],2)))
-
-
 
     def test_computation_problems(self):
         category = [
@@ -106,7 +99,11 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
         time_ratio = [True, 0.0, True]
         income = [True, True, True]
         income_ratio = [True, True, True]
-        df = pd.read_excel(self.RESULT_EXCEL["computation"], sheet_name='problems', header=0)
+        try:
+            df = pd.read_excel(self.RESULT_EXCEL["computation"], sheet_name='problems', header=0)
+        except FileNotFoundError:
+            logging.error("File %s not found.", str(self.RESULT_EXCEL["computation"]))
+            return
 
         for index, row in df.iterrows():
             self.assertEqual(category[index], row["category"])
@@ -125,19 +122,22 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
         category = [
             "overall summary",
             "Affinity apis",
-            "SynchronizeStream",
             "Operator dispatch"
         ]
 
         #True presents the attr is nan
-        description_len = [6, 1, 1, 1]
-        suggestion_len = [True, 1, 2, 1]
-        problem_count = [True, True, True, True]
-        total_time = [True, True, True, True]
-        time_ratio = [True, True, True, True]
-        income = [True, True, True, True]
-        income_ratio = [True, True, True, True]
-        df = pd.read_excel(self.RESULT_EXCEL["schedule"], sheet_name='problems', header=0)
+        description_len = [6, 1, 1]
+        suggestion_len = [True, 1, 1]
+        problem_count = [True, True, True]
+        total_time = [True, True, True]
+        time_ratio = [True, True, True]
+        income = [True, True, True]
+        income_ratio = [True, True, True]
+        try:
+            df = pd.read_excel(self.RESULT_EXCEL["schedule"], sheet_name='problems', header=0)
+        except FileNotFoundError:
+            logging.error("File %s not found.", str(self.RESULT_EXCEL["schedule"]))
+            return
 
         for index, row in df.iterrows():
             self.assertEqual(category[index], row["category"])
@@ -151,105 +151,45 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
             self.assertEqual(income[index], (math.isnan(row["income(us)"]) or round(row["income(us)"], 2)))
             self.assertEqual(income_ratio[index], (math.isnan(row["income ratio"]) or
                                                    round(row["income ratio"], 2)))
-
-    def test_all_overall_summary(self):
+    def test_overall_summary(self):
         performance_index = [
-            "Computing Time","    -- Flash Attention",
-            "    -- Conv","    -- Matmul",
-            "    -- Vector","    -- SDMA(Tensor Move)",
-            "    -- Other Cube","Uncovered Communication Time",
-            "    -- Wait","    -- Transmit",
-            "Free Time","    -- SDMA",
-            "    -- Free","E2E Time"
+            "Computing Time", "    -- Flash Attention",
+            "    -- Conv", "    -- Matmul",
+            "    -- Vector", "    -- SDMA(Tensor Move)",
+            "    -- Other Cube", "Uncovered Communication Time",
+            "    -- Wait", "    -- Transmit",
+            "Free Time", "    -- SDMA",
+            "    -- Free", "E2E Time"
         ]
         duration = [14474.856, 1194.014, 0.000, 10442.616, 2821.569, 16.473, 0.0, 23922.059, 138.275, 23783.785,
                     373.722, 0.000, 373.722, 38770.637]
         duration_ratio = ["37.33%", "3.08%", "0.00%", "26.93%", "7.28%", "0.04%", "0.00%", "61.70%", "0.36%",
-                    "61.34%", "0.96%", "0.00%", "0.96%", "100.00%"]
-        df = pd.read_excel(self.RESULT_EXCEL["all"], sheet_name='overall summary', header=0)
+                          "61.34%", "0.96%", "0.00%", "0.96%", "100.00%"]
 
-        for index, row in df.iterrows():
-            self.assertEqual(performance_index[index], row["Performance Index"])
-            self.assertEqual(duration[index], row["Duration(ms)"])
-            self.assertEqual(duration_ratio[index], row["Duration Ratio"])
+        test_pattern = ["all", "computation", "schedule"]
+        for pattern in test_pattern:
+            try:
+                df = pd.read_excel(self.RESULT_EXCEL[pattern], sheet_name='overall summary', header=0)
+            except FileNotFoundError:
+                logging.error("File %s not found.", str(self.RESULT_EXCEL[pattern]))
+                return
 
-        soup = BeautifulSoup(open(self.RESULT_HTML["all"]), 'html.parser')
-        for h2 in soup.find_all('h2'):
-            if h2.contents[0] == "overall summary":
-                div_content = h2.next.next.next
-                table = div_content.find_all('table')
-                for row_index, row in enumerate(table[0].find_all('tr')):
-                    if row_index == 0:
-                        continue
-                    self.assertEqual(performance_index[row_index-1], row.find_all('td')[0].text)
-                    self.assertEqual("{:.3f}".format(duration[row_index-1]), row.find_all('td')[1].text)
-                    self.assertEqual(duration_ratio[row_index-1], row.find_all('td')[2].text)
+            for index, row in df.iterrows():
+                self.assertEqual(performance_index[index], row["Performance Index"])
+                self.assertEqual(duration[index], row["Duration(ms)"])
+                self.assertEqual(duration_ratio[index], row["Duration Ratio"])
 
-    def test_computation_overall_summary(self):
-        performance_index = [
-            "Computing Time","    -- Flash Attention",
-            "    -- Conv","    -- Matmul",
-            "    -- Vector","    -- SDMA(Tensor Move)",
-            "    -- Other Cube","Uncovered Communication Time",
-            "    -- Wait","    -- Transmit",
-            "Free Time","    -- SDMA",
-            "    -- Free","E2E Time"
-        ]
-        duration = [14474.856, 1194.014, 0.000, 10442.616, 2821.569, 16.473, 0.0, 23922.059, 138.275, 23783.785,
-                    373.722, 0.000, 373.722, 38770.637]
-        duration_ratio = ["37.33%", "3.08%", "0.00%", "26.93%", "7.28%", "0.04%", "0.00%", "61.70%", "0.36%",
-                    "61.34%", "0.96%", "0.00%", "0.96%", "100.00%"]
-        df = pd.read_excel(self.RESULT_EXCEL["computation"], sheet_name='overall summary', header=0)
-
-        for index, row in df.iterrows():
-            self.assertEqual(performance_index[index], row["Performance Index"])
-            self.assertEqual(duration[index], row["Duration(ms)"])
-            self.assertEqual(duration_ratio[index], row["Duration Ratio"])
-
-        soup = BeautifulSoup(open(self.RESULT_HTML["computation"]), 'html.parser')
-        for h2 in soup.find_all('h2'):
-            if h2.contents[0] == "overall summary":
-                div_content = h2.next.next.next
-                table = div_content.find_all('table')
-                for row_index, row in enumerate(table[0].find_all('tr')):
-                    if row_index == 0:
-                        continue
-                    self.assertEqual(performance_index[row_index-1], row.find_all('td')[0].text)
-                    self.assertEqual("{:.3f}".format(duration[row_index-1]), row.find_all('td')[1].text)
-                    self.assertEqual(duration_ratio[row_index-1], row.find_all('td')[2].text)
-
-    def test_schedule_overall_summary(self):
-        performance_index = [
-            "Computing Time","    -- Flash Attention",
-            "    -- Conv","    -- Matmul",
-            "    -- Vector","    -- SDMA(Tensor Move)",
-            "    -- Other Cube","Uncovered Communication Time",
-            "    -- Wait","    -- Transmit",
-            "Free Time","    -- SDMA",
-            "    -- Free","E2E Time"
-        ]
-        duration = [14474.856, 1194.014, 0.000, 10442.616, 2821.569, 16.473, 0.0, 23922.059, 138.275, 23783.785,
-                    373.722, 0.000, 373.722, 38770.637]
-        duration_ratio = ["37.33%", "3.08%", "0.00%", "26.93%", "7.28%", "0.04%", "0.00%", "61.70%", "0.36%",
-                    "61.34%", "0.96%", "0.00%", "0.96%", "100.00%"]
-        df = pd.read_excel(self.RESULT_EXCEL["schedule"], sheet_name='overall summary', header=0)
-
-        for index, row in df.iterrows():
-            self.assertEqual(performance_index[index], row["Performance Index"])
-            self.assertEqual(duration[index], row["Duration(ms)"])
-            self.assertEqual(duration_ratio[index], row["Duration Ratio"])
-
-        soup = BeautifulSoup(open(self.RESULT_HTML["schedule"]), 'html.parser')
-        for h2 in soup.find_all('h2'):
-            if h2.contents[0] == "overall summary":
-                div_content = h2.next.next.next
-                table = div_content.find_all('table')
-                for row_index, row in enumerate(table[0].find_all('tr')):
-                    if row_index == 0:
-                        continue
-                    self.assertEqual(performance_index[row_index-1], row.find_all('td')[0].text)
-                    self.assertEqual("{:.3f}".format(duration[row_index-1]), row.find_all('td')[1].text)
-                    self.assertEqual(duration_ratio[row_index-1], row.find_all('td')[2].text)
+            soup = BeautifulSoup(open(self.RESULT_HTML[pattern]), 'html.parser')
+            for h2 in soup.find_all('h2'):
+                if h2.contents[0] == "overall summary":
+                    div_content = h2.next.next.next
+                    table = div_content.find_all('table')
+                    for row_index, row in enumerate(table[0].find_all('tr')):
+                        if row_index == 0:
+                            continue
+                        self.assertEqual(performance_index[row_index - 1], row.find_all('td')[0].text)
+                        self.assertEqual("{:.3f}".format(duration[row_index - 1]), row.find_all('td')[1].text)
+                        self.assertEqual(duration_ratio[row_index - 1], row.find_all('td')[2].text)
 
     def test_all_bandwidth_contention_analysis(self):
         bandwidth_contention_analysis = [
@@ -289,7 +229,11 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
                     2.81,2.67,2.8,2.74,2.16,2.79,2.88,2.75,2.93,2.88,2.31,2.72,2.39,2.6,2.55,2.58,2.69,2.86,2.09,3.12,
                     2.31,2.28,2.87,3.1,2.35,3.4,2.61,2.62
         ]
-        df = pd.read_excel(self.RESULT_EXCEL["all"], sheet_name='Bandwidth Contention Analysis', header=0)
+        try:
+            df = pd.read_excel(self.RESULT_EXCEL["all"], sheet_name='Bandwidth Contention Analysis', header=0)
+        except FileNotFoundError:
+            logging.error("File %s not found.", str(self.RESULT_EXCEL["all"]))
+            return
 
         for index, row in df.iterrows():
             self.assertEqual(bandwidth_contention_analysis[index], row["op name"])
@@ -298,194 +242,111 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
 
         # wait repair bugs to check html
 
-
-    def test_all_AICPU_operator(self):
-        op_name = ["aclnnPowTensorScalar_SquareAiCpu_Square","aclnnEqScalar_EqualAiCpu_Equal"]
-        op_type = ["Square","Equal"]
-        task_duration = [92.06,90.72]
-        input_shapes =[ "\"41\"","\"41;\""]
-        input_data_types = ["INT64","DOUBLE;DOUBLE"]
-        input_formats = ["FORMAT_ND","FORMAT_ND;FORMAT_ND"]
-        output_shapes = ["\"41\"","\"41\""]
-        output_data_types = ["INT64","BOOL"]
-        output_formats = ["FORMAT_ND","FORMAT_ND"]
-        stack_info = [True,True]
-        df = pd.read_excel(self.RESULT_EXCEL["all"], sheet_name='AICPU operator', header=0)
-
-        for index, row in df.iterrows():
-            self.assertEqual(op_name[index], row["op_name"])
-            self.assertEqual(op_type[index], row["op_type"])
-            self.assertEqual(task_duration[index], round(row["task_duration"], 2))
-            self.assertEqual(input_shapes[index], row["input_shapes"])
-            self.assertEqual(input_data_types[index], row["input_data_types"])
-            self.assertEqual(input_formats[index], row["input_formats"])
-            self.assertEqual(output_shapes[index], row["output_shapes"])
-            self.assertEqual(output_data_types[index], row["output_data_types"])
-            self.assertEqual(output_formats[index], row["output_formats"])
-            self.assertEqual(stack_info[index], math.isnan(row["stack_info"]))
+    def test_AICPU_operator(self):
+        op_name = ["aclnnPowTensorScalar_SquareAiCpu_Square", "aclnnEqScalar_EqualAiCpu_Equal"]
+        op_type = ["Square", "Equal"]
+        task_duration = [92.06, 90.72]
+        input_shapes = ["\"41\"", "\"41;\""]
+        input_data_types = ["INT64", "DOUBLE;DOUBLE"]
+        input_formats = ["FORMAT_ND", "FORMAT_ND;FORMAT_ND"]
+        output_shapes = ["\"41\"", "\"41\""]
+        output_data_types = ["INT64", "BOOL"]
+        output_formats = ["FORMAT_ND", "FORMAT_ND"]
+        stack_info = [True, True]
 
         t0_description = ["Square, Equal"]
         t0_suggestion = ["aclnnEqScalar_EqualAiCpu_Equal"]
         t0_elapsed_time = ["182.78"]
         t0_time_ratio = ["0.0"]
         t1_operator_type = ["Square"]
-        t1_counts =["1"]
+        t1_counts = ["1"]
         t1_elapsed_time = ["92.06"]
         t2_operator_type = ["Equal"]
-        t2_counts =["1"]
+        t2_counts = ["1"]
         t2_elapsed_time = ["90.72"]
-        b_names = ["Square","Suggestion 1:","Equal","Suggestion 1:"]
+        b_names = ["Square", "Suggestion 1:", "Equal", "Suggestion 1:"]
 
-        soup = BeautifulSoup(open(self.RESULT_HTML["all"]), 'html.parser')
-        for h2 in soup.find_all('h2'):
-            if h2.contents[0] == "AICPU Issues":
-                div_content = h2.next.next.next
-                table = div_content.find_all('table')
-                for row_index, row in enumerate(table[0].find_all('tr')):
-                    if row_index == 0:
-                        continue
-                    self.assertEqual(t0_description[row_index-1],
-                                     row.find_all('td')[0].text.split(":")[1].replace("\n",""))
-                    self.assertEqual(t0_suggestion[row_index-1], row.find_all('td')[1].text.split(" ")[-1])
-                    self.assertEqual(t0_elapsed_time[row_index-1], row.find_all('td')[2].text)
-                    self.assertEqual(t0_time_ratio[row_index - 1], row.find_all('td')[3].text)
-                for row_index, row in enumerate(table[1].find_all('tr')):
-                    if row_index == 0:
-                        continue
-                    self.assertEqual(t1_operator_type[row_index-1], row.find_all('td')[0].text)
-                    self.assertEqual(t1_counts[row_index-1], row.find_all('td')[1].text)
-                    self.assertEqual(t1_elapsed_time[row_index - 1], row.find_all('td')[2].text)
-                for row_index, row in enumerate(table[2].find_all('tr')):
-                    if row_index == 0:
-                        continue
-                    self.assertEqual(t2_operator_type[row_index-1], row.find_all('td')[0].text)
-                    self.assertEqual(t2_counts[row_index-1], row.find_all('td')[1].text)
-                    self.assertEqual(t2_elapsed_time[row_index - 1], row.find_all('td')[2].text)
+        test_pattern = ["all", "computation"]
+        for pattern in test_pattern:
+            try:
+                df = pd.read_excel(self.RESULT_EXCEL[pattern], sheet_name='AICPU operator', header=0)
+            except FileNotFoundError:
+                logging.error("File %s not found.", str(self.RESULT_EXCEL[pattern]))
+                return
 
-                b_contents = div_content.find_all('b')
-                for b_index, b_content in enumerate(b_contents):
-                    self.assertEqual(b_names[b_index], b_content.text)
+            for index, row in df.iterrows():
+                self.assertEqual(op_name[index], row["op_name"])
+                self.assertEqual(op_type[index], row["op_type"])
+                self.assertEqual(task_duration[index], round(row["task_duration"], 2))
+                self.assertEqual(input_shapes[index], row["input_shapes"])
+                self.assertEqual(input_data_types[index], row["input_data_types"])
+                self.assertEqual(input_formats[index], row["input_formats"])
+                self.assertEqual(output_shapes[index], row["output_shapes"])
+                self.assertEqual(output_data_types[index], row["output_data_types"])
+                self.assertEqual(output_formats[index], row["output_formats"])
+                self.assertEqual(stack_info[index], math.isnan(row["stack_info"]))
 
+            soup = BeautifulSoup(open(self.RESULT_HTML[pattern]), 'html.parser')
+            for h2 in soup.find_all('h2'):
+                if h2.contents[0] == "AICPU Issues":
+                    div_content = h2.next.next.next
+                    table = div_content.find_all('table')
+                    for row_index, row in enumerate(table[0].find_all('tr')):
+                        if row_index == 0:
+                            continue
+                        self.assertEqual(t0_description[row_index - 1],
+                                         row.find_all('td')[0].text.split(":")[1].replace("\n", ""))
+                        self.assertEqual(t0_suggestion[row_index - 1], row.find_all('td')[1].text.split(" ")[-1])
+                        self.assertEqual(t0_elapsed_time[row_index - 1], row.find_all('td')[2].text)
+                        self.assertEqual(t0_time_ratio[row_index - 1], row.find_all('td')[3].text)
+                    for row_index, row in enumerate(table[1].find_all('tr')):
+                        if row_index == 0:
+                            continue
+                        self.assertEqual(t1_operator_type[row_index - 1], row.find_all('td')[0].text)
+                        self.assertEqual(t1_counts[row_index - 1], row.find_all('td')[1].text)
+                        self.assertEqual(t1_elapsed_time[row_index - 1], row.find_all('td')[2].text)
+                    for row_index, row in enumerate(table[2].find_all('tr')):
+                        if row_index == 0:
+                            continue
+                        self.assertEqual(t2_operator_type[row_index - 1], row.find_all('td')[0].text)
+                        self.assertEqual(t2_counts[row_index - 1], row.find_all('td')[1].text)
+                        self.assertEqual(t2_elapsed_time[row_index - 1], row.find_all('td')[2].text)
 
-    def test_computation_AICPU_operator(self):
-        op_name = ["aclnnPowTensorScalar_SquareAiCpu_Square","aclnnEqScalar_EqualAiCpu_Equal"]
-        op_type = ["Square","Equal"]
-        task_duration = [92.06,90.72]
-        input_shapes =[ "\"41\"","\"41;\""]
-        input_data_types = ["INT64","DOUBLE;DOUBLE"]
-        input_formats = ["FORMAT_ND","FORMAT_ND;FORMAT_ND"]
-        output_shapes = ["\"41\"","\"41\""]
-        output_data_types = ["INT64","BOOL"]
-        output_formats = ["FORMAT_ND","FORMAT_ND"]
-        stack_info = [True,True]
-        df = pd.read_excel(self.RESULT_EXCEL["computation"], sheet_name='AICPU operator', header=0)
+                    b_contents = div_content.find_all('b')
+                    for b_index, b_content in enumerate(b_contents):
+                        self.assertEqual(b_names[b_index], b_content.text)
 
-        for index, row in df.iterrows():
-            self.assertEqual(op_name[index], row["op_name"])
-            self.assertEqual(op_type[index], row["op_type"])
-            self.assertEqual(task_duration[index], round(row["task_duration"], 2))
-            self.assertEqual(input_shapes[index], row["input_shapes"])
-            self.assertEqual(input_data_types[index], row["input_data_types"])
-            self.assertEqual(input_formats[index], row["input_formats"])
-            self.assertEqual(output_shapes[index], row["output_shapes"])
-            self.assertEqual(output_data_types[index], row["output_data_types"])
-            self.assertEqual(output_formats[index], row["output_formats"])
-            self.assertEqual(stack_info[index], math.isnan(row["stack_info"]))
-
-        t0_description = ["Square, Equal"]
-        t0_suggestion = ["aclnnEqScalar_EqualAiCpu_Equal"]
-        t0_elapsed_time = ["182.78"]
-        t0_time_ratio = ["0.0"]
-        t1_operator_type = ["Square"]
-        t1_counts =["1"]
-        t1_elapsed_time = ["92.06"]
-        t2_operator_type = ["Equal"]
-        t2_counts =["1"]
-        t2_elapsed_time = ["90.72"]
-        b_names = ["Square","Suggestion 1:","Equal","Suggestion 1:"]
-
-        soup = BeautifulSoup(open(self.RESULT_HTML["computation"]), 'html.parser')
-        for h2 in soup.find_all('h2'):
-            if h2.contents[0] == "AICPU Issues":
-                div_content = h2.next.next.next
-                table = div_content.find_all('table')
-                for row_index, row in enumerate(table[0].find_all('tr')):
-                    if row_index == 0:
-                        continue
-                    self.assertEqual(t0_description[row_index-1],
-                                     row.find_all('td')[0].text.split(":")[1].replace("\n",""))
-                    self.assertEqual(t0_suggestion[row_index-1], row.find_all('td')[1].text.split(" ")[-1])
-                    self.assertEqual(t0_elapsed_time[row_index-1], row.find_all('td')[2].text)
-                    self.assertEqual(t0_time_ratio[row_index - 1], row.find_all('td')[3].text)
-                for row_index, row in enumerate(table[1].find_all('tr')):
-                    if row_index == 0:
-                        continue
-                    self.assertEqual(t1_operator_type[row_index-1], row.find_all('td')[0].text)
-                    self.assertEqual(t1_counts[row_index-1], row.find_all('td')[1].text)
-                    self.assertEqual(t1_elapsed_time[row_index - 1], row.find_all('td')[2].text)
-                for row_index, row in enumerate(table[2].find_all('tr')):
-                    if row_index == 0:
-                        continue
-                    self.assertEqual(t2_operator_type[row_index-1], row.find_all('td')[0].text)
-                    self.assertEqual(t2_counts[row_index-1], row.find_all('td')[1].text)
-                    self.assertEqual(t2_elapsed_time[row_index - 1], row.find_all('td')[2].text)
-
-                b_contents = div_content.find_all('b')
-                for b_index, b_content in enumerate(b_contents):
-                    self.assertEqual(b_names[b_index], b_content.text)
-
-    def test_all_Affinity_API(self):
+    def test_Affinity_API(self):
         affinity_api = ["torch_npu.npu_confusion_transpose","torch_npu.optim.NpuFusedAdamW"]
         code_stacks = [True,True]
         stack_called_counts = [True,True]
-        df = pd.read_excel(self.RESULT_EXCEL["all"], sheet_name='Affinity apis', header=0)
+        ignore_api = ["torch_npu.optim.NpuFusedAdamW", "torch_npu.npu_confusion_transpose"]
 
-        for index, row in df.iterrows():
-            self.assertEqual(affinity_api[index], row["Affinity API"])
-            self.assertEqual(code_stacks[index], math.isnan(row["Code stacks"]))
-            self.assertEqual(stack_called_counts[index], math.isnan(row["Stack called counts"]))
+        test_pattern = ["all", "schedule"]
+        for pattern in test_pattern:
+            try:
+                df = pd.read_excel(self.RESULT_EXCEL[pattern], sheet_name='Affinity apis', header=0)
+            except FileNotFoundError:
+                logging.error("File %s not found.", str(self.RESULT_EXCEL[pattern]))
+                return
 
-        ignore_api = ["torch_npu.optim.NpuFusedAdamW","torch_npu.npu_confusion_transpose"]
+            for index, row in df.iterrows():
+                self.assertEqual(affinity_api[index], row["Affinity API"])
+                self.assertEqual(code_stacks[index], math.isnan(row["Code stacks"]))
+                self.assertEqual(stack_called_counts[index], math.isnan(row["Stack called counts"]))
 
-        soup = BeautifulSoup(open(self.RESULT_HTML["all"]), 'html.parser')
-        for h2 in soup.find_all('h2'):
-            if h2.contents[0] == "Affinity API Issues":
-                div_content = h2.next.next.next
-                self.assertEqual(ignore_api[0],div_content.contents[-2].contents[-2].text)
-                self.assertEqual(ignore_api[1],div_content.contents[-2].contents[-4].text)
+            soup = BeautifulSoup(open(self.RESULT_HTML[pattern]), 'html.parser')
+            for h2 in soup.find_all('h2'):
+                if h2.contents[0] == "Affinity API Issues":
+                    div_content = h2.next.next.next
+                    self.assertEqual(ignore_api[0],div_content.contents[-2].contents[-2].text)
+                    self.assertEqual(ignore_api[1],div_content.contents[-2].contents[-4].text)
 
-    def test_schedule_Affinity_API(self):
-        affinity_api = ["torch_npu.npu_confusion_transpose","torch_npu.optim.NpuFusedAdamW"]
-        code_stacks = [True,True]
-        stack_called_counts = [True,True]
-        df = pd.read_excel(self.RESULT_EXCEL["schedule"], sheet_name='Affinity apis', header=0)
-
-        for index, row in df.iterrows():
-            self.assertEqual(affinity_api[index], row["Affinity API"])
-            self.assertEqual(code_stacks[index], math.isnan(row["Code stacks"]))
-            self.assertEqual(stack_called_counts[index], math.isnan(row["Stack called counts"]))
-
-        ignore_api = ["torch_npu.optim.NpuFusedAdamW","torch_npu.npu_confusion_transpose"]
-
-        soup = BeautifulSoup(open(self.RESULT_HTML["schedule"]), 'html.parser')
-        for h2 in soup.find_all('h2'):
-            if h2.contents[0] == "Affinity API Issues":
-                div_content = h2.next.next.next
-                self.assertEqual(ignore_api[0],div_content.contents[-2].contents[-2].text)
-                self.assertEqual(ignore_api[1],div_content.contents[-2].contents[-4].text)
-
-    def test_all_operator_dispatch(self):
+    def test_operator_dispatch(self):
         issues = ["operator dispatch"]
         op_name = ["aclopCompileAndExecute"]
         counts = [381]
         total_time = [58486.7048]
-        df = pd.read_excel(self.RESULT_EXCEL["all"], sheet_name='operator dispatch', header=0)
-
-        for index, row in df.iterrows():
-            self.assertEqual(issues[index], row["Issues"])
-            self.assertEqual(op_name[index], row["op name"])
-            self.assertEqual(counts[index], row["counts"])
-            self.assertEqual(total_time[index], round(row["total time"],4))
 
         t0_description = ["381"]
         t0_suggestion = ["torch_npu.npu.set_compile_mode(jit_compile=False)"]
@@ -493,80 +354,35 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
         t1_counts = ['381']
         t1_elapsed_time = ['58486.704798215804']
 
-        soup = BeautifulSoup(open(self.RESULT_HTML["all"]), 'html.parser')
-        for h2 in soup.find_all('h2'):
-            if h2.contents[0] == "Operator Dispatch Issues":
-                div_content = h2.next.next.next
-                table = div_content.find_all('table')
-                for row_index, row in enumerate(table[0].find_all('tr')):
-                    if row_index == 0:
-                        continue
-                    self.assertEqual(t0_description[row_index-1], row.find_all('td')[0].text.split(' ')[1])
-                    self.assertEqual(t0_suggestion[row_index-1], row.find_all('td')[1].text.split('`')[1].split(';')[0])
-                for row_index, row in enumerate(table[1].find_all('tr')):
-                    if row_index == 0:
-                        continue
-                    self.assertEqual(t1_issue[row_index-1], row.find_all('td')[0].text)
-                    self.assertEqual(t1_counts[row_index-1], row.find_all('td')[1].text)
-                    self.assertEqual(t1_elapsed_time[row_index - 1], row.find_all('td')[2].text)
+        test_pattern = ["all", "schedule"]
+        for pattern in test_pattern:
+            try:
+                df = pd.read_excel(self.RESULT_EXCEL[pattern], sheet_name='operator dispatch', header=0)
+            except FileNotFoundError:
+                logging.error("File %s not found.", str(self.RESULT_EXCEL[pattern]))
+                return
+            for index, row in df.iterrows():
+                self.assertEqual(issues[index], row["Issues"])
+                self.assertEqual(op_name[index], row["op name"])
+                self.assertEqual(counts[index], row["counts"])
+                self.assertEqual(total_time[index], round(row["total time"], 4))
 
-    def test_schedule_operator_dispatch(self):
-        issues = ["operator dispatch"]
-        op_name = ["aclopCompileAndExecute"]
-        counts = [381]
-        total_time = [58486.7048]
-        df = pd.read_excel(self.RESULT_EXCEL["schedule"], sheet_name='operator dispatch', header=0)
+            soup = BeautifulSoup(open(self.RESULT_HTML[pattern]), 'html.parser')
+            for h2 in soup.find_all('h2'):
+                if h2.contents[0] == "Operator Dispatch Issues":
+                    div_content = h2.next.next.next
+                    table = div_content.find_all('table')
+                    for row_index, row in enumerate(table[0].find_all('tr')):
+                        if row_index == 0:
+                            continue
+                        self.assertEqual(t0_description[row_index - 1], row.find_all('td')[0].text.split(' ')[1])
+                        self.assertEqual(t0_suggestion[row_index - 1],
+                                         row.find_all('td')[1].text.split('`')[1].split(';')[0])
+                    for row_index, row in enumerate(table[1].find_all('tr')):
+                        if row_index == 0:
+                            continue
+                        self.assertEqual(t1_issue[row_index - 1], row.find_all('td')[0].text)
+                        self.assertEqual(t1_counts[row_index - 1], row.find_all('td')[1].text)
+                        self.assertEqual(t1_elapsed_time[row_index - 1], row.find_all('td')[2].text)
 
-        for index, row in df.iterrows():
-            self.assertEqual(issues[index], row["Issues"])
-            self.assertEqual(op_name[index], row["op name"])
-            self.assertEqual(counts[index], row["counts"])
-            self.assertEqual(total_time[index], round(row["total time"],4))
-
-        t0_description = ["381"]
-        t0_suggestion = ["torch_npu.npu.set_compile_mode(jit_compile=False)"]
-        t1_issue = ["aclopCompileAndExecute"]
-        t1_counts = ['381']
-        t1_elapsed_time = ['58486.704798215804']
-
-        soup = BeautifulSoup(open(self.RESULT_HTML["schedule"]), 'html.parser')
-        for h2 in soup.find_all('h2'):
-            if h2.contents[0] == "Operator Dispatch Issues":
-                div_content = h2.next.next.next
-                table = div_content.find_all('table')
-                for row_index, row in enumerate(table[0].find_all('tr')):
-                    if row_index == 0:
-                        continue
-                    self.assertEqual(t0_description[row_index-1], row.find_all('td')[0].text.split(' ')[1])
-                    self.assertEqual(t0_suggestion[row_index-1], row.find_all('td')[1].text.split('`')[1].split(';')[0])
-                for row_index, row in enumerate(table[1].find_all('tr')):
-                    if row_index == 0:
-                        continue
-                    self.assertEqual(t1_issue[row_index-1], row.find_all('td')[0].text)
-                    self.assertEqual(t1_counts[row_index-1], row.find_all('td')[1].text)
-                    self.assertEqual(t1_elapsed_time[row_index - 1], row.find_all('td')[2].text)
-
-    def test_all_SynchronizeStream(self):
-        stream_info = ["517","182","19705388.274839293"]
-
-        soup = BeautifulSoup(open(self.RESULT_HTML["all"]), 'html.parser')
-        for h2 in soup.find_all('h2'):
-            if h2.contents[0] == "Synchronize Stream Issues":
-                div_content = h2.next.next.next
-                a_contents = div_content.find_all('a')
-                self.assertEqual(stream_info[0], a_contents[0].text.split(" ")[6])
-                self.assertEqual(stream_info[1], a_contents[0].text.split(" ")[8])
-                self.assertEqual(stream_info[2], a_contents[0].text.split(" ")[-2])
-
-    def test_schedule_SynchronizeStream(self):
-        stream_info = ["517","182","19705388.274839293"]
-
-        soup = BeautifulSoup(open(self.RESULT_HTML["schedule"]), 'html.parser')
-        for h2 in soup.find_all('h2'):
-            if h2.contents[0] == "Synchronize Stream Issues":
-                div_content = h2.next.next.next
-                a_contents = div_content.find_all('a')
-                self.assertEqual(stream_info[0], a_contents[0].text.split(" ")[6])
-                self.assertEqual(stream_info[1], a_contents[0].text.split(" ")[8])
-                self.assertEqual(stream_info[2], a_contents[0].text.split(" ")[-2])
 

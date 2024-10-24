@@ -87,48 +87,20 @@ class SynchronizeStreamCollector(BaseOpCollector):
 
     def __init__(self):
         super().__init__()
-        self._synchronize_stream_count = 0
-        self._slow_synchronize_stream = []
-        self.rule = SynchronizeStreamCollector._load_rule()
-
-    @property
-    def total_count(self):
-        return self._synchronize_stream_count
-
-    @property
-    def slow_synchronize_stream(self):
-        return self._slow_synchronize_stream
-
-    @staticmethod
-    def _load_rule():
-        sync_stream_rule_path = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))),
-            "rules",
-            "synchronize.yaml")
-
-        sync_stream_rule = FileManager.read_yaml_file(sync_stream_rule_path)
-        return sync_stream_rule
-
-    def update_sync_stream_count(self):
-        self._synchronize_stream_count += 1
-
-    def append_slow_sync_stream(self, event):
-        if float(event.dur) / 1000 >= self.rule.get("slow_synchronize_threshold", 10):
-            self._slow_synchronize_stream.append(event)
-
-    def unset(self):
-        self._synchronize_stream_count = 0
-        self._slow_synchronize_stream = []
+        self.require_filter_by_step = False
 
     def add_op(self, event):
-        return self.op_list
+        if event.name.startswith(const.SYNC_STREAM) or event.name.startswith(const.NODE_LAUNCH):
+            self.op_list.append(event)
 
     def post_process(self, *args, **kwargs):
-        self.attribute_to_dataset["synchronize_stream"] = self
+        self.op_list.sort(key=lambda x: x.ts)
+
+        self.attribute_to_dataset["synchronize_stream"] = self.op_list
 
 
 class MemCollector(BaseOpCollector):
-    MEMORY_OP_NAME = ["AscendCL@aclMallocMemInner", "AscendCL@aclrtFreePhysical"]
+    MEMORY_OP_NAME = ["AscendCL@aclMallocMemInner", "AscendCL@aclrtFreePhysical", "AscendCL@aclrtFree"]
 
     def __init__(self):
         super().__init__()
@@ -374,3 +346,53 @@ class GcCollector(BaseOpCollector):
 
     def post_process(self, target_op_list, **kwargs):
         self.attribute_to_dataset["gc_events"] = self.op_list
+
+
+class FreeEventsCollector(BaseOpCollector):
+    def __init__(self):
+        super().__init__()
+
+    @staticmethod
+    def _load_rule():
+        sync_stream_rule_path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))),
+            "rules",
+            "gc.yaml")
+
+        gc_rule = FileManager.read_yaml_file(sync_stream_rule_path)
+        return gc_rule
+
+    def add_op(self, event):
+        if event.name.lower() == const.FREE:
+            self.op_list.append(event)
+
+    def post_process(self, target_op_list, **kwargs):
+        gc_rule = self._load_rule()
+        if os.getenv(const.FREE_DURATION_FOR_GC_ANALYSIS):
+            max_free_threshold = convert_to_float(os.getenv(const.FREE_DURATION_FOR_GC_ANALYSIS))
+        else:
+            max_free_threshold = gc_rule.get("max_free_threshold")
+
+        large_free_events = []
+
+        for op in target_op_list:
+            if convert_to_float(op.dur) > max_free_threshold:
+                large_free_events.append(op)
+
+        large_free_events.sort(key=lambda x: convert_to_float(x.ts))
+        self.attribute_to_dataset["large_free_events"] = large_free_events
+
+
+class AclEventsCollector(BaseOpCollector):
+    ACL_EVENT_PREFIX = "AscendCL@"
+
+    def __init__(self):
+        super().__init__()
+
+    def add_op(self, event):
+        if event.name.startswith(self.ACL_EVENT_PREFIX):
+            self.op_list.append(event)
+
+    def post_process(self, target_op_list, **kwargs):
+        target_op_list.sort(key=lambda x: convert_to_float(x.ts))
+        self.attribute_to_dataset["acl_events"] = target_op_list

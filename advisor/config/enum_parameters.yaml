@@ -1,5 +1,6 @@
 arguments:
   cann_version:
+    type: str
     options:
       - 6.3.RC2
       - 7.0.RC1
@@ -8,21 +9,24 @@ arguments:
     default: 8.0.RC1
 
   torch_version:
+    type: str
     options:
       - 1.11.0
       - 2.1.0
     default: 2.1.0
 
   analysis_dimensions:
+    type: list
     options:
       - [ computation, communication, schedule, memory ]
+      - [ computation ]
       - [ communication ]
       - [ schedule ]
-      - [ computation ]
       - [ memory ]
     default: [ computation, communication, schedule, memory ]
 
   profiling_type:
+    type: str
     options:
       - ascend_pytorch_profiler
       - mslite
@@ -31,5 +35,16 @@ arguments:
 
 envs:
   ADVISOR_ANALYZE_PROCESSES:
+    type: int
     options: [ 1, 2, 3, 4, 5, 6, 7, 8 ]
     default: 1
+
+  DISABLE_PROFILING_COMPARISON:
+    type: boolean
+    options: [ true, false ]
+    default: false
+
+  DISABLE_AFFINITY_API:
+    type: boolean
+    options: [ true, false ]
+    default: false

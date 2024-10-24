@@ -20,8 +20,7 @@ from profiler.advisor.common import constant
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.advisor.dataset.cluster.cluster_dataset import ClusterStepTraceTimeDataset
-from profiler.advisor.utils.utils import safe_index_value
-from profiler.advisor.utils.utils import safe_division
+from profiler.advisor.utils.utils import safe_index_value, safe_division, convert_to_int
 
 logger = logging.getLogger()
 
@@ -64,7 +63,8 @@ class SlowRankAnalyzer(BaseAnalyzer):
     def optimize(self, **kwargs):
         if self.step_trace_dict is None:
             logger.error(
-                "Slow rank analysis failed, please ensure file 'step_trace_time.csv' exists in your profiling directory %s",
+                "Slow rank analysis failed, "
+                "please ensure file 'step_trace_time.csv' exists in your profiling directory %s",
                 constant.ASCEND_PROFILER_OUTPUT)
             return self.result
         self.process()
@@ -114,7 +114,7 @@ class SlowRankAnalyzer(BaseAnalyzer):
         data_list = []
         for key, value in self.step_trace_dict.items():
             step, rank_id = key.split(constant.STEP_RANK_SEP)
-            data_list.append([int(step), int(rank_id)] + value)
+            data_list.append([convert_to_int(step), convert_to_int(rank_id)] + value)
             if step and step not in self._steps:
                 self._steps.add(step)
 
@@ -213,10 +213,14 @@ class SlowRankAnalyzer(BaseAnalyzer):
 
             stage_key = f"stage-{index}"
             stage_step_rank[stage_key] = {}
-            stage_step_rank[stage_key]["maximum"] = {"rank_id": tmp_rank_list[max_time_index],
-                                                     "step": tmp_step_list[max_time_index]}
-            stage_step_rank[stage_key]["minimum"] = {"rank_id": tmp_rank_list[min_time_index],
-                                                     "step": tmp_step_list[min_time_index]}
+            stage_step_rank[stage_key]["maximum"] = {
+                "rank_id": tmp_rank_list[max_time_index],
+                "step": tmp_step_list[max_time_index],
+            }
+            stage_step_rank[stage_key]["minimum"] = {
+                "rank_id": tmp_rank_list[min_time_index],
+                "step": tmp_step_list[min_time_index],
+            }
 
         return stage_step_rank
 

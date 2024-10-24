@@ -1,3 +1,17 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import logging
 from abc import ABC
 
@@ -34,7 +48,7 @@ class ProfilingAnalyzer(BaseAnalyzer, ABC):
         """
         profiling_data = self.get_first_data_by_key(self.dataset_list, ProfilingDataset.get_key())
         checker = self.checker
-        rank_id = kwargs.get("rank")
+        rank = kwargs.get("rank")
 
         add_render_list = kwargs.get("add_render_list", True)
 
@@ -42,16 +56,16 @@ class ProfilingAnalyzer(BaseAnalyzer, ABC):
             return self.result
         if checker.check(profiling_data):
             # add record
-            record = checker.make_record(profiling_data, rank_id)
+            record = checker.make_record(profiling_data, rank)
             self.html = checker.make_render(self.html_render, record, add_render_list,
-                                            priority=self.get_priority(checker))
+                                            priority=self.get_priority(checker), rank=kwargs.get("rank"))
             self.result.add(record)
             # add details
             details = checker.get_details()
             if details:
                 for i, detail in enumerate(details):
-                    sheet_name = checker.get_name() if rank_id is None else \
-                        f"rank {rank_id} ".capitalize() + checker.get_name()
+                    sheet_name = checker.get_name() if rank is None else \
+                        f"rank {rank} ".capitalize() + checker.get_name()
                     if i == 0:
                         # the first row is header
                         self.result.add_detail(sheet_name, headers=detail)
@@ -64,12 +78,12 @@ class ProfilingAnalyzer(BaseAnalyzer, ABC):
 
         return self.result
 
-    def get_priority(self, checker):
-        if "aicpu" not in checker.__class__.__name__.lower():
+    def get_priority(self,max_mem_op_dur):
+        if "aicpu" not in max_mem_op_dur.__class__.__name__.lower():
             return PriorityBackgroundColor.low
 
-        aicpu_duration = getattr(checker, "aicpu_task_duration", 0.0)
-        total_duration = getattr(checker, "total_task_duration", 0.0)
+        aicpu_duration = getattr(max_mem_op_dur, "aicpu_task_duration", 0.0)
+        total_duration = getattr(max_mem_op_dur, "total_task_duration", 0.0)
         return self.get_priority_by_time_ratio(aicpu_duration, total_duration)
 
 

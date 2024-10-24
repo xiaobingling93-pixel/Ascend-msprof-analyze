@@ -51,7 +51,7 @@ class OpDispatchAnalyzer(BaseAnalyzer):
         """
         self.get_op_compile_info(self.dataset)
         self.make_record(self.result)
-        self.make_render(self.html_render)
+        self.make_render(self.html_render, rank=kwargs.get('rank'))
         return self.result
 
     def get_op_compile_info(self, event_dataset: ScheduleAnalysisDataset):
@@ -106,7 +106,8 @@ class OpDispatchAnalyzer(BaseAnalyzer):
                                     template_name="operator_dispatch.html",
                                     issues=issues,
                                     optimizers=optimizations,
-                                    priority_background_color=self.get_priority())
+                                    priority_background_color=self.get_priority(),
+                                    rank=kwargs.get("rank"))
 
     def get_priority(self):
         step_duration = getattr(self.dataset, "step_duration", None)

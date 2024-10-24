@@ -1,3 +1,17 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import logging
 import os
 from multiprocessing import Manager
@@ -59,13 +73,14 @@ class PPStageComputationAnalyzer(BaseAnalyzer):
         pass
 
     def _optimize(self, profiling_path, **kwargs):
-        stage_html_record = dict(stage=kwargs.get("stage"), rank_id=kwargs.get("rank"), step=kwargs.get("step"))
+        stage_html_record = dict(stage=kwargs.get("stage"), rank=kwargs.get("rank"), step=kwargs.get("step"))
         kwargs["add_render_list"] = False
 
         # stage 并行分析时，避免调用本身，即SupportedScopes.STAGE_COMPUTE
         scopes = Interface.get_scope(Interface.COMPUTATION)
-        stage_analyzer_list = [Interface.get_analyzer(Interface.COMPUTATION, scope) for scope in scopes if
-                               scope != SupportedScopes.STAGE_COMPUTE]
+        stage_analyzer_list = [Interface.get_analyzer(Interface.COMPUTATION, scope)
+                               for scope in scopes
+                               if scope != SupportedScopes.STAGE_COMPUTE]
 
         for analyzer_cls in stage_analyzer_list:
             analyzer = analyzer_cls(collection_path=profiling_path, **kwargs)
