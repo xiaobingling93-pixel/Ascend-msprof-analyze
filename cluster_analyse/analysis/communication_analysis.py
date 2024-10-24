@@ -137,7 +137,7 @@ class CommunicationAnalysisOptimized(BaseAnalysis):
                 setdefault(formatted_data.rank_id, {}).\
                 setdefault(formatted_data.group_name, []).extend([formatted_data])
         return data_dict
-    
+
     def run(self):
         if not self._communication_ops[0] or not self._communication_ops[1]:
             return
@@ -241,7 +241,7 @@ class CommunicationAnalysisOptimized(BaseAnalysis):
 
     def _compute_total_info(self):
         if not self._aggregate_time or not self._aggregate_bandwidth:
-            logger.error("[ERROR] communication data is null.")
+            logger.error("communication data is null.")
             return
         self._compute_time_info()
         self._compute_bandwidth_info()
