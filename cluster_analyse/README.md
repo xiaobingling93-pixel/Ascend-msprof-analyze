@@ -89,13 +89,13 @@ F列：Overlapped，统计计算与通信重叠的耗时。
 
 G列：Communication，通信时间的全部耗时。
 
-H列：Free，空闲时间，只device侧既不在通信也不在计算的耗时，可能在做sdma拷贝或者空等。
+H列：Free，空闲时间，指device侧既不在通信也不在计算的耗时，可能在做sdma拷贝或者空等。
 
-I列：Stage时间，I、J、K列属于pp并行时有效的数值，stage时间代表除recieve算子时间外的时间。
+I列：Stage时间，I、J、K列属于pp并行时有效的数值，stage时间代表除receive算子时间外的时间。
 
 J列：Bubble时间，指receive时间的总和。
 
-K列：Communication（Not Overlapped and Exclude Receive）指剔除recieve算子外的并且不被掩盖的通信时间。
+K列：Communication（Not Overlapped and Exclude Receive）指剔除receive算子外的并且不被掩盖的通信时间。
 
 L列：Preparing，指迭代开始到首个计算或通信算子运行的时间。
 
