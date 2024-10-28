@@ -1,3 +1,20 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+# Copyright (C) 2024-2024. Huawei Technologies Co., Ltd. All rights reserved.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""
+
 import os
 import logging
 
@@ -7,6 +24,7 @@ from communication_group.base_communication_group import BaseCommunicationGroup
 
 
 logger = logging.getLogger()
+
 
 def get_communication_data(rank_id: str, db_path: str, analysis_mode: str):
     time_data = []
@@ -30,7 +48,8 @@ def get_communication_data(rank_id: str, db_path: str, analysis_mode: str):
     DBManager.destroy_db_connect(conn, cursor)
     return time_data, bandwidth_data, matrix_data
 
-def dump_group_db(dump_data: list, group_table: str, cluster_analysis_output_path:str):
+
+def dump_group_db(dump_data: list, group_table: str, cluster_analysis_output_path: str):
     if dump_data:
         output_path = os.path.join(cluster_analysis_output_path, Constant.CLUSTER_ANALYSIS_OUTPUT)
         result_db = os.path.join(output_path, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER)
@@ -52,7 +71,7 @@ class CommunicationDBGroup(BaseCommunicationGroup):
 
     def read_communication_func(self, params: tuple):
         if len(params) < 3:
-            return -1, ({}, {}, {})
+            return -1, {}, {}
         rank_id = params[0]
         db_path = params[1]
         time_data, bandwidth_data, matrix_data = get_communication_data(rank_id, db_path, self.analysis_mode)
@@ -80,7 +99,7 @@ class CommunicationDBGroupOptimized(BaseCommunicationGroup):
     
     def read_communication_func(self, params: tuple):
         if len(params) < 3:
-            return -1, ({}, {}, {})
+            return -1, {}, {}
         rank_id = params[0]
         db_path = params[1]
         time_data, bandwidth_data, matrix_data = get_communication_data(rank_id, db_path, self.analysis_mode)
