@@ -33,6 +33,19 @@ class MegatronAlgorithm(ParallelAlgorithm):
                  context_parallel_size: int = 1,
                  expert_model_parallel_size: int = 1,
                  **kwargs):
+        # Check for data type
+        if not isinstance(world_size, int):
+            raise RuntimeError("world_size must be int type.")
+        if not isinstance(tensor_model_parallel_size, int):
+            raise RuntimeError("tensor_model_parallel_size must be int type.")
+        if not isinstance(pipeline_model_parallel_size, int):
+            raise RuntimeError("pipeline_model_parallel_size must be int type.")
+        if not isinstance(data_parallel_size, int):
+            raise RuntimeError("data_parallel_size must be int type.")
+        if not isinstance(expert_model_parallel_size, int):
+            raise RuntimeError("expert_model_parallel_size must be int type.")
+        if not isinstance(context_parallel_size, int):
+            raise RuntimeError("context_parallel_size must be int type.")
         # Check for zero and adjust parallel sizes to avoid division by zero
         if tensor_model_parallel_size == 0:
             tensor_model_parallel_size = 1
