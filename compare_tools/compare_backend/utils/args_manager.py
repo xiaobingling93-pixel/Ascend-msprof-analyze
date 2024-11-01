@@ -99,15 +99,26 @@ class ArgsManager:
     @property
     def enable_api_compare(self):
         return self._args.enable_api_compare
-    
+
     @property
     def enable_kernel_compare(self):
         return self._args.enable_kernel_compare
 
     @classmethod
-    def check_profiling_path(cls, file_path: str):
-        PathManager.input_path_common_check(file_path)
-        PathManager.check_path_owner_consistent(file_path)
+    def check_profiling_path(cls, path_dict: dict):
+        PathManager.input_path_common_check(path_dict.get(Constant.PROFILING_PATH))
+        path_list = [path_dict.get(Constant.PROFILING_PATH)] if path_dict.get(
+            Constant.PROFILING_TYPE) == Constant.GPU else [
+            path_dict.get(Constant.PROFILING_PATH),
+            path_dict.get(Constant.TRACE_PATH),
+            path_dict.get(Constant.ASCEND_OUTPUT_PATH),
+            path_dict.get(Constant.INFO_JSON_PATH),
+            os.path.join(path_dict.get(Constant.ASCEND_OUTPUT_PATH, ""), "operator_memory.csv"),
+            os.path.join(path_dict.get(Constant.ASCEND_OUTPUT_PATH, ""), "memory_record.csv"),
+            os.path.join(path_dict.get(Constant.ASCEND_OUTPUT_PATH, ""), "kernel_details.csv"),
+            os.path.join(path_dict.get(Constant.ASCEND_OUTPUT_PATH, ""), "communication.json")
+        ]
+        PathManager.check_path_owner_consistent(path_list)
 
     @classmethod
     def check_output_path(cls, output_path: str):
@@ -115,20 +126,9 @@ class ArgsManager:
         PathManager.make_dir_safety(output_path)
         PathManager.check_path_writeable(output_path)
 
-    def get_step_args_with_validating(self):
-        if self._args.base_step and self._args.comparison_step:
-            if all([self._args.base_step.isdigit(), self._args.comparison_step.isdigit()]):
-                self._base_step = int(self._args.base_step)
-                self._comparison_step = int(self._args.comparison_step)
-            else:
-                msg = "Invalid param, base_step and comparison_step must be a number."
-                raise RuntimeError(msg)
-        elif any([self._args.base_step, self._args.comparison_step]):
-            msg = "Invalid param, base_step and comparison_step must be set at the same time."
-            raise RuntimeError(msg)
-
-    def parse_profiling_path(self, file_path: str):
-        self.check_profiling_path(file_path)
+    @classmethod
+    def parse_profiling_path(cls, file_path: str):
+        PathManager.input_path_common_check(file_path)
         if os.path.isfile(file_path):
             (split_file_path, split_file_name) = os.path.split(file_path)
             (shot_name, extension) = os.path.splitext(split_file_name)
@@ -155,6 +155,18 @@ class ArgsManager:
             if dir_name == "profiler_info.json" or re.match(r"profiler_info_[0-9]+\.json", dir_name):
                 path_dict.update({Constant.INFO_JSON_PATH: os.path.join(file_path, dir_name)})
         return path_dict
+
+    def get_step_args_with_validating(self):
+        if self._args.base_step and self._args.comparison_step:
+            if all([self._args.base_step.isdigit(), self._args.comparison_step.isdigit()]):
+                self._base_step = int(self._args.base_step)
+                self._comparison_step = int(self._args.comparison_step)
+            else:
+                msg = "Invalid param, base_step and comparison_step must be a number."
+                raise RuntimeError(msg)
+        elif any([self._args.base_step, self._args.comparison_step]):
+            msg = "Invalid param, base_step and comparison_step must be set at the same time."
+            raise RuntimeError(msg)
 
     def init(self):
         if self._args.max_kernel_num is not None and self._args.max_kernel_num <= Constant.LIMIT_KERNEL:
@@ -183,15 +195,13 @@ class ArgsManager:
             self._args.enable_communication_compare = True
             self._args.enable_api_compare = True
             self._args.enable_kernel_compare = True
-        
-        self.get_step_args_with_validating()
-        base_profiling_path = PathManager.get_realpath(self._args.base_profiling_path)
-        self.check_profiling_path(base_profiling_path)
-        self._base_path_dict = self.parse_profiling_path(base_profiling_path)
-        comparison_profiling_path = PathManager.get_realpath(self._args.comparison_profiling_path)
-        self.check_profiling_path(comparison_profiling_path)
-        self._comparison_path_dict = self.parse_profiling_path(comparison_profiling_path)
 
+        self.get_step_args_with_validating()
+        self._base_path_dict = self.parse_profiling_path(PathManager.get_realpath(self._args.base_profiling_path))
+        self.check_profiling_path(self._base_path_dict)
+        self._comparison_path_dict = self.parse_profiling_path(
+            PathManager.get_realpath(self._args.comparison_profiling_path))
+        self.check_profiling_path(self._comparison_path_dict)
         if self._args.output_path:
             self.check_output_path(PathManager.get_realpath(self._args.output_path))
 

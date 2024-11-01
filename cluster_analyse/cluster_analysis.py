@@ -70,7 +70,7 @@ class Interface:
 
     def run(self):
         PathManager.check_input_directory_path(self.collection_path)
-        PathManager.check_path_owner_consistent(self.collection_path)
+        PathManager.check_path_owner_consistent([self.collection_path])
         data_map, data_type = self.allocate_prof_data()
         if not data_map:
             logger.warning("Can not get rank info or profiling data.")

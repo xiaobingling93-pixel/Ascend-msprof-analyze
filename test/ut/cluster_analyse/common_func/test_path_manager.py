@@ -46,7 +46,7 @@ class TestPathManager(unittest.TestCase):
         PathManager.input_path_common_check(PATH_FILE)
 
     def test_check_path_owner_consistent(self):
-        PathManager.check_path_owner_consistent(PATH_DIR)
+        PathManager.check_path_owner_consistent([PATH_DIR])
 
     def test_check_path_writeable(self):
         link_name = "test_link" + str(time.time())

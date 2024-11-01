@@ -291,7 +291,7 @@ class AnalyzerController:
 
                 PathManager.check_input_directory_path(output_path)
                 if os.path.exists(output_path):
-                    PathManager.check_path_owner_consistent(output_path)
+                    PathManager.check_path_owner_consistent([output_path])
                 else:
                     PathManager.make_dir_safety(output_path)
 
