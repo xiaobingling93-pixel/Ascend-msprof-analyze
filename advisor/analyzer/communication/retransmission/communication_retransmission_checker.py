@@ -75,6 +75,8 @@ class CommunicationRetransmissionChecker:
         for group_name, hccl_group_dict in hccl_dataset.hccl_dict.items():
             for op_name, hccl_op_dict in hccl_group_dict.items():
                 for step_id, hccl_list in hccl_op_dict.items():
+                    if op_name == "Total Op Info":
+                        continue
                     if self.step_id and step_id != self.step_id:  # 传输指定step（self.step_id）情况下，非目标step跳过
                         continue
                     if not self.check_possible_retransmission_occurrence(hccl_list):
