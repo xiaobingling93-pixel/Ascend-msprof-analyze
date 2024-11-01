@@ -11,7 +11,6 @@ from compare_backend.profiling_parser.base_profiling_parser import BaseProfiling
 from compare_backend.utils.constant import Constant
 from compare_backend.utils.file_reader import FileReader
 
-
 logger = logging.getLogger()
 
 
@@ -62,6 +61,18 @@ class NPUProfilingParser(BaseProfilingParser):
                 index += 1
         return float(overlap_time)
 
+    @classmethod
+    def _read_csv_data(cls, file_path, bean):
+        data = []
+        file_name = os.path.basename(file_path)
+        try:
+            data = FileReader.read_csv_file(file_path, bean)
+        except FileNotFoundError:
+            logger.warning("The file %s does not exist.", file_name)
+        except Exception:
+            logger.error("Failed to read %s.", file_name)
+        return data
+
     def _get_dispatch_func(self):
         func_list = set()
         if self._enable_memory_compare or self._enable_operator_compare or self._enable_profiling_compare:
@@ -86,13 +97,7 @@ class NPUProfilingParser(BaseProfilingParser):
         return list(func_list)
 
     def _update_kernel_details(self):
-        try:
-            kernel_details = FileReader.read_csv_file(self._kernel_detail_path, KernelDetailsBean)
-        except FileNotFoundError:
-            logger.warning("The file kernel_details.csv does not exist.")
-        except Exception:
-            logger.warning("Failed to read kernel_details.csv.")
-            return
+        kernel_details = self._read_csv_data(self._kernel_detail_path, KernelDetailsBean)
         if not kernel_details:
             return
         kernels_dict = {}
@@ -115,14 +120,7 @@ class NPUProfilingParser(BaseProfilingParser):
         self._result_data.update_kernel_details(kernels_dict)
 
     def _update_memory_list(self):
-        try:
-            memory_data = FileReader.read_csv_file(self._operator_memory_path, OperatorMemoryBean)
-        except FileNotFoundError:
-            logger.warning("The file operator_memory.csv does not exist.")
-            return
-        except Exception:
-            logger.error("Failed to read operator_memory.csv.")
-            return
+        memory_data = self._read_csv_data(self._operator_memory_path, OperatorMemoryBean)
         if memory_data:
             self._dequeue_data.sort(key=lambda x: x.start_time)
         for data in memory_data:
@@ -143,6 +141,14 @@ class NPUProfilingParser(BaseProfilingParser):
                                                       Constant.ALLOCATION_TIME: data.allocation_time,
                                                       Constant.RELEASE_TIME: data.release_time})
 
+    def _update_kernel_dict(self):
+        kernel_details = self._read_csv_data(self._kernel_detail_path, KernelDetailsBean)
+        input_shape_dict = {kernel.start_time: kernel.input_shapes for kernel in kernel_details}
+        for kernel in self._all_kernels.values():
+            input_shape = input_shape_dict.get(kernel.start_time, "")
+            kernel.input_shapes = input_shape
+        super()._update_kernel_dict()
+
     def __match_dequeue_data(self, ts_time: float) -> int:
         if not self._dequeue_data:
             return Constant.INVALID_VALUE
@@ -161,6 +167,7 @@ class NPUProfilingParser(BaseProfilingParser):
             communication_json = FileReader.read_trace_file(self._communication_path)
         except FileNotFoundError:
             logger.warning("The file communication.json does not exist.")
+            return
         except Exception:
             logger.error("Failed to read communication.json.")
             return
