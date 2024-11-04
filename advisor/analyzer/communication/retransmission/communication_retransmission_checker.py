@@ -16,6 +16,7 @@ import logging
 import os
 from typing import Dict, List
 from collections import defaultdict
+from profiler.advisor.common.constant import TOTAL_OP_INFO
 from profiler.advisor.dataset.cluster.cluster_dataset import ClusterCommunicationDataset
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
@@ -74,9 +75,9 @@ class CommunicationRetransmissionChecker:
         """
         for group_name, hccl_group_dict in hccl_dataset.hccl_dict.items():
             for op_name, hccl_op_dict in hccl_group_dict.items():
+                if op_name == TOTAL_OP_INFO:
+                    continue
                 for step_id, hccl_list in hccl_op_dict.items():
-                    if op_name == "Total Op Info":
-                        continue
                     if self.step_id and step_id != self.step_id:  # 传输指定step（self.step_id）情况下，非目标step跳过
                         continue
                     if not self.check_possible_retransmission_occurrence(hccl_list):
