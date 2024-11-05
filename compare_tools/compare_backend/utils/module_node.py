@@ -1,3 +1,20 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+# Copyright (C) 2024-2024. Huawei Technologies Co., Ltd. All rights reserved.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""
+
 import re
 from math import ceil
 
@@ -125,12 +142,6 @@ class ModuleNode:
             node._update_kernel_total_list(ts, kernel_list)
             node = node.parent_node
 
-    def _update_kernel_self_list(self, ts, kernel_list: list):
-        self._kernel_self_list.append({self.ts: ts, self.kernels: kernel_list})
-
-    def _update_kernel_total_list(self, ts, kernel_list: list):
-        self._kernel_total_list.append({self.ts: ts, self.kernels: kernel_list})
-
     def find_module_call(self, ts_time):
         call_module = self._binary_search(ts_time, self)
         while call_module:
@@ -169,3 +180,9 @@ class ModuleNode:
                     break
                 top_node_list[cur_index].update_kernel_list(kernel_list)
                 break
+
+    def _update_kernel_self_list(self, ts, kernel_list: list):
+        self._kernel_self_list.append({self.ts: ts, self.kernels: kernel_list})
+
+    def _update_kernel_total_list(self, ts, kernel_list: list):
+        self._kernel_total_list.append({self.ts: ts, self.kernels: kernel_list})

@@ -16,7 +16,7 @@
 
 from collections import defaultdict
 import os
-
+import logging
 from cluster_data_preprocess.data_preprocessor import DataPreprocessor
 from common_func.constant import Constant
 from common_func.file_manager import FileManager
@@ -33,7 +33,7 @@ class PytorchDataPreprocessor(DataPreprocessor):
         for dir_name in self.path_list:
             rank_id = self.get_rank_id(dir_name)
             if rank_id < 0:
-                print('[Error]fail to get rankid or rankid invalid.')
+                logging.error("fail to get rankid or rankid invalid.")
                 continue
             for file_name in os.listdir(dir_name):
                 if file_name.startswith(self.PROFILER_INFO_HEAD) and file_name.endswith(self.PROFILER_INFO_EXTENSION):

@@ -27,9 +27,11 @@ OPTIMIZER_SEP = "#"
 OPTIMIZER_STEP = "step"
 ENQUEUE = "enqueue"
 TORCH_TO_NPU = "torch_to_npu"
+FREE = "free"
 OP_COMPILE_NAME = "AscendCL@aclopCompileAndExecute"
 OP_COMPILE_ID = "aclopCompileAndExecute"
 SYNC_STREAM = "AscendCL@aclrtSynchronizeStream"
+NODE_LAUNCH = "Node@launch"
 MAX_OP_COMPILE_NUM = 20
 ACL_TO_NPU = "acl_to_npu"
 TASK_TYPE = "Task Type"
@@ -126,8 +128,9 @@ BOTTLENECK = "bottleneck"
 DATA = "data"
 ADVISOR_ANALYSIS_OUTPUT_DIR = "advisor_analysis_result"
 DEFAULT_PROCESSES = 8
-CLUSTER_ANALYSIS_FILE_PATTERN = [r'profiler_info_\d+\.json', "step_trace_time.csv", "communication.json",
-                                 "communication_matrix.json"]
+CLUSTER_ANALYSIS_FILE_PATTERN = [
+    r'profiler_info_\d+\.json', "step_trace_time.csv", "communication.json", "communication_matrix.json"
+]
 ANALYSIS_OUTPUT_PATH = "ANALYSIS_OUTPUT_PATH"
 DEFAULT_RANK_FOR_PROFILING_ANALYSIS = 0
 PROFILER_INFO_FILE_PATTERN = r"profiler_info_(\d+)\.json"
@@ -139,10 +142,13 @@ MAX_NUM_PROCESSES = 4
 DEFAULT_STEP = "-1"
 STEP_RANK_SEP = "_"
 
-
 MAX_READ_LINE_BYTES = 8196 * 1024
 MAX_READ_FILE_BYTES = 64 * 1024 * 1024 * 1024
 MAX_READ_DB_FILE_BYTES = 8 * 1024 * 1024 * 1024
 
 WRITE_MODES = stat.S_IWUSR | stat.S_IRUSR | stat.S_IRGRP
 WRITE_FLAGS = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
+
+DISABLE_PROFILING_COMPARISON = "DISABLE_PROFILING_COMPARISON"
+FREE_DURATION_FOR_GC_ANALYSIS = "FREE_DURATION_FOR_GC_ANALYSIS"
+DISABLE_AFFINITY_API = "DISABLE_AFFINITY_API"

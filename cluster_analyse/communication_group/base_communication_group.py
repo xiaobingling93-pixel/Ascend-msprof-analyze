@@ -18,9 +18,13 @@ from abc import abstractmethod
 from collections import defaultdict
 from copy import deepcopy
 from multiprocessing import Pool
+import logging
 
 from common_func.constant import Constant
 from cluster_utils.data_transfer_adapter import DataTransferAdapter
+
+
+logger = logging.getLogger()
 
 
 class BaseCommunicationGroup:
@@ -51,8 +55,9 @@ class BaseCommunicationGroup:
             if os.path.exists(comm_dir) or os.path.exists(matrix_dir):
                 comm_op_dirs.append((rank_id, comm_dir, matrix_dir))
             else:
-                print(
-                    f"[WARNING] Rank {rank_id} does not have valid communication data and communication_matrix data.")
+                logger.warning(
+                    "Rank %s does not have valid communication data and communication_matrix data.", rank_id
+                )
         max_processes = int(os.cpu_count() / 2)
         with Pool(processes=max_processes) as p:
             self.rank_comm_dir_dict = p.map(self.read_communication_func, comm_op_dirs)
@@ -62,7 +67,7 @@ class BaseCommunicationGroup:
         while self.p2p_link:
             union_set = deepcopy(self.p2p_link[0])
             rm_list = [self.p2p_link[0]]
-            for idx, link_rank_set_x in enumerate(self.p2p_link[1:]):
+            for _, link_rank_set_x in enumerate(self.p2p_link[1:]):
                 if UnionFind.is_connected(link_rank_set_x, union_set):
                     union_set = union_set.union(link_rank_set_x)
                     rm_list.append(link_rank_set_x)
@@ -71,7 +76,7 @@ class BaseCommunicationGroup:
 
     def generate_collective_communication_group(self):
         self.communication_group[Constant.COLLECTIVE] = \
-            [list(group) for group_name, group in self.collective_group_dict.items()]
+            [list(group) for _, group in self.collective_group_dict.items()]
 
     def generate_p2p_communication_group(self):
         stage_group = {}
@@ -112,7 +117,7 @@ class BaseCommunicationGroup:
         for rank_id, rank_id_comm_dict, rank_id_matrix_dict in self.rank_comm_dir_dict:
             for step_id, step_id_dict in rank_id_comm_dict.items():
                 if not isinstance(step_id_dict, dict):
-                    print(f"[WARNING] rank{rank_id}'s communication.json has a wrong data struct.")
+                    logger.warning("rank%s's communication.json has a wrong data struct.", rank_id)
                     continue
                 self.get_collective_ops_name(rank_id, step_id_dict.get(Constant.COLLECTIVE))
                 for comm_op_type, comm_op_dict in step_id_dict.items():
@@ -120,7 +125,7 @@ class BaseCommunicationGroup:
 
             for step_id, step_id_dict in rank_id_matrix_dict.items():
                 if not isinstance(step_id_dict, dict):
-                    print(f"[WARNING] rank{rank_id}'s communication_matrix.json has a wrong data struct.")
+                    logger.warning("rank%s's communication_matrix.json has a wrong data struct.", rank_id)
                     continue
                 self.set_p2p_link(rank_id, step_id, rank_id_matrix_dict)
                 self.get_collective_ops_name(rank_id, step_id_dict.get(Constant.COLLECTIVE))
@@ -151,7 +156,9 @@ class BaseCommunicationGroup:
         ops = rank_id_matrix_dict.get(step_id, {})
         self.add_matrix_ops(rank_id, step_id, ops)
         if not ops:
-            print(f"[WARNING] rank{rank_id} {step_id} do not have communication matrix ops data.")
+            logger.warning(
+                "rank%s %s do not have communication matrix ops data.", rank_id, step_id
+            )
             return
         p2p_ops = ops.get(Constant.P2P, {})
         for op_name, link_dict in p2p_ops.items():
@@ -160,7 +167,7 @@ class BaseCommunicationGroup:
     def append_p2p_link(self, op_name, link_dict):
         for link in link_dict:
             if '-' not in link:
-                print(f"[WARNING] {op_name} has an invalid link key {link}!")
+                logger.warning("%s has an invalid link key %s!", op_name, link)
                 break
             src_rank = int(link.split('-')[0])
             dst_rank = int(link.split('-')[1])
@@ -194,7 +201,7 @@ class BaseCommunicationGroup:
     def add_matrix_ops(self, rank_id: int, step_id: str, step_id_dict: dict):
         for comm_op_type, comm_dict in step_id_dict.items():
             if comm_op_type != Constant.COLLECTIVE and comm_op_type != Constant.P2P:
-                print(f"[WARNING] Unknown communication operators type!")
+                logger.warning("Unknown communication operators type!")
                 continue
             for op_name, op_link_info in comm_dict.items():
                 if op_name.startswith('Total'):

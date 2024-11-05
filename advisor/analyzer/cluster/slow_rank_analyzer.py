@@ -20,8 +20,7 @@ from profiler.advisor.common import constant
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.advisor.dataset.cluster.cluster_dataset import ClusterStepTraceTimeDataset
-from profiler.advisor.utils.utils import safe_index_value
-from profiler.advisor.utils.utils import safe_division
+from profiler.advisor.utils.utils import safe_index_value, safe_division, convert_to_int, safe_index, convert_to_float
 
 logger = logging.getLogger()
 
@@ -64,7 +63,8 @@ class SlowRankAnalyzer(BaseAnalyzer):
     def optimize(self, **kwargs):
         if self.step_trace_dict is None:
             logger.error(
-                "Slow rank analysis failed, please ensure file 'step_trace_time.csv' exists in your profiling directory %s",
+                "Slow rank analysis failed, "
+                "please ensure file 'step_trace_time.csv' exists in your profiling directory %s",
                 constant.ASCEND_PROFILER_OUTPUT)
             return self.result
         self.process()
@@ -114,7 +114,7 @@ class SlowRankAnalyzer(BaseAnalyzer):
         data_list = []
         for key, value in self.step_trace_dict.items():
             step, rank_id = key.split(constant.STEP_RANK_SEP)
-            data_list.append([int(step), int(rank_id)] + value)
+            data_list.append([convert_to_int(step), convert_to_int(rank_id)] + value)
             if step and step not in self._steps:
                 self._steps.add(step)
 
@@ -213,12 +213,52 @@ class SlowRankAnalyzer(BaseAnalyzer):
 
             stage_key = f"stage-{index}"
             stage_step_rank[stage_key] = {}
-            stage_step_rank[stage_key]["maximum"] = {"rank_id": tmp_rank_list[max_time_index],
-                                                     "step": tmp_step_list[max_time_index]}
-            stage_step_rank[stage_key]["minimum"] = {"rank_id": tmp_rank_list[min_time_index],
-                                                     "step": tmp_step_list[min_time_index]}
+            stage_step_rank[stage_key]["maximum"] = {
+                "rank_id": tmp_rank_list[max_time_index],
+                "step": tmp_step_list[max_time_index],
+            }
+            stage_step_rank[stage_key]["minimum"] = {
+                "rank_id": tmp_rank_list[min_time_index],
+                "step": tmp_step_list[min_time_index],
+            }
 
         return stage_step_rank
+
+    def get_step_duration(self, rank_id, step=None):
+        # 根据指定rank和step，计算compute, communication, free三个维度之和作为单步耗时，用于计算优先级
+        headers = self.format_datas.get("headers")
+        default_step_duration = 0.0
+
+        free_col_index = safe_index_value(headers, SlowRankAnalyzer.FREE)
+        compute_col_index = safe_index_value(headers, SlowRankAnalyzer.COMPUTE)
+        communicate_col_index = safe_index_value(headers, SlowRankAnalyzer.COMMUNICATION)
+        rank_id_index = safe_index_value(headers, "rank_id")
+        step_index = safe_index_value(headers, "step")
+        if rank_id_index is None:
+            return default_step_duration
+
+        # 获取目标rank_id和step的行索引
+        if step is None or step_index is None:
+            row_index = safe_index_value(
+                [tuple_list[rank_id_index] == rank_id for tuple_list in self.format_datas.get("data")],
+                True
+            )
+        else:
+            index_match_list = []
+            for tuple_list in self.format_datas.get("data"):
+                index_match_list.append(tuple_list[rank_id_index] == rank_id and tuple_list[step_index] == step)
+            row_index = safe_index_value(
+                index_match_list,
+                True
+            )
+        if row_index is None:
+            return default_step_duration
+
+        compute_time = safe_index(safe_index(self.format_datas.get("data"), row_index, []), compute_col_index, 0)
+        communicate_time = safe_index(safe_index(self.format_datas.get("data"), row_index, []), communicate_col_index,
+                                      0)
+        free_time = safe_index(safe_index(self.format_datas.get("data"), row_index, []), free_col_index, 0)
+        return convert_to_float(compute_time) + convert_to_float(communicate_time) + convert_to_float(free_time)
 
     def get_priority(self):
         pass

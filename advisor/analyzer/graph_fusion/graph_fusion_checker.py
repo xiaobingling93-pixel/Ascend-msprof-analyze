@@ -1,3 +1,17 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import logging
 from typing import List
 
@@ -26,6 +40,23 @@ class GraphFusionRules:
                 graph = Graph(*sub_graph)
                 graph.build()
                 yield graph
+
+    @staticmethod
+    def get_attr_shape(node, type_name: str, attr_name: str) -> str:
+        attr_shape = []
+        node_attrs = getattr(node, type_name, [])
+        for attrs in node_attrs:
+            attr = getattr(attrs, attr_name, [])
+            attr_shape.append(",".join(attr))
+        return ";".join(attr_shape)
+
+    @staticmethod
+    def get_attr_type(node, type_name: str, attr_name: str) -> str:
+        attr_type = []
+        node_attrs = getattr(node, type_name, [])
+        for attr in node_attrs:
+            attr_type.append(getattr(attr, attr_name, ""))
+        return ";".join(attr_type)
 
     def find_fusion_matched_issues(self, graphs: List[GraphDataset]):
         query_graphs = QueryGraphParser(self.fusion_rules)
@@ -106,8 +137,11 @@ class GraphFusionRules:
             has_time_info = False
             if self.task_duration_list:
                 has_time_info = True
-                candidate_dict['total_duration'] = round(sum(sum(duration) for duration in
-                                                             self.task_duration_list[case_id]), 2)
+                candidate_dict['total_duration'] = round(
+                    sum(
+                        sum(duration)
+                        for duration in self.task_duration_list[case_id]
+                    ), 2)
             for node_index, refer_node in enumerate(nodes):
                 match = []
                 index = 0
@@ -188,20 +222,3 @@ class GraphFusionRules:
                         self.get_attr_type(host_node, "output", "dtype"),
                     ]
                     result.add_detail('fusion issues', detail=detail)
-
-    @staticmethod
-    def get_attr_shape(node, type_name: str, attr_name: str) -> str:
-        attr_shape = []
-        node_attrs = getattr(node, type_name, [])
-        for attrs in node_attrs:
-            attr = getattr(attrs, attr_name, [])
-            attr_shape.append(",".join(attr))
-        return ";".join(attr_shape)
-
-    @staticmethod
-    def get_attr_type(node, type_name: str, attr_name: str) -> str:
-        attr_type = []
-        node_attrs = getattr(node, type_name, [])
-        for attr in node_attrs:
-            attr_type.append(getattr(attr, attr_name, ""))
-        return ";".join(attr_type)

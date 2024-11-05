@@ -1,11 +1,22 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import logging
-
-from typing import List, Dict, Any
 
 from profiler.advisor.analyzer.base_analyzer import BaseAnalyzer
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.analyzer.schedule.synchronize_stream.synchronize_stream_checker import SynchronizeStreamChecker
-from profiler.advisor.display.html.priority_background_color import PriorityBackgroundColor
 from profiler.advisor.display.html.render import HTMLRender
 from profiler.advisor.dataset.timeline_event_dataset import ScheduleAnalysisDataset
 
@@ -25,13 +36,12 @@ class SynchronizeStreamAnalyzer(BaseAnalyzer):
 
     @BaseAnalyzer.check_data((ScheduleAnalysisDataset.get_key(),))
     def optimize(self, **kwargs):
-
         synchronize_stream_checker = SynchronizeStreamChecker()
-        synchronize_stream_checker.check_synchronize(self.timeline_event_dataset, kwargs.get("profiling_with_stack"))
+        synchronize_stream_checker.check_synchronize(self.timeline_event_dataset)
         synchronize_stream_checker.make_record(self.result)
-        synchronize_stream_checker.make_render(self.html_render, priority=self.get_priority())
+        synchronize_stream_checker.make_render(self.html_render, priority=self.get_priority(synchronize_stream_checker),
+                                               rank=kwargs.get("rank"))
         return self.result
 
-
-    def get_priority(self):
-        return PriorityBackgroundColor.low
+    def get_priority(self, synchronize_stream_checker):
+        return synchronize_stream_checker.priority

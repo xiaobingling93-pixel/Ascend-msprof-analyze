@@ -1,5 +1,18 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-msprof
+# Copyright (C) 2024-2024. Huawei Technologies Co., Ltd. All rights reserved.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """
 import logging
 from typing import Dict, List
@@ -49,6 +62,49 @@ class Msprof(ProfilingParser):
         self._max_time = 0.0
         self._data_process_time = 0.0
         self._start_point = 0.0
+
+    def __len__(self):
+        return len(self._tasks)
+
+    @property
+    def step_time(self):
+        return self._iteration_time + self._data_process_time
+
+    @property
+    def iteration_time(self):
+        return self._iteration_time
+
+    @property
+    def iter_max_time(self):
+        return self._max_time
+
+    @property
+    def iter_min_time(self):
+        return self._min_time
+
+    @property
+    def data_process_time(self):
+        return self._data_process_time
+
+    @property
+    def tasks(self):
+        return self._tasks
+
+    @property
+    def model_id(self):
+        return self._model_id
+
+    @property
+    def iteration_id(self):
+        return self._iteration_id
+
+    @property
+    def process_pid(self):
+        return self._process_pid
+
+    @property
+    def start_point(self):
+        return self._start_point
 
     def parse_from_file(self, file: str):
         if not self._parse_json(file):
@@ -100,46 +156,3 @@ class Msprof(ProfilingParser):
             self._model_id = int(task.name.split(":")[1])
         elif "process_name" == task.name:
             self._process_pid[task.args.get("name")] = task.pid
-
-    @property
-    def step_time(self):
-        return self._iteration_time + self._data_process_time
-
-    @property
-    def iteration_time(self):
-        return self._iteration_time
-
-    @property
-    def iter_max_time(self):
-        return self._max_time
-
-    @property
-    def iter_min_time(self):
-        return self._min_time
-
-    @property
-    def data_process_time(self):
-        return self._data_process_time
-
-    @property
-    def tasks(self):
-        return self._tasks
-
-    @property
-    def model_id(self):
-        return self._model_id
-
-    @property
-    def iteration_id(self):
-        return self._iteration_id
-
-    @property
-    def process_pid(self):
-        return self._process_pid
-
-    def __len__(self):
-        return len(self._tasks)
-
-    @property
-    def start_point(self):
-        return self._start_point

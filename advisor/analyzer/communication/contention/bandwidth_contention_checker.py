@@ -101,7 +101,7 @@ class BandwidthContentionChecker:
                 self.matmul_list.extend(value)
         self.matmul_list.sort(key=lambda x: convert_to_float(x.task_start_time))
 
-    def extract_SDMA_operator(self, hccl_dataset: CommunicationDataset):
+    def extract_sdma_operator(self, hccl_dataset: CommunicationDataset):
         for step_id, step_data in hccl_dataset.hccl_dict.items():
             if self.step_id is not None and step_id != self.step_id:
                 continue
@@ -114,7 +114,7 @@ class BandwidthContentionChecker:
         if not self.check_task_dict(profiling_dataset):
             return
         self.extract_matmul_operator(profiling_dataset)
-        self.extract_SDMA_operator(hccl_dataset)
+        self.extract_sdma_operator(hccl_dataset)
         hccl_index = 0
         matmul_index = 0
         while hccl_index < len(self.sdma_list) and matmul_index < len(self.matmul_list):

@@ -1,3 +1,17 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import logging
 from typing import List
 
@@ -20,6 +34,23 @@ class OpStackFinder:
         self.op_name = None
         self.task_type = None
         self.matched_index = set()
+
+    @staticmethod
+    def _query_index_by_torch_to_npu(event_dataset, torch_to_npu_event):
+        dst_op_event_key = torch_to_npu_event.ts
+        dst_op_event = event_dataset.ops_with_stack.get(dst_op_event_key)
+
+        if not dst_op_event:
+            return const.TIMELINE_BACKWARD_NO_STACK_CODE
+
+        return int(dst_op_event.get("dataset_index"))
+
+    @staticmethod
+    def _query_index_by_acl_to_npu(acl_to_npu_event):
+        if acl_to_npu_event:
+            return const.TIMELINE_ACL_TO_NPU_NO_STACK_CODE
+
+        return const.TIMELINE_BACKWARD_NO_STACK_CODE
 
     def get_api_stack_by_op(self, event_dataset: ComputationAnalysisDataset, op_name: List[str] = None,
                             task_type: str = None,
@@ -88,7 +119,10 @@ class OpStackFinder:
         if not event_dataset.dataset_len:
             return
         _ = event_dataset.parse_data_with_generator(self._query_stack_by_matched_index)
-            
+
+    def get_stack_record(self):
+        return self._stack_record
+
     def _get_api_stack_by_op(self, event_dataset: ComputationAnalysisDataset, op_name: str, task_type: str):
         for _, src_op_event in event_dataset.ops_with_task_type.items():
 
@@ -122,19 +156,6 @@ class OpStackFinder:
             if dst_op_index not in self._task_id_record:
                 self._task_id_record[dst_op_index] = []
             self._task_id_record[dst_op_index].append([task_id, op_name, task_type])
-
-    def _query_index_by_torch_to_npu(self, event_dataset, torch_to_npu_event):
-        dst_op_event_key = torch_to_npu_event.ts
-        dst_op_event = event_dataset.ops_with_stack.get(dst_op_event_key)
-
-        if not dst_op_event:
-            return const.TIMELINE_BACKWARD_NO_STACK_CODE
-
-        return int(dst_op_event.get("dataset_index"))
-
-    def _query_index_by_acl_to_npu(self, acl_to_npu_event):
-        if acl_to_npu_event:
-            return const.TIMELINE_ACL_TO_NPU_NO_STACK_CODE
 
     def _query_stacks_multiprocess(self, event_dataset, op_name_list, task_type):
 

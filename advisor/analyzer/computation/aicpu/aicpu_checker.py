@@ -1,3 +1,17 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import copy
 import os
 from functools import partial
@@ -33,22 +47,13 @@ class AicpuChecker(OperatorChecker):
         self.total_task_duration = 0.0
         self.aicpu_task_duration = 0.0
 
-    def _check_data(self, profiling_data: ProfilingDataset) -> bool:
-        if not self._check_summary(profiling_data):
-            return False
-        return True
-
-    def _check_operator(self, op_info) -> bool:
-        return op_info.task_type == constant.AI_CPU
-
-    def load_aicpu_rules(self, rule_path="rules/aicpu_rules.yaml") -> Dict:
+    def load_aicpu_rules(self, rule_path="rules/aicpu_rules.yaml"):
         if not os.path.isabs(rule_path):
             rule_path = os.path.join(os.path.dirname(__file__),
                                      "../../../", rule_path)
 
         if not os.path.exists(rule_path):
             logger.warning("Skip analyze aicpu issues, because %s does not exist.", rule_path)
-            return {}
 
         self.aicpu_rules = FileManager.read_yaml_file(rule_path)
         self.filter_aicpu_rules(self.aicpu_rules)
@@ -90,12 +95,14 @@ class AicpuChecker(OperatorChecker):
 
         def get_opeartor_stack_info(api_stack_finder: OpStackFinder, op_name_list: list) -> list:
             data: Dict[str, Dataset] = {}
-            event_dataset = ComputationAnalysisDataset(collection_path=profiling_data.collection_path, data=data, task_type=constant.AI_CPU)
+            event_dataset = ComputationAnalysisDataset(collection_path=profiling_data.collection_path,
+                                                       data=data,
+                                                       task_type=constant.AI_CPU)
 
             # disable multiprocessing, avoid cost time of enable new process for light task
             api_stack_finder.get_api_stack_by_op(event_dataset, op_name_list, constant.AI_CPU,
                                                  disable_multiprocess=True)
-            return api_stack_finder._stack_record
+            return api_stack_finder.get_stack_record()
 
         self._op_list = []
 
@@ -139,10 +146,11 @@ class AicpuChecker(OperatorChecker):
         for op in self._op_list:
             if not op.has_attr("input_data_types"):
                 logger.warning(
-                    "Skip checking of input data in AICPU checker because of not containing input_data_dtypes in op summary")
+                    "Skip checking of input data in AICPU checker "
+                    "because of not containing input_data_dtypes in op summary")
                 break
-            if op.has_attr(
-                    "input_data_types") and "DOUBLE" in op.input_data_types and op.op_name not in double_type_ai_cpu_operator:
+            if (op.has_attr("input_data_types") and "DOUBLE" in op.input_data_types
+                    and op.op_name not in double_type_ai_cpu_operator):
                 double_type_ai_cpu_operator.append(op.op_name)
         if bool(double_type_ai_cpu_operator):
             self._SUGGESTION.append("Try to convert double type operator to float, such as {}".format(
@@ -157,7 +165,8 @@ class AicpuChecker(OperatorChecker):
                                            format_result=self.format_operator_result(record,
                                                                                      constant.OPERATOR_LIST_UNLIMIT),
                                            add_render_list=add_render_list,
-                                           priority_background_color=priority)
+                                           priority_background_color=priority,
+                                           rank=kwargs.get("rank"))
 
     def format_operator_result(self, record, limit):
         """
@@ -171,23 +180,28 @@ class AicpuChecker(OperatorChecker):
         for suggestion in optimization_item.suggestion:
             release_suggestion_list.append(suggestion.replace('\n', '<br>'))
         logger.debug("suggestion list is %s", release_suggestion_list)
-        format_result = {"record": record.__dict__, "suggestion": '<br> '.join(release_suggestion_list),
-                         "task_duration": round(record.statistics_item.task_duration, 2)}
+        format_result = {
+            "record": record.__dict__,
+            "suggestion": '<br> '.join(release_suggestion_list),
+            "task_duration": round(record.statistics_item.task_duration, 2),
+        }
 
         statistic = self.group_by(copy.deepcopy(self._op_list), op_key='op_type',
                                   limit=limit)
         format_result["statistic"] = statistic
         stack_key_list = ["stack_info", "input_data_types", "output_data_types"]
         if statistic:
-            for key, info in statistic:
+            for _, info in statistic:
                 op_info_list = self.group_by_list(info.get("op_info_list"), stack_key_list, limit)
                 info["op_info_list"] = op_info_list
         return format_result
 
-    def group_by_list(self, op_list, op_key_list: List = ["stack_info", "input_data_types", "output_data_types"],
+    def group_by_list(self, op_list, op_key_list: List = None,
                       limit: int = constant.OPERATOR_LIST_UNLIMIT):
         if op_list is None:
             op_list = []
+        if op_key_list is None:
+            op_key_list = ["stack_info", "input_data_types", "output_data_types"]
 
         # op_key_list 合并添加合并的属性，作为 groupby 的 key value
         op_key = '+'.join(op_key_list)  # str, json
@@ -199,6 +213,14 @@ class AicpuChecker(OperatorChecker):
             op_info.add_attr(op_key, attribute)
 
         return self.group_by(op_list, op_key=op_key, limit=limit)
+
+    def _check_data(self, profiling_data: ProfilingDataset) -> bool:
+        if not self._check_summary(profiling_data):
+            return False
+        return True
+
+    def _check_operator(self, op_info) -> bool:
+        return op_info.task_type == constant.AI_CPU
 
 
 class BaserChecker:
@@ -250,6 +272,7 @@ class CommonChecker(BaserChecker):
             return suggestion.format(",".join(unsupported_dtype_diff).upper(),
                                      op_type,
                                      ",".join(valid_inputs).upper())
+        return None
 
     def build(self):
         for check in self.check_rules:
@@ -274,6 +297,7 @@ class ExampleGuideChecker(BaserChecker):
 
             if getattr(op_info, 'op_type', "UNKNOWN").lower() in supported_op_type:
                 return suggestion if "{}" not in suggestion else suggestion.format(url)
+            return None
 
         for check in self.check_rules:
             (_, check_rule), = check.items()

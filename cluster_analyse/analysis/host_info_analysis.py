@@ -89,7 +89,7 @@ class HostInfoAnalysis(BaseAnalysis):
                 sql = "select * from {0}".format(self.TABLE_RANK_DEVICE_MAP)
                 rank_device_info = DBManager.fetch_all_data(curs, sql, is_dict=False)
                 DBManager.destroy_db_connect(conn, curs)
-            host_uid, host_name = host_info[0][0], host_info[0][1]
+            host_uid, host_name = str(host_info[0][0]), str(host_info[0][1])
             for idx, data in enumerate(rank_device_info):
                 rank_device_info[idx] = list(data) + [host_uid, ]
             self.all_rank_host_info[host_uid] = host_name

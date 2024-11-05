@@ -1,3 +1,20 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+# Copyright (C) 2023-2024. Huawei Technologies Co., Ltd. All rights reserved.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""
+
 import os.path
 import re
 
@@ -11,7 +28,7 @@ class Singleton(object):
         self._cls = cls
         self._instance = {}
 
-    def __call__(self, args = None):
+    def __call__(self, args=None):
         if self._cls not in self._instance:
             self._instance[self._cls] = self._cls(args)
         return self._instance[self._cls]
@@ -82,21 +99,62 @@ class ArgsManager:
     @property
     def enable_api_compare(self):
         return self._args.enable_api_compare
-    
+
     @property
     def enable_kernel_compare(self):
         return self._args.enable_kernel_compare
 
     @classmethod
-    def check_profiling_path(cls, file_path: str):
-        PathManager.input_path_common_check(file_path)
-        PathManager.check_path_owner_consistent(file_path)
+    def check_profiling_path(cls, path_dict: dict):
+        PathManager.input_path_common_check(path_dict.get(Constant.PROFILING_PATH))
+        path_list = [path_dict.get(Constant.PROFILING_PATH)] if path_dict.get(
+            Constant.PROFILING_TYPE) == Constant.GPU else [
+            path_dict.get(Constant.PROFILING_PATH),
+            path_dict.get(Constant.TRACE_PATH),
+            path_dict.get(Constant.ASCEND_OUTPUT_PATH),
+            path_dict.get(Constant.INFO_JSON_PATH),
+            os.path.join(path_dict.get(Constant.ASCEND_OUTPUT_PATH, ""), "operator_memory.csv"),
+            os.path.join(path_dict.get(Constant.ASCEND_OUTPUT_PATH, ""), "memory_record.csv"),
+            os.path.join(path_dict.get(Constant.ASCEND_OUTPUT_PATH, ""), "kernel_details.csv"),
+            os.path.join(path_dict.get(Constant.ASCEND_OUTPUT_PATH, ""), "communication.json")
+        ]
+        PathManager.check_path_owner_consistent(path_list)
 
     @classmethod
     def check_output_path(cls, output_path: str):
         PathManager.check_input_directory_path(output_path)
         PathManager.make_dir_safety(output_path)
         PathManager.check_path_writeable(output_path)
+
+    @classmethod
+    def parse_profiling_path(cls, file_path: str):
+        PathManager.input_path_common_check(file_path)
+        if os.path.isfile(file_path):
+            (split_file_path, split_file_name) = os.path.split(file_path)
+            (shot_name, extension) = os.path.splitext(split_file_name)
+            if extension != ".json":
+                msg = f"Invalid profiling path suffix: {file_path}"
+                raise RuntimeError(msg)
+            json_type = FileReader.check_json_type(file_path)
+            return {
+                Constant.PROFILING_TYPE: json_type, Constant.PROFILING_PATH: file_path, Constant.TRACE_PATH: file_path
+            }
+        ascend_output = os.path.join(file_path, "ASCEND_PROFILER_OUTPUT")
+        profiler_output = ascend_output if os.path.isdir(ascend_output) else file_path
+        json_path = os.path.join(profiler_output, "trace_view.json")
+        if not os.path.isfile(json_path):
+            msg = (f"The data is not collected by PyTorch Adaptor mode or the data is not parsed. "
+                   f"Invalid profiling path: {profiler_output}")
+            raise RuntimeError(msg)
+        path_dict = {
+            Constant.PROFILING_TYPE: Constant.NPU, Constant.PROFILING_PATH: file_path,
+            Constant.TRACE_PATH: json_path, Constant.ASCEND_OUTPUT_PATH: profiler_output
+        }
+        sub_dirs = os.listdir(file_path)
+        for dir_name in sub_dirs:
+            if dir_name == "profiler_info.json" or re.match(r"profiler_info_[0-9]+\.json", dir_name):
+                path_dict.update({Constant.INFO_JSON_PATH: os.path.join(file_path, dir_name)})
+        return path_dict
 
     def get_step_args_with_validating(self):
         if self._args.base_step and self._args.comparison_step:
@@ -109,32 +167,6 @@ class ArgsManager:
         elif any([self._args.base_step, self._args.comparison_step]):
             msg = "Invalid param, base_step and comparison_step must be set at the same time."
             raise RuntimeError(msg)
-
-    def parse_profiling_path(self, file_path: str):
-        self.check_profiling_path(file_path)
-        if os.path.isfile(file_path):
-            (split_file_path, split_file_name) = os.path.split(file_path)
-            (shot_name, extension) = os.path.splitext(split_file_name)
-            if extension != ".json":
-                msg = f"Invalid profiling path suffix: {file_path}"
-                raise RuntimeError(msg)
-            json_type = FileReader.check_json_type(file_path)
-            return {Constant.PROFILING_TYPE: json_type, Constant.PROFILING_PATH: file_path,
-                    Constant.TRACE_PATH: file_path}
-        ascend_output = os.path.join(file_path, "ASCEND_PROFILER_OUTPUT")
-        profiler_output = ascend_output if os.path.isdir(ascend_output) else file_path
-        json_path = os.path.join(profiler_output, "trace_view.json")
-        if not os.path.isfile(json_path):
-            msg = (f"The data is not collected by PyTorch Adaptor mode or the data is not parsed. "
-                   f"Invalid profiling path: {profiler_output}")
-            raise RuntimeError(msg)
-        path_dict = {Constant.PROFILING_TYPE: Constant.NPU, Constant.PROFILING_PATH: file_path,
-                     Constant.TRACE_PATH: json_path, Constant.ASCEND_OUTPUT_PATH: profiler_output}
-        sub_dirs = os.listdir(file_path)
-        for dir_name in sub_dirs:
-            if dir_name == "profiler_info.json" or re.match(r"profiler_info_[0-9]+\.json", dir_name):
-                path_dict.update({Constant.INFO_JSON_PATH: os.path.join(file_path, dir_name)})
-        return path_dict
 
     def init(self):
         if self._args.max_kernel_num is not None and self._args.max_kernel_num <= Constant.LIMIT_KERNEL:
@@ -163,15 +195,13 @@ class ArgsManager:
             self._args.enable_communication_compare = True
             self._args.enable_api_compare = True
             self._args.enable_kernel_compare = True
-        
-        self.get_step_args_with_validating()
-        base_profiling_path = PathManager.get_realpath(self._args.base_profiling_path)
-        self.check_profiling_path(base_profiling_path)
-        self._base_path_dict = self.parse_profiling_path(base_profiling_path)
-        comparison_profiling_path = PathManager.get_realpath(self._args.comparison_profiling_path)
-        self.check_profiling_path(comparison_profiling_path)
-        self._comparison_path_dict = self.parse_profiling_path(comparison_profiling_path)
 
+        self.get_step_args_with_validating()
+        self._base_path_dict = self.parse_profiling_path(PathManager.get_realpath(self._args.base_profiling_path))
+        self.check_profiling_path(self._base_path_dict)
+        self._comparison_path_dict = self.parse_profiling_path(
+            PathManager.get_realpath(self._args.comparison_profiling_path))
+        self.check_profiling_path(self._comparison_path_dict)
         if self._args.output_path:
             self.check_output_path(PathManager.get_realpath(self._args.output_path))
 

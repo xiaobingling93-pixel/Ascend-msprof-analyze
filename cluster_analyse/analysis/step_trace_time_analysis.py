@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import logging
 import os
 import logging
 
@@ -60,8 +60,17 @@ class StepTraceTimeAnalysis:
         if not self.distributed_args:
             return
 
-        calculator = ParallelStrategyCalculator(**self.distributed_args)
-        parallelism_map = calculator.run()
+        if not isinstance(self.distributed_args, dict):
+            self.distributed_args = None
+            return
+
+        try:
+            calculator = ParallelStrategyCalculator(**self.distributed_args)
+            parallelism_map = calculator.run()
+        except Exception as err:
+            logging.error(err)
+            self.distributed_args = None
+            return
 
         if len(parallelism_map) > len(self.step_time_dict):
             missing_rank_ids = [

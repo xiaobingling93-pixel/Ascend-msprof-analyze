@@ -102,7 +102,7 @@ class CommMatrixAnalysis(BaseAnalysis):
         }
         for op_name, op_dict in step_dict.items():
             link_info = defaultdict(lambda:default_value.copy())
-            for _, _ in op_dict.items():
+            for rank_id, rank_dict in op_dict.items():
                 process_link_key()
             step_dict[op_name] = convert_local_to_global_rank()
 

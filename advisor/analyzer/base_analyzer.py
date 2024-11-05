@@ -91,10 +91,10 @@ class BaseAnalyzer(VersionControl, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def get_priority(self):
+    def get_priority(self, max_mem_op_dur):
         pass
 
-    def init_dataset_list(self)->None:
+    def init_dataset_list(self) -> None:
         dataset_cls_list = self.dataset_cls_list
         if len(dataset_cls_list) == 0:
             logger.warning(f"Analyser: %s don't rely on any dataset!", self.__class__.__name__)
@@ -107,20 +107,6 @@ class BaseAnalyzer(VersionControl, metaclass=ABCMeta):
                 except Exception as e:
                     logger.error(e)
                     continue
-                key = dataset_cls.get_key()
-                if key not in self.dataset_list:
-                    self.dataset_list[key] = []
-                    self.dataset_list[key].append(dataset)
-
-    def init_dataset_list(self) -> None:
-        dataset_cls_list = self.dataset_cls_list
-        if len(dataset_cls_list) == 0:
-            logger.warning(f"Analyzer: %s don't rely on any dataset!", self.__class__.__name__)
-            return
-
-        for dataset_cls in dataset_cls_list:
-            if dataset_cls and callable(dataset_cls):
-                dataset = dataset_cls(collection_path=self.collection_path, data=self.dataset_list, **self.kwargs)
                 key = dataset_cls.get_key()
                 if key not in self.dataset_list:
                     self.dataset_list[key] = []

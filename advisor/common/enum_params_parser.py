@@ -1,3 +1,19 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+# Copyright (C) 2024-2024. Huawei Technologies Co., Ltd. All rights reserved.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""
 import os
 import logging
 import typing
@@ -17,6 +33,11 @@ class EnumParamsParser():
     ENVS = "envs"
     OPTIONS = "options"
     DEFAULT = "default"
+    TYPE = "type"
+    STR_TYPE = "str"
+    LIST_TYPE = "list"
+    INT_TYPE = "int"
+    BOOLEAN_TYPE = "boolean"
 
     def __init__(self):
         enum_params_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config",
@@ -47,6 +68,14 @@ class EnumParamsParser():
             options = [value for value in options if filter_func(value)]
 
         return options
+
+    def get_value_type(self, key):
+        for param_type in [self.ARGUMENTS, self.ENVS]:
+            if key not in self.enum_params.get(param_type, {}):
+                continue
+            value_type = self.enum_params.get(param_type, {}).get(key, {}).get(self.TYPE, self.STR_TYPE)
+            return value_type
+        return self.STR_TYPE
 
     def get_default(self, key):
         default_value = None

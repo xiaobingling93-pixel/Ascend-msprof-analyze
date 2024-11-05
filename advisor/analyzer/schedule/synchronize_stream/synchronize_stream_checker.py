@@ -1,12 +1,29 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import logging
+import os
 
+from profiler.advisor.analyzer.schedule.timeline_base_checker import TimelineBaseChecker
 from profiler.advisor.common import constant as const
 from profiler.advisor.config.config import Config
 from profiler.advisor.dataset.timeline_event_dataset import ScheduleAnalysisDataset
+from profiler.advisor.display.html.priority_background_color import PriorityBackgroundColor
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
-from profiler.advisor.analyzer.schedule.timeline_base_checker import TimelineBaseChecker
-from profiler.advisor.utils.utils import format_timeline_result
+from profiler.advisor.utils.utils import format_timeline_result, safe_division
+from profiler.cluster_analyse.common_func.file_manager import FileManager
 
 logger = logging.getLogger()
 
@@ -20,45 +37,44 @@ class SynchronizeStreamChecker(TimelineBaseChecker):
         self.desc = ""
         self.suggestions = []
         self.solutions = []
-        self.max_synchronize_num = None
+        self.min_co_occurrence_ratio = 0
+        self.priority = None
+        self._init_rule()
 
-    def check_synchronize(self, event_dataset: ScheduleAnalysisDataset, profiling_with_stack=None):
-        """
-        :Param event_dataset: dataset of timeline event
-        """
+    def check_synchronize(self, event_dataset: ScheduleAnalysisDataset):
         if not hasattr(event_dataset, "synchronize_stream") or not getattr(event_dataset, "synchronize_stream"):
-            logger.debug("Skip synchronize stream checker, because no synchronize stream found")
+            logger.info("Skip synchronize stream checker, because no synchronize stream found")
             return
 
-        synchronize_num = event_dataset.synchronize_stream.total_count
-        slow_synchronize_stream = event_dataset.synchronize_stream.slow_synchronize_stream
-        total_slow_synchronize_time = sum((float(sync_stream.dur) for sync_stream in slow_synchronize_stream))
+        node_launch_num = 0
+        co_occurrence_num = 0
+        synchronize_num = 0
+        synchronize_stream = event_dataset.synchronize_stream
+        for index, op in enumerate(synchronize_stream):
+            if op.name.startswith(const.NODE_LAUNCH):
+                node_launch_num += 1
+            if op.name.startswith(const.SYNC_STREAM):
+                synchronize_num += 1
 
-        synchronize_stream_rule = event_dataset.synchronize_stream.rule
-        self.max_synchronize_num = synchronize_stream_rule.get("max_synchronize_num")
-        self.synchronize_issues = synchronize_num >= self.max_synchronize_num and len(slow_synchronize_stream) > 0
-        if not self.synchronize_issues:
-            return
+                # 统计nodeLaunch 和 synchronizeStream 一前一后连续出现次数
+                if index > 0 and synchronize_stream[index - 1].name.startswith(const.NODE_LAUNCH):
+                    co_occurrence_num += 1
 
-        for sync_stream in slow_synchronize_stream:
-            if sync_stream.name not in self._matched_op_index:
-                self._matched_op_index[sync_stream.name] = []
-            self._matched_op_index[sync_stream.name].append(sync_stream.dataset_index)
-        self.query_stack(event_dataset, profiling_with_stack)
+        # 当共现次数很多时，则大概率设置了ASCEND_LAUNCH_BLOCKING环境变量
+        co_occurrence_ratio = round(safe_division(co_occurrence_num, node_launch_num), 4)
+        if co_occurrence_ratio > self.min_co_occurrence_ratio:
+            self.synchronize_issues = True
 
-        self.desc = synchronize_stream_rule.get("problem")
+        self.priority = self.get_priority()
+
         self.desc = self.desc.format(synchronize_num=synchronize_num,
-                                     slow_synchronize_num=len(slow_synchronize_stream),
-                                     total_synchronize_stream_time=total_slow_synchronize_time)
+                                     node_launch_num=node_launch_num,
+                                     co_occur_ratio=co_occurrence_ratio)
 
-        solutions = synchronize_stream_rule.get("solutions")
+        solutions = []
         for solution in solutions:
             renderer_solution = {}
             for key, val in solution.items():
-                if self.empty_stacks and self.framework_black_list:
-                    # 如果堆栈源于torch, torch_npu等框架，则不提示修改的代码
-                    if "modify code" in key.lower():
-                        continue
                 self.suggestions.append(f"{key}, {val.get('desc')}")
                 renderer_solution.update({key: val})
             self.solutions.append(renderer_solution)
@@ -78,6 +94,7 @@ class SynchronizeStreamChecker(TimelineBaseChecker):
         if not self.synchronize_issues:
             return
         priority = kwargs.get("priority")
+        rank = kwargs.get("rank")
         format_result_for_html = format_timeline_result(dict(self.matched_op_stacks), dump_html=True)
         html_render.render_template(key="schedule",
                                     template_dir="templates",
@@ -88,4 +105,25 @@ class SynchronizeStreamChecker(TimelineBaseChecker):
                                     with_stack_doc_url=Config().timeline_with_stack_doc_url,
                                     empty_stacks=self.empty_stacks,
                                     framework_black_list=self.framework_black_list,
-                                    priority_background_color=priority)
+                                    priority_background_color=priority,
+                                    rank=rank)
+
+    def get_priority(self):
+        return PriorityBackgroundColor.high
+
+    def _init_rule(self):
+        synchronize_rule_path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))),
+            "rules",
+            "synchronize.yaml"
+        )
+
+        synchronize_rule = FileManager.read_yaml_file(synchronize_rule_path)
+
+        self.min_co_occurrence_ratio = synchronize_rule.get("min_co_occurrence_ratio")
+        self.desc = synchronize_rule.get("problem")
+
+        self.solutions = synchronize_rule.get("solutions")
+        for solution in self.solutions:
+            for key, val in solution.items():
+                self.suggestions.append(f"{key}, {val.get('desc')}")

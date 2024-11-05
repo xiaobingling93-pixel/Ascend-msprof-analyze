@@ -18,7 +18,7 @@ class TestEnumParamsParser(unittest.TestCase):
     def setUp(self) -> None:
         self.enum_params_parser = EnumParamsParser()
         self.argument_keys = sorted(["cann_version", "torch_version", "analysis_dimensions", "profiling_type"])
-        self.env_keys = ["ADVISOR_ANALYZE_PROCESSES"]
+        self.env_keys = ["ADVISOR_ANALYZE_PROCESSES", "DISABLE_PROFILING_COMPARISON", "DISABLE_AFFINITY_API"]
 
     def test_get_keys(self):
         total_keys = sorted(self.argument_keys + self.env_keys)
@@ -34,7 +34,7 @@ class TestEnumParamsParser(unittest.TestCase):
     def test_get_env_keys(self):
         env_keys = sorted(self.enum_params_parser.get_envs_keys())
         self.assertTrue(isinstance(env_keys, list))
-        self.assertEqual(env_keys, self.env_keys)
+        self.assertEqual(env_keys, sorted(self.env_keys))
 
     def test_get_default(self):
         self.assertTrue(self.enum_params_parser.get_default("cann_version"), "8.0.RC1")

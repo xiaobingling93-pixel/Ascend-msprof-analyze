@@ -38,7 +38,9 @@ from profiler.advisor.dataset.timeline_op_collector.timeline_op_collector import
     AclToNpuCollector,
     OpStackCollector,
     StepCollector,
-    GcCollector
+    GcCollector,
+    FreeEventsCollector,
+    AclEventsCollector
 )
 
 logger = logging.getLogger()
@@ -56,7 +58,7 @@ class BaseTimelineEventDataset:
                                                                lambda file: file.endswith("trace_view.json"))
         self.dataset_len = None
         self.step = kwargs.get("step")
-        self.step_duration = 0.0
+        self.step_duration = kwargs.get("step_duration", 0.0)
         if not build_dataset:
             return
 
@@ -179,7 +181,9 @@ class ScheduleAnalysisDataset(BaseTimelineEventDataset):
         SyncBNCollector=SyncBNCollector(),
         AtenCollector=AtenCollector(),
         OptimizerCollector=OptimizerCollector(),
-        GcCollector=GcCollector()
+        GcCollector=GcCollector(),
+        FreeEventsCollector=FreeEventsCollector(),
+        AclEventsCollector=AclEventsCollector()
     )
 
     def __init__(self, collection_path, data: dict, build_dataset=True, **kwargs) -> None:
@@ -193,7 +197,7 @@ class ScheduleAnalysisDataset(BaseTimelineEventDataset):
         # eliminate sub aten operator of the first level aten operator by 'ts' and 'dur',
         # keep the first level aten operator contiguous
         formated_atens = []
-        if not hasattr(self, "aten") or not hasattr(self, "synchronize_stream"):
+        if not hasattr(self, "aten"):
             return
 
         for event in sorted(self.aten, key=lambda x: x.get("ts", -1)):
@@ -201,15 +205,6 @@ class ScheduleAnalysisDataset(BaseTimelineEventDataset):
                 if not formated_atens or not formated_atens[-1].ts_include(event):
                     formated_atens.append(event)
 
-            elif event.name.startswith(const.SYNC_STREAM):
-                self.synchronize_stream.update_sync_stream_count()
-                if formated_atens and formated_atens[-1].ts_include(event):
-                    # 使用aten算子的索引，用于查询堆栈
-                    event["dataset_index"] = formated_atens[-1].get("dataset_index")
-                    self.synchronize_stream.append_slow_sync_stream(event)
-
-            else:
-                continue
         self.aten = formated_atens
 
 

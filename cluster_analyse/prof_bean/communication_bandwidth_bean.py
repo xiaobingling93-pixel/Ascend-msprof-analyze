@@ -28,7 +28,7 @@ class CommunicationBandwidthBean:
         self._transit_size = single_op.get(TableConstant.TRANSIT_SIZE, 0.0)
         self._transit_time = single_op.get(TableConstant.TRANSIT_TIME, 0.0)
         self._bandwidth = single_op.get(TableConstant.BANDWIDTH, 0.0)
-        self._large_packet_ratio  = single_op.get(TableConstant.LARGE_PACKET_RATIO, 0)
+        self._large_packet_ratio = single_op.get(TableConstant.LARGE_PACKET_RATIO, 0)
         self._package_size = single_op.get(TableConstant.PACKAGE_SIZE, 0.0)
         self._count = single_op.get(TableConstant.COUNT, 0.0)
         self._total_duration = single_op.get(TableConstant.TOTAL_DURATION, 0.0)
@@ -90,6 +90,9 @@ class CommunicationBandwidthBean:
     
     def set_bandwidth(self, value: float):
         self._bandwidth = value
+
+    def set_group_name(self, value: str):
+        self._group_name = value
 
     def convert_output(self):
         return [

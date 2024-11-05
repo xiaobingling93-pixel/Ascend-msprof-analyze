@@ -1,3 +1,17 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import copy
 import logging
 from textwrap import fill
@@ -34,7 +48,8 @@ class OperatorChecker(VersionControl):
                                        f"--tune_ops_file={Config().tune_ops_file}'\n"
     MSLite_OPERATOR_TUNE_SUGGESTION = f"Optimize operator by AOE in mindspore lite framework, such as:\n" \
                                       f"converter_lite --fmk=ONNX --optimize=ascend_oriented --saveType=MINDIR " \
-                                      f"--modelFile=$user_model.onnx --outputFile=user_model --configFile=./config.txt\n"
+                                      f"--modelFile=$user_model.onnx --outputFile=user_model " \
+                                      f"--configFile=./config.txt\n"
 
     def __init__(self, cann_version: str):
         self.cann_version = cann_version
@@ -95,18 +110,19 @@ class OperatorChecker(VersionControl):
             return True
         return False
 
-    def make_record(self, profiling_data: ProfilingDataset, rank_id=None):
+    def make_record(self, profiling_data: ProfilingDataset, rank=None):
         """
         Make record for what and how to optimize
         :param profiling_data: profiling data
         :return: optimize record
         """
 
-        if rank_id is not None:
-            self._PROBLEM = f"rank {rank_id} ".capitalize() + self._PROBLEM.lower()
+        if rank is not None:
+            self._PROBLEM = f"rank {rank} ".capitalize() + self._PROBLEM.lower()
 
-        task_duration_list = [float(op_info.get_attr("task_duration")) for op_info in self._op_list if
-                              hasattr(op_info, "get_attr")]
+        task_duration_list = [float(op_info.get_attr("task_duration"))
+                              for op_info in self._op_list
+                              if hasattr(op_info, "get_attr")]
         total_cost_time = sum(task_duration_list)
         total_task_duration = profiling_data.op_summary.get_total_task_duration()
         count = len(task_duration_list)
@@ -123,7 +139,7 @@ class OperatorChecker(VersionControl):
             return description
 
         desc_suffix = []
-        for i in range(len(op_type_list)):
+        for i, _ in enumerate(op_type_list):
             if i % 3 == 0 and i != 0:
                 desc_suffix.append("\n")
 
@@ -154,7 +170,8 @@ class OperatorChecker(VersionControl):
             else:
                 logger.warning(
                     "Skip dynamic shape check because of not containing ge_info.db file in host filefloder.\n"
-                    "To enable dynamic shape check, please try to set data_simplification=False in experimental_config.\n"
+                    "To enable dynamic shape check, "
+                    "please try to set data_simplification=False in experimental_config.\n"
                     "More details please refer to link : %s", Config().ascend_profiler_url)
         else:
             # CANN 8.0.RC1 之后 op_state 属性从 op_summary 文件中获取
@@ -181,18 +198,21 @@ class OperatorChecker(VersionControl):
             release_suggestion = copy.deepcopy(suggestion)
             if release_suggestion == OperatorChecker.PyTorch_OPERATOR_TUNE_SUGGESTION:
                 release_suggestion += \
-                    (f"for details please refer to link : <a href={Config().pytorch_aoe_operator_tune_url}>LINK</a>")
+                    (f"for details please refer to link : <a href={Config().pytorch_aoe_operator_tune_url} target='_blank'>LINK</a>")
             elif release_suggestion == OperatorChecker.MSLite_OPERATOR_TUNE_SUGGESTION:
                 release_suggestion += \
                     (f"\nThe config file for MSLite AOE usage is as follows:\n" \
                      f"[ascend_context]\n" \
                      f"aoe_mode=\"operator tuning\"\n" \
                      f"--tune_ops_file={Config().tune_ops_file}\n"
-                     f"\nFor details please refer to link : <a href={Config().mslite_infer_aoe_operator_tune_url}>LINK</a>")
+                     f"\nFor details please refer to link : <a href="
+                     f"{Config().mslite_infer_aoe_operator_tune_url} target='_blank'>LINK</a>")
             release_suggestion_list.append(release_suggestion.replace('\n', '<br>'))
-        format_result = {"record": record.__dict__,
-                         "suggestion": fill('<br> '.join(release_suggestion_list), width=200),
-                         "task_duration": round(record.statistics_item.task_duration, 2)}
+        format_result = {
+            "record": record.__dict__,
+            "suggestion": fill('<br> '.join(release_suggestion_list), width=200),
+            "task_duration": round(record.statistics_item.task_duration, 2),
+        }
         statistic = self.group_by(copy.deepcopy(self._op_list), limit=limit)
         format_result["statistic"] = statistic
         return format_result
@@ -210,15 +230,21 @@ class OperatorChecker(VersionControl):
             op_list = []
         statistic = {}  # str, json
         for op_info in op_list:
-            if statistic.get(op_info.get_attr(op_key)):
-                statistic[op_info.get_attr(op_key)]["summary"]["total_duration"] = float(
-                    statistic[op_info.get_attr(op_key)]["summary"]["total_duration"]) + float(
-                    op_info.get_attr("task_duration", constant.DEFAULT_DURATION_ZERO))
-                statistic[op_info.get_attr(op_key)]["summary"]["counts"] += 1
+            statistic_op_key = statistic.get(op_info.get_attr(op_key), {})
+            summary = statistic_op_key.get("summary", {})
+            if summary:
+                if summary.get("total_duration"):
+                    summary["total_duration"] = float(
+                        summary["total_duration"]) + float(
+                        op_info.get_attr("task_duration", constant.DEFAULT_DURATION_ZERO))
+                if summary.get("counts"):
+                    summary["counts"] += 1
                 stack_info = op_info.get_attr("stack_info")
                 if stack_info:
                     op_info.stack_info = stack_info.replace('\r\n', '<br/>')
-                statistic[op_info.get_attr(op_key)]["op_info_list"].append(op_info)
+                if statistic_op_key.get("op_info_list") is None:
+                    statistic_op_key["op_info_list"] = []
+                statistic_op_key["op_info_list"].append(op_info)
             else:
                 statistic[op_info.get_attr(op_key)] = {"summary": {}, "op_info_list": []}
                 statistic[op_info.get_attr(op_key)]["summary"]["op_type"] = op_info.get_attr(
@@ -244,15 +270,6 @@ class OperatorChecker(VersionControl):
         else:
             logger.warning("%s checker do not has results to format html", str(self.__class__.__name__))
         return statistic
-
-    def _check_data(self, profiling_data):
-        return True
-
-    def _check_operator(self, op_info):
-        return False
-
-    def _get_income(self, _op_info: OpInfo) -> float:
-        return 0
 
     def get_tune_op_list(self):
         """
@@ -282,12 +299,6 @@ class OperatorChecker(VersionControl):
                 op_type_list.append(op_info.op_type)
         return op_type_list
 
-    def _check_summary(self, data: ProfilingDataset):
-        if not hasattr(data, "op_summary"):
-            logger.warning(self.SKIP_CHECK_MSG, self._CHECKER, "op summary")
-            return False
-        return True
-
     def get_details(self) -> list:
         """
         get details of operator to be optimized
@@ -314,3 +325,18 @@ class OperatorChecker(VersionControl):
             self._SUGGESTION.append(self.PyTorch_OPERATOR_TUNE_SUGGESTION)
         elif profiling_data.PROF_TYPE == EnumParamsParser.profiling_type.mslite:
             self._SUGGESTION.append(self.MSLite_OPERATOR_TUNE_SUGGESTION)
+
+    def _check_data(self, profiling_data):
+        return True
+
+    def _check_operator(self, op_info):
+        return False
+
+    def _get_income(self, _op_info: OpInfo) -> float:
+        return 0
+
+    def _check_summary(self, data: ProfilingDataset):
+        if not hasattr(data, "op_summary"):
+            logger.warning(self.SKIP_CHECK_MSG, self._CHECKER, "op summary")
+            return False
+        return True
