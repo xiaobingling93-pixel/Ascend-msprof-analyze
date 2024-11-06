@@ -68,7 +68,7 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
         try:
             df = pd.read_excel(self.RESULT_EXCEL["all"], sheet_name='problems',header=0)
         except FileNotFoundError:
-            logging.error("File %s not found.", str(self.RESULT_EXCEL["all"]))
+            logging.error("File %s not found.", self.RESULT_EXCEL["all"])
             return
 
         for index, row in df.iterrows():
@@ -102,13 +102,13 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
         try:
             df = pd.read_excel(self.RESULT_EXCEL["computation"], sheet_name='problems', header=0)
         except FileNotFoundError:
-            logging.error("File %s not found.", str(self.RESULT_EXCEL["computation"]))
+            logging.error("File %s not found.", self.RESULT_EXCEL["computation"])
             return
 
         for index, row in df.iterrows():
             self.assertEqual(category[index], row["category"])
             self.assertEqual(description_len[index], len(row["description"].split("\n")))
-            self.assertEqual(suggestion_len[index], ((type(row["suggestion"]) == float) or
+            self.assertEqual(suggestion_len[index], (isinstance(row["suggestion"],float) or
                                                      len(row["suggestion"].split("\n"))))
             self.assertEqual(problem_count[index], (math.isnan(row["problem count"]) or row["problem count"]))
             self.assertEqual(total_time[index], (math.isnan(row["total_time(us)"]) or
@@ -136,13 +136,13 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
         try:
             df = pd.read_excel(self.RESULT_EXCEL["schedule"], sheet_name='problems', header=0)
         except FileNotFoundError:
-            logging.error("File %s not found.", str(self.RESULT_EXCEL["schedule"]))
+            logging.error("File %s not found.", self.RESULT_EXCEL["schedule"])
             return
 
         for index, row in df.iterrows():
             self.assertEqual(category[index], row["category"])
             self.assertEqual(description_len[index], len(row["description"].split("\n")))
-            self.assertEqual(suggestion_len[index], ((type(row["suggestion"]) == float) or
+            self.assertEqual(suggestion_len[index], (isinstance(row["suggestion"] ,float) or
                                                      len(row["suggestion"].split("\n"))))
             self.assertEqual(problem_count[index], (math.isnan(row["problem count"]) or row["problem count"]))
             self.assertEqual(total_time[index], (math.isnan(row["total_time(us)"]) or
@@ -171,7 +171,7 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
             try:
                 df = pd.read_excel(self.RESULT_EXCEL[pattern], sheet_name='overall summary', header=0)
             except FileNotFoundError:
-                logging.error("File %s not found.", str(self.RESULT_EXCEL[pattern]))
+                logging.error("File %s not found.", self.RESULT_EXCEL[pattern])
                 return
 
             for index, row in df.iterrows():
@@ -232,7 +232,7 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
         try:
             df = pd.read_excel(self.RESULT_EXCEL["all"], sheet_name='Bandwidth Contention Analysis', header=0)
         except FileNotFoundError:
-            logging.error("File %s not found.", str(self.RESULT_EXCEL["all"]))
+            logging.error("File %s not found.", self.RESULT_EXCEL["all"])
             return
 
         for index, row in df.iterrows():
@@ -271,7 +271,7 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
             try:
                 df = pd.read_excel(self.RESULT_EXCEL[pattern], sheet_name='AICPU operator', header=0)
             except FileNotFoundError:
-                logging.error("File %s not found.", str(self.RESULT_EXCEL[pattern]))
+                logging.error("File %s not found.", self.RESULT_EXCEL[pattern])
                 return
 
             for index, row in df.iterrows():
@@ -327,7 +327,7 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
             try:
                 df = pd.read_excel(self.RESULT_EXCEL[pattern], sheet_name='Affinity apis', header=0)
             except FileNotFoundError:
-                logging.error("File %s not found.", str(self.RESULT_EXCEL[pattern]))
+                logging.error("File %s not found.", self.RESULT_EXCEL[pattern])
                 return
 
             for index, row in df.iterrows():
@@ -359,7 +359,7 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
             try:
                 df = pd.read_excel(self.RESULT_EXCEL[pattern], sheet_name='operator dispatch', header=0)
             except FileNotFoundError:
-                logging.error("File %s not found.", str(self.RESULT_EXCEL[pattern]))
+                logging.error("File %s not found.", self.RESULT_EXCEL[pattern])
                 return
             for index, row in df.iterrows():
                 self.assertEqual(issues[index], row["Issues"])

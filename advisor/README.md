@@ -231,7 +231,7 @@ computation模块从device计算性能维度进行分析，能够识别AI CPU、
 
 ![computation_1](./img/computation_1.png)
 
-上图中torch_npu.npu.set_compile_mode接口介绍请参见[torch_npu.npu.set_compile_mode](https://www.hiascend.com/document/detail/zh/Pytorch/60RC2/apiref/apilist/ptaoplist_000880.html)。
+上图中torch_npu.npu.set_compile_mode接口介绍请参见[torch_npu.npu.set_compile_mode](https://www.hiascend.com/document/detail/zh/Pytorch/60RC2/apiref/apilist/ptaoplist_000880.html)；AICPU算子替换样例可参考《[Samples of AI CPU Operator Replacement](https://gitee.com/ascend/mstt/blob/master/profiler/advisor/doc/Samples%20of%20AI%20CPU%20Operator%20Replacement.md)》。
 
 当存在pp stage（流水线并行）时，computation会按stage分析，每个stage就是一个流水线切分，比如0\~7卡为stage-0、8\~15卡为stage-1。
 
@@ -256,7 +256,7 @@ schedule模块包GC Analysis、含亲和API、aclOpCompile、syncBatchNorm、Syn
 - `gc.set_threshold(threshold0, thresholdl, threshold2)`：这个函数用于设置垃圾回收的阈值。垃圾回收器将所有对象分为三代（0代、1代和2代），每一代的对象在经历垃圾回收后会被移到下一代。`threshold0`控制第0代的垃圾回收频率，`threshold1`控制第1代的垃圾回收频率，`threshold2`控制第2代的垃圾回收频率。将`threshold0`设为0可以禁用垃圾回收。
 - `gc.disable ()`：这个函数用于禁用自动垃圾回收。调用`gc.disable ()`后，垃圾回收器将不会自动运行，直到手动调用`gc.enable（）`。
 
-如下图示例，Affinity API Issues提示存在可以替换的亲和API并给出对应的堆栈，用户可以根据堆栈找到需要修改的代码，并给出修改案例（API instruction超链接）。
+如下图示例，Affinity API Issues提示存在可以替换的亲和API并给出对应的堆栈，用户可以根据堆栈找到需要修改的代码，并给出修改案例（[API instruction](https://gitee.com/ascend/mstt/blob/master/profiler/advisor/doc/Samples%20of%20Fused%20Operator%20API%20Replacement.md)）。
 
 ![schedule_3](./img/schedule_3.png)
 

@@ -19,6 +19,7 @@ import re
 import os
 import stat
 import warnings
+import logging
 from pathlib import Path
 
 import pandas as pd
@@ -39,6 +40,16 @@ class FormDataProcessor:
         self.form_name = form_name
         self.files = self.get_files_with_prefix_recursive(path, form_name)
 
+    @staticmethod
+    def get_device_id(dir_path):
+        device_id = re.search(r'device_(\d+)', dir_path).group(1)
+        return device_id
+
+    @staticmethod
+    def get_node_id(dir_path):
+        node_id = re.search(r'node(\d+)', dir_path).group(1)
+        return int(node_id)
+
     def get_files_with_prefix_recursive(self, csv_path, match_str):
         matched_ir_files = list(Path(csv_path).rglob(match_str))
         if not matched_ir_files:
@@ -46,7 +57,7 @@ class FormDataProcessor:
             raise RuntimeError(msg)
         return [str(item) for item in matched_ir_files]
 
-    def readSummaryData(self, columns_to_keep):
+    def read_summary_data(self, columns_to_keep):
         # 存储所有合并后的数据
         all_data = pd.DataFrame()
         for f in self.files:
@@ -61,25 +72,28 @@ class FormDataProcessor:
             try:
                 df = df[columns_to_keep]
             except KeyError:
-                print(f"{f}文件没有所需的列，请确认profiling数据的正确性:\n,以下列可能不存在{columns_to_keep}\n")
+                logging.info("%s文件没有所需的列，请确认profiling数据的正确性:\n,"
+                             "以下列可能不存在%s\n", f, columns_to_keep)
                 continue
             # 从文件名提取设备ID
             try:
-                df['device_id'] = self.getDeviceId(f)
+                df['device_id'] = self.get_device_id(f)
             except Exception:
-                print(f"文件 \"{f}\" 的路径或者是文件夹名没有按照要求，请确保存在[device_]这一级文件夹,具体操作指导见readme\n")
+                logging.info("文件 \"%s\" 的路径或者是文件夹名没有按照要求，请确保存在[device_]这一级文件夹,"
+                             "具体操作指导见readme\n", f)
                 continue
             # 添加新列 "device_id"
             try:
-                df['node_id'] = self.getNodeId(f)
+                df['node_id'] = self.get_node_id(f)
             except Exception:
-                print(f"文件 \"{f}\" 的路径或者是文件夹名没有按照要求，请确保存在[node*]这一级文件夹,具体操作指导见readme\n")
+                logging.info("文件 \"%s\" 的路径或者是文件夹名没有按照要求，请确保存在[node*]这一级文件夹,"
+                             "具体操作指导见readme\n", f)
                 continue
             # 将数据添加到最终的数据框中
             all_data = pd.concat([all_data, df])
         return all_data
 
-    def getChipType(self):
+    def get_chip_type(self):
         file = self.files[0]
         PathManager.check_file_size(file)
         PathManager.check_path_readable(file)
@@ -88,15 +102,7 @@ class FormDataProcessor:
             return "ASCEND_NEW"
         return "ASCEND_OTHER"
 
-    def getDeviceId(self, dir_path):
-        device_id = re.search(r'device_(\d+)', dir_path).group(1)
-        return device_id
-
-    def getNodeId(self, dir_path):
-        node_id = re.search(r'node(\d+)', dir_path).group(1)
-        return int(node_id)
-
-    def getRankNum(self):
+    def get_rank_num(self):
         return len(self.files)
 
 
@@ -105,9 +111,9 @@ class ViewInfoManager:
     def __init__(self, chip_type):
         self.chip_type = chip_type
         self.op_summary_columns_dict = {}
-        self.setOpSummaryColumnsParams()
+        self.set_op_summary_columns_params()
 
-    def setOpSummaryColumnsParams(self):
+    def set_op_summary_columns_params(self):
         # 有些数据除了用表格的列进行分组之外，还添加了其他属性对数据进行分类，这部分数据放在extend_attr_to_group里面
         self.op_summary_columns_dict = {
             'ASCEND_NEW': {
@@ -143,14 +149,14 @@ class ViewInfoManager:
             }
         }
 
-    def getColumnsInfo(self, analyzer_type):
+    def get_columns_info(self, analyzer_type):
         return self.op_summary_columns_dict.get(self.chip_type, {}).get(analyzer_type)
 
 
 class OpSummaryAnalyzerBase:
     def __init__(self, chip_type, analyzer_type, dir_path):
         self.chip_type = chip_type
-        view_info = ViewInfoManager(chip_type).getColumnsInfo(analyzer_type)
+        view_info = ViewInfoManager(chip_type).get_columns_info(analyzer_type)
         self.columns_to_view = view_info['columns_to_view']
         self.calculate_fun = view_info['calculate_fun']
         self.columns_to_group = view_info['columns_to_group']
@@ -166,10 +172,17 @@ class OpSummaryAnalyzerBase:
         PathManager.make_dir_safety(self.result_dir)
         PathManager.check_path_writeable(self.result_dir)
 
-    def getColumnsToGroup(self):
+    @staticmethod
+    def on_rm_error(func, path, exc_info):
+        # path contains the path of the file that couldn't be removed
+        # let's just assume that it's read-only and unlink it.
+        os.chmod(path, stat.S_IWRITE)
+        os.unlink(path)
+
+    def get_columns_to_group(self):
         return self.columns_to_group
 
-    def getColumnsToView(self):
+    def get_columns_to_view(self):
         return self.columns_to_view
 
     def calculateViewData(self, summary_data):
@@ -178,18 +191,12 @@ class OpSummaryAnalyzerBase:
         view_data = summary_data.groupby(self.attrs_to_group).agg(calculate_dict).reset_index()
         return view_data
 
-    def on_rm_error(self, func, path, exc_info):
-        # path contains the path of the file that couldn't be removed
-        # let's just assume that it's read-only and unlink it.
-        os.chmod(path, stat.S_IWRITE)
-        os.unlink(path)
-
 
 class TimeToCsvAnalyzer(OpSummaryAnalyzerBase):
     def __init__(self, chip_type, dir_path):
         super().__init__(chip_type, "TimeToCsvAnalyzer", dir_path)
 
-    def GenerateDeliverable(self, summary_data, rank_num):
+    def generate_deliverable(self, summary_data, rank_num):
         view_data = self.calculateViewData(summary_data)
         # 规范化列名
         view_data.columns = [''.join(col) if col[1] == "" else '_'.join(col) for col in view_data.columns]
@@ -212,7 +219,7 @@ class StatisticalInfoToHtmlAnalyzer(OpSummaryAnalyzerBase):
         self.top_n = top_n
         # top_n 如果不符合要求，报警告
 
-    def GenerateDeliverable(self, summary_data, rank_num):
+    def generate_deliverable(self, summary_data, rank_num):
         view_data = self.calculateViewData(summary_data)
         # 规范化列名 op_name/ --> op_name   time/var 这种不变
         view_data.columns = [''.join(col) if col[1] == "" else col for col in view_data.columns]
@@ -223,10 +230,10 @@ class StatisticalInfoToHtmlAnalyzer(OpSummaryAnalyzerBase):
 
         for column in self.columns_to_view:
             # 分别给每一种特性画图
-            self.drawPloty(column, summary_data, top_n_data, rank_num)
+            self.draw_plotly(column, summary_data, top_n_data, rank_num)
 
-    def drawPloty(self, column, summary_data, top_n_data, rank_num):
-        col_num = self.getCalNum(rank_num)
+    def draw_plotly(self, column, summary_data, top_n_data, rank_num):
+        col_num = self.get_cal_num(rank_num)
         row_num = self.top_n // col_num if self.top_n % col_num == 0 else (self.top_n + 1) // col_num
         fig = make_subplots(rows=row_num, cols=col_num, vertical_spacing=0.03)
         for i, (_, operation) in enumerate(top_n_data.iterrows()):
@@ -256,7 +263,7 @@ class StatisticalInfoToHtmlAnalyzer(OpSummaryAnalyzerBase):
         # 该文件权限设置为只读权限，不允许修改
         os.chmod(save_plot_path, stat.S_IROTH)
 
-    def getCalNum(self, rank_num):
+    def get_cal_num(self, rank_num):
         # 计算每行应该画多少个子图
         if rank_num <= 16:
             return 2
@@ -267,32 +274,33 @@ class StatisticalInfoToHtmlAnalyzer(OpSummaryAnalyzerBase):
 class DeliverableGenerator:
     def __init__(self, params):
         self.dirs = params.get('dir')
-        self.formProcess = FormDataProcessor(self.dirs, 'op_summary*.csv')
+        self.form_process = FormDataProcessor(self.dirs, 'op_summary*.csv')
         self.analyzers = []
         self.columns_to_keep = []
-        self.setAnalyzers(params)
-        self.setColumnsToKeep()
+        self.set_analyzers(params)
+        self.set_columns_to_keep()
 
     def run(self):
-        summary_data = self.formProcess.readSummaryData(self.columns_to_keep)
+        summary_data = self.form_process.read_summary_data(self.columns_to_keep)
         # 判断summarydata 数据是否为空，如果是空， 说明所有csv读取数据都失败了
         if summary_data.empty:
-            print("没有符合要求的csv表格数据，请排查您的PROFILING数据")
+            logging.info("没有符合要求的csv表格数据，请排查您的PROFILING数据")
             return
-        rank_num = self.formProcess.getRankNum()
+        rank_num = self.form_process.get_rank_num()
         for analyzer in self.analyzers:
-            analyzer.GenerateDeliverable(summary_data, rank_num)
+            analyzer.generate_deliverable(summary_data, rank_num)
 
-    def setAnalyzers(self, params):
-        chip_type = self.formProcess.getChipType()
+    def set_analyzers(self, params):
+        chip_type = self.form_process.get_chip_type()
         # 判断该路径是不是软链接，并修改为绝对路径
         if os.path.islink(params.get('dir')):
-            print(f"The file: \"{params.get('dir')}\" is link. Please check the path.")
+            logging.info("The file: \"%s\" is link. Please check the path.", params.get('dir'))
             return
         prof_path = os.path.abspath(params.get('dir'))
         PathManager.input_path_common_check(prof_path)
         if params.get('type') == "all":
-            self.analyzers = [TimeToCsvAnalyzer(chip_type, prof_path), StatisticalInfoToHtmlAnalyzer(chip_type, params.get("top_n"), prof_path)]
+            self.analyzers = [TimeToCsvAnalyzer(chip_type, prof_path),
+                              StatisticalInfoToHtmlAnalyzer(chip_type, params.get("top_n"), prof_path)]
         elif params.get('type') == "html":
             self.analyzers = [StatisticalInfoToHtmlAnalyzer(chip_type, params.get("top_n"), prof_path)]
         elif params.get('type') == "csv":
@@ -301,11 +309,11 @@ class DeliverableGenerator:
             warnings.warn("参数错误，请输入 all html csv 这三种类型")  # 发出一个警告信息
 
 
-    def setColumnsToKeep(self):
+    def set_columns_to_keep(self):
         columns_to_keep = []
         for analyzer in self.analyzers:
-            columns_to_keep.extend(analyzer.getColumnsToGroup())
-            columns_to_keep.extend(analyzer.getColumnsToView())
+            columns_to_keep.extend(analyzer.get_columns_to_group())
+            columns_to_keep.extend(analyzer.get_columns_to_view())
         self.columns_to_keep = list(set(columns_to_keep))
 
 
