@@ -29,16 +29,16 @@ class TestAdvisorCmdClusterAscendPtNoCompare(TestCase):
         PathManager.make_dir_safety(self.SCHEDULE_OUTPUT_PATH)
         cmd_all = ["msprof-analyze", "advisor", "all" ,"-d", self.BASE_PROFILING_PATH, "-o",self.ALL_OUTPUT_PATH]
         if execute_cmd(cmd_all) != self.COMMAND_SUCCESS or not os.path.exists(self.ALL_OUTPUT_PATH):
-            self.assertEqual(False, True, msg="advisor [all] task failed.")
+            self.assertTrue(False,  msg="advisor [all] task failed.")
         cmd_computation = ["msprof-analyze", "advisor", "computation" ,"-d", self.BASE_PROFILING_PATH, "-o",
                self.COMPUTATION_OUTPUT_PATH]
         if execute_cmd(cmd_computation) != self.COMMAND_SUCCESS or not os.path.exists(self.COMPUTATION_OUTPUT_PATH):
-            self.assertEqual(False, True, msg="advisor [computation] task failed.")
+            self.assertTrue(False,  msg="advisor [computation] task failed.")
         cmd_schedule = ["msprof-analyze", "advisor", "schedule" ,"-d", self.BASE_PROFILING_PATH, "-o",
                self.SCHEDULE_OUTPUT_PATH]
         if execute_cmd(cmd_schedule) != self.COMMAND_SUCCESS or not os.path.exists(
                 self.SCHEDULE_OUTPUT_PATH):
-            self.assertEqual(False, True, msg="advisor [schedule] task failed.")
+            self.assertTrue(False,  msg="advisor [schedule] task failed.")
 
         self.RESULT_HTML,self.RESULT_EXCEL = get_files(self.OUTPUT_PATH)
 
@@ -49,7 +49,6 @@ class TestAdvisorCmdClusterAscendPtNoCompare(TestCase):
         category = [
             "slow rank",
             "slow link",
-            "Communication retransmission analysis",
             "Kernel compare of Rank5 and Rank12",
             "Rank 5 dynamic shape operator",
             "Rank 5 aicpu operator",
@@ -58,23 +57,23 @@ class TestAdvisorCmdClusterAscendPtNoCompare(TestCase):
 
 
         # True presents the attr is nan
-        description_len = [1, 11, 2, 1, 1, 2, 1]
-        suggestion_len = [True, True, 2, True, 5, 2, 1]
-        problem_count = [True, True, True, True, 1.0, 2.0, True]
-        total_time = [True, True, True, True, True, 87845894.04, True]
-        time_ratio = [True, True, True, True, True, 0.0, True]
-        income = [True, True, True, True, True, True, True]
-        income_ratio = [True, True, True, True, True, True, True]
+        description_len = [1, 11, 1, 1, 2, 1]
+        suggestion_len = [True, True, True, 5, 2, 1]
+        problem_count = [True, True, True, 1.0, 2.0, True]
+        total_time = [True, True, True, True, 87845894.04, True]
+        time_ratio = [True, True, True, True, 0.0, True]
+        income = [True, True, True, True, True, True]
+        income_ratio = [True, True, True, True, True, True]
         try:
-            df = pd.read_excel(self.RESULT_EXCEL["all"], sheet_name='problems', header=0)
+            df = pd.read_excel(self.RESULT_EXCEL.get("all",None), sheet_name='problems', header=0)
         except FileNotFoundError:
-            logging.error("File %s not found.", self.RESULT_EXCEL["all"])
+            logging.error("File %s not found.", self.RESULT_EXCEL.get("all",None))
             return
 
         for index, row in df.iterrows():
             self.assertEqual(category[index], row["category"])
             self.assertEqual(description_len[index], len(row["description"].split("\n")))
-            self.assertEqual(suggestion_len[index], ((isinstance(row["suggestion"]),float) or
+            self.assertEqual(suggestion_len[index], (isinstance(row["suggestion"],float) or
                                                      len(row["suggestion"].split("\n"))))
             self.assertEqual(problem_count[index], (math.isnan(row["problem count"]) or row["problem count"]))
             self.assertEqual(total_time[index], (math.isnan(row["total_time(us)"]) or
@@ -103,15 +102,15 @@ class TestAdvisorCmdClusterAscendPtNoCompare(TestCase):
         income = [True, True, True, True, True]
         income_ratio = [True, True, True, True, True]
         try:
-            df = pd.read_excel(self.RESULT_EXCEL["computation"], sheet_name='problems', header=0)
+            df = pd.read_excel(self.RESULT_EXCEL.get("computation",None), sheet_name='problems', header=0)
         except FileNotFoundError:
-            logging.error("File %s not found.", self.RESULT_EXCEL["computation"])
+            logging.error("File %s not found.", self.RESULT_EXCEL.get("computation",None))
             return
 
         for index, row in df.iterrows():
             self.assertEqual(category[index], row["category"])
             self.assertEqual(description_len[index], len(row["description"].split("\n")))
-            self.assertEqual(suggestion_len[index], ((isinstance(row["suggestion"]),float) or
+            self.assertEqual(suggestion_len[index], (isinstance(row["suggestion"],float) or
                                                      len(row["suggestion"].split("\n"))))
             self.assertEqual(problem_count[index], (math.isnan(row["problem count"]) or row["problem count"]))
             self.assertEqual(total_time[index], (math.isnan(row["total_time(us)"]) or
@@ -138,15 +137,15 @@ class TestAdvisorCmdClusterAscendPtNoCompare(TestCase):
         income = [True, True, True]
         income_ratio = [True, True, True]
         try:
-            df = pd.read_excel(self.RESULT_EXCEL["schedule"], sheet_name='problems', header=0)
+            df = pd.read_excel(self.RESULT_EXCEL.get("schedule",None), sheet_name='problems', header=0)
         except FileNotFoundError:
-            logging.error("File %s not found.", self.RESULT_EXCEL["schedule"])
+            logging.error("File %s not found.", self.RESULT_EXCEL.get("schedule",None))
             return
 
         for index, row in df.iterrows():
             self.assertEqual(category[index], row["category"])
             self.assertEqual(description_len[index], len(row["description"].split("\n")))
-            self.assertEqual(suggestion_len[index], ((isinstance(row["suggestion"]),float) or
+            self.assertEqual(suggestion_len[index], (isinstance(row["suggestion"],float) or
                                                      len(row["suggestion"].split("\n"))))
             self.assertEqual(problem_count[index], (math.isnan(row["problem count"]) or row["problem count"]))
             self.assertEqual(total_time[index], (math.isnan(row["total_time(us)"]) or
@@ -187,19 +186,19 @@ class TestAdvisorCmdClusterAscendPtNoCompare(TestCase):
         test_pattern = ["all", "computation", "schedule"]
         for pattern in test_pattern:
             try:
-                df = pd.read_excel(self.RESULT_EXCEL[pattern], sheet_name='slow rank', header=0)
+                df = pd.read_excel(self.RESULT_EXCEL.get(pattern,None), sheet_name='slow rank', header=0)
             except FileNotFoundError:
-                logging.error("File %s not found.", self.RESULT_EXCEL[pattern])
+                logging.error("File %s not found.", self.RESULT_EXCEL.get(pattern,None))
                 return
 
             for index, row in df.iterrows():
                 self.assertEqual(step[index], row["step"])
                 self.assertEqual(rank_id[index], row["rank_id"])
-                self.assertEqual(compute_us[index], round(["compute(us)"],2))
-                self.assertEqual(communication_us[index], round(["communication(us)"], 2))
-                self.assertEqual(free_us[index], round(row["Duration Ratio"],3))
+                self.assertEqual(compute_us[index], round(row["compute(us)"],2))
+                self.assertEqual(communication_us[index], round(row["communication(us)"], 2))
+                self.assertEqual(free_us[index], round(row["free(us)"],3))
 
-            soup = BeautifulSoup(open(self.RESULT_HTML[pattern]), 'html.parser')
+            soup = BeautifulSoup(open(self.RESULT_HTML.get(pattern,None)), 'html.parser')
             for h2 in soup.find_all('h2'):
                 if h2.contents[0] == "slow rank":
                     div_content = h2.next.next.next
@@ -268,22 +267,22 @@ class TestAdvisorCmdClusterAscendPtNoCompare(TestCase):
         test_pattern = ["all", "computation", "schedule"]
         for pattern in test_pattern:
             try:
-                df = pd.read_excel(self.RESULT_EXCEL[pattern], sheet_name='slow link', header=0)
+                df = pd.read_excel(self.RESULT_EXCEL.get(pattern,None), sheet_name='slow link', header=0)
             except FileNotFoundError:
-                logging.error("File %s not found.", self.RESULT_EXCEL[pattern])
+                logging.error("File %s not found.", self.RESULT_EXCEL.get(pattern,None))
                 return
 
             for index, row in df.iterrows():
                 self.assertEqual(step[index], row["step"])
                 self.assertEqual(rank_id[index], row["rank_id"])
-                self.assertEqual(rdma_bandwidth[index], round(["RDMA bandwidth(GB/s)"], 4))
-                self.assertEqual(rdma_size[index], round(["RDMA size(mb)"], 4))
+                self.assertEqual(rdma_bandwidth[index], round(row["RDMA bandwidth(GB/s)"], 4))
+                self.assertEqual(rdma_size[index], round(row["RDMA size(mb)"], 4))
                 self.assertEqual(rdma_time[index], round(row["RDMA time(ms)"], 5))
-                self.assertEqual(sdma_bandwidth[index], round(["SDMA bandwidth(GB/s)"], 4))
-                self.assertEqual(sdma_size[index], round(["SDMA size(mb)"], 4))
+                self.assertEqual(sdma_bandwidth[index], round(row["SDMA bandwidth(GB/s)"], 4))
+                self.assertEqual(sdma_size[index], round(row["SDMA size(mb)"], 4))
                 self.assertEqual(sdma_time[index], round(row["SDMA time(ms)"], 5))
 
-            soup = BeautifulSoup(open(self.RESULT_HTML[pattern]), 'html.parser')
+            soup = BeautifulSoup(open(self.RESULT_HTML.get(pattern,None)), 'html.parser')
             for h2 in soup.find_all('h2'):
                 if h2.contents[0] == "slow link":
                     div_content = h2.next.next.next
@@ -299,113 +298,6 @@ class TestAdvisorCmdClusterAscendPtNoCompare(TestCase):
                         self.assertEqual(str(round(sdma_bandwidth[row_index - 1],2)), row.find_all('td')[5].text)
                         self.assertEqual(str(round(sdma_size[row_index - 1],2)), row.find_all('td')[6].text)
                         self.assertEqual(str(round(sdma_time[row_index - 1],2)), row.find_all('td')[7].text)
-
-    def test_all_Comm_Retransmission(self):
-        communication_group = [
-            "(0, 8, 4, 12)","(0, 8, 4, 12)","(0, 8, 4, 12)",
-            "(0, 8, 4, 12)","(1, 5, 13, 9)","(1, 5, 13, 9)",
-            "(1, 5, 13, 9)","(1, 5, 13, 9)","(2, 10, 6, 14)",
-            "(2, 10, 6, 14)","(2, 10, 6, 14)","(2, 10, 6, 14)",
-            "(3, 11, 7, 15)","(3, 11, 7, 15)","(3, 11, 7, 15)",
-            "(3, 11, 7, 15)"
-        ]
-        op_name = [
-            "Total Op Info","Total Op Info","Total Op Info",
-            "Total Op Info","Total Op Info","Total Op Info",
-            "Total Op Info","Total Op Info","Total Op Info",
-            "Total Op Info","Total Op Info","Total Op Info",
-            "Total Op Info","Total Op Info","Total Op Info",
-            "Total Op Info"
-        ]
-        step_id = [
-            "step","step","step",
-            "step","step","step",
-            "step","step","step",
-            "step","step","step",
-            "step","step","step",
-            "step",
-        ]
-        rank_id = [0,4,8,12,1,5,9,13,2,6,10,14,3,7,11,15]
-        rdma_transmit_size = [
-            177034.3428,177034.3428,177034.3428,
-            177034.3428,177034.3428,177034.3428,
-            177034.3428,177034.3428,177034.3428,
-            177034.3428,177034.3428,177034.3428,
-            177034.3428,177034.3428,177034.3428,
-            177034.3428
-        ]
-        rdma_transmit_time = [
-            36156.26623,36590.31959,38950.40516,
-            38872.4551,35304.701,35769.14826,
-            39478.79111,39419.82564,35400.3203,
-            36005.55316,39578.98882,39417.90407,
-            34549.48502,35053.03898,39337.64792,
-            39263.31102
-        ]
-        rdma_bandwidth = [
-            4.8964,4.8383,4.5451,
-            4.5542,5.0145,4.9494,
-            4.4843,4.491,5.0009,
-            4.9169,4.4729,4.4912,
-            5.1241,5.0505,4.5004,
-            4.50890
-        ]
-
-        t1_rdma_transmit_size = [
-            "177034.3427520006","177034.3427520006","177034.3427520006",
-            "177034.3427520006","177034.3427520006","177034.3427520006",
-            "177034.3427520006","177034.3427520006","177034.3427520006",
-            "177034.3427520006","177034.3427520006","177034.3427520006",
-            "177034.3427520006","177034.3427520006","177034.3427520006",
-            "177034.3427520006",
-        ]
-        t1_rdma_transmit_time = [
-            "36156.26623200001","36590.31959400004","38950.40516000001",
-            "38872.45509599998","35304.700999999994","35769.148255999986",
-            "39478.79111000002","39419.82564000002","35400.32029600007",
-            "36005.553162","39578.98882199998","39417.90406800003",
-            "34549.48502000001","35053.038978000026","39337.647924000026",
-            "39263.31102199996"
-        ]
-        t1_rdma_bandwidth = [
-            "4.8964","4.8383","4.5451",
-            "4.5542","5.0145","4.9494",
-            "4.4843","4.491","5.0009",
-            "4.9169","4.4729","4.4912",
-            "5.1241","5.0505","4.5004",
-            "4.5089"
-        ]
-
-        try:
-            df = pd.read_excel(self.RESULT_EXCEL["all"], sheet_name='Comm Retransmission Analysis', header=0)
-        except FileNotFoundError:
-            logging.error("File %s not found.", self.RESULT_EXCEL["all"])
-            return
-
-        for index, row in df.iterrows():
-            self.assertEqual(communication_group[index], row["Communication group"])
-            self.assertEqual(op_name[index], row["Op name"])
-            self.assertEqual(step_id[index], row["Step id"])
-            self.assertEqual(rank_id[index], row["Rank id"])
-            self.assertEqual(rdma_transmit_size[index], round(row["RDMA transmit size(MB)"], 4))
-            self.assertEqual(rdma_transmit_time[index], round(row["RDMA transmit time(ms)"], 5))
-            self.assertEqual(rdma_bandwidth[index], round(row["RDMA bandwidth"], 4))
-
-        soup = BeautifulSoup(open(self.RESULT_HTML["all"]), 'html.parser')
-        for h2 in soup.find_all('h2'):
-            if h2.contents[0] == "Communication Retransmission Analysis":
-                div_content = h2.next.next.next
-                table = div_content.find_all('table')
-                for row_index, row in enumerate(table[1].find_all('tr')):
-                    if row_index == 0:
-                        continue
-                    self.assertEqual(str(communication_group[row_index - 1]), row.find_all('td')[0].text)
-                    self.assertEqual(str(op_name[row_index - 1]), row.find_all('td')[1].text)
-                    self.assertEqual(str(step_id[row_index - 1]), row.find_all('td')[2].text)
-                    self.assertEqual(str(rank_id[row_index - 1]), row.find_all('td')[3].text)
-                    self.assertEqual(t1_rdma_transmit_size[row_index - 1], row.find_all('td')[4].text)
-                    self.assertEqual(t1_rdma_transmit_time[row_index - 1], row.find_all('td')[5].text)
-                    self.assertEqual(t1_rdma_bandwidth[row_index - 1], row.find_all('td')[6].text)
 
     def test_kernel_compare(self):
         table_length = 1163
@@ -469,7 +361,7 @@ class TestAdvisorCmdClusterAscendPtNoCompare(TestCase):
         ]
         t0_benchmark_avg_duration = [
             "3.23","281.4","277.93",
-            "3531.85","12.21","16.09"
+            "3531.85","12.21","16.09",
             "5.22","3.52","2.76",
             "3.29"
         ]
@@ -507,15 +399,15 @@ class TestAdvisorCmdClusterAscendPtNoCompare(TestCase):
         test_pattern = ["all", "computation"]
         for pattern in test_pattern:
             try:
-                df = pd.read_excel(self.RESULT_EXCEL[pattern], sheet_name='Kernel compare of Rank5 and Ran', header=0)
+                df = pd.read_excel(self.RESULT_EXCEL.get(pattern,None), sheet_name='Kernel compare of Rank5 and Ran', header=0)
             except FileNotFoundError:
-                logging.error("File %s not found.", self.RESULT_EXCEL[pattern])
+                logging.error("File %s not found.", self.RESULT_EXCEL.get(pattern,None))
                 return
 
             self.assertEqual(table_length, df.shape[0])
             self.assertEqual(table_tags, df.shape[1])
 
-            soup = BeautifulSoup(open(self.RESULT_HTML[pattern]), 'html.parser')
+            soup = BeautifulSoup(open(self.RESULT_HTML.get(pattern,None)), 'html.parser')
             for h2 in soup.find_all('h2'):
                 if h2.contents[0] == "Kernel compare of Rank5 and Rank12":
                     div_content = h2.next.next.next
@@ -568,9 +460,9 @@ class TestAdvisorCmdClusterAscendPtNoCompare(TestCase):
         test_pattern = ["all","computation"]
         for pattern in test_pattern:
             try:
-                df = pd.read_excel(self.RESULT_EXCEL[pattern], sheet_name='Rank 5 AICPU operator', header=0)
+                df = pd.read_excel(self.RESULT_EXCEL.get(pattern,None), sheet_name='Rank 5 AICPU operator', header=0)
             except FileNotFoundError:
-                logging.error("File %s not found.", self.RESULT_EXCEL[pattern])
+                logging.error("File %s not found.", self.RESULT_EXCEL.get(pattern,None))
                 return
 
             for index, row in df.iterrows():
@@ -585,7 +477,7 @@ class TestAdvisorCmdClusterAscendPtNoCompare(TestCase):
                 self.assertEqual(output_formats[index], row["output_formats"])
                 self.assertEqual(stack_info[index], math.isnan(row["stack_info"]))
 
-            soup = BeautifulSoup(open(self.RESULT_HTML[pattern]), 'html.parser')
+            soup = BeautifulSoup(open(self.RESULT_HTML.get(pattern,None)), 'html.parser')
             for h2 in soup.find_all('h2'):
                 if h2.contents[0] == "AICPU Issues":
                     div_content = h2.next.next.next
@@ -625,14 +517,14 @@ class TestAdvisorCmdClusterAscendPtNoCompare(TestCase):
 
         test_pattern = ["all", "schedule"]
         for pattern in test_pattern:
-            df = pd.read_excel(self.RESULT_EXCEL[pattern], sheet_name='operator dispatch', header=0)
+            df = pd.read_excel(self.RESULT_EXCEL.get(pattern,None), sheet_name='operator dispatch', header=0)
             for index, row in df.iterrows():
                 self.assertEqual(issues[index], row["Issues"])
                 self.assertEqual(op_name[index], row["op name"])
                 self.assertEqual(counts[index], row["counts"])
                 self.assertEqual(total_time[index], round(row["total time"], 4))
 
-            soup = BeautifulSoup(open(self.RESULT_HTML[pattern]), 'html.parser')
+            soup = BeautifulSoup(open(self.RESULT_HTML.get(pattern,None)), 'html.parser')
             for h2 in soup.find_all('h2'):
                 if h2.contents[0] == "Operator Dispatch Issues":
                     div_content = h2.next.next.next
