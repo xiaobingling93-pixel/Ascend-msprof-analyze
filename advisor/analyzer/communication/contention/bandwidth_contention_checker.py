@@ -126,7 +126,7 @@ class BandwidthContentionChecker:
             else:
                 if self.sdma_list[hccl_index].bandwidth < self.threshold:
                     self.abnormal_sdma_list.append(self.sdma_list[hccl_index])
-                matmul_index += 1
+                hccl_index += 1
         if self.abnormal_sdma_list:
             self.contention_issues = True
             self.desc = self.desc.format(threshold=self.threshold)

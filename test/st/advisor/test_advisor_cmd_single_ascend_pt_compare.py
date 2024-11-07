@@ -28,7 +28,7 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
         cmd_all = ["msprof-analyze", "advisor", "all" ,"-d", self.BASE_PROFILING_PATH, "-bp",
                    self.COMPARISON_PROFILING_PATH, "-o", self.ALL_OUTPUT_PATH]
         if execute_cmd(cmd_all) != self.COMMAND_SUCCESS or not os.path.exists(self.ALL_OUTPUT_PATH):
-            self.assertEqual(False, True, msg="advisor [all] [bp] task failed.")
+            self.assertTrue(False, msg="advisor [all] [bp] task failed.")
         self.RESULT_HTML,self.RESULT_EXCEL = get_files(self.OUTPUT_PATH)
 
     def teardown_class(self):
@@ -46,16 +46,16 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
 
         #True presents the attr is nan
         description_len = [1,3,2,1,1,1]
-        suggestion_len = [True,1,2,3,1,1]
+        suggestion_len = [True,1,2,5,1,1]
         problem_count = [True,True,2.0,1.0,True,True]
         total_time = [True,True,57674709.54,True,True,True]
         time_ratio = [True,True,0.0,True,True,True]
         income = [True,True,True,True,True,True]
         income_ratio = [True,True,True,True,True,True]
         try:
-            df = pd.read_excel(self.RESULT_EXCEL["all"], sheet_name='problems',header=0)
+            df = pd.read_excel(self.RESULT_EXCEL.get("all",None), sheet_name='problems',header=0)
         except FileNotFoundError:
-            logging.error("File %s not found.", str(self.RESULT_EXCEL["all"]))
+            logging.error("File %s not found.", str(self.RESULT_EXCEL.get("all",None)))
             return
 
         for index, row in df.iterrows():
@@ -181,15 +181,15 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
         ]
 
         try:
-            df = pd.read_excel(self.RESULT_EXCEL["all"], sheet_name='Kernel compare of Target and Be', header=0)
+            df = pd.read_excel(self.RESULT_EXCEL.get("all",None), sheet_name='Kernel compare of Target and Be', header=0)
         except FileNotFoundError:
-            print(f"File {self.RESULT_EXCEL["all"]} not found.")
+            logging.error("File %s not found.", self.RESULT_EXCEL.get("all",None))
             return
 
         self.assertEqual(table_length, df.shape[0])
         self.assertEqual(table_tags, df.shape[1])
 
-        soup = BeautifulSoup(open(self.RESULT_HTML["all"]), 'html.parser')
+        soup = BeautifulSoup(open(self.RESULT_HTML.get("all",None)), 'html.parser')
         for h2 in soup.find_all('h2'):
             if h2.contents[0] == "Kernel compare of Target and Benchmark":
                 div_content = h2.next.next.next
@@ -220,41 +220,48 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
             "hcom_allGather__508_137_1","hcom_allGather__508_141_1","hcom_allGather__508_145_1",
             "hcom_allGather__508_153_1","hcom_allGather__508_157_1","hcom_allGather__508_173_1",
             "hcom_allGather__508_177_1","hcom_allGather__508_181_1","hcom_allGather__508_209_1",
-            "hcom_allGather__508_276_1","hcom_reduceScatter__508_283_1","hcom_reduceScatter__508_291_1",
-            "hcom_reduceScatter__508_299_1","hcom_reduceScatter__508_307_1","hcom_reduceScatter__508_315_1",
+            "hcom_reduceScatter__868_261_1","hcom_reduceScatter__868_266_1","hcom_allGather__508_276_1",
+            "hcom_reduceScatter__508_283_1","hcom_reduceScatter__508_291_1","hcom_reduceScatter__508_299_1",
+            "hcom_reduceScatter__508_307_1","hcom_allGather__508_308_1","hcom_reduceScatter__508_315_1",
             "hcom_reduceScatter__508_323_1","hcom_reduceScatter__508_331_1","hcom_reduceScatter__508_339_1",
-            "hcom_reduceScatter__508_347_1","hcom_reduceScatter__508_355_1","hcom_reduceScatter__508_363_1",
-            "hcom_reduceScatter__508_371_1","hcom_reduceScatter__508_379_1","hcom_reduceScatter__508_387_1",
-            "hcom_reduceScatter__508_395_1","hcom_reduceScatter__508_403_1","hcom_reduceScatter__508_411_1",
-            "hcom_reduceScatter__508_419_1","hcom_reduceScatter__508_427_1","hcom_reduceScatter__508_435_1",
-            "hcom_reduceScatter__508_443_1","hcom_reduceScatter__508_451_1","hcom_reduceScatter__508_459_1",
-            "hcom_reduceScatter__508_467_1","hcom_reduceScatter__508_475_1","hcom_reduceScatter__508_483_1",
-            "hcom_reduceScatter__508_491_1","hcom_reduceScatter__508_499_1","hcom_reduceScatter__508_507_1",
-            "hcom_reduceScatter__508_515_1","hcom_reduceScatter__508_523_1","hcom_reduceScatter__508_531_1",
+            "hcom_reduceScatter__508_347_1","hcom_reduceScatter__508_355_1","hcom_allGather__508_356_1",
+            "hcom_reduceScatter__508_363_1","hcom_reduceScatter__508_371_1","hcom_allGather__508_372_1",
+            "hcom_reduceScatter__508_379_1","hcom_reduceScatter__508_387_1","hcom_allGather__508_388_1",
+            "hcom_reduceScatter__508_395_1","hcom_reduceScatter__508_403_1","hcom_allGather__508_404_1",
+            "hcom_reduceScatter__508_411_1","hcom_reduceScatter__508_419_1","hcom_reduceScatter__508_427_1",
+            "hcom_reduceScatter__508_435_1","hcom_reduceScatter__508_443_1","hcom_reduceScatter__508_451_1",
+            "hcom_reduceScatter__508_459_1","hcom_reduceScatter__508_467_1","hcom_allGather__508_468_1",
+            "hcom_reduceScatter__508_475_1","hcom_reduceScatter__508_483_1","hcom_reduceScatter__508_491_1",
+            "hcom_reduceScatter__508_499_1","hcom_reduceScatter__508_507_1","hcom_reduceScatter__508_515_1",
+            "hcom_allGather__508_516_1","hcom_reduceScatter__508_523_1","hcom_reduceScatter__508_531_1",
             "hcom_reduceScatter__508_539_1","hcom_reduceScatter__508_547_1","hcom_reduceScatter__508_555_1",
             "hcom_reduceScatter__508_563_1","hcom_reduceScatter__508_571_1","hcom_reduceScatter__508_579_1",
-            "hcom_reduceScatter__508_587_1","hcom_reduceScatter__508_595_1","hcom_reduceScatter__508_603_1",
-            "hcom_reduceScatter__508_611_1","hcom_reduceScatter__508_619_1","hcom_reduceScatter__508_627_1",
-            "hcom_reduceScatter__508_635_1","hcom_reduceScatter__508_643_1","hcom_reduceScatter__508_651_1",
-            "hcom_reduceScatter__508_659_1","hcom_reduceScatter__508_667_1","hcom_reduceScatter__508_675_1",
-            "hcom_reduceScatter__508_683_1"
+            "hcom_reduceScatter__508_587_1","hcom_allGather__508_588_1","hcom_reduceScatter__508_595_1",
+            "hcom_reduceScatter__508_603_1","hcom_reduceScatter__508_611_1","hcom_reduceScatter__508_619_1",
+            "hcom_reduceScatter__508_627_1","hcom_reduceScatter__508_635_1","hcom_reduceScatter__508_643_1",
+            "hcom_allGather__508_644_1","hcom_reduceScatter__508_651_1","hcom_reduceScatter__508_659_1",
+            "hcom_reduceScatter__508_667_1","hcom_reduceScatter__508_675_1","hcom_reduceScatter__508_683_1"
         ]
-        duration = [8.3454,13.8113,39.8263,21.6036,38.2598,5.3913,13.4007,9.6871,8.8002,10.0535,8.3423,9.3205,
-                    11.3891,9.473,12.7247,16.3541,127.5414,127.288,126.6839,129.0707,128.8378,130.0548,128.3927,
-                    124.9711,128.0221,122.8157,127.0278,123.3328,122.3141,123.1837,123.8337,127.5955,123.0412,128.4852,
-                    122.3674,127.1958,127.5779,129.6155,127.2981,125.5495,127.4827,126.4632,125.0414,123.9187,125.168,
-                    127.1,126.3728,126.9693,127.677,127.1439,127.2013,127.9102,125.7989,126.4961,127.6573,127.6283,
-                    126.3803,129.8238,126.2997,127.4806,129.2007,127.2733,126.8322,127.5317,126.482,127.8283,129.2951
+        duration = [
+            8.3454, 13.8113, 39.8263, 21.6036, 38.2598, 5.3913, 13.4007, 9.6871, 8.8002, 10.0535, 8.3423, 9.3205,
+            11.3891,9.473, 12.7247, 19.4176, 13.2621, 16.3541, 127.5414, 127.288, 126.6839, 129.0707, 11.8205, 128.8378,
+            130.0548,128.3927, 124.9711, 128.0221, 122.8157, 11.7839, 127.0278, 123.3328, 11.9078, 122.3141, 123.1837,
+            11.2561,123.8337, 127.5955, 11.5881, 123.0412, 128.4852, 122.3674, 127.1958, 127.5779, 129.6155, 127.2981,
+            125.5495,11.0916, 127.4827, 126.4632, 125.0414, 123.9187, 125.168, 127.1, 12.6763, 126.3728, 126.9693,
+            127.677,127.1439, 127.2013, 127.9102, 125.7989, 126.4961, 127.6573, 12.2088, 127.6283, 126.3803, 129.8238,
+            126.2997, 127.4806, 129.2007, 127.2733, 12.0963, 126.8322, 127.5317, 126.482, 127.8283, 129.2951
         ]
-        bandwidth = [5.49,4.8,5.99,14.13,3.24,6.25,8.52,5.17,5.34,8.24,5.43,6.15,9.79,5.55,4.39,3.61,2.51,2.88,2.83,
-                    3.07,2.55,2.57,2.73,2.84,2.44,3.01,2.63,3.06,2.88,3.44,2.91,3.21,2.38,2.31,2.9,4.26,3.57,2.31,2.24,
-                    2.81,2.67,2.8,2.74,2.16,2.79,2.88,2.75,2.93,2.88,2.31,2.72,2.39,2.6,2.55,2.58,2.69,2.86,2.09,3.12,
-                    2.31,2.28,2.87,3.1,2.35,3.4,2.61,2.62
+        bandwidth = [
+            5.49, 4.8, 5.99, 14.13, 3.24, 6.25, 8.52, 5.17, 5.34, 8.24, 5.43, 6.15, 9.79, 5.55, 4.39, 13.35, 13.14,
+            3.61, 2.51,2.88, 2.83, 3.07, 4.81, 2.55, 2.57, 2.73, 2.84, 2.44, 3.01, 4.95, 2.63, 3.06, 3.77, 2.88, 3.44,
+            4.72, 2.91, 3.21, 4.47, 2.38, 2.31, 2.9, 4.26, 3.57, 2.31, 2.24, 2.81, 4.37, 2.67, 2.8, 2.74, 2.16, 2.79,
+            2.88, 5.79, 2.75,2.93, 2.88, 2.31, 2.72, 2.39, 2.6, 2.55, 2.58, 4.29, 2.69, 2.86, 2.09, 3.12, 2.31, 2.28,
+            2.87, 6.97, 3.1, 2.35, 3.4, 2.61, 2.62
         ]
         try:
-            df = pd.read_excel(self.RESULT_EXCEL["all"], sheet_name='Bandwidth Contention Analysis', header=0)
+            df = pd.read_excel(self.RESULT_EXCEL.get("all",None), sheet_name='Bandwidth Contention Analysis', header=0)
         except FileNotFoundError:
-            logging.error("File %s not found.", str(self.RESULT_EXCEL["all"]))
+            logging.error("File %s not found.", str(self.RESULT_EXCEL.get("all",None)))
             return
 
         for index, row in df.iterrows():
@@ -288,55 +295,53 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
         t2_elapsed_time = ["90.72"]
         b_names = ["Square", "Suggestion 1:", "Equal", "Suggestion 1:"]
 
-        test_pattern = ["all", "computation"]
-        for pattern in test_pattern:
-            try:
-                df = pd.read_excel(self.RESULT_EXCEL[pattern], sheet_name='AICPU operator', header=0)
-            except FileNotFoundError:
-                logging.error("File %s not found.", str(self.RESULT_EXCEL[pattern]))
-                return
+        try:
+            df = pd.read_excel(self.RESULT_EXCEL.get("all",None), sheet_name='AICPU operator', header=0)
+        except FileNotFoundError:
+            logging.error("File %s not found.", str(self.RESULT_EXCEL.get("all",None)))
+            return
 
-            for index, row in df.iterrows():
-                self.assertEqual(op_name[index], row["op_name"])
-                self.assertEqual(op_type[index], row["op_type"])
-                self.assertEqual(task_duration[index], round(row["task_duration"], 2))
-                self.assertEqual(input_shapes[index], row["input_shapes"])
-                self.assertEqual(input_data_types[index], row["input_data_types"])
-                self.assertEqual(input_formats[index], row["input_formats"])
-                self.assertEqual(output_shapes[index], row["output_shapes"])
-                self.assertEqual(output_data_types[index], row["output_data_types"])
-                self.assertEqual(output_formats[index], row["output_formats"])
-                self.assertEqual(stack_info[index], math.isnan(row["stack_info"]))
+        for index, row in df.iterrows():
+            self.assertEqual(op_name[index], row["op_name"])
+            self.assertEqual(op_type[index], row["op_type"])
+            self.assertEqual(task_duration[index], round(row["task_duration"], 2))
+            self.assertEqual(input_shapes[index], row["input_shapes"])
+            self.assertEqual(input_data_types[index], row["input_data_types"])
+            self.assertEqual(input_formats[index], row["input_formats"])
+            self.assertEqual(output_shapes[index], row["output_shapes"])
+            self.assertEqual(output_data_types[index], row["output_data_types"])
+            self.assertEqual(output_formats[index], row["output_formats"])
+            self.assertEqual(stack_info[index], math.isnan(row["stack_info"]))
 
-            soup = BeautifulSoup(open(self.RESULT_HTML[pattern]), 'html.parser')
-            for h2 in soup.find_all('h2'):
-                if h2.contents[0] == "AICPU Issues":
-                    div_content = h2.next.next.next
-                    table = div_content.find_all('table')
-                    for row_index, row in enumerate(table[0].find_all('tr')):
-                        if row_index == 0:
-                            continue
-                        self.assertEqual(t0_description[row_index - 1],
-                                         row.find_all('td')[0].text.split(":")[1].replace("\n", ""))
-                        self.assertEqual(t0_suggestion[row_index - 1], row.find_all('td')[1].text.split(" ")[-1])
-                        self.assertEqual(t0_elapsed_time[row_index - 1], row.find_all('td')[2].text)
-                        self.assertEqual(t0_time_ratio[row_index - 1], row.find_all('td')[3].text)
-                    for row_index, row in enumerate(table[1].find_all('tr')):
-                        if row_index == 0:
-                            continue
-                        self.assertEqual(t1_operator_type[row_index - 1], row.find_all('td')[0].text)
-                        self.assertEqual(t1_counts[row_index - 1], row.find_all('td')[1].text)
-                        self.assertEqual(t1_elapsed_time[row_index - 1], row.find_all('td')[2].text)
-                    for row_index, row in enumerate(table[2].find_all('tr')):
-                        if row_index == 0:
-                            continue
-                        self.assertEqual(t2_operator_type[row_index - 1], row.find_all('td')[0].text)
-                        self.assertEqual(t2_counts[row_index - 1], row.find_all('td')[1].text)
-                        self.assertEqual(t2_elapsed_time[row_index - 1], row.find_all('td')[2].text)
+        soup = BeautifulSoup(open(self.RESULT_HTML.get("all",None)), 'html.parser')
+        for h2 in soup.find_all('h2'):
+            if h2.contents[0] == "AICPU Issues":
+                div_content = h2.next.next.next
+                table = div_content.find_all('table')
+                for row_index, row in enumerate(table[0].find_all('tr')):
+                    if row_index == 0:
+                        continue
+                    self.assertEqual(t0_description[row_index - 1],
+                                     row.find_all('td')[0].text.split(":")[1].replace("\n", ""))
+                    self.assertEqual(t0_suggestion[row_index - 1], row.find_all('td')[1].text.split(" ")[-1])
+                    self.assertEqual(t0_elapsed_time[row_index - 1], row.find_all('td')[2].text)
+                    self.assertEqual(t0_time_ratio[row_index - 1], row.find_all('td')[3].text)
+                for row_index, row in enumerate(table[1].find_all('tr')):
+                    if row_index == 0:
+                        continue
+                    self.assertEqual(t1_operator_type[row_index - 1], row.find_all('td')[0].text)
+                    self.assertEqual(t1_counts[row_index - 1], row.find_all('td')[1].text)
+                    self.assertEqual(t1_elapsed_time[row_index - 1], row.find_all('td')[2].text)
+                for row_index, row in enumerate(table[2].find_all('tr')):
+                    if row_index == 0:
+                        continue
+                    self.assertEqual(t2_operator_type[row_index - 1], row.find_all('td')[0].text)
+                    self.assertEqual(t2_counts[row_index - 1], row.find_all('td')[1].text)
+                    self.assertEqual(t2_elapsed_time[row_index - 1], row.find_all('td')[2].text)
 
-                    b_contents = div_content.find_all('b')
-                    for b_index, b_content in enumerate(b_contents):
-                        self.assertEqual(b_names[b_index], b_content.text)
+                b_contents = div_content.find_all('b')
+                for b_index, b_content in enumerate(b_contents):
+                    self.assertEqual(b_names[b_index], b_content.text)
 
     def test_Affinity_API(self):
         affinity_api = ["torch_npu.npu_confusion_transpose","torch_npu.optim.NpuFusedAdamW"]
@@ -344,25 +349,23 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
         stack_called_counts = [True,True]
         ignore_api = ["torch_npu.optim.NpuFusedAdamW", "torch_npu.npu_confusion_transpose"]
 
-        test_pattern = ["all", "schedule"]
-        for pattern in test_pattern:
-            try:
-                df = pd.read_excel(self.RESULT_EXCEL[pattern], sheet_name='Affinity apis', header=0)
-            except FileNotFoundError:
-                logging.error("File %s not found.", str(self.RESULT_EXCEL[pattern]))
-                return
+        try:
+            df = pd.read_excel(self.RESULT_EXCEL.get("all",None), sheet_name='Affinity apis', header=0)
+        except FileNotFoundError:
+            logging.error("File %s not found.", str(self.RESULT_EXCEL.get("all",None)))
+            return
 
-            for index, row in df.iterrows():
-                self.assertEqual(affinity_api[index], row["Affinity API"])
-                self.assertEqual(code_stacks[index], math.isnan(row["Code stacks"]))
-                self.assertEqual(stack_called_counts[index], math.isnan(row["Stack called counts"]))
+        for index, row in df.iterrows():
+            self.assertEqual(affinity_api[index], row["Affinity API"])
+            self.assertEqual(code_stacks[index], math.isnan(row["Code stacks"]))
+            self.assertEqual(stack_called_counts[index], math.isnan(row["Stack called counts"]))
 
-            soup = BeautifulSoup(open(self.RESULT_HTML[pattern]), 'html.parser')
-            for h2 in soup.find_all('h2'):
-                if h2.contents[0] == "Affinity API Issues":
-                    div_content = h2.next.next.next
-                    self.assertEqual(ignore_api[0],div_content.contents[-2].contents[-2].text)
-                    self.assertEqual(ignore_api[1],div_content.contents[-2].contents[-4].text)
+        soup = BeautifulSoup(open(self.RESULT_HTML.get("all",None)), 'html.parser')
+        for h2 in soup.find_all('h2'):
+            if h2.contents[0] == "Affinity API Issues":
+                div_content = h2.next.next.next
+                self.assertEqual(ignore_api[0],div_content.contents[-2].contents[-2].text)
+                self.assertEqual(ignore_api[1],div_content.contents[-2].contents[-4].text)
 
     def test_operator_dispatch(self):
         issues = ["operator dispatch"]
@@ -376,33 +379,31 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
         t1_counts = ['381']
         t1_elapsed_time = ['58486.704798215804']
 
-        test_pattern = ["all", "schedule"]
-        for pattern in test_pattern:
-            try:
-                df = pd.read_excel(self.RESULT_EXCEL[pattern], sheet_name='operator dispatch', header=0)
-            except FileNotFoundError:
-                logging.error("File %s not found.", str(self.RESULT_EXCEL[pattern]))
-                return
-            for index, row in df.iterrows():
-                self.assertEqual(issues[index], row["Issues"])
-                self.assertEqual(op_name[index], row["op name"])
-                self.assertEqual(counts[index], row["counts"])
-                self.assertEqual(total_time[index], round(row["total time"], 4))
+        try:
+            df = pd.read_excel(self.RESULT_EXCEL.get("all",None), sheet_name='operator dispatch', header=0)
+        except FileNotFoundError:
+            logging.error("File %s not found.", str(self.RESULT_EXCEL.get("all",None)))
+            return
+        for index, row in df.iterrows():
+            self.assertEqual(issues[index], row["Issues"])
+            self.assertEqual(op_name[index], row["op name"])
+            self.assertEqual(counts[index], row["counts"])
+            self.assertEqual(total_time[index], round(row["total time"], 4))
 
-            soup = BeautifulSoup(open(self.RESULT_HTML[pattern]), 'html.parser')
-            for h2 in soup.find_all('h2'):
-                if h2.contents[0] == "Operator Dispatch Issues":
-                    div_content = h2.next.next.next
-                    table = div_content.find_all('table')
-                    for row_index, row in enumerate(table[0].find_all('tr')):
-                        if row_index == 0:
-                            continue
-                        self.assertEqual(t0_description[row_index - 1], row.find_all('td')[0].text.split(' ')[1])
-                        self.assertEqual(t0_suggestion[row_index - 1],
-                                         row.find_all('td')[1].text.split('`')[1].split(';')[0])
-                    for row_index, row in enumerate(table[1].find_all('tr')):
-                        if row_index == 0:
-                            continue
-                        self.assertEqual(t1_issue[row_index - 1], row.find_all('td')[0].text)
-                        self.assertEqual(t1_counts[row_index - 1], row.find_all('td')[1].text)
-                        self.assertEqual(t1_elapsed_time[row_index - 1], row.find_all('td')[2].text)
+        soup = BeautifulSoup(open(self.RESULT_HTML.get("all",None)), 'html.parser')
+        for h2 in soup.find_all('h2'):
+            if h2.contents[0] == "Operator Dispatch Issues":
+                div_content = h2.next.next.next
+                table = div_content.find_all('table')
+                for row_index, row in enumerate(table[0].find_all('tr')):
+                    if row_index == 0:
+                        continue
+                    self.assertEqual(t0_description[row_index - 1], row.find_all('td')[0].text.split(' ')[1])
+                    self.assertEqual(t0_suggestion[row_index - 1],
+                                     row.find_all('td')[1].text.split('`')[1].split(';')[0])
+                for row_index, row in enumerate(table[1].find_all('tr')):
+                    if row_index == 0:
+                        continue
+                    self.assertEqual(t1_issue[row_index - 1], row.find_all('td')[0].text)
+                    self.assertEqual(t1_counts[row_index - 1], row.find_all('td')[1].text)
+                    self.assertEqual(t1_elapsed_time[row_index - 1], row.find_all('td')[2].text)
