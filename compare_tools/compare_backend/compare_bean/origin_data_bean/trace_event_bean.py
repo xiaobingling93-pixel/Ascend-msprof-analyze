@@ -17,6 +17,7 @@ class TraceEventBean:
         self._name = ""
         self._args = {}
         self._is_torch_op = False
+        self._input_shape = None
         self.init()
 
     @property
@@ -107,12 +108,20 @@ class TraceEventBean:
         return self._event
 
     @property
+    def input_shapes(self):
+        return self._input_shape
+
+    @property
     def is_torch_op(self) -> bool:
         return self._is_torch_op
 
     @is_torch_op.setter
     def is_torch_op(self, value: bool):
         self._is_torch_op = value
+
+    @input_shapes.setter
+    def input_shapes(self, value: str):
+        self._input_shape = value
 
     @classmethod
     def is_sdma(cls):

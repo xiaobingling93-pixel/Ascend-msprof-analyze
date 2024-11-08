@@ -30,7 +30,7 @@ logger = logging.getLogger()
 class ByteAlignmentChecker:
     _CHECKER = "ByteAlignmentChecker"
     _BASE_SIZE = 512
-    _MIN_SIZE = 4
+    _MIN_SIZE = 512
     _LOW_PRIORITY = 0.2
     _HIGH_PRIORITY = 0.7
     _TYPE = "SDMA"
@@ -50,8 +50,7 @@ class ByteAlignmentChecker:
         self.suggestions = []
         self._init_rule()
         self.headers = [
-            "op name", "memcopy size(Byte)", "memcopy bandwidth(GB/s)", "reduce_inline size(Byte)",
-            "reduce_inline bandwidth(GB/s)"
+            "op name", "total size(Byte)", "duration(us)", "abnormal duration(us)", "bandwidth(GB/s)"
         ]
 
     @staticmethod
@@ -64,14 +63,11 @@ class ByteAlignmentChecker:
 
     def check_alignment(self, hccl_detail_dataset: HcclDetailDataset) -> None:
         for hccl_op in hccl_detail_dataset.hccl_ops:
-            memcpy_size, memcpy_duration, memcopy_flag = self._check_op(hccl_op.memcpy_tasks)
-            reduce_inline_size, reduce_inline_duration, reduce_inline_flag = self._check_op(hccl_op.reduce_inline_tasks)
-            if memcopy_flag or reduce_inline_flag:
+            size, duration, abnormal_dur, flag = self._check_op([hccl_op.memcpy_tasks, hccl_op.reduce_inline_tasks])
+            if flag:
                 self.abnormal_ops_count += 1
-                self.abnormal_ops.append([hccl_op.op_name, memcpy_size,
-                                          self._calculate_bandwidth_gb_s(memcpy_size, memcpy_duration),
-                                          reduce_inline_size,
-                                          self._calculate_bandwidth_gb_s(reduce_inline_size, reduce_inline_duration)])
+                self.abnormal_ops.append([hccl_op.op_name, size, round(duration, 4), round(abnormal_dur, 4),
+                                          self._calculate_bandwidth_gb_s(size, duration)])
         if self.abnormal_ops_count:
             self.byge_alignment_issue = True
             self.desc = self.desc.format(count=self.abnormal_ops_count)
@@ -110,20 +106,23 @@ class ByteAlignmentChecker:
             return False
         return True
 
-    def _check_op(self, tasks: List[HcclTask]):
+    def _check_op(self, op: List[List[HcclTask]]):
         flag = False
         size = 0
         duration = 0
-        for task in tasks:
-            if not self._pre_check(task, self._TYPE):
-                continue
-            self.total_ops_dur += task.duration
-            size += task.size
-            duration += task.duration
-            if task.size % self._BASE_SIZE:
-                self.abnormal_ops_dur += task.duration
-                flag = True
-        return size, duration, flag
+        abnormal_dur = 0
+        for tasks in op:
+            for task in tasks:
+                if not self._pre_check(task, self._TYPE):
+                    continue
+                self.total_ops_dur += task.duration
+                size += task.size
+                duration += task.duration
+                if task.size % self._BASE_SIZE:
+                    self.abnormal_ops_dur += task.duration
+                    abnormal_dur += task.duration
+                    flag = True
+        return [size, duration, abnormal_dur, flag]
 
     def _init_rule(self):
         rule_path = os.path.join(

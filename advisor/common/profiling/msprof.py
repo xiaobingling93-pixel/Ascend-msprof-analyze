@@ -147,6 +147,7 @@ class Msprof(ProfilingParser):
             self._max_time = max_time
             self._min_time = min_time
         if self._tasks:
+            self._tasks.sort(key=lambda x: x.start_time)
             return True
         return False
 

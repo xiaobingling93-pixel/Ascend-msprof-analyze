@@ -28,7 +28,7 @@ class OverallPerfInterface:
         self._profiling_path = profiling_path
         self._profiling_path_dict = {}
         self._result_data = {}
-        self._profiling_data = NPUProfilingParser()
+        self._profiling_data = None
 
     def run(self):
         try:
