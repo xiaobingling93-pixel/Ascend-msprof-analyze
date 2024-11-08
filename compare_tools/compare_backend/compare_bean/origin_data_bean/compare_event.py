@@ -29,7 +29,8 @@ class KernelEvent:
     def kernel_details(self):
         if self._device_type == Constant.GPU:
             return f"{self.kernel_name} [duration: {self.device_dur}]\n"
-        return f"{self.kernel_name}, {self.task_id}, {self.task_type} [duration: {self.device_dur}]\n"
+        input_shape = f", [input shapes: {self._event.input_shapes}]" if self._event.input_shapes else ""
+        return f"{self.kernel_name}, {self.task_id}, {self.task_type}{input_shape} [duration: {self.device_dur}]\n"
 
 
 class MemoryEvent:
