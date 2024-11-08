@@ -36,6 +36,7 @@ from profiler.compare_tools.compare_backend.comparison_generator import Comparis
 @click.option('--enable_api_compare', is_flag=True, help="Enable API performance comparison")
 @click.option('--enable_kernel_compare', is_flag=True, help="Enable kernel performance comparison")
 @click.option('--disable_details', is_flag=True, help="Hide detailed comparison")
+@click.option('--disable_module', is_flag=True, help="Hide module comparison")
 @click.option('--output_path', '-o', 'output_path', type=click.Path(), help="Path of comparison result")
 @click.option('--max_kernel_num', 'max_kernel_num', type=int, help="The number of kernels per torch op is limited")
 @click.option('--op_name_map', type=ast.literal_eval, default='{}',

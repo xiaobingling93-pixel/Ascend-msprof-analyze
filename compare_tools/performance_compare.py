@@ -21,6 +21,7 @@ def main():
     parser.add_argument("--enable_api_compare", default=False, action='store_true', help="Enable API performance comparison")
     parser.add_argument("--enable_kernel_compare", default=False, action='store_true', help="Enable kernel performance comparison")
     parser.add_argument("--disable_details", default=False, action='store_true', help="Hide detailed comparison")
+    parser.add_argument("--disable_module", default=False, action='store_true', help="Hide module comparison")
     parser.add_argument('-o', "--output_path", type=str, default='', help="Path of comparison result")
     parser.add_argument("--max_kernel_num", type=int, help="The number of kernels per torch op is limited.")
     parser.add_argument("--op_name_map", type=ast.literal_eval, default={},
