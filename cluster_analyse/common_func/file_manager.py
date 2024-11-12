@@ -16,11 +16,15 @@
 import os
 import csv
 import json
+import logging
 
 import yaml
 
 from common_func.constant import Constant
 from common_func.path_manager import PathManager
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
+
+logger = logging.getLogger()
 
 
 class FileManager:
@@ -34,7 +38,7 @@ class FileManager:
         file_size = os.path.getsize(file_path)
         if file_size <= 0:
             return []
-        if file_size > Constant.MAX_CSV_SIZE:
+        if file_size > Constant.MAX_CSV_SIZE and not AdditionalArgsManager().force:
             raise RuntimeError(f"The file({base_name}) size exceeds the preset max value.")
         result_data = []
         try:
@@ -53,7 +57,7 @@ class FileManager:
         file_size = os.path.getsize(file_path)
         if file_size <= 0:
             return {}
-        if file_size > Constant.MAX_JSON_SIZE:
+        if file_size > Constant.MAX_JSON_SIZE and not AdditionalArgsManager().force:
             raise RuntimeError(f"The file({base_name}) size exceeds the preset max value.")
         try:
             with open(file_path, "r") as json_file:
@@ -69,7 +73,7 @@ class FileManager:
         file_size = os.path.getsize(file_path)
         if file_size <= 0:
             return {}
-        if file_size > Constant.MAX_JSON_SIZE:
+        if not AdditionalArgsManager().force and file_size > Constant.MAX_JSON_SIZE:
             raise RuntimeError(f"The file({base_name}) size exceeds the preset max value.")
 
         try:
@@ -136,15 +140,16 @@ class FileManager:
         else:
             limit_size = Constant.MAX_JSON_SIZE
         file_size = os.path.getsize(file_path)
-        if file_size > limit_size:
+        if not AdditionalArgsManager().force and file_size > limit_size:
             raise RuntimeError(f"The file({base_name}) size exceeds the preset max value.")
 
 
 def check_db_path_valid(path: str, is_create: bool = False, max_size: int = Constant.MAX_READ_DB_FILE_BYTES) -> bool:
     if os.path.islink(path):
-        print(f'[ERROR] The db file path: {path} is link. Please check the path')
+        logger.error('The db file path: %s is link. Please check the path', path)
         return False
     if not is_create and os.path.exists(path) and os.path.getsize(path) > max_size:
-        print(f'[ERROR] The db file: {path} is too large to read. Please check the file')
-        return False
+        if not AdditionalArgsManager().force:
+            logger.error('The db file: %s is too large to read. Please check the file', path)
+            return False
     return True

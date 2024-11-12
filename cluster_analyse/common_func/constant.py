@@ -118,3 +118,4 @@ class Constant(object):
     STEP = "step"
 
     DATA_SIMPLIFICATION = "data_simplification"
+    FORCE = "force"

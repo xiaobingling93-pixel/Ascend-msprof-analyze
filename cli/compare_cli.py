@@ -45,7 +45,8 @@ from profiler.compare_tools.compare_backend.comparison_generator import Comparis
 @click.option('--gpu_flow_cat', type=str, default='', help="Identifier of the GPU connection")
 @click.option('--base_step', type=str, default='', help="Comparison step for performance data to be compared")
 @click.option('--comparison_step', type=str, default='', help="Comparison step for benchmark performance data")
-
+@click.option('--force', is_flag=True, help="Indicates whether to skip file size verification and "
+                                            "owner verification")
 def compare_cli(**kwargs) -> None:
     args = AnalyzeDict(kwargs)
     ComparisonGenerator(args).run()
