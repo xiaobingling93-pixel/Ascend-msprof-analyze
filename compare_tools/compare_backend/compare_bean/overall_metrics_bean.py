@@ -288,7 +288,8 @@ class OverallMetricsInfo:
                 self._profiling_info.get_transmit_time_by_group(group_name) / self.e2e_time, "/"]
 
     def _init_overall_metrics_data(self):
-        overall_metrics_data = {"before_group": {
+        overall_metrics_data = {
+            "before_group": {
             ExcelConfig.COMPUTING: self.computing_data,
             ExcelConfig.FA_FWD: self.fa_fwd_data,
             ExcelConfig.FA_FWD_CUBE: self.fa_fwd_cube_data,
@@ -312,7 +313,8 @@ class OverallMetricsInfo:
             ExcelConfig.CUBE: self.cube_data,
             ExcelConfig.SDMA_TM: self.sdma_tm_data,
             ExcelConfig.OTHER: self.other_data,
-            ExcelConfig.COMMUNICATION_TIME: self.communication_data}
+            ExcelConfig.COMMUNICATION_TIME: self.communication_data
+            }
         }
         if self._comm_group_list:
             for group_name in self._comm_group_list:
