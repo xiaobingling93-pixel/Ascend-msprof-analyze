@@ -14,12 +14,15 @@
 # limitations under the License.
 import logging
 import os
+import logging
 
 from common_func.db_manager import DBManager
 from common_func.constant import Constant
 from common_func.file_manager import FileManager
 from prof_bean.step_trace_time_bean import StepTraceTimeBean
 from cluster_utils.parallel_strategy_calculator import ParallelStrategyCalculator
+
+logger = logging.getLogger()
 
 
 class StepTraceTimeAnalysis:
@@ -43,11 +46,8 @@ class StepTraceTimeAnalysis:
         if not data_group_list:
             return []
         ret = []
-        for idx in range(len(data_group_list[0])):
-            max_val = 0
-            for idy in range(len(data_group_list)):
-                max_val = max(max_val, data_group_list[idy][idx])
-            ret.append(max_val)
+        for item in zip(*data_group_list):
+            ret.append(max(item))
         return ret
 
     def run(self):
@@ -73,16 +73,19 @@ class StepTraceTimeAnalysis:
             return
 
         if len(parallelism_map) > len(self.step_time_dict):
-            missing_rank_ids = [rank_id for rank_id in range(len(parallelism_map))
-                                if rank_id not in self.step_time_dict]
-            print(f"[WARNING] Step trace data length should equal to real rank numbers, "
-                  f"but get step data length = {len(self.step_time_dict)}, real rank numbers = {len(parallelism_map)}, "
-                  f"maybe lost some rank ids = {missing_rank_ids}, please check your profiling data.")
+            missing_rank_ids = [
+                rank_id for rank_id in range(len(parallelism_map))
+                if rank_id not in self.step_time_dict
+            ]
+            logger.warning("Step trace data length should equal to real rank numbers, but get step data length ="
+                           "%s, real rank numbers = %s, maybe lost some rank ids = %s, please check your profiling "
+                           "data.",str(len(self.step_time_dict)),str(len(parallelism_map)),str(missing_rank_ids))
 
         if len(parallelism_map) < len(self.step_time_dict):
-            print(f"[ERROR] Step trace data length should equal to real rank numbers, "
-                  f"but get step data length = {len(self.step_time_dict)}, real rank numbers = {len(parallelism_map)}, "
-                  f"maybe parallel params in profiler_metadata.json is error, please check your metadata data.")
+            logger.error("Step trace data length should equal to real rank numbers, but get step data length = %s,"
+                         " real rank numbers = %s, maybe parallel params in profiler_metadata.json is error, "
+                         "please check your metadata data.",
+                         str(len(self.step_time_dict)),str(len(parallelism_map)))
             self.distributed_args = None
             return
 
@@ -98,7 +101,7 @@ class StepTraceTimeAnalysis:
 
     def dump_data(self):
         if not self.step_data_list:
-            print("[WARNING] Can't get step time info!")
+            logger.warning("Can't get step time info!")
             return
         if self.data_type == Constant.TEXT:
             headers = self.get_headers()
@@ -140,7 +143,8 @@ class StepTraceTimeAnalysis:
                     self.step_time_dict[rank_id] = data
                     DBManager.destroy_db_connect(conn, cursor)
             if not self.step_time_dict.get(rank_id):
-                print(f"[WARNING] Rank {rank_id} does not have a valid step_trace_time data in {self.data_type} file.")
+                logger.warning("Rank %s does not have a valid step_trace_time data in %s file."
+                               ,str(rank_id),str(self.data_type))
 
     def analyze_step_time(self):
         for rank_id, data_bean_list in self.step_time_dict.items():
