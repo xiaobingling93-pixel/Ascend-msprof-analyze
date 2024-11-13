@@ -92,20 +92,17 @@ class CsvTitleV2(CsvTitle):
 
 
 class Constant:
-    DTYPE_SIZE_MAP = {"int8": 1, "uint8": 1,
-                      "int16": 2, "uint16": 2,
-                      "int32": 4, "uint32": 4,
-                      "int64": 8, "uint64": 8,
-                      "float16": 2,
-                      "bfloat16": 2,
-                      "bf16": 2,
-                      "dt_bf16": 2,
-                      "float32": 4,
-                      "float": 4,
-                      "float64": 8,
-                      "complex64": 8,
-                      "complex128": 16,
-                      "bool": 1}
+    DTYPE_SIZE_MAP = {
+        "int8": 1, "uint8": 1,
+        "int16": 2, "uint16": 2,
+        "int32": 4, "uint32": 4,
+        "int64": 8, "uint64": 8,
+        "float16": 2, "bfloat16": 2,
+        "bf16": 2, "dt_bf16": 2,
+        "float32": 4, "float": 4,
+        "float64": 8, "complex64": 8,
+        "complex128": 16, "bool": 1
+    }
     TP_THRESHOLD = 1150
     MAX_INPUT_MODE_LEN = 30
     MAX_INPUT_ADVICE_LEN = 30
@@ -173,35 +170,37 @@ class Constant:
     TRACE_VIEW_JSON = "trace_view.json"
 
     # pattern_dict key: pattern, value: pattern name
-    PATTERN_DICT = {("Add", "DropOutDoMask", "Add"): "bias_dropout_add",
-                    ("BatchMatMul", "Mul", "Cast", "Mul", "MaskedFill", "SoftmaxV2", "Cast", "DropOutDoMask",
-                     "AsStrided", "BatchMatMul", "Transpose"): "FA",
-                    ("Transpose", "Transpose", "Transpose", "Mul", "Transpose", "BatchMatMulV2", "MaskedFill",
-                     "Cast", "SoftmaxV2", "Cast", "DropOutDoMask", "BatchMatMulV2", "Transpose"): "FA",
-                    ("Transpose", "BatchMatMulV2", "Transpose", "Transpose", "BatchMatMulV2", "ZerosLike",
-                     "DropOutDoMask", "Cast", "SoftmaxGrad", "Cast", "MaskedFill", "BatchMatMulV2",
-                     "BatchMatMulV2", "Mul"): "FA",
-                    ("Cast", "Square", "ReduceMeanD", "Add", "Rsqrt", "Cast", "Cast", "Mul", "Cast", "Cast",
-                     "Mul", "Cast"): "RMSNORM",
-                    ("Cast", "LayerNorm", "Cast"): "LayerNorm",
-                    ("Add", "LayerNorm"): "AddLayerNorm",
-                    ("Add", "LayerNormV3"): "AddLayerNorm",
-                    ("Gelu", "Add"): "GeluAdd",
-                    ("Cast", "Square", "MemSet", "ReduceMean", "Add", "Rsqrt", "Mul", "Cast", "Mul"): "RMSNorm",
-                    ("BatchMatMul", "RealDiv", "Add", "Maximum", "SoftmaxV2", "Cast", "BatchMatMul"): "FA",
-                    ("BatchMatMulV2", "RealDiv", "Add", "Cast", "Maximum", "Cast", "SoftmaxV2", "AsStrided",
-                     "BatchMatMulV2"): "FA",
-                    ("BatchMatMulV2", "RealDiv", "Add", "Cast", "SoftmaxV2", "Cast", "BroadcastTo",
-                     "BatchMatMulV2"): "FA",
-                    ("Mul", "Slice", "Neg", "Slice", "ConcatD", "Cast", "Mul", "Add"): "RotaryMul",
-                    ("Mul", "AsStrided", "Neg", "AsStrided", "ConcatD", "Mul", "Add"): "RotaryMul",
-                    ("Mul", "Slice", "Neg", "Slice", "ConcatD", "Mul", "Add"): "RotaryMul",
-                    ("MatMulV2", "Swish", "MatMulV2", "Mul", "MatMulV2"): "FFN",
-                    ("Transpose", "Transpose", "GatherElement", "Transpose"): "GatherElement",
-                    ("Slice", "Slice", "Swish", "Mul"): "torch_npu.npu_swiglu",
-                    ("Cast", "Mul", "MaskedFill", "SoftmaxV2", "Cast"): "torch_npu.npu_scaled_masked_softmax",
-                    ("Mul", "Slice", "Neg", "Slice", "ConcatD", "Mul"): "torch_npu.npu_rotary_mul",
-                    ("Cast", "Square", "ReduceMeanD", "Add", "Rsqrt", "Mul", "Cast", "Mul"): "torch_npu.npu_rms_norm"}
+    PATTERN_DICT = {
+        ("Add", "DropOutDoMask", "Add"): "bias_dropout_add",
+        ("BatchMatMul", "Mul", "Cast", "Mul", "MaskedFill", "SoftmaxV2", "Cast", "DropOutDoMask",
+        "AsStrided", "BatchMatMul", "Transpose"): "FA",
+        ("Transpose", "Transpose", "Transpose", "Mul", "Transpose", "BatchMatMulV2", "MaskedFill",
+        "Cast", "SoftmaxV2", "Cast", "DropOutDoMask", "BatchMatMulV2", "Transpose"): "FA",
+        ("Transpose", "BatchMatMulV2", "Transpose", "Transpose", "BatchMatMulV2", "ZerosLike",
+        "DropOutDoMask", "Cast", "SoftmaxGrad", "Cast", "MaskedFill", "BatchMatMulV2",
+        "BatchMatMulV2", "Mul"): "FA",
+        ("Cast", "Square", "ReduceMeanD", "Add", "Rsqrt", "Cast", "Cast", "Mul", "Cast", "Cast",
+        "Mul", "Cast"): "RMSNORM",
+        ("Cast", "LayerNorm", "Cast"): "LayerNorm",
+        ("Add", "LayerNorm"): "AddLayerNorm",
+        ("Add", "LayerNormV3"): "AddLayerNorm",
+        ("Gelu", "Add"): "GeluAdd",
+        ("Cast", "Square", "MemSet", "ReduceMean", "Add", "Rsqrt", "Mul", "Cast", "Mul"): "RMSNorm",
+        ("BatchMatMul", "RealDiv", "Add", "Maximum", "SoftmaxV2", "Cast", "BatchMatMul"): "FA",
+        ("BatchMatMulV2", "RealDiv", "Add", "Cast", "Maximum", "Cast", "SoftmaxV2", "AsStrided",
+        "BatchMatMulV2"): "FA",
+        ("BatchMatMulV2", "RealDiv", "Add", "Cast", "SoftmaxV2", "Cast", "BroadcastTo",
+        "BatchMatMulV2"): "FA",
+        ("Mul", "Slice", "Neg", "Slice", "ConcatD", "Cast", "Mul", "Add"): "RotaryMul",
+        ("Mul", "AsStrided", "Neg", "AsStrided", "ConcatD", "Mul", "Add"): "RotaryMul",
+        ("Mul", "Slice", "Neg", "Slice", "ConcatD", "Mul", "Add"): "RotaryMul",
+        ("MatMulV2", "Swish", "MatMulV2", "Mul", "MatMulV2"): "FFN",
+        ("Transpose", "Transpose", "GatherElement", "Transpose"): "GatherElement",
+        ("Slice", "Slice", "Swish", "Mul"): "torch_npu.npu_swiglu",
+        ("Cast", "Mul", "MaskedFill", "SoftmaxV2", "Cast"): "torch_npu.npu_scaled_masked_softmax",
+        ("Mul", "Slice", "Neg", "Slice", "ConcatD", "Mul"): "torch_npu.npu_rotary_mul",
+        ("Cast", "Square", "ReduceMeanD", "Add", "Rsqrt", "Mul", "Cast", "Mul"): "torch_npu.npu_rms_norm"
+    }
     TITLE = CsvTitleV2
 
     @classmethod
