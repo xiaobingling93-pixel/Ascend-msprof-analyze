@@ -27,6 +27,7 @@ import psutil
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "compare_tools"))
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "cluster_analyse"))
 
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 from profiler.advisor.analyzer.cluster.slow_rank_analyzer import SlowRankAnalyzer
 from profiler.advisor.analyzer.cluster.slow_link_analyzer import SlowLinkAnalyzer
 from profiler.advisor.analyzer.computation.pp_stage_computation_analyzer import PPStageComputationAnalyzer
@@ -154,6 +155,7 @@ class AnalyzerController:
     def __init__(self):
         self.dimensions = Interface.all_dimension
         self.kwargs = {}
+        self.args_manager = None
         self.slow_rank_analyzer = None
         self.slow_link_analyzer = None
         self.cluster_local_data_map = {}
@@ -278,6 +280,8 @@ class AnalyzerController:
     def do_analysis(self, dimensions, **kwargs):
         pid = os.getpid()
         resp = {"id": pid}
+        self.args_manager = AdditionalArgsManager()
+        self.args_manager.init(kwargs)
         output_path = kwargs.get("output_path")
 
         AnalyzerController._set_analysis_process_priority(pid)

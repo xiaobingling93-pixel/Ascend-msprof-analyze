@@ -48,9 +48,15 @@ def analyze_cli(**kwargs):
               required=False,
               type=click.Choice(EnumParamsParser().get_options(constant.PROFILING_TYPE)),
               help="enter the profiling type, selectable range ascend_pytorch_profiler, mslite ,msprof")
+@click.option("--force",
+              is_flag=True,
+              help="Indicates whether to skip file size verification and owner verification")
 @debug_option
 def analyze_all(**kwargs) -> None:
-    AnalyzerController().do_analysis(Interface.all_dimension, **kwargs)
+    try:
+        AnalyzerController().do_analysis(Interface.all_dimension, **kwargs)
+    except Exception as e:
+        logger.error(e)
 
 
 @analyze_cli.command(context_settings=CONTEXT_SETTINGS,
@@ -76,9 +82,15 @@ def analyze_all(**kwargs) -> None:
               required=False,
               type=click.Choice(EnumParamsParser().get_options(constant.PROFILING_TYPE)),
               help="enter the profiling type, selectable range ascend_pytorch_profiler, mslite ,msprof")
+@click.option("--force",
+              is_flag=True,
+              help="Indicates whether to skip file size verification and owner verification")
 @debug_option
 def analyze_schedule(**kwargs) -> None:
-    AnalyzerController().do_analysis([Interface.SCHEDULE], **kwargs)
+    try:
+        AnalyzerController().do_analysis([Interface.SCHEDULE], **kwargs)
+    except Exception as e:
+        logger.error(e)
 
 
 @analyze_cli.command(context_settings=CONTEXT_SETTINGS,
@@ -104,6 +116,12 @@ def analyze_schedule(**kwargs) -> None:
               required=False,
               type=click.Choice(EnumParamsParser().get_options(constant.PROFILING_TYPE)),
               help="enter the profiling type, selectable range ascend_pytorch_profiler, mslite ,msprof")
+@click.option("--force",
+              is_flag=True,
+              help="Indicates whether to skip file size verification and owner verification")
 @debug_option
 def analyze_computation(**kwargs) -> None:
-    AnalyzerController().do_analysis([Interface.COMPUTATION], **kwargs)
+    try:
+        AnalyzerController().do_analysis([Interface.COMPUTATION], **kwargs)
+    except Exception as e:
+        logger.error(e)

@@ -6,8 +6,10 @@ import sys
 
 sys.path.append(
     os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "cluster_analyse"))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 from compare_backend.comparison_generator import ComparisonGenerator
+from profiler.prof_common.analyze_dict import AnalyzeDict
 
 
 def main():
@@ -29,9 +31,11 @@ def main():
     parser.add_argument("--gpu_flow_cat", type=str, default='', help="Identifier of the GPU connection")
     parser.add_argument("--base_step", type=str, default='', help="Comparison step for performance data to be compared")
     parser.add_argument("--comparison_step", type=str, default='', help="Comparison step for benchmark performance data")
+    parser.add_argument("--force", action='store_true',
+                        help="Indicates whether to skip file size verification and owner verification")
     args = parser.parse_args()
 
-    ComparisonGenerator(args).run()
+    ComparisonGenerator(AnalyzeDict(vars(args))).run()
 
 if __name__ == "__main__":
     start_time = datetime.datetime.now()

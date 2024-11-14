@@ -17,6 +17,7 @@ import os
 import re
 import shutil
 import platform
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 
 
 
@@ -105,6 +106,8 @@ class PathManager:
         Exception Description:
             when invalid path, prompt the user
         """
+        if AdditionalArgsManager().force:
+            return
         if platform.system().lower() == cls.WINDOWS:
             return
         for path in path_list:

@@ -14,7 +14,6 @@
 # limitations under the License.
 
 import csv
-import json
 import os
 import re
 from typing import List, Dict

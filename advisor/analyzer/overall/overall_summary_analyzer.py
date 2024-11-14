@@ -111,7 +111,7 @@ class OverallSummaryAnalyzer(BaseAnalyzer):
         overall_data = self.cur_data.get("overall_data")
         if not overall_data:
             return
-        e2e_time = '%.3f' % sum([data for data in overall_data.values()])
+        e2e_time = round(sum([data for data in overall_data.values()]), 3)
         overall_bottleneck = f"The Model E2E Time is {e2e_time}ms.\n"
         comparison_bottleneck = ""
         for time_type, time_value in overall_data.items():
