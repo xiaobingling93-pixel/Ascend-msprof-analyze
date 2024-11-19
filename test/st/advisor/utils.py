@@ -44,3 +44,6 @@ def get_files(out_path):
         result_html[pattern] = os.path.join(files_out_path, newest_html_file)
         result_excel[pattern] = os.path.join(log_dir, newest_excel_file)
     return result_html, result_excel
+
+
+

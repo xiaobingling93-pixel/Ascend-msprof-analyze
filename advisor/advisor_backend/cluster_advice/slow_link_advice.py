@@ -35,12 +35,13 @@ class SlowLinkAdvice(ClusterAdviceBase):
 
     def __init__(self, collection_path: str, kwargs: dict = None):
         super().__init__(collection_path)
-        self.rank_bw_dict = defaultdict(lambda: {
+        default_value = {
             self.RDMA_TIME_MS: 0,
             self.RDMA_SIZE_MB: 0,
             self.SDMA_TIME_MS: 0,
             self.SDMA_SIZE_MB: 0,
-        })
+        }
+        self.rank_bw_dict = defaultdict(lambda: default_value.copy())
 
     @staticmethod
     def compute_ratio(dividend: float, divisor: float):
@@ -65,9 +66,9 @@ class SlowLinkAdvice(ClusterAdviceBase):
         return self.output_format_data
 
     def process(self, communication_json: dict):
-        for comm_group, group_dict in communication_json.items():
-            for step, step_dict in group_dict.items():
-                for op, op_dict in step_dict.items():
+        for _, group_dict in communication_json.items():
+            for _, step_dict in group_dict.items():
+                for _, op_dict in step_dict.items():
                     self.compute_bandwidth(op_dict)
         if self.rank_bw_dict:
             self.produce_bottleneck(self.RDMA_BANDWIDTH)
@@ -88,7 +89,7 @@ class SlowLinkAdvice(ClusterAdviceBase):
                     self.rank_bw_dict[rank][self.RDMA_SIZE_MB] += bw_dict.get(self.TRANSIT_SIZE)
                     self.rank_bw_dict[rank][self.RDMA_TIME_MS] += bw_dict.get(self.TRANSIT_TIME)
 
-        for rank, rank_dict in self.rank_bw_dict.items():
+        for rank, _ in self.rank_bw_dict.items():
             self.rank_bw_dict[rank][self.RDMA_BANDWIDTH] = self.compute_ratio(
                 self.rank_bw_dict[rank][self.RDMA_SIZE_MB], self.rank_bw_dict[rank][self.RDMA_TIME_MS])
             self.rank_bw_dict[rank][self.SDMA_BANDWIDTH] = self.compute_ratio(

@@ -13,18 +13,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from compare_backend.utils.common_func import convert_to_float
+import logging
 
+class Logger:
+    def __init__(self):
+        if not hasattr(self, 'logger'):
+            self.logger = logging.getLogger('singleton_logger')
+            self.logger.setLevel(logging.INFO)
 
-class MemoryRecordBean:
-    def __init__(self, data: dict):
-        self._data = data
-        self._total_reserved_mb = 0.0
-        self.init()
+    def info(self, message):
+        self.logger.info(message)
 
-    @property
-    def total_reserved_mb(self) -> float:
-        return convert_to_float(self._total_reserved_mb)
+    def debug(self, message):
+        self.logger.debug(message)
 
-    def init(self):
-        self._total_reserved_mb = self._data.get("Total Reserved(MB)", 0)
+    def warning(self, message):
+        self.logger.warning(message)
+
+    def error(self, message):
+        self.logger.error(message)
+
+    def critical(self, message):
+        self.logger.critical(message)
+

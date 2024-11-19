@@ -22,6 +22,7 @@ import logging
 
 from common_func.path_manager import PathManager
 from compare_backend.utils.constant import Constant
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 
 
 logger = logging.getLogger()
@@ -30,13 +31,13 @@ logger = logging.getLogger()
 class FileReader:
     @classmethod
     def read_trace_file(cls, file_path: str) -> any:
-        PathManager.check_path_readable(file_path)
         if not os.path.isfile(file_path):
             raise FileNotFoundError("File not exists.")
+        PathManager.check_path_readable(file_path)
         file_size = os.path.getsize(file_path)
         if file_size <= 0:
             return []
-        if file_size > Constant.MAX_FILE_SIZE:
+        if not AdditionalArgsManager().force and file_size > Constant.MAX_FILE_SIZE:
             check_msg = input(
                 f"The file({file_path}) size exceeds the preset max value. Continue reading the file? [y/n]")
             if check_msg.lower() != "y":
@@ -52,13 +53,13 @@ class FileReader:
 
     @classmethod
     def read_csv_file(cls, file_path: str, bean_class: any = None) -> any:
-        PathManager.check_path_readable(file_path)
         if not os.path.isfile(file_path):
             raise FileNotFoundError("File not exists.")
+        PathManager.check_path_readable(file_path)
         file_size = os.path.getsize(file_path)
         if file_size <= 0:
             return []
-        if file_size > Constant.MAX_FILE_SIZE:
+        if not AdditionalArgsManager().force and file_size > Constant.MAX_FILE_SIZE:
             check_msg = input(
                 f"The file({file_path}) size exceeds the preset max value. Continue reading the file? [y/n]")
             if check_msg.lower() != "y":

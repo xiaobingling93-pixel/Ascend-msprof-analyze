@@ -13,6 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
 from compare_backend.generator.detail_performance_generator import DetailPerformanceGenerator
 from compare_backend.generator.overall_performance_generator import OverallPerformanceGenerator
 from compare_backend.interface.overall_interface import OverallInterface
@@ -21,6 +24,7 @@ from compare_backend.profiling_parser.gpu_profiling_parser import GPUProfilingPa
 from compare_backend.profiling_parser.npu_profiling_parser import NPUProfilingParser
 from compare_backend.utils.constant import Constant
 from compare_backend.utils.args_manager import ArgsManager
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 
 
 class ComparisonGenerator:
@@ -28,6 +32,7 @@ class ComparisonGenerator:
     INTERFACE_DICT = {Constant.OVERALL_COMPARE: OverallInterface}
 
     def __init__(self, args):
+        AdditionalArgsManager().init(args)
         self._args_manager = ArgsManager(args)
         self._data_dict = {}
 
