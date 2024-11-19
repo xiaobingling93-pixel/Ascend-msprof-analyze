@@ -43,6 +43,7 @@ from profiler.advisor.analyzer.computation.ai_core_freq.ai_core_freq_analyzer im
 from profiler.advisor.analyzer.memory.memory_analyzer import MemoryAnalyzer
 from profiler.advisor.analyzer.communication.packet.packet_analyzer import PacketAnalyzer
 from profiler.advisor.analyzer.communication.contention.bandwidth_contention_analyzer import BandwidthContentionAnalyzer
+from profiler.advisor.analyzer.communication.alignment.byte_alignment_analyzer import ByteAlignmentAnalyzer
 from profiler.advisor.analyzer.schedule.gc.gc_analyzer import GcAnalyzer
 from profiler.advisor.analyzer.comparison.comparison_analyzer import ComparisonAnalyzer
 
@@ -77,7 +78,8 @@ class Interface:
         }),
         COMMUNICATION: OrderedDict({SupportedScopes.PACKET: PacketAnalyzer,
                                     SupportedScopes.COMMUNICATION_RETRANSMISSION_DETECTION: RDMARetransmissionAnalyzer,
-                                    SupportedScopes.BANDWIDTH_CONTENTION_DETECTION: BandwidthContentionAnalyzer}),
+                                    SupportedScopes.BANDWIDTH_CONTENTION_DETECTION: BandwidthContentionAnalyzer,
+                                    SupportedScopes.BYTE_ALIGNMENT_DETECTION: ByteAlignmentAnalyzer}),
         OVERALL: OrderedDict({SupportedScopes.OVER_ALL: OverallSummaryAnalyzer,
                               SupportedScopes.ENVIRONMENT_VARIABLE_ANALYSIS: EnvironmentVariabelAnalyzer}),
         CLUSTER: OrderedDict({

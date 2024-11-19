@@ -56,6 +56,7 @@ experimental_config = torch_npu.profiler._ExperimentalConfig(
    | --output_path或-o     | 自定义输出路径，运行分析脚本之后会在该目录下自动创建cluster_analysis_output文件夹，保存分析数据。 | 否       |
    | --mode或-m            | 数据解析模式，取值详见“**--mode参数说明**”表。               | 否       |
    | --data_simplification | 数据精简模式。对于数据量过大的性能数据db文件，可以通过配置该参数将数据精简，并提高工具分析效率。 | 否       |
+   | --force               | 强制跳过用户属主（文件是否属于当前用户）及文件大小（csv文件小于5G，json文件小于10G,db文件小于8G）校验。  | 否       |
    
    --mode参数说明：
    

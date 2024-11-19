@@ -18,6 +18,7 @@ import shutil
 import platform
 
 from .constant import Constant
+from .additional_args_manager import AdditionalArgsManager
 
 
 class PathManager:
@@ -97,7 +98,7 @@ class PathManager:
         Exception Description:
             when invalid path, prompt the user
         """
-        if platform.system().lower() == cls.WINDOWS:
+        if platform.system().lower() == cls.WINDOWS or AdditionalArgsManager().force:
             return
         for path in path_list:
             if not os.path.exists(path):
@@ -194,6 +195,8 @@ class PathManager:
     def check_file_size(cls, file_path: str):
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"The file {file_path} does not exists.")
+        if AdditionalArgsManager().force:
+            return
         file_size = os.path.getsize(file_path)
         if file_size > Constant.MAX_FILE_SIZE_5_GB:
             check_msg = input(
