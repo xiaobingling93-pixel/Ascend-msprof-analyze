@@ -1,3 +1,18 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from compare_backend.utils.constant import Constant
 from compare_backend.utils.excel_config import ExcelConfig
 from compare_backend.utils.common_func import calculate_diff_ratio
@@ -62,10 +77,12 @@ class CommunicationBean:
 
     @classmethod
     def _get_row(cls, base_info: CommunicationInfo, comparison_info: CommunicationInfo, is_task: bool) -> list:
-        row = [None, base_info.comm_op_name, base_info.task_name, base_info.calls, base_info.total_duration,
-               base_info.avg_duration, base_info.max_duration, base_info.min_duration, comparison_info.comm_op_name,
-               comparison_info.task_name, comparison_info.calls, comparison_info.total_duration,
-               comparison_info.avg_duration, comparison_info.max_duration, comparison_info.min_duration]
+        row = [
+            None, base_info.comm_op_name, base_info.task_name, base_info.calls, base_info.total_duration,
+            base_info.avg_duration, base_info.max_duration, base_info.min_duration, comparison_info.comm_op_name,
+            comparison_info.task_name, comparison_info.calls, comparison_info.total_duration,
+            comparison_info.avg_duration, comparison_info.max_duration, comparison_info.min_duration
+        ]
         diff_fields = [None, None] if is_task else calculate_diff_ratio(base_info.total_duration,
                                                                         comparison_info.total_duration)
         row.extend(diff_fields)

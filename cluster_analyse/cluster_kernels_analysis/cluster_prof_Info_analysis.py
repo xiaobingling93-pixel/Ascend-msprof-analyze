@@ -26,10 +26,11 @@ import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from plotly.offline import plot
-
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from common_func.path_manager import PathManager
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 
 
 MAX_READ_FILE_BYTES = 64 * 1024 * 1024
@@ -323,13 +324,16 @@ def main():
     parser.add_argument("--dir", "-d", default=None, help="root dir of PROF_* data")
     parser.add_argument("--top_n", "-n", default=10, help="how many operators to show", type=int)
     parser.add_argument("--type", "-t", default='html', help="compare ratio or aicore-time", type=str)
+    parser.add_argument("--force", action='store_true',
+                        help="Indicates whether to skip file size verification and owner verification")
     args = parser.parse_args()
     params = {
         "dir": args.dir,
         "top_n": args.top_n,
-        "type": args.type
+        "type": args.type,
+        "force": args.force
     }
-
+    AdditionalArgsManager().init(params)
     deviverable_gen = DeliverableGenerator(params)
     deviverable_gen.run()
 

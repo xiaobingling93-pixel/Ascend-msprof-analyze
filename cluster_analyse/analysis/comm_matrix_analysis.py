@@ -1,10 +1,27 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import os
+import logging
 from collections import defaultdict
 
 from analysis.base_analysis import BaseAnalysis
 from common_func.constant import Constant
 from common_func.db_manager import DBManager
 
+logger = logging.getLogger()
 
 class CommMatrixAnalysis(BaseAnalysis):
     SAVED_JSON = "cluster_communication_matrix.json"
@@ -49,7 +66,7 @@ class CommMatrixAnalysis(BaseAnalysis):
         def process_link_key():
             for link_key in rank_dict:
                 if '-' not in link_key:
-                    print(f"[WARNING] {op_name} has an invalid link key {link_key}!")
+                    logger.warning("%s has an invalid link key %s!", str(op_name), str(link_key))
                     break
                 src_rank = link_key.split('-')[0]
                 dst_rank = link_key.split('-')[1]
@@ -57,8 +74,8 @@ class CommMatrixAnalysis(BaseAnalysis):
                     if src_rank not in project_local_global_rank_map:
                         project_local_global_rank_map[src_rank] = rank_id
                     elif project_local_global_rank_map.get(src_rank) != rank_id:
-                        print(f"[WARNING] In the same communication group, local ranks projecting to global ranks "
-                              f"repeat!")
+                        logger.warning("In the same communication group, local ranks projecting to global ranks "
+                                       "repeat!")
                 self.combine_link(link_info[link_key], rank_dict[link_key])
 
         def convert_local_to_global_rank():
@@ -77,29 +94,31 @@ class CommMatrixAnalysis(BaseAnalysis):
             return tmp_link
 
         project_local_global_rank_map = dict()
+        default_value = {
+            Constant.TRANSPORT_TYPE: '',
+            Constant.TRANSIT_TIME_MS: 0,
+            Constant.TRANSIT_SIZE_MB: 0,
+            Constant.OP_NAME: ''
+        }
         for op_name, op_dict in step_dict.items():
-            link_info = defaultdict(lambda: {
-                Constant.TRANSPORT_TYPE: '',
-                Constant.TRANSIT_TIME_MS: 0,
-                Constant.TRANSIT_SIZE_MB: 0,
-                Constant.OP_NAME: ''
-            })
+            link_info = defaultdict(lambda:default_value.copy())
             for rank_id, rank_dict in op_dict.items():
                 process_link_key()
             step_dict[op_name] = convert_local_to_global_rank()
 
     def combine_link_info(self, step_dict: dict):
-        total_op_info = defaultdict(lambda: {
+        default_value = {
             Constant.TRANSPORT_TYPE: '',
             Constant.TRANSIT_TIME_MS: 0,
             Constant.TRANSIT_SIZE_MB: 0,
             Constant.OP_NAME: ''
-        })
+        }
+        total_op_info = defaultdict(lambda: default_value.copy())
         for op_name, op_dict in step_dict.items():
             if self.check_add_op(op_name):
                 for link_key, link_dict in op_dict.items():
                     self.combine_link(total_op_info[link_key], link_dict)
-        for link_key, link_dict in total_op_info.items():
+        for _, link_dict in total_op_info.items():
             link_dict[Constant.BANDWIDTH_GB_S] = \
                 self.compute_ratio(link_dict.get(Constant.TRANSIT_SIZE_MB, 0),
                                    link_dict.get(Constant.TRANSIT_TIME_MS, 0))

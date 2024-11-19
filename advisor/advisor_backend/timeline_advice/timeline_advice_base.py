@@ -17,13 +17,16 @@ from abc import abstractmethod
 from collections import defaultdict
 import json
 import os
+import logging
 
 from advice_base import AdviceBase
 from common_func.file_manager import FileManager
 
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 class TimelineAdviceBase(AdviceBase):
-    class PREPARSE_TYPE:
+    class PreParseType:
         OPTIMIZER = 0
         STEP = 1
         OVERLAP_CPT = 2
@@ -40,9 +43,9 @@ class TimelineAdviceBase(AdviceBase):
         self.has_preparse = False
         self.preparse_data = defaultdict(list)
         self.entry_map = {
-            'Computing': self.PREPARSE_TYPE.OVERLAP_CPT,
-            'Free': self.PREPARSE_TYPE.OVERLAP_FREE,
-            'AscendCL@aclrtSynchronizeDevice': self.PREPARSE_TYPE.SYNCHRONIZE
+            'Computing': self.PreParseType.OVERLAP_CPT,
+            'Free': self.PreParseType.OVERLAP_FREE,
+            'AscendCL@aclrtSynchronizeDevice': self.PreParseType.SYNCHRONIZE
         }
 
     def path_check(self):
@@ -50,19 +53,20 @@ class TimelineAdviceBase(AdviceBase):
         check whether input path is valid
         """
         if not os.path.exists(self.collection_path):
-            print("[ERROR] Path: {} is not exist.".format(self.collection_path))
+            logger.error("Path: %s is not exist.",str(self.collection_path))
             return False
         if os.path.isdir(self.collection_path) and self.collection_path.endswith("ascend_pt"):
             self.trace_view_path = os.path.join(self.collection_path, "ASCEND_PROFILER_OUTPUT", "trace_view.json")
             if not os.path.exists(self.trace_view_path):
-                print("[ERROR] trace_view.json is not exist in the Path: {}.".format(os.path.join(self.collection_path, "ASCEND_PROFILER_OUTPUT")))
+                logger.error("trace_view.json is not exist in the Path: %s."\
+                             ,str(os.path.join(self.collection_path, "ASCEND_PROFILER_OUTPUT")))
                 return False
         elif os.path.isfile(self.collection_path) and os.path.basename(self.collection_path) == "trace_view.json":
             self.trace_view_path = self.collection_path
         else:
-            print("[ERROR] Please input ascend_pt or trace_view.json.")
+            logger.error("Please input ascend_pt or trace_view.json.")
             return False
-        print("[INFO] Start to analyse the target file: {}".format(self.trace_view_path))
+        logger.info("Start to analyse the target file: %s",str(self.trace_view_path))
         return True
 
     @abstractmethod
@@ -91,9 +95,9 @@ class TimelineAdviceBase(AdviceBase):
             if not name:
                 continue
             if name.startswith("Optimizer.step#") and name.endswith(".step"):
-                self.preparse_data[self.PREPARSE_TYPE.OPTIMIZER].append(entry)
+                self.preparse_data[self.PreParseType.OPTIMIZER].append(entry)
             elif name.startswith("ProfilerStep#"):
-                self.preparse_data[self.PREPARSE_TYPE.STEP].append(entry)
+                self.preparse_data[self.PreParseType.STEP].append(entry)
             elif name in self.entry_map:
                 self.preparse_data[self.entry_map[name]].append(entry)
         self.has_preparse = True
