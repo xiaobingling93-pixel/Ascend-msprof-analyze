@@ -12,10 +12,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import logging
 from decimal import Decimal
 from common_func_advisor.constant import Constant
 from timeline_advice.timeline_advice_base import TimelineAdviceBase
 
+logger = logging.getLogger()
 
 class OpScheduleAdvice(TimelineAdviceBase):
     def __init__(self, collection_path: str):
@@ -33,10 +35,10 @@ class OpScheduleAdvice(TimelineAdviceBase):
         return self.output_format_data
 
     def process(self):
-        cpt_data = self.preparse_data[self.PREPARSE_TYPE.OVERLAP_CPT]
-        free_data = self.preparse_data[self.PREPARSE_TYPE.OVERLAP_FREE]
+        cpt_data = self.preparse_data[self.PreParseType.OVERLAP_CPT]
+        free_data = self.preparse_data[self.PreParseType.OVERLAP_FREE]
         if not cpt_data or not free_data:
-            print("[ERROR] Fail to find Overlap data.")
+            logger.error("Fail to find Overlap data.")
             return
 
         op_dur = [entry.get("dur", 0) for entry in cpt_data]
@@ -61,8 +63,8 @@ class OpScheduleAdvice(TimelineAdviceBase):
             return
         self.cur_bottleneck = f"NPU Utilication: {round(free_ratio * 100, 2)}%, " \
             f"NPU Free Utilization: {round(cpt_ratio * 100, 2)}%."
-        if len(self.preparse_data[self.PREPARSE_TYPE.SYNCHRONIZE]) > 1:
-            self.cur_advice = f"Device synchronize {len(self.preparse_data[self.PREPARSE_TYPE.SYNCHRONIZE])} times, " \
+        if len(self.preparse_data[self.PreParseType.SYNCHRONIZE]) > 1:
+            self.cur_advice = f"Device synchronize {len(self.preparse_data[self.PreParseType.SYNCHRONIZE])} times, " \
                 "try to reduce synchronization statements to alleviate the bottleneck of operator delivery.\n"
         small_op_num = self.small_op_block(op_free, op_dur)
         small_op_ratio = small_op_num / len(op_dur) if op_dur else 0.0
@@ -77,9 +79,9 @@ class OpScheduleAdvice(TimelineAdviceBase):
         return small_op_num
 
     def get_ratio(self):
-        cpt_data = self.preparse_data[self.PREPARSE_TYPE.OVERLAP_CPT]
-        free_data = self.preparse_data[self.PREPARSE_TYPE.OVERLAP_FREE]
-        cmu_data = self.preparse_data[self.PREPARSE_TYPE.OVERLAP_CMU]
+        cpt_data = self.preparse_data[self.PreParseType.OVERLAP_CPT]
+        free_data = self.preparse_data[self.PreParseType.OVERLAP_FREE]
+        cmu_data = self.preparse_data[self.PreParseType.OVERLAP_CMU]
         cpt_time = sum([x.get("dur", 0) for x in cpt_data])
         free_time = sum([x.get("dur", 0) for x in free_data])
         cmu_time = sum([x.get("dur", 0) for x in cmu_data])

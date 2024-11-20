@@ -18,7 +18,7 @@ profiling info
 """
 import decimal
 import logging
-
+from typing import List
 from profiler.advisor.utils.utils import lazy_property
 
 logger = logging.getLogger()
@@ -220,7 +220,7 @@ class TaskInfo:
         get pid
         :return: pid
         """
-        return self._args.get("Task Type", "NA")
+        return self._args.get("task type", "NA")
 
     @property
     def start_time(self):
@@ -260,7 +260,7 @@ class TaskInfo:
         get stream_id
         :return: steram id
         """
-        return self._args.get("Stream Id", "NA")
+        return self._args.get("stream id", "NA")
 
     @property
     def task_id(self):
@@ -268,7 +268,23 @@ class TaskInfo:
         get task id
         :return: task_id
         """
-        return self._args.get("Task Id", "NA")
+        return self._args.get("task id", "NA")
+
+    @property
+    def transport_type(self):
+        """
+        get transport type
+        :return: transport_type
+        """
+        return self._args.get("transport type", "NA")
+
+    @property
+    def link_type(self):
+        """
+        get link type
+        :return: link_type
+        """
+        return self._args.get("link type", "NA")
 
     @property
     def args(self):
@@ -284,3 +300,52 @@ class TaskInfo:
         get category of task
         """
         return self._cat
+
+
+class HcclOp:
+    MIN_SIZE = 512
+
+    def __init__(self, task: TaskInfo):
+        self.op_name = task.name
+        self.start = task.start_time
+        self.end = task.end_time
+        self.sdma_size = 0
+        self.sdma_duration = 0
+        self.rdma_size = 0
+        self.rdma_duration = 0
+        self.reduce_inline_tasks: List[HcclTask] = []
+        self.memcpy_tasks: List[HcclTask] = []
+
+
+class HcclTask:
+    def __init__(self, task: TaskInfo):
+        self._start = task.start_time
+        self._end = task.end_time
+        self._duration = task.dur
+        self._size = task.args.get("size(Byte)", 0)
+        self._transport_type = task.transport_type
+        self._link_type = task.link_type
+
+    @property
+    def start(self):
+        return self._start
+
+    @property
+    def end(self):
+        return self._end
+
+    @property
+    def duration(self):
+        return self._duration
+
+    @property
+    def size(self):
+        return self._size
+
+    @property
+    def transport_type(self):
+        return self._transport_type
+
+    @property
+    def link_type(self):
+        return self._link_type

@@ -17,7 +17,7 @@
 import logging
 from typing import Dict, List
 
-from profiler.advisor.dataset.profiling.info_collection import TaskInfo
+from profiler.advisor.dataset.profiling.info_collection import TaskInfo, HcclOp
 from profiler.advisor.dataset.profiling.profiling_parser import ProfilingParser
 
 logger = logging.getLogger()
@@ -54,6 +54,7 @@ class Msprof(ProfilingParser):
     def __init__(self, path: str) -> None:
         super().__init__(path)
         self._tasks: List[TaskInfo] = []
+        self._hccl_tasks: List[HcclOp] = []
         self._iteration_time = 0.0
         self._model_id = None
         self._iteration_id = None
@@ -146,6 +147,7 @@ class Msprof(ProfilingParser):
             self._max_time = max_time
             self._min_time = min_time
         if self._tasks:
+            self._tasks.sort(key=lambda x: x.start_time)
             return True
         return False
 

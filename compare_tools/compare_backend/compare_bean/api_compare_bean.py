@@ -1,3 +1,18 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from compare_backend.utils.common_func import calculate_diff_ratio
 from compare_backend.utils.constant import Constant
 from compare_backend.utils.excel_config import ExcelConfig
@@ -34,14 +49,18 @@ class ApiCompareBean:
 
     @property
     def row(self):
-        row = [None, self._name,
-               self._base_api.total_dur, self._base_api.self_time, self._base_api.avg_dur, self._base_api.number,
-               self._comparison_api.total_dur, self._comparison_api.self_time,
-               self._comparison_api.avg_dur, self._comparison_api.number]
-        diff_fields = [calculate_diff_ratio(self._base_api.total_dur, self._comparison_api.total_dur)[1],
-                       calculate_diff_ratio(self._base_api.self_time, self._comparison_api.self_time)[1],
-                       calculate_diff_ratio(self._base_api.avg_dur, self._comparison_api.avg_dur)[1],
-                       calculate_diff_ratio(self._base_api.number, self._comparison_api.number)[1]]
+        row = [
+            None, self._name,
+            self._base_api.total_dur, self._base_api.self_time, self._base_api.avg_dur, self._base_api.number,
+            self._comparison_api.total_dur, self._comparison_api.self_time,
+            self._comparison_api.avg_dur, self._comparison_api.number
+        ]
+        diff_fields = [
+            calculate_diff_ratio(self._base_api.total_dur, self._comparison_api.total_dur)[1],
+            calculate_diff_ratio(self._base_api.self_time, self._comparison_api.self_time)[1],
+            calculate_diff_ratio(self._base_api.avg_dur, self._comparison_api.avg_dur)[1],
+            calculate_diff_ratio(self._base_api.number, self._comparison_api.number)[1]
+        ]
         row.extend(diff_fields)
         return row
 
