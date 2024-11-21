@@ -94,7 +94,7 @@ class DetailPerformanceGenerator(BaseGenerator):
 
         # 算子性能比对-module级
         enable_operator_compare = False
-        if self._args.enable_operator_compare:
+        if self._args.enable_operator_compare and not self._args.disable_moduel:
             module_compare_result = self._module_match()
             if module_compare_result:
                 comparator_list.append(ModuleStatisticComparator(module_compare_result, ModuleStatisticBean))
