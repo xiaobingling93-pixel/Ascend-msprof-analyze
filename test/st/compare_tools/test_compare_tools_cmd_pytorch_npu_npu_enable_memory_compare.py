@@ -10,9 +10,10 @@ from .utils import execute_cmd, check_result_file
 class TestCompareToolsCmdPytorchNpuVsNpuEnableMemoryCompare(TestCase):
     ST_DATA_PATH = os.getenv("MSTT_PROFILER_ST_DATA_PATH",
                              "/home/dcs-50/smoke_project_for_msprof_analyze/mstt_profiler/st_data")
-    BASE_PROFILING_PATH = os.path.join(ST_DATA_PATH, "cluster_data_3", "n122-122-067_12380_20240912033946038_ascend_pt")
-    COMPARISON_PROFILING_PATH = os.path.join(ST_DATA_PATH, "cluster_data_3",
-                                             "n122-122-067_12380_20240912033946038_ascend_pt")
+    BASE_PROFILING_PATH = os.path.join(ST_DATA_PATH, "cluster_data_4",
+                                       "n122-197-168_1333345_20241105122131111_ascend_pt")
+    COMPARISON_PROFILING_PATH = os.path.join(ST_DATA_PATH, "cluster_data_4",
+                                             "n122-197-168_1632305_20241105124759292_ascend_pt")
     OUTPUT_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                                "CompareToolsCmdPytorchNpuVsNpuEnableMemoryCompare")
     RESULT_EXCEL = ""
@@ -37,7 +38,7 @@ class TestCompareToolsCmdPytorchNpuVsNpuEnableMemoryCompare(TestCase):
                    "Base Operator Number", "Comparison Allocated Duration(ms)", "Comparison Allocated Memory(MB)",
                    "Comparison Operator Number", "Diff Memory(MB)", "Diff Ratio"]
         df = pd.read_excel(self.RESULT_EXCEL, sheet_name="MemoryCompareStatistic", header=2)
-        self.assertEqual(len(df), 141, msg="pytorch npu vs npu memory compare results 'MemoryCompareStatistic'"
+        self.assertEqual(len(df), 139, msg="pytorch npu vs npu memory compare results 'MemoryCompareStatistic'"
                                            "quantity is wrong")
         self.assertEqual(headers, df.columns.tolist(),
                          msg="pytorch npu vs npu memory compare results 'MemoryCompareStatistic'"

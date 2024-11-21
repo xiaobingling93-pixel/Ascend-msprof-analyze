@@ -11,9 +11,10 @@ from .utils import execute_cmd, check_result_file
 class TestCompareToolsCmdPytorchNpuVsNpuEnableProfiling(TestCase):
     ST_DATA_PATH = os.getenv("MSTT_PROFILER_ST_DATA_PATH",
                              "/home/dcs-50/smoke_project_for_msprof_analyze/mstt_profiler/st_data")
-    BASE_PROFILING_PATH = os.path.join(ST_DATA_PATH, "cluster_data_3", "n122-122-067_12380_20240912033946038_ascend_pt")
-    COMPARISON_PROFILING_PATH = os.path.join(ST_DATA_PATH, "cluster_data_3",
-                                             "n122-122-067_12380_20240912033946038_ascend_pt")
+    BASE_PROFILING_PATH = os.path.join(ST_DATA_PATH, "cluster_data_4",
+                                       "n122-197-168_1333345_20241105122131111_ascend_pt")
+    COMPARISON_PROFILING_PATH = os.path.join(ST_DATA_PATH, "cluster_data_4",
+                                             "n122-197-168_1632305_20241105124759292_ascend_pt")
     OUTPUT_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                                "CompareToolsCmdPytorchNpuVsNpuEnableProfiling")
     RESULT_EXCEL = ""
@@ -34,14 +35,13 @@ class TestCompareToolsCmdPytorchNpuVsNpuEnableProfiling(TestCase):
 
     def test_overall_metrics(self):
         duration_exp: List[float] = [
-            14474.86, 1194.01, 1194.01, 10442.62, 10402.34, 40.28, 2821.57, 444.33, 2377.24, 16.47,
-            0.18, 23922.06, 4604.98, 9.35, 4595.63, 128.38, 127.35, 1.03, 93.30, 1.27, 92.03, 146.49, 0.10,
-            146.39, 23310.81, 23310.81, 170.82, 0.20, 170.62, 373.72, 373.72, 38770.64
+            1725.15, 11.98, 11.98, 31.78, 31.78, 756.62, 705.49, 51.13, 879.83, 66.23, 813.60, 32.90, 12.04, 520.82,
+            307.11, 13.12, 293.99, 0.00, 0.00, 207.81, 0.01, 207.80, 5.87, 0.01, 5.86, 0.03, 0.03, 2897.92, 2897.92,
+            5143.89
         ]
-        diff_exp: List[float] = [0.37, 0.03, 0.03, 0.27, 0.27, 0.00, 0.07, 0.01, 0.06, 0.00,
-                                 0.00, 0.62, 0.12, 0.00, 0.12, 0.00, 0.00, 0.00, 0.00, 0.00,
-                                 0.00, 0.00, 0.00, 0.00, 0.60, 0.60, 0.00, 0.00, 0.00, 0.01,
-                                 0.01, 1.00]
+        diff_exp: List[float] = [
+            0.34, 0.00, 0.00, 0.01, 0.01, 0.15, 0.14, 0.01, 0.17, 0.01, 0.16, 0.01, 0.00, 0.10, 0.06, 0.00, 0.06, 0.00,
+            0.00, 0.04, 0.00, 0.04, 0.00, 0.00, 0.00, 0.00, 0.00, 0.56, 0.56, 1.00]
         df = pd.read_excel(self.RESULT_EXCEL, sheet_name="OverallMetrics", header=2)
         for index, row in df.iterrows():
             self.assertEqual(duration_exp[index], round(row["Duration(ms)"], 2),
