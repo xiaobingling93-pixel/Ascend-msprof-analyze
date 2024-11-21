@@ -21,17 +21,7 @@ import re
 from common_func.path_manager import PathManager
 from compare_backend.utils.constant import Constant
 from compare_backend.utils.file_reader import FileReader
-
-
-class Singleton(object):
-    def __init__(self, cls):
-        self._cls = cls
-        self._instance = {}
-
-    def __call__(self, args=None):
-        if self._cls not in self._instance:
-            self._instance[self._cls] = self._cls(args)
-        return self._instance[self._cls]
+from compare_backend.utils.singleton import Singleton
 
 
 @Singleton
