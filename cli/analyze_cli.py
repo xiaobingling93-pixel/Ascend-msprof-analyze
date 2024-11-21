@@ -37,17 +37,12 @@ def analyze_cli(**kwargs):
               default=EnumParamsParser().get_default(Constant.CANN_VERSION),
               help='The CANN software version, which can be viewed by executing the following command: '
                    '"cat /usr/local/Ascend/ascend-toolkit/latest/aarch64-linux/ascend_toolkit_install.info"')
-@click.option('--torch_version', '-tv', 'torch_version',
-              type=click.Choice(EnumParamsParser().get_options(Constant.TORCH_VERSION), case_sensitive=False),
-              default=EnumParamsParser().get_default(Constant.TORCH_VERSION),
-              help='The runtime torch version, which can be detected by exec command "pip show torch"')
 @click.option("-pt",
               "--profiling_type",
               metavar="",
-              default=EnumParamsParser().get_default(Constant.PROFILING_TYPE_UNDER_LINE),
               required=False,
               type=click.Choice(EnumParamsParser().get_options(Constant.PROFILING_TYPE_UNDER_LINE)),
-              help="enter the profiling type, selectable range ascend_pytorch_profiler, mslite ,msprof")
+              help="enter the profiling type, selectable range pytorch, mindspore, mslite ,msprof")
 @click.option("--force",
               is_flag=True,
               help="Indicates whether to skip file size verification and owner verification")

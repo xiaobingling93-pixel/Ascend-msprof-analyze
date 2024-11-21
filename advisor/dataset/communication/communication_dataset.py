@@ -30,7 +30,7 @@ class CommunicationDataset:
 
     def __init__(self, collection_path, data: dict, **kwargs) -> None:
         self.timeline_dir = collection_path
-        if not self.timeline_dir.endswith("ascend_pt"):
+        if not self.timeline_dir.endswith("ascend_pt") and not self.timeline_dir.endswith("ascend_ms"):
             return
         self.timeline_data_list = self.get_file_path_from_directory(
             self.timeline_dir,

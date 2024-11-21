@@ -56,7 +56,9 @@ class TimelineFusionOpsAnalyzer(BaseAnalyzer):
 
         for mode in [Constant.ATEN.lower(), Constant.OPTIMIZER.lower()]:
 
-            for op_combined, npu_apis in tqdm(getattr(init_timeline_ops_db(self.cann_version, self.torch_version),
+            for op_combined, npu_apis in tqdm(getattr(init_timeline_ops_db(self.cann_version,
+                                                                           self.profiling_type,
+                                                                           self.profiling_version),
                                                       f"_{mode}_op_api_map").items(), leave=False, ncols=100,
                                               desc="Scanning timeline for affinity apis"):
                 for npu_api in npu_apis.split("/"):
@@ -94,7 +96,7 @@ class TimelineFusionOpsAnalyzer(BaseAnalyzer):
             return
 
         desc = f"Found {len(format_timeline_result(self.matched_op_stacks))} apis to be replaced" \
-               f" based on the runtime env cann-{self.cann_version} and torch-{self.torch_version}"
+               f" based on the runtime env cann-{self.cann_version} and torch-{self.profiling_version}"
         suggestion = "Please replace training api according to sub table 'Affinity training api'"
         if self.empty_stacks:
             desc += ", but with no stack"
@@ -131,7 +133,8 @@ class TimelineFusionOpsAnalyzer(BaseAnalyzer):
                                          template_dir="templates",
                                          template_name="affinity_api.html",
                                          cann_version=self.cann_version,
-                                         torch_version=self.torch_version,
+                                         profiling_type=self.profiling_type,
+                                         profiling_version=self.profiling_version,
                                          empty_stacks=self.empty_stacks,
                                          with_stack_doc_url=Config().timeline_with_stack_doc_url,
                                          api_doc_url=Config().timeline_api_doc_url,

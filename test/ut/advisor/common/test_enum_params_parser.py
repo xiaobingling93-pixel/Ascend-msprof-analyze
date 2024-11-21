@@ -17,7 +17,7 @@ class TestEnumParamsParser(unittest.TestCase):
 
     def setUp(self) -> None:
         self.enum_params_parser = EnumParamsParser()
-        self.argument_keys = sorted(["cann_version", "torch_version", "analysis_dimensions", "profiling_type"])
+        self.argument_keys = sorted(["cann_version", "torch_version", "analysis_dimensions", "profiling_type", "mindspore_version"])
         self.env_keys = ["ADVISOR_ANALYZE_PROCESSES", "DISABLE_PROFILING_COMPARISON", "DISABLE_AFFINITY_API"]
 
     def test_get_keys(self):

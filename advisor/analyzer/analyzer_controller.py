@@ -39,6 +39,7 @@ from profiler.advisor.common.enum_params_parser import EnumParamsParser
 from profiler.advisor.utils.utils import Timer, safe_index_value, safe_division, safe_index, convert_to_int
 from profiler.advisor.interface.interface import Interface
 from profiler.cluster_analyse.cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
+from profiler.cluster_analyse.cluster_data_preprocess.mindspore_data_preprocessor import MindsporeDataPreprocessor
 from profiler.prof_common.path_manager import PathManager
 from profiler.prof_common.constant import Constant
 
@@ -185,28 +186,6 @@ class AnalyzerController:
 
         return True
 
-    @staticmethod
-    def _whether_include_mindspore_prof(profiling_path):
-        # 暂不支持Mindspore数据，支持后可删除该限制
-        ASCEND_MS = "ascend_ms"
-
-        has_ascend_ms_dirs = False
-        for root, dirs, _ in os.walk(profiling_path):
-            if root.endswith(ASCEND_MS):
-                has_ascend_ms_dirs = True
-                break
-            for dir_name in dirs:
-                if dir_name.endswith(ASCEND_MS):
-                    has_ascend_ms_dirs = True
-                    break
-            if has_ascend_ms_dirs:
-                break
-
-        if has_ascend_ms_dirs:
-            logger.error("Advisor does not support data from MindSpore now, existing dirs end with 'ascend_ms'")
-            return True
-
-        return False
 
     @staticmethod
     def _get_step_rank_for_cluster_statistic_diff(target_cluster_statistic_data, benchmark_cluster_statistic_data,
@@ -318,7 +297,8 @@ class AnalyzerController:
             dimensions: analysis dimension, normally set as Interface.all_dimension, support specific dimension analysis
                 such as ['computation'] or ['computation', 'schedule']
             cann_version: cann version of your runtime, inpact on the analysis of affinity api and AICPU operators
-            torch_version: torch version of your runtime, inpact on the analysis of affinity api
+            profiling_type: profiling type of your runtime
+            profiling_version: profiling version of your runtime, inpact on the analysis of affinity api
             analysis_dimensions: can overwite dimensions.
             advisor_analyze_processes: number of processes to use while the training params pipeline parallel(pp) >1,
                 can reduce the time of analysis.
@@ -646,14 +626,6 @@ class AnalyzerController:
             logger.error(error_msg)
             return
 
-        # 暂不支持Mindspore数据，支持后可删除该限制
-        if self._whether_include_mindspore_prof(profiling_path):
-            error_msg = f"Got *_ascend_ms dirs from {profiling_path}, skip analysis"
-            self._update_analysis_process_resp(pid, async_resp, error_msg=error_msg,
-                                               status_code=AsyncAnalysisStatus.FAILED_STATUS_CODE,
-                                               status=AsyncAnalysisStatus.FAILED)
-            logger.error(error_msg)
-            return
 
         if benchmark_profiling_path and not self._check_profiling_path_valid(benchmark_profiling_path):
             error_msg = (f"Got invalid argument '-bp/--benchmark_profiling_path' {benchmark_profiling_path}, "
@@ -840,7 +812,16 @@ class AnalyzerController:
             return False
         path_list = [os.path.join(profiling_path, dir_name) for dir_name in os.listdir(profiling_path)]
         ascend_pt_dirs = [path for path in path_list if os.path.isdir(path) and path.endswith("ascend_pt")]
-        data_processor = PytorchDataPreprocessor(ascend_pt_dirs)
+        ascend_ms_dirs = [path for path in path_list if os.path.isdir(path) and path.endswith("ascend_ms")]
+        if ascend_ms_dirs and ascend_pt_dirs:
+            logger.error("Cannot analyze pytorch and mindspore meantime.")
+            return False
+        if not ascend_pt_dirs and not ascend_ms_dirs:
+            return False
+        if ascend_ms_dirs and not ascend_pt_dirs:
+            data_processor = MindsporeDataPreprocessor(ascend_ms_dirs)
+        elif ascend_pt_dirs and not ascend_ms_dirs:
+            data_processor = PytorchDataPreprocessor(ascend_pt_dirs)
 
         self.cluster_local_data_map[profiling_path] = data_processor.get_data_map()
 

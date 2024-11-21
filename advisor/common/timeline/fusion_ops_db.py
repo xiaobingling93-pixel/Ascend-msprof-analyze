@@ -29,10 +29,12 @@ logger = logging.getLogger()
 logger.setLevel(get_log_level())
 
 
-def init_timeline_ops_db(cann_version=None, torch_version=None):
+def init_timeline_ops_db(cann_version=None, profiling_type=None, profiling_version=None):
     logger.debug("init operators database")
 
-    return FusionOperatorDB(cann_version=cann_version, torch_version=torch_version)
+    return FusionOperatorDB(cann_version=cann_version,
+                            profiling_type=profiling_type,
+                            profiling_version=profiling_version)
 
 
 def get_timeline_fusion_ops_yaml_path():
@@ -65,17 +67,18 @@ def get_timeline_fusion_ops_yaml_path():
 
 class FusionOperatorDB:
 
-    def __init__(self, file_path=None, cann_version=None, torch_version=None):
+    def __init__(self, cann_version=None, profiling_type=None, profiling_version=None):
         self.timeline_fusion_ops_yaml_path = os.path.normpath(get_timeline_fusion_ops_yaml_path())
-
         self.cann_version = cann_version or EnumParamsParser().get_default(Constant.CANN_VERSION)
-        self.torch_version = torch_version or EnumParamsParser().get_default(Constant.TORCH_VERSION)
+        self.profiling_type = profiling_type or EnumParamsParser().get_default(Constant.PROFILING_TYPE_UNDER_LINE)
+        self.profiling_version = profiling_version or EnumParamsParser().get_default(Constant.PROFILING_TYPE_UNDER_LINE)
 
         self._supported_version_dict = {}
 
         self.is_empty = False
         self.timeline_op_rule_handler = TimelineOpRuleHandler()
-        self.fusion_operator = self._load_yaml(self.timeline_fusion_ops_yaml_path)
+        self.fusion_operator = self._load_yaml(
+            self.timeline_fusion_ops_yaml_path) if profiling_type == Constant.PYTORCH else {}
 
         self._dequeue_op_names = []
         self._aten_op_names = []
@@ -126,7 +129,7 @@ class FusionOperatorDB:
 
     def regenerate_timeline_op_rule_with_version(self, cann_version=None, torch_version=None):
         cann_version = cann_version or self.cann_version
-        torch_version = torch_version or self.torch_version
+        torch_version = torch_version or self.profiling_version
         unique_id = self._get_unique_id_in_supported_version_dict(cann_version=cann_version,
                                                                   torch_version=torch_version)
         self.regenerate_timeline_op_rule_with_unique_id(unique_id)
@@ -180,7 +183,7 @@ class FusionOperatorDB:
         if not is_version_supported:
             # 若规则库不支持当前版本, 则log警告信息
             logger.warning("Unsupported versions: cann-%s and torch-%s, supported version list of ['cann', 'torch'] "
-                           "is %s", self.cann_version, self.torch_version, self._supported_version_dict.values())
+                           "is %s", self.cann_version, self.profiling_version, self._supported_version_dict.values())
         return is_version_supported
 
     def _is_version_supported_in_supported_version_dict(self, cann_version=None, torch_version=None):
@@ -208,7 +211,7 @@ class FusionOperatorDB:
             torch_version_list = [torch_version_list]
 
         cann_version = cann_version or self.cann_version
-        torch_version = torch_version or self.torch_version
+        torch_version = torch_version or self.profiling_version
 
         if (cann_version in cann_version_list) and (torch_version in torch_version_list):
             return True
