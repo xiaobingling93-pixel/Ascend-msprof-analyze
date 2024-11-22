@@ -14,7 +14,7 @@
 # limitations under the License.
 import os
 
-from profiler.cluster_analyse.common_func.file_manager import FileManager
+from profiler.prof_common.file_manager import FileManager
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem
 from profiler.advisor.result.item import OptimizeRecord

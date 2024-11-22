@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from common_func.constant import Constant
+from profiler.prof_common.constant import Constant
 from communication_group.communication_db_group import CommunicationDBGroup
 from communication_group.communication_db_group import CommunicationDBGroupOptimized
 from communication_group.communication_json_group import CommunicationJsonGroup

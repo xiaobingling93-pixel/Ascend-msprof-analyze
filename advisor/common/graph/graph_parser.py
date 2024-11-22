@@ -21,7 +21,7 @@ from collections import deque
 from dataclasses import dataclass
 from typing import List, Tuple, Dict
 
-from profiler.cluster_analyse.common_func.file_manager import FileManager
+from profiler.prof_common.file_manager import FileManager
 from profiler.advisor.utils.file import FileOpen
 
 logger = logging.getLogger()

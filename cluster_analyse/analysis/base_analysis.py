@@ -16,8 +16,8 @@
 import logging
 from abc import abstractmethod
 
-from common_func.constant import Constant
-from common_func.file_manager import FileManager
+from profiler.prof_common.constant import Constant
+from profiler.prof_common.file_manager import FileManager
 from cluster_utils.data_transfer_adapter import DataTransferAdapter
 
 logger = logging.getLogger()

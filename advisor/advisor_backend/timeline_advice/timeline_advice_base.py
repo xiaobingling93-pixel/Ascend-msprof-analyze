@@ -20,7 +20,7 @@ import os
 import logging
 
 from advice_base import AdviceBase
-from common_func.file_manager import FileManager
+from profiler.prof_common.file_manager import FileManager
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)

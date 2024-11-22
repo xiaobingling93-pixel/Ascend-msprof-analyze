@@ -17,8 +17,8 @@ import logging
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.advisor.utils.utils import safe_index_value, convert_to_float, convert_to_int
-from profiler.compare_tools.compare_backend.utils.constant import Constant as CompareConstant
 from profiler.compare_tools.compare_interface.comparison_interface import ComparisonInterface
+from profiler.prof_common.constant import Constant
 
 logger = logging.getLogger()
 
@@ -28,8 +28,8 @@ class ComparisonChecker:
     SHOW_TOPK = 10
     DIFF_AVG_RATIO = "Diff Avg Ratio"
     COMPARE_MODE_TO_DESC = {
-        CompareConstant.KERNEL_COMPARE: "Kernel compare",
-        CompareConstant.API_COMPARE: "Api compare",
+        Constant.KERNEL_COMPARE: "Kernel compare",
+        Constant.API_COMPARE: "Api compare",
     }
 
     def __init__(self, profiling_path, benchmark_profiling_path, step=None, benchmark_step=None, rank=None,

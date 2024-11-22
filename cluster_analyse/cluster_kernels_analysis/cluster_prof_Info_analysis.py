@@ -29,7 +29,7 @@ from plotly.offline import plot
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from common_func.path_manager import PathManager
+from profiler.prof_common.path_manager import PathManager
 from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 
 

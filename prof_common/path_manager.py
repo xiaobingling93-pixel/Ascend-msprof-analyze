@@ -17,8 +17,8 @@ import re
 import shutil
 import platform
 
-from .constant import Constant
-from .additional_args_manager import AdditionalArgsManager
+from profiler.prof_common.constant import Constant
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 
 
 class PathManager:
@@ -88,6 +88,13 @@ class PathManager:
             msg = f"Invalid path which has illagal characters \"{invalid_obj}\"."
             raise RuntimeError(msg)
 
+        path_split_list = path.split("/")
+        for path in path_split_list:
+            path_list = path.split("\\")
+            for name in path_list:
+                if len(name) > cls.MAX_FILE_NAME_LENGTH:
+                    raise RuntimeError("Length of input path exceeds the limit.")
+
     @classmethod
     def check_path_owner_consistent(cls, path_list: list):
         """
@@ -147,6 +154,8 @@ class PathManager:
 
     @classmethod
     def remove_path_safety(cls, path: str):
+        if not os.path.exists(path):
+            return
         base_name = os.path.basename(path)
         msg = f"Failed to remove path: {base_name}"
         cls.check_path_writeable(path)

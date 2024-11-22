@@ -20,7 +20,7 @@ import re
 from tqdm import tqdm
 
 from profiler.advisor.analyzer.base_analyzer import BaseAnalyzer
-from profiler.advisor.common import constant as const
+from profiler.prof_common.constant import Constant
 from profiler.advisor.common.analyzer_scopes import SupportedScopes
 from profiler.advisor.common.timeline.event import TimelineEvent
 from profiler.advisor.config.config import Config
@@ -48,13 +48,13 @@ class TimelineFusionOpsAnalyzer(BaseAnalyzer):
         return PriorityBackgroundColor.low
 
     def optimize(self, **kwargs):
-        disable_affinity_api = os.getenv(const.DISABLE_AFFINITY_API)
+        disable_affinity_api = os.getenv(Constant.DISABLE_AFFINITY_API)
         if disable_affinity_api is not None and disable_affinity_api.lower() == "true":
             logger.info(
                 "Skip affinity api analysis due to longer processing time due to env 'DISABLE_AFFINITY_API'")
             return self.result
 
-        for mode in [const.ATEN.lower(), const.OPTIMIZER.lower()]:
+        for mode in [Constant.ATEN.lower(), Constant.OPTIMIZER.lower()]:
 
             for op_combined, npu_apis in tqdm(getattr(init_timeline_ops_db(self.cann_version, self.torch_version),
                                                       f"_{mode}_op_api_map").items(), leave=False, ncols=100,
@@ -98,7 +98,7 @@ class TimelineFusionOpsAnalyzer(BaseAnalyzer):
         suggestion = "Please replace training api according to sub table 'Affinity training api'"
         if self.empty_stacks:
             desc += ", but with no stack"
-            suggestion = const.TIMELINE_EMPTY_STACKS_PROMPT.format(
+            suggestion = Constant.TIMELINE_EMPTY_STACKS_PROMPT.format(
                 timeline_profiling_doc_url=Config().timeline_with_stack_doc_url
             )
 
@@ -148,7 +148,7 @@ class TimelineFusionOpsAnalyzer(BaseAnalyzer):
             for op_rule, stack in op_stack.items():
                 if op_rule not in self.matched_op_stacks:
                     self.matched_op_stacks[op_rule] = {}
-                if stack == const.TIMELINE_FUSION_OPS_NO_STACK_FLAG:
+                if stack == Constant.TIMELINE_FUSION_OPS_NO_STACK_FLAG:
                     continue
                 if stack not in self.matched_op_stacks[op_rule]:
                     self.matched_op_stacks[op_rule][stack] = 0
@@ -162,7 +162,7 @@ class TimelineFusionOpsAnalyzer(BaseAnalyzer):
         :Param npu_api: api of torch_npu, generally more efficient than torch api
         :Param mode: aten or dequeue or optimizer
         """
-        op_list = ops.split(const.OP_SEP)
+        op_list = ops.split(Constant.OP_SEP)
 
         matched_op_index = set()
         api_ops_matched = False
@@ -190,7 +190,7 @@ class TimelineFusionOpsAnalyzer(BaseAnalyzer):
         :Param mode: aten or dequeue or optimizer
         """
         matched_op_index = set()
-        total_op_name = "".join([f"{const.OP_SEP}{self._replace_op_name_prefix(event.name, mode)}{const.OP_SEP}"
+        total_op_name = "".join([f"{Constant.OP_SEP}{self._replace_op_name_prefix(event.name, mode)}{Constant.OP_SEP}"
                                  for event in getattr(event_dataset, mode)])
 
         matched_pattern_index_tuple = [(x.start(0), x.end(0)) for x in re.finditer(op_rule_pattern, total_op_name)]
@@ -211,7 +211,7 @@ class TimelineFusionOpsAnalyzer(BaseAnalyzer):
         # by the regex index and then calculate the real index for matched fusion operators in event dataset
         for left, right in zip(total_ops_split_points, total_ops_split_points[1:]):
             matched_op_flag = True if (left, right) in matched_pattern_index_tuple else False
-            matched_ops_list = total_op_name[left: right].strip(const.OP_SEP).split(const.OP_SEP + const.OP_SEP)
+            matched_ops_list = total_op_name[left: right].strip(Constant.OP_SEP).split(Constant.OP_SEP + Constant.OP_SEP)
             op_index.append([matched_op_flag, len(matched_ops_list)])
         for i, _ in enumerate(op_index):
             if i > 0:
@@ -243,10 +243,10 @@ class TimelineFusionOpsAnalyzer(BaseAnalyzer):
                 continue
 
             matched_op_rules.append(op_rule)
-            stack = event.args.get(const.CALL_STACKS)
+            stack = event.args.get(Constant.CALL_STACKS)
 
             if not stack:
-                logger.debug("Got empty '%s' for event %s", const.CALL_STACKS, event)
+                logger.debug("Got empty '%s' for event %s", Constant.CALL_STACKS, event)
                 continue
 
             if self.empty_stacks and stack:
@@ -256,17 +256,17 @@ class TimelineFusionOpsAnalyzer(BaseAnalyzer):
 
         if matched_op_rules and not stack_record:
             for op_rule in matched_op_rules:
-                stack_record[op_rule] = const.TIMELINE_FUSION_OPS_NO_STACK_FLAG
+                stack_record[op_rule] = Constant.TIMELINE_FUSION_OPS_NO_STACK_FLAG
 
         return stack_record
 
     def _replace_op_name_prefix(self, event_name, mode):
-        if mode == const.DEQUEUE.lower():
-            op_name_prefix = f"{const.DEQUEUE}{const.DEQUEUE_SEP}"
-        elif mode == const.ATEN:
-            op_name_prefix = f"{const.ATEN}{const.ATEN_SEP}"
+        if mode == Constant.DEQUEUE.lower():
+            op_name_prefix = f"{Constant.DEQUEUE}{Constant.DEQUEUE_SEP}"
+        elif mode == Constant.ATEN:
+            op_name_prefix = f"{Constant.ATEN}{Constant.ATEN_SEP}"
         else:
-            op_name_prefix = f"{const.OPTIMIZER}.{const.OPTIMIZER_STEP}{const.OPTIMIZER_SEP}"
+            op_name_prefix = f"{Constant.OPTIMIZER}.{Constant.OPTIMIZER_STEP}{Constant.OPTIMIZER_SEP}"
 
         return event_name.replace(op_name_prefix, "")
 
@@ -283,7 +283,7 @@ class TimelineFusionOpsAnalyzer(BaseAnalyzer):
             return op_rule, enable_regex
 
         enable_regex = True
-        op_pattern_list = op_rule.split(const.OP_SEP)
+        op_pattern_list = op_rule.split(Constant.OP_SEP)
         format_op_pattern = ""
         for op_pattern in op_pattern_list:
             matched_res = re.search(r'\((\w*?)\)', op_pattern)
@@ -294,7 +294,7 @@ class TimelineFusionOpsAnalyzer(BaseAnalyzer):
             op_names = op_pattern[ops_index_range[0]: ops_index_range[1]]
             tmp_op_names_record = []
             for op_name in op_names.split("|"):
-                tmp_op_names_record.append(f"{const.OP_SEP}{op_name.strip(' ')}{const.OP_SEP}")
+                tmp_op_names_record.append(f"{Constant.OP_SEP}{op_name.strip(' ')}{Constant.OP_SEP}")
             op_suffix = op_pattern[ops_index_range[1] + 1:]
             op_names_format = f"({'|'.join(tmp_op_names_record)}){op_suffix}"
 

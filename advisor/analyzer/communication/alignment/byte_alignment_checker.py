@@ -15,14 +15,14 @@
 import logging
 import os
 from typing import List
-from profiler.advisor.common.constant import COMMUNICATION_B_TO_GB, US_TO_S
 from profiler.advisor.dataset.communication.hccl_detail_dataset import HcclDetailDataset
 from profiler.advisor.dataset.profiling.info_collection import HcclTask
 from profiler.advisor.display.html.priority_background_color import PriorityBackgroundColor
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
-from profiler.cluster_analyse.common_func.file_manager import FileManager
+from profiler.prof_common.file_manager import FileManager
 from profiler.advisor.utils.utils import safe_division
+from profiler.prof_common.constant import Constant
 
 logger = logging.getLogger()
 
@@ -58,7 +58,7 @@ class ByteAlignmentChecker:
         if abs(duration) < 1e-15:
             bandwidth = 0
         else:
-            bandwidth = (size * COMMUNICATION_B_TO_GB) / (duration * US_TO_S)
+            bandwidth = (size * Constant.COMMUNICATION_B_TO_GB) / (duration * Constant.US_TO_S)
         return round(bandwidth, 4)
 
     def check_alignment(self, hccl_detail_dataset: HcclDetailDataset) -> None:

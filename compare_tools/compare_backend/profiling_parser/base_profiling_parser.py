@@ -6,8 +6,8 @@ from compare_backend.compare_bean.origin_data_bean.compare_event import KernelEv
 from compare_backend.compare_bean.origin_data_bean.kernel_details_bean import KernelDetailsBean
 from compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
 from compare_backend.compare_bean.profiling_info import ProfilingInfo
-from compare_backend.utils.constant import Constant
-from compare_backend.utils.file_reader import FileReader
+from profiler.prof_common.constant import Constant
+from profiler.prof_common.file_manager import FileManager
 
 logger = logging.getLogger()
 
@@ -333,6 +333,6 @@ class BaseProfilingParser(ABC):
 
     def _read_trace_event(self):
         try:
-            self._trace_events = FileReader.read_trace_file(self._json_path)
+            self._trace_events = FileManager.read_json_file(self._json_path)
         except Exception:
             print(f"[ERROR] Failed to read the file: {self._json_path}")

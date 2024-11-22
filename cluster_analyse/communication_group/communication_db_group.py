@@ -19,7 +19,7 @@ import os
 import logging
 
 from common_func.db_manager import DBManager
-from common_func.constant import Constant
+from profiler.prof_common.constant import Constant
 from communication_group.base_communication_group import BaseCommunicationGroup
 
 

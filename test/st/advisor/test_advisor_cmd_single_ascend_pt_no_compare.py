@@ -50,6 +50,7 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
     def test_all_problems(self):
         category = [
             "overall summary",
+            "byte alignment analysis",
             "bandwidth contention analysis",
             "AICPU operator",
             "Dynamic shape operator",
@@ -58,13 +59,13 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
         ]
 
         #True presents the attr is nan
-        description_len = [6,3,2,1,1,1]
-        suggestion_len = [True,1,2,5,1,1]
-        problem_count = [True,True,2.0,1.0,True,True]
-        total_time = [True,True,57674709.54,True,True,True]
-        time_ratio = [True,True,0.0,True,True,True]
-        income = [True,True,True,True,True,True]
-        income_ratio = [True,True,True,True,True,True]
+        description_len = [6,1,3,2,1,1,1]
+        suggestion_len = [True,1,1,2,5,1,1]
+        problem_count = [True,True,True,2.0,1.0,True,True]
+        total_time = [True,True,True,57674709.54,True,True,True]
+        time_ratio = [True,True,True,0.0,True,True,True]
+        income = [True,True,True,True,True,True,True]
+        income_ratio = [True,True,True,True,True,True,True]
         try:
             df = pd.read_excel(self.RESULT_EXCEL.get("all",None), sheet_name='problems',header=0)
         except FileNotFoundError:

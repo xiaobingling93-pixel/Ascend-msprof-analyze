@@ -15,7 +15,7 @@
 # limitations under the License.
 """
 
-from compare_backend.utils.constant import Constant
+from profiler.prof_common.constant import Constant
 
 
 class CellFormatType:
