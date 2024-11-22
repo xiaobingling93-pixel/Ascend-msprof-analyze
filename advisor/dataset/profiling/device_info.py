@@ -6,7 +6,7 @@ import logging
 
 from profiler.advisor.config.config import Config
 from profiler.advisor.utils.utils import get_file_path_from_directory
-from profiler.cluster_analyse.common_func.file_manager import FileManager
+from profiler.prof_common.file_manager import FileManager
 
 logger = logging.getLogger()
 

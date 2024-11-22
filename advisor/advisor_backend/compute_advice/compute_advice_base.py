@@ -18,7 +18,7 @@ from collections import defaultdict
 import os
 
 from advice_base import AdviceBase
-from common_func.file_manager import FileManager
+from profiler.prof_common.file_manager import FileManager
 
 
 class ComputeAdviceBase(AdviceBase):

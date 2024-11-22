@@ -19,7 +19,7 @@ from profiler.advisor.dataset.communication.communication_dataset import Communi
 from profiler.advisor.dataset.profiling.profiling_dataset import ProfilingDataset
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
-from profiler.cluster_analyse.common_func.file_manager import FileManager
+from profiler.prof_common.file_manager import FileManager
 from profiler.advisor.utils.utils import convert_to_float
 from profiler.advisor.dataset.cluster.hccl_collection import HcclInfo
 from profiler.advisor.dataset.profiling.info_collection import OpInfo

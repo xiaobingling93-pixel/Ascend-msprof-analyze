@@ -17,7 +17,7 @@ from functools import wraps
 from typing import Dict, List, Union
 from abc import abstractmethod, ABCMeta
 
-from profiler.advisor.common import constant
+from profiler.prof_common.constant import Constant
 from profiler.advisor.common.enum_params_parser import EnumParamsParser
 from profiler.advisor.common.version_control import VersionControl
 from profiler.advisor.dataset.dataset import Dataset
@@ -30,7 +30,7 @@ logger = logging.getLogger()
 
 
 class BaseAnalyzer(VersionControl, metaclass=ABCMeta):
-    _SUPPORT_VERSIONS = EnumParamsParser().get_options(constant.CANN_VERSION)
+    _SUPPORT_VERSIONS = EnumParamsParser().get_options(Constant.CANN_VERSION)
     ANALYZER_HIGH_PRIORITY_TIME_RATIO = 0.05
     ANALYZER_MEDIUM_PRIORITY_TIME_RATIO = 0.03
 
@@ -38,8 +38,8 @@ class BaseAnalyzer(VersionControl, metaclass=ABCMeta):
 
     def __init__(self, collection_path, n_processes: int = 1, **kwargs):
         self.n_processes = n_processes
-        self.cann_version = kwargs.get(constant.CANN_VERSION, EnumParamsParser().get_default(constant.CANN_VERSION))
-        self.torch_version = kwargs.get(constant.TORCH_VERSION, EnumParamsParser().get_default(constant.TORCH_VERSION))
+        self.cann_version = kwargs.get(Constant.CANN_VERSION, EnumParamsParser().get_default(Constant.CANN_VERSION))
+        self.torch_version = kwargs.get(Constant.TORCH_VERSION, EnumParamsParser().get_default(Constant.TORCH_VERSION))
         self.html_render = HTMLRender()
         self.collection_path = collection_path
         self.kwargs = kwargs

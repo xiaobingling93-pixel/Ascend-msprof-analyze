@@ -37,7 +37,7 @@ from compare_backend.compare_bean.overall_metrics_bean import OverallMetricsBean
 from compare_backend.data_prepare.module_data_prepare import ModuleDataPrepare
 from compare_backend.data_prepare.operator_data_prepare import OperatorDataPrepare
 from compare_backend.generator.base_generator import BaseGenerator
-from compare_backend.utils.constant import Constant
+from profiler.prof_common.constant import Constant
 from compare_backend.view.excel_view import ExcelView
 
 from compare_backend.data_prepare.sequence_pre_matching import SequencePreMatching

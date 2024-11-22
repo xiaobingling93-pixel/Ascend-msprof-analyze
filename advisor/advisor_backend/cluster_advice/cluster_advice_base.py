@@ -16,10 +16,10 @@
 import os
 
 from abc import abstractmethod
-from common_func.constant import Constant
 from advice_base import AdviceBase
 from cluster_analysis import Interface
 from profiler.advisor.advisor_backend.logger import Logger
+from profiler.prof_common.constant import Constant
 
 logger = Logger()
 

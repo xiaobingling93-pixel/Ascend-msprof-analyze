@@ -18,8 +18,8 @@ from collections import defaultdict
 import os
 import logging
 from cluster_data_preprocess.data_preprocessor import DataPreprocessor
-from common_func.constant import Constant
-from common_func.file_manager import FileManager
+from profiler.prof_common.constant import Constant
+from profiler.prof_common.file_manager import FileManager
 
 
 class PytorchDataPreprocessor(DataPreprocessor):

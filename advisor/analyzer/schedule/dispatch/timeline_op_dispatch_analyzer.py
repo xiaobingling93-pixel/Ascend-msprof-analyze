@@ -16,7 +16,7 @@
 # limitations under the License.
 import logging
 
-from profiler.advisor.common import constant as const
+from profiler.prof_common.constant import Constant
 from profiler.advisor.analyzer.base_analyzer import BaseAnalyzer
 from profiler.advisor.dataset.timeline_event_dataset import ScheduleAnalysisDataset
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
@@ -60,11 +60,11 @@ class OpDispatchAnalyzer(BaseAnalyzer):
         """
         if hasattr(event_dataset, "ops_compile"):
             self._op_compile = getattr(event_dataset, "ops_compile")
-            if not self._op_compile or self._op_compile.total_count < const.MAX_OP_COMPILE_NUM:
+            if not self._op_compile or self._op_compile.total_count < Constant.MAX_OP_COMPILE_NUM:
                 return
 
             self._issues_record.append(['operator dispatch',
-                                        const.OP_COMPILE_ID,
+                                        Constant.OP_COMPILE_ID,
                                         self._op_compile.total_count,
                                         self._op_compile.total_time])
         else:

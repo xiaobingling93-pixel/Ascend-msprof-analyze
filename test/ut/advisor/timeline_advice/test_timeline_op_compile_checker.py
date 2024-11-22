@@ -18,7 +18,7 @@ class TestOperatorDispatchAnalyzer(unittest.TestCase):
     def tearDownClass(cls) -> None:
         recover_env()
 
-    @patch("profiler.advisor.common.constant.MAX_OP_COMPILE_NUM", 5)
+    @patch("profiler.prof_common.constant.Constant.MAX_OP_COMPILE_NUM", 5)
     def test_ops_dispatch_analyzer(self):
         kwargs = {"analysis_mode": "all"}
         data_root_dir = os.path.dirname(os.path.realpath(__file__))
@@ -28,7 +28,7 @@ class TestOperatorDispatchAnalyzer(unittest.TestCase):
         self.assertTrue(results.page_dict)
         self.assertIsNotNone(results.sheet_recorder.sheet_data.get("operator dispatch"))
 
-    @patch("profiler.advisor.common.constant.MAX_OP_COMPILE_NUM", 5)
+    @patch("profiler.prof_common.constant.Constant.MAX_OP_COMPILE_NUM", 5)
     def test_ops_dispatch_make_render(self):
         kwargs = {"analysis_mode": "timeline"}
         data_root_dir = os.path.dirname(os.path.realpath(__file__))

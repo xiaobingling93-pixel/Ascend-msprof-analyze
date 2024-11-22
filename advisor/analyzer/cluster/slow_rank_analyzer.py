@@ -16,7 +16,7 @@
 import logging
 
 from profiler.advisor.analyzer.base_analyzer import BaseAnalyzer
-from profiler.advisor.common import constant
+from profiler.prof_common.constant import Constant
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.advisor.dataset.cluster.cluster_dataset import ClusterStepTraceTimeDataset
@@ -65,7 +65,7 @@ class SlowRankAnalyzer(BaseAnalyzer):
             logger.error(
                 "Slow rank analysis failed, "
                 "please ensure file 'step_trace_time.csv' exists in your profiling directory %s",
-                constant.ASCEND_PROFILER_OUTPUT)
+                Constant.ASCEND_PROFILER_OUTPUT)
             return self.result
         self.process()
         self.make_record()
@@ -113,7 +113,7 @@ class SlowRankAnalyzer(BaseAnalyzer):
         headers = ["step", "rank_id", "compute(us)", "communication(us)", "free(us)"]
         data_list = []
         for key, value in self.step_trace_dict.items():
-            step, rank_id = key.split(constant.STEP_RANK_SEP)
+            step, rank_id = key.split(Constant.STEP_RANK_SEP)
             data_list.append([convert_to_int(step), convert_to_int(rank_id)] + value)
             if step and step not in self._steps:
                 self._steps.add(step)
@@ -167,7 +167,7 @@ class SlowRankAnalyzer(BaseAnalyzer):
             max_time_step = self.format_datas.get("data")[max_time_index][step_index]
             min_time_step = self.format_datas.get("data")[min_time_index][step_index]
         else:
-            max_time_step, min_time_step = constant.DEFAULT_STEP, constant.DEFAULT_STEP
+            max_time_step, min_time_step = Constant.DEFAULT_STEP, Constant.DEFAULT_STEP
 
         global_step_rank["maximum"] = {"rank_id": max_time_rank_id, "step": max_time_step}
         global_step_rank["minimum"] = {"rank_id": min_time_rank_id, "step": min_time_step}
@@ -192,7 +192,7 @@ class SlowRankAnalyzer(BaseAnalyzer):
         if step_index is not None:
             step_list = [tuple_list[step_index] for tuple_list in self.format_datas.get("data")]
         else:
-            step_list = [constant.DEFAULT_STEP] * len(rank_list)
+            step_list = [Constant.DEFAULT_STEP] * len(rank_list)
 
         for index, stage in enumerate(self.stages):
             tmp_step_list, tmp_rank_list, tmp_time_list = [], [], []

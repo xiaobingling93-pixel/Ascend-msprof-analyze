@@ -20,8 +20,8 @@ from profiler.advisor.dataset.timeline_event_dataset import ScheduleAnalysisData
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.advisor.utils.utils import convert_to_float, convert_to_int, safe_division
-from profiler.advisor.common import constant as const
-from profiler.cluster_analyse.common_func.file_manager import FileManager
+from profiler.prof_common.constant import Constant
+from profiler.prof_common.file_manager import FileManager
 
 logger = logging.getLogger()
 
@@ -120,7 +120,7 @@ class GcChecker:
 
         while free_event_index < len(large_free_events) and acl_event_index < len(acl_events):
             free_event = large_free_events[free_event_index]
-            free_event_name = f"{const.FREE}-{free_event_index}"
+            free_event_name = f"{Constant.FREE}-{free_event_index}"
             free_event_start_time = convert_to_float(free_event.ts)
             free_event_end_time = free_event_start_time + convert_to_float(free_event.dur)
             if free_event_name not in free_include_acl_events:
@@ -153,7 +153,7 @@ class GcChecker:
         event_indexs = range(len(large_free_events))
         for index, free_event in sorted(zip(event_indexs, large_free_events), key=lambda x: x[1].dur, reverse=True):
 
-            free_event_name = f"{const.FREE}-{index}"
+            free_event_name = f"{Constant.FREE}-{index}"
             free_duration = convert_to_float(free_event.dur)
             acl_event_dur = free_include_acl_events.get(free_event_name, {}).get("acl_event_dur", 0.0)
             acl_event_count = free_include_acl_events.get(free_event_name, {}).get("acl_event_count", 0)

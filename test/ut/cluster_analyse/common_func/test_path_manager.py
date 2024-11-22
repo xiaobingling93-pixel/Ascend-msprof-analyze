@@ -3,7 +3,7 @@ import os
 import time
 import pytest
 
-from common_func.path_manager import PathManager
+from profiler.prof_common.path_manager import PathManager
 
 
 PATH_DIR = "resource"

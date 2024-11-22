@@ -7,7 +7,6 @@ import threading
 
 stop_print_thread = False
 
-
 def print_stout(output):
     while True:
         line = output.readline().strip()

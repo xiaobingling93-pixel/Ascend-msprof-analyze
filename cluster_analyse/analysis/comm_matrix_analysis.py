@@ -18,7 +18,7 @@ import logging
 from collections import defaultdict
 
 from analysis.base_analysis import BaseAnalysis
-from common_func.constant import Constant
+from profiler.prof_common.constant import Constant
 from common_func.db_manager import DBManager
 
 logger = logging.getLogger()

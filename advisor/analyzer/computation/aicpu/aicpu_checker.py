@@ -19,12 +19,11 @@ from typing import List, Dict, Optional
 
 from profiler.advisor.analyzer.computation.operator_checker import OperatorChecker, logger
 from profiler.advisor.analyzer.schedule.fusion_ops.timeline_api_stack_checker import OpStackFinder
-from profiler.advisor.common import constant
 from profiler.advisor.dataset.dataset import Dataset
 from profiler.advisor.dataset.profiling.profiling_dataset import ProfilingDataset
 from profiler.advisor.dataset.timeline_event_dataset import ComputationAnalysisDataset
-from profiler.cluster_analyse.common_func.file_manager import FileManager
-
+from profiler.prof_common.file_manager import FileManager
+from profiler.prof_common.constant import Constant
 
 class AicpuChecker(OperatorChecker):
     _CHECKER = "aicpu operator"
@@ -97,10 +96,10 @@ class AicpuChecker(OperatorChecker):
             data: Dict[str, Dataset] = {}
             event_dataset = ComputationAnalysisDataset(collection_path=profiling_data.collection_path,
                                                        data=data,
-                                                       task_type=constant.AI_CPU)
+                                                       task_type=Constant.AI_CPU)
 
             # disable multiprocessing, avoid cost time of enable new process for light task
-            api_stack_finder.get_api_stack_by_op(event_dataset, op_name_list, constant.AI_CPU,
+            api_stack_finder.get_api_stack_by_op(event_dataset, op_name_list, Constant.AI_CPU,
                                                  disable_multiprocess=True)
             return api_stack_finder.get_stack_record()
 
@@ -163,7 +162,7 @@ class AicpuChecker(OperatorChecker):
                                            template_dir="templates",
                                            template_name="operator_ai_cpu.html",
                                            format_result=self.format_operator_result(record,
-                                                                                     constant.OPERATOR_LIST_UNLIMIT),
+                                                                                     Constant.OPERATOR_LIST_UNLIMIT),
                                            add_render_list=add_render_list,
                                            priority_background_color=priority,
                                            rank=kwargs.get("rank"))
@@ -197,7 +196,7 @@ class AicpuChecker(OperatorChecker):
         return format_result
 
     def group_by_list(self, op_list, op_key_list: List = None,
-                      limit: int = constant.OPERATOR_LIST_UNLIMIT):
+                      limit: int = Constant.OPERATOR_LIST_UNLIMIT):
         if op_list is None:
             op_list = []
         if op_key_list is None:
@@ -220,7 +219,7 @@ class AicpuChecker(OperatorChecker):
         return True
 
     def _check_operator(self, op_info) -> bool:
-        return op_info.task_type == constant.AI_CPU
+        return op_info.task_type == Constant.AI_CPU
 
 
 class BaserChecker:

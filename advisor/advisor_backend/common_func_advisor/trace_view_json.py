@@ -23,7 +23,7 @@ from typing import List
 
 import pandas as pd
 
-from common_func.file_manager import FileManager
+from profiler.prof_common.file_manager import FileManager
 from profiler.advisor.advisor_backend.logger import Logger
 
 logger = Logger()

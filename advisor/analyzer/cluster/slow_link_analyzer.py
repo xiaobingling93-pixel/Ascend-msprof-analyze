@@ -18,7 +18,7 @@ from typing import Dict, List
 import logging
 
 from profiler.advisor.analyzer.base_analyzer import BaseAnalyzer
-from profiler.advisor.common import constant
+from profiler.prof_common.constant import Constant
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.advisor.dataset.cluster.cluster_dataset import ClusterCommunicationDataset
@@ -105,7 +105,7 @@ class SlowLinkAnalyzer(BaseAnalyzer):
 
         data_list = []
         for step_rank, rank_bw in self.rank_bw_dict.items():
-            step_rank_list = list(map(convert_to_int, step_rank.split(constant.STEP_RANK_SEP)))
+            step_rank_list = list(map(convert_to_int, step_rank.split(Constant.STEP_RANK_SEP)))
             value_list = [rank_bw.get(i, 0) for i in headers]
             data_list.append(step_rank_list + value_list)
         data_list.sort(key=lambda x: (x[0], x[1]))  # 按rank_id排序
@@ -181,7 +181,7 @@ class SlowLinkAnalyzer(BaseAnalyzer):
             min_bandwidth_rank_id = self.format_datas.get("data")[min_bandwidth_index][rank_id_index]
 
             if step_index is None:
-                max_bandwidth_step, min_bandwidth_step = constant.DEFAULT_STEP, constant.DEFAULT_STEP
+                max_bandwidth_step, min_bandwidth_step = Constant.DEFAULT_STEP, Constant.DEFAULT_STEP
             else:
                 max_bandwidth_step = self.format_datas.get("data")[max_bandwidth_index][step_index]
                 min_bandwidth_step = self.format_datas.get("data")[min_bandwidth_index][step_index]

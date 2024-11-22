@@ -33,7 +33,6 @@ from profiler.advisor.analyzer.cluster.slow_link_analyzer import SlowLinkAnalyze
 from profiler.advisor.analyzer.computation.pp_stage_computation_analyzer import PPStageComputationAnalyzer
 from profiler.advisor.analyzer.overall.overall_summary_analyzer import OverallSummaryAnalyzer
 from profiler.advisor.config.config import Config
-from profiler.advisor.common import constant as const
 from profiler.advisor.common.analyzer_scopes import SupportedScopes
 from profiler.advisor.common.async_analysis_status import AsyncAnalysisStatus
 from profiler.advisor.common.enum_params_parser import EnumParamsParser
@@ -41,7 +40,7 @@ from profiler.advisor.utils.utils import Timer, safe_index_value, safe_division,
 from profiler.advisor.interface.interface import Interface
 from profiler.cluster_analyse.cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
 from profiler.prof_common.path_manager import PathManager
-from profiler.compare_tools.compare_backend.utils.constant import Constant as CompareConstant
+from profiler.prof_common.constant import Constant
 
 # 以spawn模式启动多进程，避免fork主进程资源。如果主进程逻辑较为复杂，fork可能会导致异常。
 mp.set_start_method("spawn", force=True)
@@ -397,9 +396,9 @@ class AnalyzerController:
             # kernel/api 比对
             compare_profiling_list = [
                 dict(profiling_path=profiling_path, benchmark_profiling_path=benchmark_profiling_path,
-                     compare_mode=CompareConstant.KERNEL_COMPARE),
+                     compare_mode=Constant.KERNEL_COMPARE),
                 dict(profiling_path=profiling_path, benchmark_profiling_path=benchmark_profiling_path,
-                     compare_mode=CompareConstant.API_COMPARE)
+                     compare_mode=Constant.API_COMPARE)
             ]
 
             job_list += self._profiling_comparison(compare_profiling_list)
@@ -545,7 +544,7 @@ class AnalyzerController:
                       benchmark_profiling_path=self._get_profiling_path_by_rank(profiling_path, fast_rank_id),
                       step=slow_step, benchmark_step=fast_step,
                       rank=slow_rank_id, benchmark_rank=fast_rank_id,
-                      compare_mode=CompareConstant.API_COMPARE,
+                      compare_mode=Constant.API_COMPARE,
                       step_duration=self.slow_rank_analyzer.get_step_duration(slow_rank_id, slow_step))
 
         job_list += self.schedule_analysis(**kwargs)
@@ -736,7 +735,7 @@ class AnalyzerController:
 
     def _profiling_comparison(self, compare_profiling_list):
         job_list = []
-        disable_profiling_comparison = os.getenv(const.DISABLE_PROFILING_COMPARISON)
+        disable_profiling_comparison = os.getenv(Constant.DISABLE_PROFILING_COMPARISON)
         if disable_profiling_comparison is not None and disable_profiling_comparison.lower() == "true":
             logger.info(
                 "Skip profiling comparison due to longer processing time due to env 'DISABLE_PROFILING_COMPARISON'")
@@ -787,7 +786,7 @@ class AnalyzerController:
 
         if isinstance(target_cluster_analyzer, SlowRankAnalyzer):
             comparison_dims = [SlowRankAnalyzer.COMPUTE, SlowRankAnalyzer.FREE]
-            comparison_modes = [CompareConstant.KERNEL_COMPARE, CompareConstant.API_COMPARE]
+            comparison_modes = [Constant.KERNEL_COMPARE, Constant.API_COMPARE]
         elif isinstance(target_cluster_analyzer, SlowLinkAnalyzer):
             comparison_dims = [SlowLinkAnalyzer.SDMA_BANDWIDTH, SlowLinkAnalyzer.RDMA_BANDWIDTH]
             comparison_modes = [None, None]
@@ -913,7 +912,7 @@ class AnalyzerController:
                     benchmark_step=benchmark_step,
                     profiling_path=self._get_profiling_path_by_rank(profiling_path, rank_id),
                     benchmark_profiling_path=self._get_profiling_path_by_rank(profiling_path, benchmark_rank_id),
-                    compare_mode=CompareConstant.KERNEL_COMPARE,
+                    compare_mode=Constant.KERNEL_COMPARE,
                     step_duration=self.slow_rank_analyzer.get_step_duration(rank_id, step)
                 )
             )
@@ -953,7 +952,7 @@ class AnalyzerController:
         kwargs = dict(profiling_path=self._get_profiling_path_by_rank(profiling_path, slow_rank_id),
                       benchmark_profiling_path=self._get_profiling_path_by_rank(profiling_path, fast_rank_id),
                       step=slow_step, benchmark_step=fast_step, rank=slow_rank_id, benchmark_rank=fast_rank_id,
-                      compare_mode=CompareConstant.KERNEL_COMPARE,
+                      compare_mode=Constant.KERNEL_COMPARE,
                       step_duration=self.slow_rank_analyzer.get_step_duration(slow_rank_id, slow_step))
 
         job_list += self.computation_analysis(**kwargs)

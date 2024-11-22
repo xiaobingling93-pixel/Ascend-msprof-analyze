@@ -17,13 +17,13 @@
 import logging
 import os
 
-from profiler.advisor.common import constant
+from profiler.prof_common.constant import Constant
 from profiler.advisor.common.enum_params_parser import EnumParamsParser
 from profiler.advisor.common.timeline.fusion_ops_rule import OpRule
 from profiler.advisor.common.timeline.fusion_ops_rule_handler import TimelineOpRuleHandler
 from profiler.advisor.utils.log import get_log_level
 from profiler.advisor.utils.utils import get_file_path_by_walk
-from profiler.cluster_analyse.common_func.file_manager import FileManager
+from profiler.prof_common.file_manager import FileManager
 
 logger = logging.getLogger()
 logger.setLevel(get_log_level())
@@ -37,25 +37,25 @@ def init_timeline_ops_db(cann_version=None, torch_version=None):
 
 def get_timeline_fusion_ops_yaml_path():
     # 环境变量 ADVISOR_RULE_PATH 不为空且该路径存在, os.walk遍历其下文件, 若存在相应的规则文件则返回路径
-    advisor_rule_path = os.getenv(constant.ADVISOR_RULE_PATH)
+    advisor_rule_path = os.getenv(Constant.ADVISOR_RULE_PATH)
     if advisor_rule_path and os.path.exists(advisor_rule_path):
-        specified_file_path = get_file_path_by_walk(advisor_rule_path, constant.TIMELINE_FUSION_OPS_YAML_NAME)
+        specified_file_path = get_file_path_by_walk(advisor_rule_path, Constant.TIMELINE_FUSION_OPS_YAML_NAME)
         if len(specified_file_path.strip()) and os.path.exists(specified_file_path):
             logger.debug("Successfully find The %s file which is specified by the environment variable: %s.",
-                         specified_file_path, constant.ADVISOR_RULE_PATH)
+                         specified_file_path, Constant.ADVISOR_RULE_PATH)
             return specified_file_path
         logger.warning("The %s does not exist in path: %s. Try to use cloud or default local YAML file.",
-                       constant.TIMELINE_FUSION_OPS_YAML_NAME, os.path.normpath(advisor_rule_path))
+                       Constant.TIMELINE_FUSION_OPS_YAML_NAME, os.path.normpath(advisor_rule_path))
     # 检查云文件默认保存路径文件夹下是否存在相应文件, 默认路径 ~/rules/cloud/
-    cloud_file_path = os.path.join(os.path.expanduser("~"), constant.CLOUD_RULE_PATH,
-                                   constant.TIMELINE_FUSION_OPS_YAML_NAME)
+    cloud_file_path = os.path.join(os.path.expanduser("~"), Constant.CLOUD_RULE_PATH,
+                                   Constant.TIMELINE_FUSION_OPS_YAML_NAME)
     if os.path.exists(cloud_file_path):
-        logger.debug("Successfully find The cloud %s file in %s.", constant.TIMELINE_FUSION_OPS_YAML_NAME,
+        logger.debug("Successfully find The cloud %s file in %s.", Constant.TIMELINE_FUSION_OPS_YAML_NAME,
                      cloud_file_path)
         return cloud_file_path
     # 检查本地默认文件
     local_file_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))),
-                                   constant.DEFAULT_RULE_PATH, constant.TIMELINE_FUSION_OPS_YAML_NAME)
+                                   Constant.DEFAULT_RULE_PATH, Constant.TIMELINE_FUSION_OPS_YAML_NAME)
     if not os.path.exists(local_file_path):
         # 若本地默认文件不存在, 则log异常信息并
         logger.error("The default local YAML file does not exist. Please check the YAML file in the default path %s.",
@@ -68,8 +68,8 @@ class FusionOperatorDB:
     def __init__(self, file_path=None, cann_version=None, torch_version=None):
         self.timeline_fusion_ops_yaml_path = os.path.normpath(get_timeline_fusion_ops_yaml_path())
 
-        self.cann_version = cann_version or EnumParamsParser().get_default(constant.CANN_VERSION)
-        self.torch_version = torch_version or EnumParamsParser().get_default(constant.TORCH_VERSION)
+        self.cann_version = cann_version or EnumParamsParser().get_default(Constant.CANN_VERSION)
+        self.torch_version = torch_version or EnumParamsParser().get_default(Constant.TORCH_VERSION)
 
         self._supported_version_dict = {}
 
@@ -110,9 +110,9 @@ class FusionOperatorDB:
         return self._optimizer_op_api_map
 
     def get_fusion_operator_with_unique_id(self, unique_id):
-        if unique_id == constant.TIMELINE_FUSION_OPS_INVALID_UNIQUE_ID:
+        if unique_id == Constant.TIMELINE_FUSION_OPS_INVALID_UNIQUE_ID:
             logger.warning("The specified unique id: %s is invalid.Please check whether the rule of the unique id "
-                           "exists and modify the rule.", constant.TIMELINE_FUSION_OPS_INVALID_UNIQUE_ID)
+                           "exists and modify the rule.", Constant.TIMELINE_FUSION_OPS_INVALID_UNIQUE_ID)
             return {}
         result_tmp_rule = self.timeline_op_rule_handler.get_tmp_timeline_op_rule_with_unique_id(unique_id)
         result_op_rule = OpRule(result_tmp_rule)
@@ -195,7 +195,7 @@ class FusionOperatorDB:
         for key_unique_id, supported_version in self._supported_version_dict.items():
             if self._is_version_supported_in_versions(supported_version, cann_version, torch_version):
                 return key_unique_id
-        return constant.TIMELINE_FUSION_OPS_INVALID_UNIQUE_ID
+        return Constant.TIMELINE_FUSION_OPS_INVALID_UNIQUE_ID
 
     def _is_version_supported_in_versions(self, supported_version, cann_version=None, torch_version=None):
         """校验当前cann版本和torch版本是否存在在规则库中的版本支持数组的元素中"""
@@ -216,9 +216,9 @@ class FusionOperatorDB:
 
     def _parse_db(self):
         """生成输出的规则库"""
-        self._parse(constant.ATEN)
-        self._parse(constant.DEQUEUE)
-        self._parse(constant.OPTIMIZER)
+        self._parse(Constant.ATEN)
+        self._parse(Constant.DEQUEUE)
+        self._parse(Constant.OPTIMIZER)
 
     def _parse(self, mode):
         """生成输出的规则库中指定部分， 如aten, Optimizer等"""
@@ -252,7 +252,7 @@ class FusionOperatorDB:
         if not os.path.exists(file_path):
             logger.warning("Path: '%s' does not exist, please specific existed path of "
                            "fusion operators yaml file by setting env '%s'",
-                           os.path.abspath(file_path), constant.ADVISOR_RULE_PATH)
+                           os.path.abspath(file_path), Constant.ADVISOR_RULE_PATH)
             self.is_empty = True
             return {}
 
