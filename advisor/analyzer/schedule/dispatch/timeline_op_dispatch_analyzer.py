@@ -49,6 +49,9 @@ class OpDispatchAnalyzer(BaseAnalyzer):
         :param data: input datasets
         :return: result
         """
+        if "mindspore" in self.profiling_type:
+            logger.warning("The analyzer %s does not support MindSpore.", self.__class__.__name__)
+            return self.result
         self.get_op_compile_info(self.dataset)
         self.make_record(self.result)
         self.make_render(self.html_render, rank=kwargs.get('rank'))

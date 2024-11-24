@@ -230,7 +230,8 @@ class OverallSummaryAnalyzer(BaseAnalyzer):
                                          template_dir="templates",
                                          template_name="cluster_analysis.html",
                                          cann_version=self.cann_version,
-                                         torch_version=self.torch_version,
+                                         profiling_type=self.profiling_type,
+                                         profiling_version=self.profiling_version,
                                          result=result_for_html)
 
     def get_priority(self):

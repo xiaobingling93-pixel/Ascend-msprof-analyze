@@ -6,10 +6,12 @@ import subprocess
 RE_EXCEL_MATCH_EXP = r"^mstt_advisor_\d{1,20}\.xlsx"
 RE_HTML_MATCH_EXP = r"^mstt_advisor_\d{1,20}\.html"
 
+
 def execute_cmd(cmd):
-    logging.info('Execute command:%s'," ".join(cmd))
+    logging.info('Execute command:%s', " ".join(cmd))
     completed_process = subprocess.run(cmd, capture_output=True, shell=False, check=True)
     return completed_process.returncode
+
 
 def get_files(out_path):
     dirs = os.listdir(out_path)
@@ -44,6 +46,3 @@ def get_files(out_path):
         result_html[pattern] = os.path.join(files_out_path, newest_html_file)
         result_excel[pattern] = os.path.join(log_dir, newest_excel_file)
     return result_html, result_excel
-
-
-
