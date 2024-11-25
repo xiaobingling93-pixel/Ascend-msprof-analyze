@@ -21,7 +21,7 @@ class TestCompareToolsCmdPytorchNpuVsNpu(TestCase):
     def setup_class(self):
         PathManager.make_dir_safety(self.OUTPUT_PATH)
         cmd = ["msprof-analyze", "compare", "-d", self.COMPARISON_PROFILING_PATH, "-bp", self.BASE_PROFILING_PATH,
-               "--base_step=5", "--comparison_step=5", "--disable_details", "-o", self.OUTPUT_PATH]
+               "--base_step=5", "--comparison_step=5", "--disable_details", "-o", self.OUTPUT_PATH, "--force"]
         if execute_cmd(cmd) != self.COMMAND_SUCCESS or not os.path.exists(self.OUTPUT_PATH):
             self.assertEqual(False, True, msg="step comparison task failed.")
         if not check_result_file(self.OUTPUT_PATH):
