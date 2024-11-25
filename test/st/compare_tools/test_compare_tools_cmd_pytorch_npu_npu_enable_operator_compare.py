@@ -11,9 +11,10 @@ from .utils import execute_cmd, check_result_file
 class TestCompareToolsCmdPytorchNpuVsNpuEnableOperatorCompare(TestCase):
     ST_DATA_PATH = os.getenv("MSTT_PROFILER_ST_DATA_PATH",
                              "/home/dcs-50/smoke_project_for_msprof_analyze/mstt_profiler/st_data")
-    BASE_PROFILING_PATH = os.path.join(ST_DATA_PATH, "cluster_data_3", "n122-122-067_12380_20240912033946038_ascend_pt")
-    COMPARISON_PROFILING_PATH = os.path.join(ST_DATA_PATH, "cluster_data_3",
-                                             "n122-122-067_12380_20240912033946038_ascend_pt")
+    BASE_PROFILING_PATH = os.path.join(ST_DATA_PATH, "cluster_data_4",
+                                       "n122-197-168_1333345_20241105122131111_ascend_pt")
+    COMPARISON_PROFILING_PATH = os.path.join(ST_DATA_PATH, "cluster_data_4",
+                                             "n122-197-168_1632305_20241105124759292_ascend_pt")
     OUTPUT_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                                "CompareToolsCmdPytorchNpuVsNpuEnableOperatorCompare")
     RESULT_EXCEL = ""
@@ -84,7 +85,7 @@ class TestCompareToolsCmdPytorchNpuVsNpuEnableOperatorCompare(TestCase):
         headers = ["Top", "Operator Name", "Base Device Duration(ms)", "Base Operator Number",
                    "Comparison Device Duration(ms)", "Comparison Operator Number", "Diff Duration(ms)", "Diff Ratio"]
         df = pd.read_excel(self.RESULT_EXCEL, sheet_name="OperatorCompareStatistic", header=2)
-        self.assertEqual(len(df), 141, msg="pytorch npu vs npu operator compare results 'OperatorCompareStatistic'"
+        self.assertEqual(len(df), 139, msg="pytorch npu vs npu operator compare results 'OperatorCompareStatistic'"
                                            "quantity is wrong")
         self.assertEqual(headers, df.columns.tolist(), msg="pytorch npu vs npu operator compare results "
                                                            "'OperatorCompareStatistic' headers is wrong")
@@ -93,7 +94,7 @@ class TestCompareToolsCmdPytorchNpuVsNpuEnableOperatorCompare(TestCase):
         headers = ["Top", "Operator Name", "Base Device Duration(ms)", "Base Operator Number",
                    "Comparison Device Duration(ms)", "Comparison Operator Number", "Diff Duration(ms)", "Diff Ratio"]
         df = pd.read_excel(self.IS_RESULT_EXCEL, sheet_name="OperatorCompareStatistic", header=2)
-        self.assertEqual(len(df), 141, msg="pytorch npu vs npu use input shape operator compare results "
+        self.assertEqual(len(df), 139, msg="pytorch npu vs npu use input shape operator compare results "
                                            "'OperatorCompareStatistic' quantity is wrong")
         self.assertEqual(headers, df.columns.tolist(), msg="pytorch npu vs npu use input shape operator compare "
                                                            "results 'OperatorCompareStatistic' headers is wrong")
@@ -102,7 +103,7 @@ class TestCompareToolsCmdPytorchNpuVsNpuEnableOperatorCompare(TestCase):
         headers = ["Top", "Operator Name", "Base Device Duration(ms)", "Base Operator Number",
                    "Comparison Device Duration(ms)", "Comparison Operator Number", "Diff Duration(ms)", "Diff Ratio"]
         df = pd.read_excel(self.MKN_RESULT_EXCEL, sheet_name="OperatorCompareStatistic", header=2)
-        self.assertEqual(len(df), 141, msg="pytorch npu vs npu use input shape operator compare results "
+        self.assertEqual(len(df), 139, msg="pytorch npu vs npu use input shape operator compare results "
                                            "'OperatorCompareStatistic' quantity is wrong")
         self.assertEqual(headers, df.columns.tolist(), msg="pytorch npu vs npu use input shape operator compare "
                                                            "results 'OperatorCompareStatistic' headers is wrong")
@@ -111,7 +112,7 @@ class TestCompareToolsCmdPytorchNpuVsNpuEnableOperatorCompare(TestCase):
         headers = ["Top", "Operator Name", "Base Device Duration(ms)", "Base Operator Number",
                    "Comparison Device Duration(ms)", "Comparison Operator Number", "Diff Duration(ms)", "Diff Ratio"]
         df = pd.read_excel(self.ONM_RESULT_EXCEL, sheet_name="OperatorCompareStatistic", header=2)
-        self.assertEqual(len(df), 141, msg="pytorch npu vs npu use input shape operator compare results "
+        self.assertEqual(len(df), 139, msg="pytorch npu vs npu use input shape operator compare results "
                                            "'OperatorCompareStatistic' quantity is wrong")
         self.assertEqual(headers, df.columns.tolist(), msg="pytorch npu vs npu use input shape operator compare "
                                                            "results 'OperatorCompareStatistic' headers is wrong")
