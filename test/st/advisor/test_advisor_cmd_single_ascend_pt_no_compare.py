@@ -27,17 +27,18 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
         PathManager.make_dir_safety(self.ALL_OUTPUT_PATH)
         PathManager.make_dir_safety(self.COMPUTATION_OUTPUT_PATH)
         PathManager.make_dir_safety(self.SCHEDULE_OUTPUT_PATH)
-        cmd_all = ["msprof-analyze", "advisor", "all", "-d", self.BASE_PROFILING_PATH, "-o", self.ALL_OUTPUT_PATH]
+        cmd_all = ["msprof-analyze", "advisor", "all", "-d", self.BASE_PROFILING_PATH, "-o", self.ALL_OUTPUT_PATH,
+                   "--force"]
         if execute_cmd(cmd_all) != self.COMMAND_SUCCESS or not os.path.exists(self.ALL_OUTPUT_PATH):
             self.assertTrue(False, msg="advisor [all] task failed.")
 
         cmd_computation = ["msprof-analyze", "advisor", "computation", "-d", self.BASE_PROFILING_PATH, "-o",
-                           self.COMPUTATION_OUTPUT_PATH]
+                           self.COMPUTATION_OUTPUT_PATH, "--force"]
         if execute_cmd(cmd_computation) != self.COMMAND_SUCCESS or not os.path.exists(self.COMPUTATION_OUTPUT_PATH):
             self.assertTrue(False, msg="advisor [computation] task failed.")
 
         cmd_schedule = ["msprof-analyze", "advisor", "schedule", "-d", self.BASE_PROFILING_PATH, "-o",
-                        self.SCHEDULE_OUTPUT_PATH]
+                        self.SCHEDULE_OUTPUT_PATH, "--force"]
         if execute_cmd(cmd_schedule) != self.COMMAND_SUCCESS or not os.path.exists(self.SCHEDULE_OUTPUT_PATH):
             self.assertTrue(False, msg="advisor [schedule] task failed.")
 

@@ -37,7 +37,7 @@ class TestCompareToolsCmdPytorchNpuVsNpuEnableOperatorCompare(TestCase):
         PathManager.make_dir_safety(self.ONM_OUTPUT_PATH)
         # 1. no params compare
         cmd = ["msprof-analyze", "compare", "-d", self.COMPARISON_PROFILING_PATH, "-bp", self.BASE_PROFILING_PATH,
-               "--enable_operator_compare", "--disable_details", "-o", self.OUTPUT_PATH]
+               "--enable_operator_compare", "--disable_details", "-o", self.OUTPUT_PATH, "--force"]
         if execute_cmd(cmd) != self.COMMAND_SUCCESS or not os.path.exists(self.OUTPUT_PATH):
             self.assertEqual(False, True, msg="enable operator compare comparison task failed.")
         if not check_result_file(self.OUTPUT_PATH):
