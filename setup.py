@@ -61,7 +61,7 @@ setup(
     author="MindStudio",
     author_email=author_email,
     package_dir={"": root_path},
-    packages=find_packages(root_path),
+    packages=find_packages(root_path, exclude=["example"]),
     include_package_data=False,
     python_requires='>=3.7',
     install_requires=requires,
