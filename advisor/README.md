@@ -1,15 +1,14 @@
 # advisor
 
-msprof-analyze的advisor功能是将Ascend PyTorch Profiler或者msprof采集的性能数据进行分析，并输出性能调优建议。
+msprof-analyze的advisor功能是将Ascend PyTorch Profiler、msprof或者MindSpore Profiler采集的性能数据进行分析，并输出性能调优建议。
 
-性能数据采集方法请参见《[性能分析工具](https://www.hiascend.com/document/detail/zh/mindstudio/70RC1/mscommandtoolug/mscommandug/atlasprofiling_16_0001.html)》。
+Ascend PyTorch Profiler、msprof采集方法请参见《[性能调优工具](https://www.hiascend.com/document/detail/zh/mindstudio/70RC3/T&ITools/Profiling/atlasprofiling_16_0001.html)》，MindSpore Profiler采集方法请参见《[性能调试](https://www.mindspore.cn/mindinsight/docs/zh-CN/r2.3/performance_profiling_ascend.html)》。
 
 ## 工具使用（命令行方式方式）
 
 ### 约束
 
-- 不支持对db格式文件分析。
-- 不支持分析MindSpore场景采集的性能数据。
+不支持对db格式文件分析。
 
 ### 操作步骤
 
@@ -37,7 +36,7 @@ msprof-analyze的advisor功能是将Ascend PyTorch Profiler或者msprof采集的
 
    以上命令更多参数介绍请参见“**命令详解**”。
 
-   单卡场景需要指定到性能数据文件`*_ascend_pt`目录；多卡或集群场景需要指定到`*_ascend_pt`目录的父目录层级。
+   单卡场景需要指定到性能数据文件`*_ascend_pt`或`*_ascend_ms`目录；多卡或集群场景需要指定到`*_ascend_pt`或`*_ascend_ms`目录的父目录层级。
 
 3. 查看结果。
 
@@ -322,6 +321,8 @@ comparison模块内容如下图示例，识别标杆和待比对性能数据的K
 `mstt_advisor_{timestamp}.html`文件的comparison模块内容仅展示Kernel和API的Top 10条数据，详细数据需要查看`mstt_advisor_{timestamp}.xlsx`文件。
 
 ## 工具使用（Jupyter Notebook方式）
+
+MindSpore场景不支持该方式。
 
 Jupyter Notebook使用方式如下：
 

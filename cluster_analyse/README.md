@@ -2,7 +2,11 @@
 cluster_analyse（集群分析工具）是在集群场景下，通过此工具来进行集群数据的分析，当前主要对基于通信域的迭代内耗时分析、通信时间分析以及通信矩阵分析为主， 从而定位慢卡、慢节点以及慢链路问题。
 
 ## 性能数据采集
-当前集群调优工具主要支持Ascend PyTorch Profiler采集方式下的集群数据。采集方式参考：[Profiling数据采集](https://gitee.com/ascend/mstt/tree/master/profiler)，此工具只需要通过Ascend PyTorch Porfiler工具采集NPU的性能数据即可。
+当前集群调优工具主要支持PyTorch场景的Ascend PyTorch Profiler采集方式和MindSpore场景的MindSpore Profiler采集方式下的集群数据。
+
+此工具只需要NPU的性能数据作为输入。
+
+Ascend PyTorch Profiler采集方法请参见《[NPU性能数据采集](https://gitee.com/ascend/mstt/tree/master/profiler)》，MindSpore Profiler采集方法请参见《[性能调试](https://www.mindspore.cn/mindinsight/docs/zh-CN/r2.3/performance_profiling_ascend.html)》。
 
 我们要求至少是L1级别的数据。
 ```python
@@ -12,7 +16,7 @@ experimental_config = torch_npu.profiler._ExperimentalConfig(
 ```
 ### 确认数据是否可用
 
-打开采集到的某张卡数据(*ascend_pt结尾的文件夹)，可用的数据应该具备：
+打开采集到的某张卡数据(\*ascend_pt、\*ascend_ms结尾的文件夹)，可用的数据应该具备：
 
 - ./profiler_info_x.json,
 - ./ASCEND_PROFILER_OUTPUT/step_trace_time.csv,
@@ -26,7 +30,7 @@ experimental_config = torch_npu.profiler._ExperimentalConfig(
 - analysis.db
 - ascend_pytorch_profiler_{rank_id}.db
 
-以上csv、json文件与db文件只能存在一类，否则集群分析工具解析异常。
+以上csv、json文件与db文件只能存在一类，否则集群分析工具解析异常。MindSpore场景暂不支持以上db文件。
 
 确认这几个文件生成后，继续下面的集群分析。
 
