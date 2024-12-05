@@ -33,15 +33,15 @@ from profiler.advisor.analyzer.cluster.slow_link_analyzer import SlowLinkAnalyze
 from profiler.advisor.analyzer.computation.pp_stage_computation_analyzer import PPStageComputationAnalyzer
 from profiler.advisor.analyzer.overall.overall_summary_analyzer import OverallSummaryAnalyzer
 from profiler.advisor.config.config import Config
-from profiler.advisor.common import constant as const
 from profiler.advisor.common.analyzer_scopes import SupportedScopes
 from profiler.advisor.common.async_analysis_status import AsyncAnalysisStatus
 from profiler.advisor.common.enum_params_parser import EnumParamsParser
 from profiler.advisor.utils.utils import Timer, safe_index_value, safe_division, safe_index, convert_to_int
 from profiler.advisor.interface.interface import Interface
 from profiler.cluster_analyse.cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
+from profiler.cluster_analyse.cluster_data_preprocess.mindspore_data_preprocessor import MindsporeDataPreprocessor
 from profiler.prof_common.path_manager import PathManager
-from profiler.compare_tools.compare_backend.utils.constant import Constant as CompareConstant
+from profiler.prof_common.constant import Constant
 
 # 以spawn模式启动多进程，避免fork主进程资源。如果主进程逻辑较为复杂，fork可能会导致异常。
 mp.set_start_method("spawn", force=True)
@@ -186,28 +186,6 @@ class AnalyzerController:
 
         return True
 
-    @staticmethod
-    def _whether_include_mindspore_prof(profiling_path):
-        # 暂不支持Mindspore数据，支持后可删除该限制
-        ASCEND_MS = "ascend_ms"
-
-        has_ascend_ms_dirs = False
-        for root, dirs, _ in os.walk(profiling_path):
-            if root.endswith(ASCEND_MS):
-                has_ascend_ms_dirs = True
-                break
-            for dir_name in dirs:
-                if dir_name.endswith(ASCEND_MS):
-                    has_ascend_ms_dirs = True
-                    break
-            if has_ascend_ms_dirs:
-                break
-
-        if has_ascend_ms_dirs:
-            logger.error("Advisor does not support data from MindSpore now, existing dirs end with 'ascend_ms'")
-            return True
-
-        return False
 
     @staticmethod
     def _get_step_rank_for_cluster_statistic_diff(target_cluster_statistic_data, benchmark_cluster_statistic_data,
@@ -319,7 +297,8 @@ class AnalyzerController:
             dimensions: analysis dimension, normally set as Interface.all_dimension, support specific dimension analysis
                 such as ['computation'] or ['computation', 'schedule']
             cann_version: cann version of your runtime, inpact on the analysis of affinity api and AICPU operators
-            torch_version: torch version of your runtime, inpact on the analysis of affinity api
+            profiling_type: profiling type of your runtime
+            profiling_version: profiling version of your runtime, inpact on the analysis of affinity api
             analysis_dimensions: can overwite dimensions.
             advisor_analyze_processes: number of processes to use while the training params pipeline parallel(pp) >1,
                 can reduce the time of analysis.
@@ -397,9 +376,9 @@ class AnalyzerController:
             # kernel/api 比对
             compare_profiling_list = [
                 dict(profiling_path=profiling_path, benchmark_profiling_path=benchmark_profiling_path,
-                     compare_mode=CompareConstant.KERNEL_COMPARE),
+                     compare_mode=Constant.KERNEL_COMPARE),
                 dict(profiling_path=profiling_path, benchmark_profiling_path=benchmark_profiling_path,
-                     compare_mode=CompareConstant.API_COMPARE)
+                     compare_mode=Constant.API_COMPARE)
             ]
 
             job_list += self._profiling_comparison(compare_profiling_list)
@@ -545,7 +524,7 @@ class AnalyzerController:
                       benchmark_profiling_path=self._get_profiling_path_by_rank(profiling_path, fast_rank_id),
                       step=slow_step, benchmark_step=fast_step,
                       rank=slow_rank_id, benchmark_rank=fast_rank_id,
-                      compare_mode=CompareConstant.API_COMPARE,
+                      compare_mode=Constant.API_COMPARE,
                       step_duration=self.slow_rank_analyzer.get_step_duration(slow_rank_id, slow_step))
 
         job_list += self.schedule_analysis(**kwargs)
@@ -647,14 +626,6 @@ class AnalyzerController:
             logger.error(error_msg)
             return
 
-        # 暂不支持Mindspore数据，支持后可删除该限制
-        if self._whether_include_mindspore_prof(profiling_path):
-            error_msg = f"Got *_ascend_ms dirs from {profiling_path}, skip analysis"
-            self._update_analysis_process_resp(pid, async_resp, error_msg=error_msg,
-                                               status_code=AsyncAnalysisStatus.FAILED_STATUS_CODE,
-                                               status=AsyncAnalysisStatus.FAILED)
-            logger.error(error_msg)
-            return
 
         if benchmark_profiling_path and not self._check_profiling_path_valid(benchmark_profiling_path):
             error_msg = (f"Got invalid argument '-bp/--benchmark_profiling_path' {benchmark_profiling_path}, "
@@ -736,7 +707,7 @@ class AnalyzerController:
 
     def _profiling_comparison(self, compare_profiling_list):
         job_list = []
-        disable_profiling_comparison = os.getenv(const.DISABLE_PROFILING_COMPARISON)
+        disable_profiling_comparison = os.getenv(Constant.DISABLE_PROFILING_COMPARISON)
         if disable_profiling_comparison is not None and disable_profiling_comparison.lower() == "true":
             logger.info(
                 "Skip profiling comparison due to longer processing time due to env 'DISABLE_PROFILING_COMPARISON'")
@@ -787,7 +758,7 @@ class AnalyzerController:
 
         if isinstance(target_cluster_analyzer, SlowRankAnalyzer):
             comparison_dims = [SlowRankAnalyzer.COMPUTE, SlowRankAnalyzer.FREE]
-            comparison_modes = [CompareConstant.KERNEL_COMPARE, CompareConstant.API_COMPARE]
+            comparison_modes = [Constant.KERNEL_COMPARE, Constant.API_COMPARE]
         elif isinstance(target_cluster_analyzer, SlowLinkAnalyzer):
             comparison_dims = [SlowLinkAnalyzer.SDMA_BANDWIDTH, SlowLinkAnalyzer.RDMA_BANDWIDTH]
             comparison_modes = [None, None]
@@ -841,7 +812,16 @@ class AnalyzerController:
             return False
         path_list = [os.path.join(profiling_path, dir_name) for dir_name in os.listdir(profiling_path)]
         ascend_pt_dirs = [path for path in path_list if os.path.isdir(path) and path.endswith("ascend_pt")]
-        data_processor = PytorchDataPreprocessor(ascend_pt_dirs)
+        ascend_ms_dirs = [path for path in path_list if os.path.isdir(path) and path.endswith("ascend_ms")]
+        if ascend_ms_dirs and ascend_pt_dirs:
+            logger.error("Cannot analyze pytorch and mindspore meantime.")
+            return False
+        if not ascend_pt_dirs and not ascend_ms_dirs:
+            return False
+        if ascend_ms_dirs and not ascend_pt_dirs:
+            data_processor = MindsporeDataPreprocessor(ascend_ms_dirs)
+        elif ascend_pt_dirs and not ascend_ms_dirs:
+            data_processor = PytorchDataPreprocessor(ascend_pt_dirs)
 
         self.cluster_local_data_map[profiling_path] = data_processor.get_data_map()
 
@@ -913,7 +893,7 @@ class AnalyzerController:
                     benchmark_step=benchmark_step,
                     profiling_path=self._get_profiling_path_by_rank(profiling_path, rank_id),
                     benchmark_profiling_path=self._get_profiling_path_by_rank(profiling_path, benchmark_rank_id),
-                    compare_mode=CompareConstant.KERNEL_COMPARE,
+                    compare_mode=Constant.KERNEL_COMPARE,
                     step_duration=self.slow_rank_analyzer.get_step_duration(rank_id, step)
                 )
             )
@@ -953,7 +933,7 @@ class AnalyzerController:
         kwargs = dict(profiling_path=self._get_profiling_path_by_rank(profiling_path, slow_rank_id),
                       benchmark_profiling_path=self._get_profiling_path_by_rank(profiling_path, fast_rank_id),
                       step=slow_step, benchmark_step=fast_step, rank=slow_rank_id, benchmark_rank=fast_rank_id,
-                      compare_mode=CompareConstant.KERNEL_COMPARE,
+                      compare_mode=Constant.KERNEL_COMPARE,
                       step_duration=self.slow_rank_analyzer.get_step_duration(slow_rank_id, slow_step))
 
         job_list += self.computation_analysis(**kwargs)

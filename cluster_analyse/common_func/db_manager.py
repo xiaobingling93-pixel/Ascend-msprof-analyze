@@ -16,9 +16,9 @@
 import os
 import sqlite3
 
-from common_func.constant import Constant
+from profiler.prof_common.constant import Constant
 from common_func.empty_class import EmptyClass
-from common_func.file_manager import check_db_path_valid
+from profiler.prof_common.file_manager import check_db_path_valid
 from common_func.tables_config import TablesConfig
 
 class DBManager:

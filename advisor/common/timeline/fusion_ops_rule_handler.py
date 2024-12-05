@@ -2,7 +2,7 @@
 import copy
 import logging
 
-from profiler.advisor.common import constant
+from profiler.prof_common.constant import Constant
 from profiler.advisor.common.timeline.fusion_ops_rule import OpRule
 from profiler.advisor.utils.log import get_log_level
 
@@ -189,5 +189,5 @@ class TimelineOpRuleHandler:
             logger.error("Advise to use a positive integer as the unique id of rules. "
                          "Negative numbers: %s are not recommended to use as unique id. "
                          "If specified invalid unique id: %s is used, an empty rule is returned by default.",
-                         unique_id, constant.TIMELINE_FUSION_OPS_INVALID_UNIQUE_ID)
+                         unique_id, Constant.TIMELINE_FUSION_OPS_INVALID_UNIQUE_ID)
         return self._all_tmp_timeline_op_rule.get(unique_id)

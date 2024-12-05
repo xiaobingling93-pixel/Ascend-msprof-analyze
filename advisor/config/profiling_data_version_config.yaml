@@ -1,4 +1,28 @@
 versions:
+  - version: 8.0.0
+    dirs_pattern:
+      ASCEND_PROFILER_OUTPUT: [ op_summary, msprof ]
+      ^PROF_\d{6}_\d{17}_\w+$:
+        mindstudio_profiler_output: [ op_summary, msprof ]
+    class_attr:
+      op_summary: OpSummary
+      msprof: Msprof
+    file_attr:
+      msprof: [trace_view.json, '^msprof_\d{14}\.json$']
+      op_summary: [ kernel_details.csv, '^op_summary_\d{14}\.csv$' ]
+
+  - version: 8.0.RC2
+    dirs_pattern:
+      ASCEND_PROFILER_OUTPUT: [ op_summary, msprof ]
+      ^PROF_\d{6}_\d{17}_\w+$:
+        mindstudio_profiler_output: [ op_summary, msprof ]
+    class_attr:
+      op_summary: OpSummary
+      msprof: Msprof
+    file_attr:
+      msprof: [trace_view.json, '^msprof_\d{14}\.json$']
+      op_summary: [ kernel_details.csv, '^op_summary_\d{14}\.csv$' ]
+
   - version: 8.0.RC1
     dirs_pattern:
       ASCEND_PROFILER_OUTPUT: [ op_summary, msprof ]

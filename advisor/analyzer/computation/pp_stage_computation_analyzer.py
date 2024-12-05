@@ -24,7 +24,6 @@ from profiler.advisor.interface.interface import Interface
 from profiler.advisor.utils.utils import ParallelJob, get_analyze_processes
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
-from profiler.advisor.common import constant as const
 
 logger = logging.getLogger()
 

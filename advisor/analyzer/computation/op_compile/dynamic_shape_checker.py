@@ -17,7 +17,6 @@ import logging
 from typing import List
 
 from profiler.advisor.analyzer.computation.operator_checker import OperatorChecker
-from profiler.advisor.common import constant
 from profiler.advisor.config.config import Config
 from profiler.advisor.dataset.profiling.info_collection import OpInfo
 from profiler.advisor.result.item import OptimizeItem, StatisticsItem, OptimizeRecord

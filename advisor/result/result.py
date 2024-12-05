@@ -22,11 +22,11 @@ import click
 import xlsxwriter
 from prettytable import ALL, PrettyTable
 
-from profiler.advisor.common import constant as const
+from profiler.prof_common.constant import Constant
 from profiler.advisor.utils.utils import singleton, logger
 from profiler.advisor.config.config import Config
 from profiler.advisor.utils.file import FdOpen, check_dir_writable
-from profiler.cluster_analyse.common_func.file_manager import FileManager
+from profiler.prof_common.file_manager import FileManager
 
 
 class ResultWriter:
@@ -243,4 +243,4 @@ class TerminalResult:
         if table_row_cnt > 0:
             click.echo(self.table)
         else:
-            click.echo(click.style(const.SKIP_ANALYZE_PROMPT, fg='red'))
+            click.echo(click.style(Constant.SKIP_ANALYZE_PROMPT, fg='red'))

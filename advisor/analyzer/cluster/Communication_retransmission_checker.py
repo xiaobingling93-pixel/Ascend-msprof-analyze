@@ -19,7 +19,7 @@ from collections import defaultdict
 from profiler.advisor.dataset.cluster.cluster_dataset import ClusterCommunicationDataset
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
-from profiler.cluster_analyse.common_func.file_manager import FileManager
+from profiler.prof_common.file_manager import FileManager
 from profiler.advisor.dataset.cluster.hccl_collection import HcclInfo
 
 logger = logging.getLogger()

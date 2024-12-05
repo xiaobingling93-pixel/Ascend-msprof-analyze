@@ -1,4 +1,4 @@
-from compare_backend.utils.constant import Constant
+from profiler.prof_common.constant import Constant
 
 from compare_backend.comparator.operator_comparator import OperatorComparator
 from compare_backend.comparator.api_compare_comparator import ApiCompareComparator
@@ -7,7 +7,6 @@ from compare_backend.compare_bean.operator_compare_bean import OperatorCompareBe
 from compare_backend.compare_bean.api_compare_bean import ApiCompareBean
 from compare_backend.compare_bean.kernel_compare_bean import KernelCompareBean
 from compare_backend.data_prepare.operator_data_prepare import OperatorDataPrepare
-from compare_backend.utils.constant import Constant
 from compare_backend.data_prepare.sequence_pre_matching import SequencePreMatching
 
 class CompareInterface:

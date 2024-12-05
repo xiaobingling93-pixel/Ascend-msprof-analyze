@@ -15,7 +15,7 @@
 
 import os
 import logging
-from profiler.advisor.common import constant as const
+from profiler.prof_common.constant import Constant
 from profiler.advisor.utils.utils import check_path_valid
 from profiler.advisor.utils.log import get_log_level
 
@@ -28,7 +28,7 @@ class FileOpen:
     open and read file
     """
 
-    def __init__(self: any, file_path: str, mode: str = "r", max_size: int = const.MAX_READ_FILE_BYTES) -> None:
+    def __init__(self: any, file_path: str, mode: str = "r", max_size: int = Constant.MAX_READ_FILE_BYTES) -> None:
         self.file_path = file_path
         self.file_reader = None
         self.mode = mode
@@ -49,7 +49,7 @@ class FdOpen:
     creat and write file
     """
 
-    def __init__(self: any, file_path: str, flags: int = const.WRITE_FLAGS, mode: int = const.WRITE_MODES,
+    def __init__(self: any, file_path: str, flags: int = Constant.WRITE_FLAGS, mode: int = Constant.WRITE_MODES,
                  operate: str = "w", newline: str = None) -> None:
         self.file_path = file_path
         self.flags = flags

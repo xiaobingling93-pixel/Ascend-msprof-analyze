@@ -33,7 +33,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from tqdm import tqdm
 
-from profiler.advisor.common import constant as const
+from profiler.prof_common.constant import Constant
 from profiler.advisor.common.version_control import VersionControl
 from profiler.advisor.utils.log import init_logger, get_log_level
 
@@ -205,7 +205,7 @@ class Timer:
 
 def get_analyze_processes():
     # n_processes not exposed to user through att-advisor command arguments now
-    return min(int(os.getenv(const.ADVISOR_ANALYZE_PROCESSES, 1)), const.ADVISOR_MAX_PROCESSES)
+    return min(int(os.getenv(Constant.ADVISOR_ANALYZE_PROCESSES, 1)), Constant.ADVISOR_MAX_PROCESSES)
 
 
 def format_timeline_result(result: dict, dump_html=False):
@@ -439,7 +439,7 @@ def get_file_path_by_walk(root, filename):
     return file_path
 
 
-def check_path_valid(path: str, is_file: bool = True, max_size: int = const.MAX_READ_FILE_BYTES) -> bool:
+def check_path_valid(path: str, is_file: bool = True, max_size: int = Constant.MAX_READ_FILE_BYTES) -> bool:
     """
     check the path is valid or not
     :param path: file path
@@ -475,7 +475,7 @@ def parse_json_with_generator(timeline_data_path, func):
         return result
     try:
         with open(timeline_data_path, "r") as f:
-            if os.getenv(const.DISABLE_STREAMING_READER) == "1":
+            if os.getenv(Constant.DISABLE_STREAMING_READER) == "1":
                 logger.debug("Disable streaming reader.")
                 file_parser = json.loads(f.read())
             else:

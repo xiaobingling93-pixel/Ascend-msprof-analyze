@@ -3,10 +3,10 @@ import math
 import os
 from abc import abstractmethod, ABCMeta
 
-from profiler.advisor.common import constant as const
+from profiler.prof_common.constant import Constant
 from profiler.advisor.common.timeline.event import TimelineEvent
 from profiler.advisor.utils.utils import convert_to_float
-from profiler.cluster_analyse.common_func.file_manager import FileManager
+from profiler.prof_common.file_manager import FileManager
 
 logger = logging.getLogger()
 
@@ -73,7 +73,7 @@ class OpCompileCollector(BaseOpCollector):
         self._total_op_compile_time = 0.0
 
     def add_op(self, event):
-        if event.name == const.OP_COMPILE_NAME or event.args.get("id") == const.OP_COMPILE_ID:
+        if event.name == Constant.OP_COMPILE_NAME or event.args.get("id") == Constant.OP_COMPILE_ID:
             self.op_list.append(event)
 
     def post_process(self, target_op_list, **kwargs):
@@ -90,7 +90,7 @@ class SynchronizeStreamCollector(BaseOpCollector):
         self.require_filter_by_step = False
 
     def add_op(self, event):
-        if event.name.startswith(const.SYNC_STREAM) or event.name.startswith(const.NODE_LAUNCH):
+        if event.name.startswith(Constant.SYNC_STREAM) or event.name.startswith(Constant.NODE_LAUNCH):
             self.op_list.append(event)
 
     def post_process(self, *args, **kwargs):
@@ -170,13 +170,13 @@ class AtenCollector(BaseOpCollector):
         super().__init__()
 
     def add_op(self, event):
-        if event.name.lower().startswith(f"{const.ATEN}{const.ATEN_SEP}") or event.name.lower().startswith(
-                f"{const.NPU}{const.ATEN_SEP}"):
+        if event.name.lower().startswith(f"{Constant.ATEN}{Constant.ATEN_SEP}") or event.name.lower().startswith(
+                f"{Constant.NPU_LOWER}{Constant.ATEN_SEP}"):
             self._add_aten(event)
             return
 
         # 检查cann层同步操作，根据时间窗口索引到host侧的aten算子并给出堆栈
-        if event.name.startswith(const.SYNC_STREAM):
+        if event.name.startswith(Constant.SYNC_STREAM):
             self._add_aten(event)
 
     def post_process(self, target_op_list, **kwargs):
@@ -194,7 +194,7 @@ class OptimizerCollector(BaseOpCollector):
         super().__init__()
 
     def add_op(self, event):
-        if event.name.startswith(f"{const.OPTIMIZER}.{const.OPTIMIZER_STEP}{const.OPTIMIZER_SEP}"):
+        if event.name.startswith(f"{Constant.OPTIMIZER}.{Constant.OPTIMIZER_STEP}{Constant.OPTIMIZER_SEP}"):
             self.op_list.append(TimelineEvent(
                 {"name": event.name, "dataset_index": event.dataset_index, "ts": event.ts, "dur": event.dur}))
 
@@ -260,14 +260,14 @@ class SpecificTaskTypeOpCollector(BaseOpCollector):
 
     def __init__(self, op_type_list=None):
         super().__init__()
-        self.op_type_list = op_type_list if op_type_list else [const.AI_CPU, const.AI_CORE, const.MIX_AIC]
+        self.op_type_list = op_type_list if op_type_list else [Constant.AI_CPU, Constant.AI_CORE, Constant.MIX_AIC]
 
     def add_op(self, event):
-        if event.args.get(const.TASK_TYPE) and event.args.get(const.TASK_TYPE) in self.op_type_list:
+        if event.args.get(Constant.TASK_TYPE) and event.args.get(Constant.TASK_TYPE) in self.op_type_list:
             self.op_list.append(
                 TimelineEvent(
                     {
-                        const.TASK_TYPE: event.args.get(const.TASK_TYPE),
+                        Constant.TASK_TYPE: event.args.get(Constant.TASK_TYPE),
                         "task_id": event.args.get("Task Id"),
                         "tid": event.tid,
                         "name": event.name,
@@ -293,7 +293,7 @@ class TorchToNpuCollector(BaseOpCollector):
         super().__init__()
 
     def add_op(self, event):
-        if event.name.lower() == const.TORCH_TO_NPU:
+        if event.name.lower() == Constant.TORCH_TO_NPU:
             self.op_list.append(TimelineEvent({"tid": event.tid, "ts": str(event.ts), "ph": event.ph, "id": event.id}))
 
     def post_process(self, target_op_list, **kwargs):
@@ -310,7 +310,7 @@ class AclToNpuCollector(BaseOpCollector):
         super().__init__()
 
     def add_op(self, event):
-        if event.name and event.ts and event.name == const.ACL_TO_NPU:
+        if event.name and event.ts and event.name == Constant.ACL_TO_NPU:
             self.op_list.append(TimelineEvent({"ts": event.ts}))
 
     def post_process(self, target_op_list, **kwargs):
@@ -323,7 +323,7 @@ class OpStackCollector(BaseOpCollector):
         super().__init__()
 
     def add_op(self, event):
-        if event.args.get(const.CALL_STACKS):
+        if event.args.get(Constant.CALL_STACKS):
             self.op_list.append(
                 TimelineEvent({"name": event.name, "dataset_index": event.dataset_index, "ts": event.ts}))
 
@@ -363,13 +363,13 @@ class FreeEventsCollector(BaseOpCollector):
         return gc_rule
 
     def add_op(self, event):
-        if event.name.lower() == const.FREE:
+        if event.name.lower() == Constant.FREE:
             self.op_list.append(event)
 
     def post_process(self, target_op_list, **kwargs):
         gc_rule = self._load_rule()
-        if os.getenv(const.FREE_DURATION_FOR_GC_ANALYSIS):
-            max_free_threshold = convert_to_float(os.getenv(const.FREE_DURATION_FOR_GC_ANALYSIS))
+        if os.getenv(Constant.FREE_DURATION_FOR_GC_ANALYSIS):
+            max_free_threshold = convert_to_float(os.getenv(Constant.FREE_DURATION_FOR_GC_ANALYSIS))
         else:
             max_free_threshold = gc_rule.get("max_free_threshold")
 

@@ -20,7 +20,7 @@ from copy import deepcopy
 from multiprocessing import Pool
 import logging
 
-from common_func.constant import Constant
+from profiler.prof_common.constant import Constant
 from cluster_utils.data_transfer_adapter import DataTransferAdapter
 
 

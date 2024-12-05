@@ -1,6 +1,6 @@
 from compare_backend.comparator.overall_performance_comparator import OverallPerformanceComparator
 from compare_backend.compare_bean.profiling_info import ProfilingInfo
-from compare_backend.utils.constant import Constant
+from profiler.prof_common.constant import Constant
 
 
 class OverallInterface:

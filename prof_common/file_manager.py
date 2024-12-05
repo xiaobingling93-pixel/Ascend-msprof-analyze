@@ -20,35 +20,15 @@ import logging
 
 import yaml
 
-from common_func.constant import Constant
-from common_func.path_manager import PathManager
+from profiler.prof_common.constant import Constant
+from profiler.prof_common.path_manager import PathManager
 from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 
 logger = logging.getLogger()
 
 
 class FileManager:
-    DATA_FILE_AUTHORITY = 0o640
-    DATA_DIR_AUTHORITY = 0o750
 
-    @classmethod
-    def read_csv_file(cls, file_path: str, class_bean: any) -> list:
-        PathManager.check_path_readable(file_path)
-        base_name = os.path.basename(file_path)
-        file_size = os.path.getsize(file_path)
-        if file_size <= 0:
-            return []
-        if file_size > Constant.MAX_CSV_SIZE and not AdditionalArgsManager().force:
-            raise RuntimeError(f"The file({base_name}) size exceeds the preset max value.")
-        result_data = []
-        try:
-            with open(file_path, newline="") as csv_file:
-                reader = csv.DictReader(csv_file)
-                for row in reader:
-                    result_data.append(class_bean(row))
-        except Exception as e:
-            raise RuntimeError(f"Failed to read the file: {base_name}") from e
-        return result_data
 
     @classmethod
     def read_json_file(cls, file_path: str) -> dict:
@@ -57,14 +37,51 @@ class FileManager:
         file_size = os.path.getsize(file_path)
         if file_size <= 0:
             return {}
-        if file_size > Constant.MAX_JSON_SIZE and not AdditionalArgsManager().force:
-            raise RuntimeError(f"The file({base_name}) size exceeds the preset max value.")
+        if not AdditionalArgsManager().force and file_size > Constant.MAX_FILE_SIZE:
+            check_msg = input(
+                f"The file({file_path}) size exceeds the preset max value. Continue reading the file? [y/n]")
+            if check_msg.lower() != "y":
+                logger.warning("The user choose not to read the file: %s", file_path)
+                return []
         try:
             with open(file_path, "r") as json_file:
                 result_data = json.loads(json_file.read())
         except Exception as e:
             raise RuntimeError(f"Failed to read the file: {base_name}") from e
         return result_data
+
+    @classmethod
+    def read_csv_file(cls, file_path: str, class_bean: any = None) -> list:
+        if not os.path.isfile(file_path):
+            raise FileNotFoundError("File not exists.")
+        PathManager.check_path_readable(file_path)
+        file_size = os.path.getsize(file_path)
+        if file_size <= 0:
+            return []
+        if not AdditionalArgsManager().force and file_size > Constant.MAX_FILE_SIZE:
+            check_msg = input(
+                f"The file({file_path}) size exceeds the preset max value. Continue reading the file? [y/n]")
+            if check_msg.lower() != "y":
+                print(f"[WARNING] The user choose not to read the file: {file_path}")
+                return []
+        result_data = []
+        try:
+            with open(file_path, newline="") as csv_file:
+                reader = csv.DictReader(csv_file)
+                for row in reader:
+                    row_data = class_bean(row) if class_bean else row
+                    result_data.append(row_data)
+        except Exception as e:
+            msg = f"Failed to read the file: {file_path}"
+            raise RuntimeError(msg) from e
+        return result_data
+
+    @classmethod
+    def check_json_type(cls, file_path: str) -> str:
+        json_data = cls.read_json_file(file_path)
+        if isinstance(json_data, dict):
+            return Constant.GPU
+        return Constant.NPU
 
     @classmethod
     def read_yaml_file(cls, file_path: str) -> dict:
@@ -94,7 +111,7 @@ class FileManager:
         PathManager.check_path_writeable(output_path)
         try:
             with os.fdopen(
-                    os.open(output_file, os.O_WRONLY | os.O_CREAT, cls.DATA_FILE_AUTHORITY),
+                    os.open(output_file, os.O_WRONLY | os.O_CREAT, Constant.FILE_AUTHORITY),
                     'w', newline=""
             ) as file:
                 writer = csv.writer(file)
@@ -118,7 +135,7 @@ class FileManager:
         base_name = os.path.basename(output_file)
         try:
             with os.fdopen(
-                    os.open(output_file, os.O_WRONLY | os.O_CREAT, cls.DATA_FILE_AUTHORITY), 'w'
+                    os.open(output_file, os.O_WRONLY | os.O_CREAT, Constant.FILE_AUTHORITY), 'w'
             ) as file:
                 file.write(json.dumps(data))
         except Exception as e:

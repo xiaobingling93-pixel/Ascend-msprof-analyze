@@ -38,7 +38,7 @@ class TestNPUProfilingParser(unittest.TestCase):
         with patch("compare_backend.profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"), \
                 patch("compare_backend.profiling_parser.npu_profiling_parser.NPUProfilingParser.__init__",
                       return_value=None), \
-                patch("compare_backend.utils.file_reader.FileReader.read_csv_file", return_value=memory_data):
+                patch("profiler.prof_common.file_manager.FileManager.read_csv_file", return_value=memory_data):
             res = NPUProfilingParser({}, {})
             res._operator_memory_path = ""
             res._enqueue_dict = {}

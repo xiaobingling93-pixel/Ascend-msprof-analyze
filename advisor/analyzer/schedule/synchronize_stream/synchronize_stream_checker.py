@@ -16,14 +16,14 @@ import logging
 import os
 
 from profiler.advisor.analyzer.schedule.timeline_base_checker import TimelineBaseChecker
-from profiler.advisor.common import constant as const
+from profiler.prof_common.constant import Constant
 from profiler.advisor.config.config import Config
 from profiler.advisor.dataset.timeline_event_dataset import ScheduleAnalysisDataset
 from profiler.advisor.display.html.priority_background_color import PriorityBackgroundColor
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.advisor.utils.utils import format_timeline_result, safe_division
-from profiler.cluster_analyse.common_func.file_manager import FileManager
+from profiler.prof_common.file_manager import FileManager
 
 logger = logging.getLogger()
 
@@ -51,13 +51,13 @@ class SynchronizeStreamChecker(TimelineBaseChecker):
         synchronize_num = 0
         synchronize_stream = event_dataset.synchronize_stream
         for index, op in enumerate(synchronize_stream):
-            if op.name.startswith(const.NODE_LAUNCH):
+            if op.name.startswith(Constant.NODE_LAUNCH):
                 node_launch_num += 1
-            if op.name.startswith(const.SYNC_STREAM):
+            if op.name.startswith(Constant.SYNC_STREAM):
                 synchronize_num += 1
 
                 # 统计nodeLaunch 和 synchronizeStream 一前一后连续出现次数
-                if index > 0 and synchronize_stream[index - 1].name.startswith(const.NODE_LAUNCH):
+                if index > 0 and synchronize_stream[index - 1].name.startswith(Constant.NODE_LAUNCH):
                     co_occurrence_num += 1
 
         # 当共现次数很多时，则大概率设置了ASCEND_LAUNCH_BLOCKING环境变量

@@ -19,7 +19,7 @@ from compare_backend.utils.common_func import longest_common_subsequence_matchin
 from compare_backend.utils.torch_op_node import TorchOpNode
 from compare_backend.utils.module_node import ModuleNode
 
-from compare_backend.utils.constant import Constant
+from profiler.prof_common.constant import Constant
 
 
 class SequencePreMatching:
