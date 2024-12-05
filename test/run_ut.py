@@ -3,7 +3,6 @@ import shutil
 import subprocess
 import sys
 
-
 def set_python_path():
     cluster_analyse_root = os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "cluster_analyse")

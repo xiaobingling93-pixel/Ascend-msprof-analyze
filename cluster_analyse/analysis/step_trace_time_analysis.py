@@ -17,8 +17,8 @@ import os
 import logging
 
 from common_func.db_manager import DBManager
-from common_func.constant import Constant
-from common_func.file_manager import FileManager
+from profiler.prof_common.constant import Constant
+from profiler.prof_common.file_manager import FileManager
 from prof_bean.step_trace_time_bean import StepTraceTimeBean
 from cluster_utils.parallel_strategy_calculator import ParallelStrategyCalculator
 

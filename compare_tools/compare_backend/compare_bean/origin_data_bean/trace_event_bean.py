@@ -17,7 +17,8 @@
 from decimal import Decimal
 
 from compare_backend.utils.common_func import convert_to_float, convert_to_decimal
-from compare_backend.utils.constant import Constant
+from compare_backend.compare_config.compare_config import CompareConfig
+from profiler.prof_common.constant import Constant
 
 
 class TraceEventBean:
@@ -251,19 +252,19 @@ class TraceEventBean:
         """
         这个类在cpu op和gpu中均有用到，这里是在cpu op阶段判断
         """
-        return any(cube_mask in self.lower_name for cube_mask in Constant.CPU_OP_FA_MASK)
+        return any(cube_mask in self.lower_name for cube_mask in CompareConfig().fa_mask)
 
     def is_conv_for_cpu_op(self) -> bool:
         """
         这个类在cpu op和gpu中均有用到，这里是在cpu op阶段判断
         """
-        return self.lower_name.startswith(Constant.CPU_OP_CONV)
+        return any(conv_mask in self.lower_name for conv_mask in CompareConfig().conv_mask)
 
     def is_matmul_for_cpu_op(self) -> bool:
         """
         这个类在cpu op和gpu中均有用到，这里是在cpu op阶段判断
         """
-        return any(bwd_mask in self.lower_name for bwd_mask in Constant.CPU_OP_MATMUL_MASK)
+        return any(bwd_mask in self.lower_name for bwd_mask in CompareConfig().mm_mask)
 
     def is_bwd_for_cpu_op(self) -> bool:
         """
@@ -275,10 +276,10 @@ class TraceEventBean:
         return self.is_matmul_for_cpu_op() or self.is_fa_for_cpu_op() or self.is_conv_for_cpu_op()
 
     def is_vector(self):
-        return not any(cube_mask in self.lower_name for cube_mask in Constant.KERNEL_CUBE_MASK)
+        return not any(cube_mask in self.lower_name for cube_mask in CompareConfig().cube_mask)
 
     def is_cube_kernel_cat(self):
-        return any(cube_mask in self.lower_name for cube_mask in Constant.KERNEL_CUBE_MASK)
+        return any(cube_mask in self.lower_name for cube_mask in CompareConfig().cube_mask)
 
     def init(self):
         if isinstance(self._event, dict):

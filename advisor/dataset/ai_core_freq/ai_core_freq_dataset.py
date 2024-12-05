@@ -22,7 +22,6 @@ import traceback
 import ijson
 from tqdm import tqdm
 
-from profiler.advisor.common import constant as const
 from profiler.advisor.common.timeline.event import TimelineEvent
 from profiler.advisor.utils.utils import get_file_path_from_directory
 from profiler.advisor.utils.utils import convert_to_float, parse_json_with_generator

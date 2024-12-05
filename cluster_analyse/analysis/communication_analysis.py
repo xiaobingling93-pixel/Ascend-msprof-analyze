@@ -18,11 +18,11 @@ import logging
 from collections import defaultdict
 
 from analysis.base_analysis import BaseAnalysis
-from common_func.constant import Constant
 from common_func.table_constant import TableConstant
 from common_func.db_manager import DBManager
 from prof_bean.communication_bandwidth_bean import CommunicationBandwidthBean
 from prof_bean.communication_time_bean import CommunicationTimeBean
+from profiler.prof_common.constant import Constant
 
 logger = logging.getLogger()
 

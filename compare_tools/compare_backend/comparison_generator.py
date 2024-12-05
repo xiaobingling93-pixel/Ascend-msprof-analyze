@@ -22,7 +22,7 @@ from compare_backend.interface.overall_interface import OverallInterface
 from compare_backend.interface.compare_interface import CompareInterface
 from compare_backend.profiling_parser.gpu_profiling_parser import GPUProfilingParser
 from compare_backend.profiling_parser.npu_profiling_parser import NPUProfilingParser
-from compare_backend.utils.constant import Constant
+from profiler.prof_common.constant import Constant
 from compare_backend.utils.args_manager import ArgsManager
 from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 

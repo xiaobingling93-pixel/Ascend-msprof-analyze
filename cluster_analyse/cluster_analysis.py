@@ -17,16 +17,16 @@ import argparse
 import os
 import logging
 import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
 from cluster_data_preprocess.mindspore_data_preprocessor import MindsporeDataPreprocessor
 from communication_group.communication_group_generator import CommunicationGroupGenerator
-from common_func.constant import Constant
-from common_func.file_manager import FileManager
-from common_func.path_manager import PathManager
 from analysis.analysis_facade import AnalysisFacade
 from profiler.prof_common.additional_args_manager import AdditionalArgsManager
+from profiler.prof_common.constant import Constant
+from profiler.prof_common.file_manager import FileManager
+from profiler.prof_common.path_manager import PathManager
 
 COMM_FEATURE_LIST = ['all', 'communication_time', 'communication_matrix']
 logger = logging.getLogger()

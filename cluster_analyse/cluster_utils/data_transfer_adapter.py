@@ -1,6 +1,6 @@
 import copy
 
-from common_func.constant import Constant
+from profiler.prof_common.constant import Constant
 from common_func.table_constant import TableConstant
 
 

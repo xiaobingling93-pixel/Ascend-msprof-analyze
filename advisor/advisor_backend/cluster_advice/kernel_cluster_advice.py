@@ -15,12 +15,12 @@
 
 import os
 import pandas as pd
-from common_func.path_manager import PathManager
-from common_func.constant import Constant
 from common_func_advisor.constant import Constant as AdvisorConstant
 from cluster_advice.cluster_advice_base import ClusterAdviceBase
 from cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
-from profiler.cluster_analyse.common_func.file_manager import FileManager
+from profiler.prof_common.file_manager import FileManager
+from profiler.prof_common.constant import Constant
+from profiler.prof_common.path_manager import PathManager
 
 
 class KernelClusterAdvice(ClusterAdviceBase):

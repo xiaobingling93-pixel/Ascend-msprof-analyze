@@ -8,7 +8,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from compare_backend.comparison_generator import ComparisonGenerator
 from compare_backend.disaggregate.overall_perf_interface import OverallPerfInterface
 from compare_backend.utils.compare_args import Args
-from compare_backend.utils.constant import Constant
+from profiler.prof_common.constant import Constant
 
 
 class ComparisonInterface:

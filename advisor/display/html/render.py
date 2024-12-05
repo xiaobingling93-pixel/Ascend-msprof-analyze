@@ -19,7 +19,7 @@ from typing import List, Dict
 from collections import defaultdict, OrderedDict
 
 from jinja2 import Environment, FileSystemLoader
-from profiler.advisor.common import constant
+from profiler.prof_common.constant import Constant
 
 from profiler.advisor.config.config import Config
 from profiler.advisor.utils.utils import singleton, safe_write
@@ -40,7 +40,7 @@ class HTMLRender:
         self.render_list = defaultdict(list)
 
     def render_html(self, template_dir: str = "templates", template_name: str = "main.html",
-                    template_header=constant.DEFAULT_TEMPLATE_HEADER):
+                    template_header=Constant.DEFAULT_TEMPLATE_HEADER):
 
         # 确保overall 和 comparison 在 performance problem analysis 之前
         sorted_render_htmls = OrderedDict()

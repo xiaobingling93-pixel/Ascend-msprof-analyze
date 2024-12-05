@@ -17,7 +17,7 @@ import logging
 from textwrap import fill
 from typing import List
 
-from profiler.advisor.common import constant
+from profiler.prof_common.constant import Constant
 from profiler.advisor.common.enum_params_parser import EnumParamsParser
 from profiler.advisor.common.version_control import VersionControl
 from profiler.advisor.config.config import Config
@@ -30,8 +30,8 @@ logger = logging.getLogger()
 
 
 class OperatorChecker(VersionControl):
-    _SUPPORT_VERSIONS = EnumParamsParser().get_options(constant.CANN_VERSION)
-    _MAX_TUNE_OP_NUM = constant.OPERATOR_OUT_TOPK
+    _SUPPORT_VERSIONS = EnumParamsParser().get_options(Constant.CANN_VERSION)
+    _MAX_TUNE_OP_NUM = Constant.OPERATOR_OUT_TOPK
     _MIN_TASK_DURATION = 0
     _MIN_TASK_DURATION_RATIO = 1.0
     _MIN_TOTAL_DURATION_RATIO = 1.0
@@ -105,7 +105,7 @@ class OperatorChecker(VersionControl):
             self._op_list.sort(key=lambda x: float(x.get_attr("task_duration")), reverse=True)
             self._tune_op_info_list.sort(key=lambda x: float(x.get_attr("task_duration")), reverse=True)
             for op in self._op_list:
-                if op.op_name not in self._tune_op_list and len(self._tune_op_list) < constant.OPERATOR_OUT_TOPK:
+                if op.op_name not in self._tune_op_list and len(self._tune_op_list) < Constant.OPERATOR_OUT_TOPK:
                     self._tune_op_list.append(op.op_name)
             return True
         return False
@@ -157,7 +157,7 @@ class OperatorChecker(VersionControl):
     def is_dynamic_shape(self, profiling_database: ProfilingDataset) -> bool:
         cann800_major_version = 8
         less_than_cann800_list = EnumParamsParser().get_options(
-            constant.CANN_VERSION,
+            Constant.CANN_VERSION,
             filter_func=lambda x: convert_to_float(x.split(".")[0]) < cann800_major_version
         )
         # CANN 8.0.RC1 之前从 ge_info 中获取 op_state 属性，进行动态 shape 逻辑判断
@@ -218,7 +218,7 @@ class OperatorChecker(VersionControl):
         return format_result
 
     def group_by(self, op_list, op_key="op_type",
-                 limit: int = constant.OPERATOR_LIST_UNLIMIT):
+                 limit: int = Constant.OPERATOR_LIST_UNLIMIT):
         """
         group by Profiling.OpInfo's attribute key， then return top limit tuple by duration
         :param op_list: input a OpInfo list
@@ -236,7 +236,7 @@ class OperatorChecker(VersionControl):
                 if summary.get("total_duration"):
                     summary["total_duration"] = float(
                         summary["total_duration"]) + float(
-                        op_info.get_attr("task_duration", constant.DEFAULT_DURATION_ZERO))
+                        op_info.get_attr("task_duration", Constant.DEFAULT_DURATION_ZERO))
                 if summary.get("counts"):
                     summary["counts"] += 1
                 stack_info = op_info.get_attr("stack_info")
@@ -248,9 +248,9 @@ class OperatorChecker(VersionControl):
             else:
                 statistic[op_info.get_attr(op_key)] = {"summary": {}, "op_info_list": []}
                 statistic[op_info.get_attr(op_key)]["summary"]["op_type"] = op_info.get_attr(
-                    "op_type", constant.DEFAULT_OPERATOR_TYPE)
+                    "op_type", Constant.DEFAULT_OPERATOR_TYPE)
                 statistic[op_info.get_attr(op_key)]["summary"]["total_duration"] = float(
-                    op_info.get_attr("task_duration", constant.DEFAULT_DURATION_ZERO))
+                    op_info.get_attr("task_duration", Constant.DEFAULT_DURATION_ZERO))
                 statistic[op_info.get_attr(op_key)]["summary"]["counts"] = 1
                 stack_info = op_info.get_attr("stack_info")
                 if stack_info:
@@ -321,9 +321,9 @@ class OperatorChecker(VersionControl):
         return details
 
     def format_suggestion_content(self, profiling_data: ProfilingDataset) -> None:
-        if profiling_data.PROF_TYPE == EnumParamsParser().profiling_type.ascend_pytorch_profiler:
+        if profiling_data.prof_type == EnumParamsParser().profiling_type.ascend_pytorch_profiler:
             self._SUGGESTION.append(self.PyTorch_OPERATOR_TUNE_SUGGESTION)
-        elif profiling_data.PROF_TYPE == EnumParamsParser.profiling_type.mslite:
+        elif profiling_data.prof_type == EnumParamsParser.profiling_type.mslite:
             self._SUGGESTION.append(self.MSLite_OPERATOR_TUNE_SUGGESTION)
 
     def _check_data(self, profiling_data):

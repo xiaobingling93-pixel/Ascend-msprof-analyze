@@ -23,7 +23,7 @@ class TestCompareToolsCmdPytorchNpuVsNpuEnableCommunicationCompare(TestCase):
     def setup_class(self):
         PathManager.make_dir_safety(self.OUTPUT_PATH)
         cmd = ["msprof-analyze", "compare", "-d", self.COMPARISON_PROFILING_PATH, "-bp", self.BASE_PROFILING_PATH,
-               "--enable_communication_compare", "-o", self.OUTPUT_PATH]
+               "--enable_communication_compare", "-o", self.OUTPUT_PATH, "--force"]
         if execute_cmd(cmd) != self.COMMAND_SUCCESS or not os.path.exists(self.OUTPUT_PATH):
             self.assertEqual(False, True, msg="enable communication compare comparison task failed.")
         if not check_result_file(self.OUTPUT_PATH):

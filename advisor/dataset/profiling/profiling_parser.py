@@ -20,7 +20,7 @@ from typing import List, Dict
 
 from profiler.advisor.dataset.profiling.info_collection import logger
 from profiler.advisor.utils.utils import get_file_path_from_directory, SafeOpen, format_excel_title
-from profiler.cluster_analyse.common_func.file_manager import FileManager
+from profiler.prof_common.file_manager import FileManager
 
 
 class ProfilingParser:

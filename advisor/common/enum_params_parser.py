@@ -20,7 +20,7 @@ import typing
 
 from profiler.advisor.common.timeline.event import AdvisorDict
 from profiler.advisor.utils.utils import singleton
-from profiler.cluster_analyse.common_func.file_manager import FileManager
+from profiler.prof_common.file_manager import FileManager
 
 logger = logging.getLogger()
 

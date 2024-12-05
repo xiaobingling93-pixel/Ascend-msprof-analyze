@@ -19,7 +19,8 @@ from decimal import Decimal
 import pandas as pd
 
 from compare_backend.utils.common_func import convert_to_float, convert_to_decimal
-from compare_backend.utils.constant import Constant
+from compare_backend.compare_config.compare_config import CompareConfig
+from profiler.prof_common.constant import Constant
 
 
 class KernelDetailsBean:
@@ -81,7 +82,7 @@ class KernelDetailsBean:
     @property
     def end_time(self) -> Decimal:
         return self.start_time + convert_to_decimal(self._duration)
-    
+
     @property
     def step_id(self) -> int:
         return int(self._step_id) if self._step_id else Constant.VOID_STEP
@@ -126,7 +127,7 @@ class KernelDetailsBean:
         return "pagedattention" in self.op_type.lower()
 
     def is_trans(self):
-        return any(trans_mask in self.name.lower() for trans_mask in Constant.KERNEL_TRANS_MASK)
+        return any(trans_mask in self.name.lower() for trans_mask in CompareConfig().trans_mask)
 
     def is_cube_kernel_cat(self):
         return self.mac_time > 0 or self.aicore_time > 0

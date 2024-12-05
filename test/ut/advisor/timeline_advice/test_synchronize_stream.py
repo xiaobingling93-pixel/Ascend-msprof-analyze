@@ -5,7 +5,7 @@ import yaml
 
 from profiler.advisor.analyzer.schedule.synchronize_stream.synchronize_stream_checker import SynchronizeStreamChecker
 from profiler.advisor.common.timeline.event import TimelineEvent
-from profiler.advisor.common import constant as const
+from profiler.prof_common.constant import Constant
 from profiler.advisor.utils.utils import safe_division
 from profiler.test.ut.advisor.advisor_backend.tools.tool import recover_env
 
@@ -49,13 +49,13 @@ class TestSynchronizeChecker(unittest.TestCase):
         if is_empty_dataset:
             return dataset
 
-        co_occurrence_event_list = [TimelineEvent(dict(name=const.NODE_LAUNCH)),
-                                    TimelineEvent(dict(name=const.SYNC_STREAM))] * co_occurrence_num
+        co_occurrence_event_list = [TimelineEvent(dict(name=Constant.NODE_LAUNCH)),
+                                    TimelineEvent(dict(name=Constant.SYNC_STREAM))] * co_occurrence_num
 
-        synchronize_stream_event_list = [TimelineEvent(dict(name=const.SYNC_STREAM))] * (
+        synchronize_stream_event_list = [TimelineEvent(dict(name=Constant.SYNC_STREAM))] * (
                 total_synchronize_stream_num - co_occurrence_num)
 
-        node_launch_event_list = [TimelineEvent(dict(name=const.NODE_LAUNCH))] * (
+        node_launch_event_list = [TimelineEvent(dict(name=Constant.NODE_LAUNCH))] * (
                 total_node_launch_num - co_occurrence_num)
 
         dataset[

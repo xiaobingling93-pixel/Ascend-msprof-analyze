@@ -15,7 +15,7 @@
 
 import os
  
-from common_func.file_manager import FileManager
+from profiler.prof_common.file_manager import FileManager
 from communication_group.base_communication_group import BaseCommunicationGroup
 
 

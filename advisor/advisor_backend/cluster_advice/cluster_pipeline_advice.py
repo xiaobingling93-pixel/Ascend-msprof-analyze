@@ -26,13 +26,13 @@ from collections import deque
 from decimal import Decimal
 from dataclasses import dataclass
 
-from common_func.file_manager import FileManager
 from common_func_advisor.constant import Constant
 from common_func_advisor.trace_view_preprocessor import FineTraceViewData
 from common_func_advisor.trace_view_preprocessor import TraceViewPreProcessor
 from cluster_advice.cluster_advice_base import ClusterAdviceBase
 from cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
 from profiler.advisor.advisor_backend.logger import Logger
+from profiler.prof_common.file_manager import FileManager
 
 logger = Logger()
 

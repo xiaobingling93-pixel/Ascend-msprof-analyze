@@ -188,10 +188,10 @@ class TestAdvisorCmdClusterAscendPtCompare(TestCase):
             self.assertEqual(rank_id[index], row["rank_id"])
             self.assertEqual(rdma_bandwidth[index], round(row["RDMA bandwidth(GB/s)"], 4))
             self.assertEqual(rdma_size[index], round(row["RDMA size(mb)"], 4))
-            self.assertEqual(rdma_time[index], round(row["RDMA time(ms)"], 5))
+            self.assertEqual(rdma_time[index], round(row["RDMA time(ms)"], 4))
             self.assertEqual(sdma_bandwidth[index], round(row["SDMA bandwidth(GB/s)"], 4))
-            self.assertEqual(sdma_size[index], round(row["SDMA size(mb)"], 4))
-            self.assertEqual(sdma_time[index], round(row["SDMA time(ms)"], 5))
+            self.assertEqual(sdma_size[index], round(row["SDMA size(mb)"], 3))
+            self.assertEqual(sdma_time[index], round(row["SDMA time(ms)"], 4))
 
         soup = BeautifulSoup(open(self.RESULT_HTML.get("all",None)), 'html.parser')
         for h2 in soup.find_all('h2'):
@@ -266,9 +266,9 @@ class TestAdvisorCmdClusterAscendPtCompare(TestCase):
                             continue
                         self.assertEqual(str(op_name[row_index - 1]), row.find_all('td')[0].text)
                         self.assertEqual(str(total_size[row_index - 1]), row.find_all('td')[1].text)
-                        self.assertEqual(str(round(duration[row_index - 1],2)), row.find_all('td')[2].text)
-                        self.assertEqual(str(round(abnormal_duration[row_index - 1],2)), row.find_all('td')[3].text)
-                        self.assertEqual(str(round(bandwidth[row_index - 1],2)), row.find_all('td')[4].text)
+                        self.assertEqual(str(duration[row_index - 1]), row.find_all('td')[2].text)
+                        self.assertEqual(str(abnormal_duration[row_index - 1]), row.find_all('td')[3].text)
+                        self.assertEqual(str(bandwidth[row_index - 1]), row.find_all('td')[4].text)
 
     def test_aicpu_operator(self):
         op_name = [

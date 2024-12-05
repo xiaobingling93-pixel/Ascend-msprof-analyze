@@ -16,7 +16,7 @@
 import re
 
 from compare_backend.utils.common_func import calculate_diff_ratio
-from compare_backend.utils.constant import Constant
+from profiler.prof_common.constant import Constant
 from compare_backend.utils.excel_config import ExcelConfig
 
 

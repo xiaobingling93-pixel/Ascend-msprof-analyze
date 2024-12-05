@@ -15,7 +15,7 @@
 import logging
 from compare_backend.profiling_parser.base_profiling_parser import ProfilingResult
 from compare_backend.utils.tree_builder import TreeBuilder
-from compare_backend.utils.constant import Constant
+from profiler.prof_common.constant import Constant
 
 
 class OperatorDataPrepare:
