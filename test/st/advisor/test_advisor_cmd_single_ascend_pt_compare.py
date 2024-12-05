@@ -36,7 +36,7 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
 
     def test_all_problems(self):
         category = [
-            "Kernel compare of Target and Benchmark",
+            "byte alignment analysis",
             "bandwidth contention analysis",
             "AICPU operator",
             "Dynamic shape operator",
@@ -46,7 +46,7 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
 
         #True presents the attr is nan
         description_len = [1,3,2,1,1,1]
-        suggestion_len = [True,1,2,5,1,1]
+        suggestion_len = [1,1,2,5,1,1]
         problem_count = [True,True,2.0,1.0,True,True]
         total_time = [True,True,57674709.54,True,True,True]
         time_ratio = [True,True,0.0,True,True,True]
@@ -71,147 +71,65 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
             self.assertEqual(income_ratio[index], (math.isnan(row["income ratio"]) or
                                                    round(row["income ratio"],2)))
 
-    def test_kernel_compare(self):
-        table_length = 1051
-        table_tags = 15
-
-        t0_order_id = [
-            "704", "705", "706",
-            "707", "708", "709",
-            "710", "711", "712",
-            "713"
-        ]
-        t0_kernel = [
-            "GroupedMatmul", "GroupedMatmul", "GroupedMatmul",
-            "GroupedMatmul", "GroupedMatmul", "GroupedMatmul",
-            "GroupedMatmul", "GroupedMatmul", "GroupedMatmul",
-            "GroupedMatmul"
-        ]
-        t0_shape = [
-            "\"12300,8192;12981,8192;6251,8192;11323,8192;10774,8192;12501,8192;2041,8192;5306,8192;126,8192;7404,8192;"
-            "8146,8192;869,8192;2875,8192;1667,8192;531,8192;12420,8192;12853,8192;193,8192;68,8192;21428,8192;21763,"
-            "8192;20,8192;;;;;;;;;;;32,2560,8192;;;;;;32\"",
-            "\"12300,1280;12981,1280;6251,1280;11323,1280;10774,1280;12501,1280;2041,1280;5306,1280;126,1280;7404,1280;"
-            "8146,1280;869,1280;2875,1280;1667,1280;531,1280;12420,1280;12853,1280;193,1280;68,1280;21428,1280;21763,"
-            "1280;20,1280;;;;;;;;;;;32,8192,1280;;;;;;32\"",
-            "\"32768,8192;;;31251,8192;31497,8192;;;;;;283,8192;2505,8192;;;;32768,8192;32768,8192;;;;;;;;;;;;;;;;32,"
-            "2560,8192;;;;;;32\"",
-            "\"32768,1280;;;31251,1280;31497,1280;;;;;;283,1280;2505,1280;;;;32768,1280;32768,1280;;;;;;;;;;;;;;;;32,"
-            "8192,1280;;;;;;32\"",
-            "\";;;;;;;32768,8192;32768,8192;32768,8192;32768,8192;;;;32768,8192;;;;;;;;;;;;;;;;;;32,2560,8192;;;;;;32\"",
-            "\";;;;;;;32768,1280;32768,1280;32768,1280;32768,1280;;;;32768,1280;;;;;;;;;;;;;;;;;;32,8192,1280;;;;;;32\"",
-            "\";;;;;;36,8192;32768,8192;;32768,8192;32768,8192;32732,8192;;;;32768,8192;;;;;;;;;;;;;;;;;32,2560,"
-            "8192;;;;;;32\"",
-            "\";;;;;;36,1280;32768,1280;;32768,1280;32768,1280;32732,1280;;;;32768,1280;;;;;;;;;;;;;;;;;32,8192,"
-            "1280;;;;;;32\"",
-            "\";;;32768,8192;32768,8192;;;32768,8192;;;;;;;;32768,8192;32768,8192;;;;;;;;;;;;;;;;32,2560,8192;;;;;;32\"",
-            "\";;;32768,1280;32768,1280;;;32768,1280;;;;;;;;32768,1280;32768,1280;;;;;;;;;;;;;;;;32,8192,1280;;;;;;32\""
-        ]
-        t0_total_duration = [
-            "0.0", "0.0", "0.0",
-            "0.0", "0.0", "0.0",
-            "0.0", "0.0", "0.0",
-            "0.0"
-        ]
-        t0_avg_duration = [
-            "0.0", "0.0", "0.0",
-            "0.0", "0.0", "0.0",
-            "0.0", "0.0", "0.0",
-            "0.0"
-        ]
-        t0_max_duration = [
-            "None", "None", "None",
-            "None", "None", "None",
-            "None", "None", "None",
-            "None"
-        ]
-        t0_min_duration = [
-            "None", "None", "None",
-            "None", "None", "None",
-            "None", "None", "None",
-            "None"
-        ]
-        t0_calls = [
-            "None", "None", "None",
-            "None", "None", "None",
-            "None", "None", "None",
-            "None"
-        ]
-        t0_benchmark_total_duration = [
-            "22282.5", "12777.44", "21856.3",
-            "11169.78", "22329.05", "11113.58",
-            "22313.49", "11217.98", "31379.29",
-            "11115.84"
-        ]
-        t0_benchmark_avg_duration = [
-            "22282.5", "12777.44", "21856.3",
-            "11169.78", "22329.05", "11113.58",
-            "22313.49", "11217.98", "31379.29",
-            "11115.84"
-        ]
-        t0_benchmark_max_duration = [
-            "22282.5", "12777.44", "21856.3",
-            "11169.78", "22329.05", "11113.58",
-            "22313.49", "11217.98", "31379.29",
-            "11115.84"
-        ]
-        t0_benchmark_min_duration = [
-            "22282.5", "12777.44", "21856.3",
-            "11169.78", "22329.05", "11113.58",
-            "22313.49", "11217.98", "31379.29",
-            "11115.84"
-        ]
-        t0_benchmark_calls = [
-            "1", "1", "1",
-            "1", "1", "1",
-            "1", "1", "1",
-            "1"
-        ]
-        t0_diff_total_ratio = [
-            "inf", "inf", "inf",
-            "inf", "inf", "inf",
-            "inf", "inf", "inf",
-            "inf"
-        ]
-        t0_diff_avg_ratio = [
-            "inf", "inf", "inf",
-            "inf", "inf", "inf",
-            "inf", "inf", "inf",
-            "inf"
+    def test_Byte_Alignment_Analysis(self):
+        op_name = [
+            "hcom_broadcast__868_2_1",
+            "hcom_reduceScatter__511_1_1",
+            "hcom_allGather__511_2_1"
         ]
 
-        try:
-            df = pd.read_excel(self.RESULT_EXCEL.get("all",None), sheet_name='Kernel compare of Target and Be', header=0)
-        except FileNotFoundError:
-            logging.error("File %s not found.", self.RESULT_EXCEL.get("all",None))
-            return
+        total_size = [
+            24274052,
+            670986240,
+            335493120
+        ]
 
-        self.assertEqual(table_length, df.shape[0])
-        self.assertEqual(table_tags, df.shape[1])
+        duration = [
+            995.36,
+            35724.8,
+            17275.4
+        ]
 
-        soup = BeautifulSoup(open(self.RESULT_HTML.get("all",None)), 'html.parser')
-        for h2 in soup.find_all('h2'):
-            if h2.contents[0] == "Kernel compare of Target and Benchmark":
-                div_content = h2.next.next.next
-                table = div_content.find_all('table')
-                for row_index, row in enumerate(table[0].find_all('tr')):
-                    if row_index == 0:
-                        continue
-                    self.assertEqual(t0_order_id[row_index - 1], row.find_all('td')[0].text)
-                    self.assertEqual(t0_kernel[row_index - 1], row.find_all('td')[1].text)
-                    self.assertEqual(t0_shape[row_index - 1], row.find_all('td')[2].text)
-                    self.assertEqual(t0_total_duration[row_index - 1], row.find_all('td')[3].text)
-                    self.assertEqual(t0_avg_duration[row_index - 1], row.find_all('td')[4].text)
-                    self.assertEqual(t0_max_duration[row_index - 1], row.find_all('td')[5].text)
-                    self.assertEqual(t0_min_duration[row_index - 1], row.find_all('td')[6].text)
-                    self.assertEqual(t0_calls[row_index - 1], row.find_all('td')[7].text)
-                    self.assertEqual(t0_benchmark_total_duration[row_index - 1], row.find_all('td')[8].text)
-                    self.assertEqual(t0_benchmark_avg_duration[row_index - 1], row.find_all('td')[9].text)
-                    self.assertEqual(t0_benchmark_max_duration[row_index - 1], row.find_all('td')[10].text)
-                    self.assertEqual(t0_benchmark_min_duration[row_index - 1], row.find_all('td')[11].text)
-                    self.assertEqual(t0_benchmark_calls[row_index - 1], row.find_all('td')[12].text)
-                    self.assertEqual(t0_diff_total_ratio[row_index - 1], row.find_all('td')[13].text)
-                    self.assertEqual(t0_diff_avg_ratio[row_index - 1], row.find_all('td')[14].text)
+        abnormal_duration = [
+            995.36,
+            35724.8,
+            17275.4
+        ]
+
+        bandwidth = [
+            24.3872,
+            18.7821,
+            19.4203
+        ]
+
+        test_pattern = ["all"]
+        for pattern in test_pattern:
+            try:
+                df = pd.read_excel(self.RESULT_EXCEL.get(pattern, None), sheet_name='Byte Alignment Analysis', header=0)
+            except FileNotFoundError:
+                logging.error("File %s not found.", self.RESULT_EXCEL.get(pattern, None))
+                return
+
+            for index, row in df.iterrows():
+                self.assertEqual(op_name[index], row["op name"])
+                self.assertEqual(total_size[index], row["total size(Byte)"])
+                self.assertEqual(duration[index], row["duration(us)"])
+                self.assertEqual(abnormal_duration[index], row["abnormal duration(us)"])
+                self.assertEqual(bandwidth[index], row["bandwidth(GB/s)"])
+
+            soup = BeautifulSoup(open(self.RESULT_HTML.get(pattern, None)), 'html.parser')
+            for h2 in soup.find_all('h2'):
+                if h2.contents[0] == "Byte Alignment Analysis":
+                    div_content = h2.next.next.next
+                    table = div_content.find_all('table')
+                    for row_index, row in enumerate(table[1].find_all('tr')):
+                        if row_index == 0:
+                            continue
+                        self.assertEqual(str(op_name[row_index - 1]), row.find_all('td')[0].text)
+                        self.assertEqual(str(total_size[row_index - 1]), row.find_all('td')[1].text)
+                        self.assertEqual(str(round(duration[row_index - 1], 2)), row.find_all('td')[2].text)
+                        self.assertEqual(str(round(abnormal_duration[row_index - 1], 2)), row.find_all('td')[3].text)
+                        self.assertEqual(str(round(bandwidth[row_index - 1], 4)), row.find_all('td')[4].text)
 
     def test_all_bandwidth_contention_analysis(self):
         bandwidth_contention_analysis = [
