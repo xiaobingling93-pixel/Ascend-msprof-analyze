@@ -24,7 +24,7 @@ class TestAdvisorCmdClusterAscendPtCompare(TestCase):
     def setup_class(self):
         PathManager.make_dir_safety(self.ALL_OUTPUT_PATH)
         cmd_all = ["msprof-analyze", "advisor", "all" ,"-d", self.BASE_PROFILING_PATH, "-bp",
-                   self.COMPARISON_PROFILING_PATH, "-o",self.ALL_OUTPUT_PATH]
+                   self.COMPARISON_PROFILING_PATH, "-o",self.ALL_OUTPUT_PATH, "--force"]
         if execute_cmd(cmd_all) != self.COMMAND_SUCCESS or not os.path.exists(self.ALL_OUTPUT_PATH):
             self.assertTrue(False, msg="advisor [all] [bp] task failed.")
         self.RESULT_HTML,self.RESULT_EXCEL = get_files(self.OUTPUT_PATH)
@@ -36,6 +36,7 @@ class TestAdvisorCmdClusterAscendPtCompare(TestCase):
         category = [
             "slow rank",
             "slow link",
+            "byte alignment analysis",
             "Rank 5 dynamic shape operator",
             "Rank 5 aicpu operator",
             "Operator dispatch"
@@ -43,13 +44,13 @@ class TestAdvisorCmdClusterAscendPtCompare(TestCase):
 
 
         # True presents the attr is nan
-        description_len = [1, 11, 1, 2, 1]
-        suggestion_len = [True, True, 5, 2, 1]
-        problem_count = [True, True, 1.0, 2.0, True]
-        total_time = [True, True, True, 87845894.04, True]
-        time_ratio = [True, True, True, 0.0, True]
-        income = [True, True, True, True, True]
-        income_ratio = [True, True, True, True, True]
+        description_len = [1, 11, 1, 1, 2, 1]
+        suggestion_len = [True, True, 1, 5, 2, 1]
+        problem_count = [True, True, True, 1.0, 2.0, True]
+        total_time = [True, True, True, True, 87845894.04, True]
+        time_ratio = [True, True, True, True, 0.0, True]
+        income = [True, True, True, True, True, True]
+        income_ratio = [True, True, True, True, True, True]
         try:
             df = pd.read_excel(self.RESULT_EXCEL.get("all",None), sheet_name='problems', header=0)
         except FileNotFoundError:
@@ -128,52 +129,52 @@ class TestAdvisorCmdClusterAscendPtCompare(TestCase):
         step = [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
         rank_id = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
         rdma_bandwidth = [
-            4.9792,5.0987,5.085,
-            5.2097,4.9204,5.0328,
-            4.9999,5.1352,4.6234,
-            4.5618,4.5503,4.5781,
-            4.6327,4.5686,4.5688,
-            4.5867
+            4.7729, 4.8102, 4.7966,
+            4.8765, 4.7619, 4.7982,
+            4.781, 4.8631, 4.7027,
+            4.7044, 4.6912, 4.7522,
+            4.7046, 4.7058, 4.6952,
+            4.7541
         ]
         rdma_size = [
-            361640.4528,361640.4528,361640.4528,
-            361640.4528,361640.4528,361640.4528,
-            361640.4528,361640.4528,361640.4528,
-            361640.4528,361640.4528,361640.4528,
-            361640.4528,361640.4528,361640.4528,
-            361640.4528
+            892743.4811,892743.4811,892743.4811,
+            892743.4811,892743.4811,892743.4811,
+            892743.4811,892743.4811,892743.4811,
+            892743.4811,892743.4811,892743.4811,
+            892743.4811,892743.4811,892743.4811,
+            892743.4811
         ]
         rdma_time = [
-            72630.76076,70927.45388,71118.63087,
-            69417.01812,73498.63856,71856.297,
-            72329.09444,70424.10871,78218.88192,
-            79275.62469,79475.98656,78993.54096,
-            78063.08199,79157.7244,79153.91256,
-            78844.78884
+            187043.9406, 185595.2189, 186121.0769,
+            183071.016, 187477.765, 186059.6148,
+            186726.3076, 183574.5527, 189837.9228,
+            189769.2996, 190299.7641, 187859.376,
+            189760.073, 189710.3648, 190138.7748,
+            187784.9608
         ]
         sdma_bandwidth = [
-            18.2005,18.2617,17.0562,
-            16.7276,17.9992,18.3296,
-            18.2035,18.2863,18.3781,
-            18.3976,18.1672,18.4719,
-            17.0411,16.7507,18.378,
-            18.3361
+            17.6709, 17.6923, 17.4552,
+            17.3868, 18.2276, 18.305,
+            18.2818, 18.3001, 18.3065,
+            18.321, 18.2769, 18.3395,
+            17.4277, 17.3756, 17.7028,
+            17.6966
         ]
         sdma_size = [
-            790114.2982,790132.0533,790132.0533,
-            790132.1025,790085.9865,790094.3053,
-            790094.3053,790094.3544,790116.6868,
-            790135.2388,790135.2388,790135.2879,
-            790128.4732,790150.9543,790150.9543,
-            790151.0034
+            1975312.412, 1975321.29, 1975321.29,
+            1975321.314, 1975227.481, 1975231.641,
+            1975231.641, 1975231.665, 1975319.579,
+            1975328.855, 1975328.855, 1975328.879,
+            1975354.942, 1975366.182, 1975366.182,
+            1975366.207
         ]
         sdma_time = [
-            43411.76848,43267.2028,46325.07769,
-            47235.17312,43895.56059,43104.81233,
-            43403.44058,43206.83072,42992.20756,
-            42947.84266,43492.30228,42775.04277,
-            46366.0822,47171.34588,42994.32757,
-            43092.59268
+            111783.3614, 111648.6661, 113165.2345,
+            113610.0823, 108364.7268, 107906.9403,
+            108043.8853, 107935.3805, 107902.3439,
+            107817.7491, 108077.6098, 107708.7801,
+            113345.8656, 113686.0851, 111585.2068,
+            111624.1395
         ]
 
         try:
@@ -208,6 +209,66 @@ class TestAdvisorCmdClusterAscendPtCompare(TestCase):
                     self.assertEqual(str(round(sdma_bandwidth[row_index - 1],2)), row.find_all('td')[5].text)
                     self.assertEqual(str(round(sdma_size[row_index - 1],2)), row.find_all('td')[6].text)
                     self.assertEqual(str(round(sdma_time[row_index - 1],2)), row.find_all('td')[7].text)
+
+    def test_Byte_Alignment_Analysis(self):
+        op_name = [
+            "hcom_broadcast__275_2_1", "hcom_allReduce__275_237_1",
+            "hcom_allReduce__275_238_1", "hcom_allReduce__275_239_1",
+            "hcom_reduceScatter__063_1_1", "hcom_allGather__063_2_1"
+        ]
+
+        total_size = [
+            41816518, 262120,
+            262120, 262120,
+            670986240, 335493120
+        ]
+
+        duration = [
+            1656.7, 14.9,
+            14.46, 14.58,
+            35449.52, 17285
+        ]
+
+        abnormal_duration = [
+            1656.7, 14.9,
+            14.46, 14.58,
+            35449.52, 17285
+        ]
+
+        bandwidth = [
+            25.2409, 17.5919,
+            18.1272, 17.9781,
+            18.9279, 19.4095
+        ]
+
+        test_pattern = ["all"]
+        for pattern in test_pattern:
+            try:
+                df = pd.read_excel(self.RESULT_EXCEL.get(pattern,None), sheet_name='Byte Alignment Analysis', header=0)
+            except FileNotFoundError:
+                logging.error("File %s not found.", self.RESULT_EXCEL.get(pattern,None))
+                return
+
+            for index, row in df.iterrows():
+                self.assertEqual(op_name[index], row["op name"])
+                self.assertEqual(total_size[index], row["total size(Byte)"])
+                self.assertEqual(duration[index], row["duration(us)"])
+                self.assertEqual(abnormal_duration[index], row["abnormal duration(us)"])
+                self.assertEqual(bandwidth[index], row["bandwidth(GB/s)"])
+
+            soup = BeautifulSoup(open(self.RESULT_HTML.get(pattern,None)), 'html.parser')
+            for h2 in soup.find_all('h2'):
+                if h2.contents[0] == "Byte Alignment Analysis":
+                    div_content = h2.next.next.next
+                    table = div_content.find_all('table')
+                    for row_index, row in enumerate(table[1].find_all('tr')):
+                        if row_index == 0:
+                            continue
+                        self.assertEqual(str(op_name[row_index - 1]), row.find_all('td')[0].text)
+                        self.assertEqual(str(total_size[row_index - 1]), row.find_all('td')[1].text)
+                        self.assertEqual(str(round(duration[row_index - 1],2)), row.find_all('td')[2].text)
+                        self.assertEqual(str(round(abnormal_duration[row_index - 1],2)), row.find_all('td')[3].text)
+                        self.assertEqual(str(round(bandwidth[row_index - 1],2)), row.find_all('td')[4].text)
 
     def test_aicpu_operator(self):
         op_name = [
