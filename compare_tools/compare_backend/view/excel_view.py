@@ -4,7 +4,7 @@ from xlsxwriter import Workbook
 
 from compare_backend.view.base_view import BaseView
 from compare_backend.view.work_sheet_creator import WorkSheetCreator
-from compare_backend.utils.constant import Constant
+from profiler.prof_common.constant import Constant
 
 
 class ExcelView(BaseView):

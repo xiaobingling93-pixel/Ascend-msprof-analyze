@@ -16,8 +16,8 @@
 import os
 from collections import defaultdict
 from common_func_advisor.constant import Constant
-from common_func.file_manager import FileManager
 from cluster_advice.cluster_advice_base import ClusterAdviceBase
+from profiler.prof_common.file_manager import FileManager
 
 
 class SlowLinkAdvice(ClusterAdviceBase):

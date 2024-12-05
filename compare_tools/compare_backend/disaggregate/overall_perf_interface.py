@@ -18,7 +18,7 @@ from compare_backend.profiling_parser.gpu_profiling_parser import GPUProfilingPa
 from compare_backend.profiling_parser.npu_profiling_parser import NPUProfilingParser
 from compare_backend.utils.args_manager import ArgsManager
 from compare_backend.utils.compare_args import Args
-from compare_backend.utils.constant import Constant
+from profiler.prof_common.constant import Constant
 
 
 class OverallPerfInterface:

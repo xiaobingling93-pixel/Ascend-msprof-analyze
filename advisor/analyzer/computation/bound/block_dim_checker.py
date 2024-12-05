@@ -16,7 +16,7 @@ import logging
 from typing import List
 
 from profiler.advisor.analyzer.computation.operator_checker import OperatorChecker
-from profiler.advisor.common import constant
+from profiler.prof_common.constant import Constant
 from profiler.advisor.config.config import Config
 from profiler.advisor.dataset.profiling.profiling_dataset import ProfilingDataset
 
@@ -44,7 +44,7 @@ class BlockDimChecker(OperatorChecker):
                                            template_dir="templates",
                                            template_name="operator_block_dim.html",
                                            format_result=self.format_operator_result(record,
-                                                                                     constant.OPERATOR_OUT_TOPK),
+                                                                                     Constant.OPERATOR_OUT_TOPK),
                                            add_render_list=add_render_list,
                                            priority_background_color=priority,
                                            rank=kwargs.get("rank"))

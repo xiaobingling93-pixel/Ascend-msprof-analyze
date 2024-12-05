@@ -15,7 +15,7 @@
 import logging
 from typing import List
 
-from profiler.advisor.common import constant as const
+from profiler.prof_common.constant import Constant
 from profiler.advisor.common.timeline.event import TimelineEvent
 from profiler.advisor.dataset.timeline_event_dataset import ComputationAnalysisDataset
 from profiler.advisor.result.result import OptimizeResult
@@ -41,16 +41,16 @@ class OpStackFinder:
         dst_op_event = event_dataset.ops_with_stack.get(dst_op_event_key)
 
         if not dst_op_event:
-            return const.TIMELINE_BACKWARD_NO_STACK_CODE
+            return Constant.TIMELINE_BACKWARD_NO_STACK_CODE
 
         return int(dst_op_event.get("dataset_index"))
 
     @staticmethod
     def _query_index_by_acl_to_npu(acl_to_npu_event):
         if acl_to_npu_event:
-            return const.TIMELINE_ACL_TO_NPU_NO_STACK_CODE
+            return Constant.TIMELINE_ACL_TO_NPU_NO_STACK_CODE
 
-        return const.TIMELINE_BACKWARD_NO_STACK_CODE
+        return Constant.TIMELINE_BACKWARD_NO_STACK_CODE
 
     def get_api_stack_by_op(self, event_dataset: ComputationAnalysisDataset, op_name: List[str] = None,
                             task_type: str = None,
@@ -126,7 +126,7 @@ class OpStackFinder:
     def _get_api_stack_by_op(self, event_dataset: ComputationAnalysisDataset, op_name: str, task_type: str):
         for _, src_op_event in event_dataset.ops_with_task_type.items():
 
-            op_task_type = src_op_event.get(const.TASK_TYPE)
+            op_task_type = src_op_event.get(Constant.TASK_TYPE)
             if not (src_op_event.name == op_name and op_task_type and op_task_type == task_type):
                 continue
 
@@ -163,8 +163,8 @@ class OpStackFinder:
             if task_type is not None:
                 self._get_api_stack_by_op(event_dataset, op_name, task_type)
             else:
-                self._get_api_stack_by_op(event_dataset, op_name, const.AI_CORE)
-                self._get_api_stack_by_op(event_dataset, op_name, const.AI_CPU)
+                self._get_api_stack_by_op(event_dataset, op_name, Constant.AI_CORE)
+                self._get_api_stack_by_op(event_dataset, op_name, Constant.AI_CPU)
 
     def _format_stack_record(self):
         stack_list = []
@@ -176,13 +176,13 @@ class OpStackFinder:
         if index not in self.matched_index:
             return None
         event = TimelineEvent(event)
-        stack = event.args.get(const.CALL_STACKS)
+        stack = event.args.get(Constant.CALL_STACKS)
 
-        stack = stack if stack else const.NO_STACK_REASON_MAP.get(const.TIMELINE_BACKWARD_NO_STACK_CODE)
+        stack = stack if stack else Constant.NO_STACK_REASON_MAP.get(Constant.TIMELINE_BACKWARD_NO_STACK_CODE)
         for matched_op_info in self._task_id_record.get(index, []):
             self._stack_record.append([*matched_op_info, stack])
 
-        for matched_op_info in self._task_id_record.get(const.TIMELINE_ACL_TO_NPU_NO_STACK_CODE, []):
+        for matched_op_info in self._task_id_record.get(Constant.TIMELINE_ACL_TO_NPU_NO_STACK_CODE, []):
             self._stack_record.append([*matched_op_info,
-                                       const.NO_STACK_REASON_MAP.get(const.TIMELINE_ACL_TO_NPU_NO_STACK_CODE)])
+                                       Constant.NO_STACK_REASON_MAP.get(Constant.TIMELINE_ACL_TO_NPU_NO_STACK_CODE)])
         return None

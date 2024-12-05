@@ -20,7 +20,7 @@ import os
 import logging
 
 from advice_base import AdviceBase
-from common_func.file_manager import FileManager
+from profiler.prof_common.file_manager import FileManager
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -55,7 +55,8 @@ class TimelineAdviceBase(AdviceBase):
         if not os.path.exists(self.collection_path):
             logger.error("Path: %s is not exist.",str(self.collection_path))
             return False
-        if os.path.isdir(self.collection_path) and self.collection_path.endswith("ascend_pt"):
+        if os.path.isdir(self.collection_path) and \
+            (self.collection_path.endswith("ascend_pt") or self.collection_path.endswith("ascend_ms")):
             self.trace_view_path = os.path.join(self.collection_path, "ASCEND_PROFILER_OUTPUT", "trace_view.json")
             if not os.path.exists(self.trace_view_path):
                 logger.error("trace_view.json is not exist in the Path: %s."\

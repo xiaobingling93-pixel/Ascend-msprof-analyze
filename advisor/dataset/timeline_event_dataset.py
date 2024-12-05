@@ -21,7 +21,7 @@ from collections import OrderedDict
 import ijson
 from tqdm import tqdm
 
-from profiler.advisor.common import constant as const
+from profiler.prof_common.constant import Constant
 from profiler.advisor.common.timeline.event import TimelineEvent
 from profiler.advisor.utils.utils import get_file_path_from_directory, check_path_valid, singleton, convert_to_float
 from profiler.advisor.dataset.timeline_op_collector.timeline_op_collector import (
@@ -82,7 +82,7 @@ class BaseTimelineEventDataset:
             ops_with_task_type = getattr(self, "ops_with_task_type", {}).values()
             kwargs["ai_core_ops"] = [
                 op for op in ops_with_task_type if
-                op.get(const.TASK_TYPE) in [const.AI_CORE, const.MIX_AIC]
+                op.get(Constant.TASK_TYPE) in [Constant.AI_CORE, Constant.MIX_AIC]
             ]
         return kwargs
 
@@ -201,7 +201,7 @@ class ScheduleAnalysisDataset(BaseTimelineEventDataset):
             return
 
         for event in sorted(self.aten, key=lambda x: x.get("ts", -1)):
-            if event.name.startswith(const.ATEN):
+            if event.name.startswith(Constant.ATEN):
                 if not formated_atens or not formated_atens[-1].ts_include(event):
                     formated_atens.append(event)
 

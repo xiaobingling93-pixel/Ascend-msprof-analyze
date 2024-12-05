@@ -19,20 +19,9 @@ import os.path
 import re
 
 from common_func.path_manager import PathManager
-from compare_backend.utils.constant import Constant
-from compare_backend.utils.file_reader import FileReader
-
-
-class Singleton(object):
-    def __init__(self, cls):
-        self._cls = cls
-        self._instance = {}
-
-    def __call__(self, args=None):
-        if self._cls not in self._instance:
-            self._instance[self._cls] = self._cls(args)
-        return self._instance[self._cls]
-
+from compare_backend.utils.singleton import Singleton
+from profiler.prof_common.constant import Constant
+from profiler.prof_common.file_manager import FileManager
 
 @Singleton
 class ArgsManager:
@@ -135,7 +124,7 @@ class ArgsManager:
             if extension != ".json":
                 msg = f"Invalid profiling path suffix: {file_path}"
                 raise RuntimeError(msg)
-            json_type = FileReader.check_json_type(file_path)
+            json_type = FileManager.check_json_type(file_path)
             return {
                 Constant.PROFILING_TYPE: json_type, Constant.PROFILING_PATH: file_path, Constant.TRACE_PATH: file_path
             }

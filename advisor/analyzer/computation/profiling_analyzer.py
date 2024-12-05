@@ -90,6 +90,9 @@ class ProfilingAnalyzer(BaseAnalyzer, ABC):
 class DynamicShapeAnalyzer(ProfilingAnalyzer):
     def __init__(self, collection_path, **kwargs) -> None:
         super().__init__(collection_path, **kwargs)
+        if collection_path.endswith("ascend_ms"):
+            logger.warning("Dynamic shape analyzer does not support Mindspore.")
+            return
         self.checker = DynamicShapeChecker(self.cann_version)
 
 

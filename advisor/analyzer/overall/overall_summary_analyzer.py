@@ -19,9 +19,8 @@ from profiler.advisor.analyzer.base_analyzer import BaseAnalyzer
 from profiler.advisor.display.html.render import HTMLRender
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.advisor.result.result import OptimizeResult
-from profiler.compare_tools.compare_backend.utils.constant import Constant
 from profiler.compare_tools.compare_interface.comparison_interface import ComparisonInterface
-
+from profiler.prof_common.constant import Constant
 
 class OverallSummaryAnalyzer(BaseAnalyzer):
     OVERALL_SUMMARY_ANALYZER = "overall summary"
@@ -231,7 +230,8 @@ class OverallSummaryAnalyzer(BaseAnalyzer):
                                          template_dir="templates",
                                          template_name="cluster_analysis.html",
                                          cann_version=self.cann_version,
-                                         torch_version=self.torch_version,
+                                         profiling_type=self.profiling_type,
+                                         profiling_version=self.profiling_version,
                                          result=result_for_html)
 
     def get_priority(self):

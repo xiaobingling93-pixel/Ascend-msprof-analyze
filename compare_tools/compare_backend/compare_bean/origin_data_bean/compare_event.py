@@ -16,7 +16,7 @@
 from decimal import Decimal
 
 from compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
-from compare_backend.utils.constant import Constant
+from profiler.prof_common.constant import Constant
 
 
 class KernelEvent:

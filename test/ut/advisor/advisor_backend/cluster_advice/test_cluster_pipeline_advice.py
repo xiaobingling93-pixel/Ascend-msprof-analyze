@@ -12,7 +12,7 @@ from advisor_backend.cluster_advice.cluster_pipeline_advice import PipelineTrace
 class TestClusterPipelineAdvice(unittest.TestCase):
 
     def test_load_trace_view_data_should_return_none_when_input_json_empty(self):
-        with mock.patch('common_func.file_manager.FileManager.read_json_file', return_value=None):
+        with mock.patch('profiler.prof_common.file_manager.FileManager.read_json_file', return_value=None):
             advice = ClusterPipelineAdvice('./tmp_dir', {})
             self.assertEqual(advice.load_trace_view_data('test'), None)
 
@@ -62,7 +62,7 @@ class TestClusterPipelineAdvice(unittest.TestCase):
             npu_ops_ts_dur={"15": 16, "17": 18},
             torch_to_npu_links=[torch_to_npu_link],
         )
-        with mock.patch('common_func.file_manager.FileManager.read_json_file', return_value=raw_data):
+        with mock.patch('profiler.prof_common.file_manager.FileManager.read_json_file', return_value=raw_data):
             advice = ClusterPipelineAdvice('./tmp_dir', {})
             check_res = advice.load_trace_view_data('test')
             self.assertEqual(check_res, except_res)

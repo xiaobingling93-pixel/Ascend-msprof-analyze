@@ -17,7 +17,7 @@ import logging
 import os
 
 import yaml
-from profiler.advisor.common import constant
+from profiler.prof_common.constant import Constant
 from profiler.advisor.common.profiling.ge_info import GeInfo
 from profiler.advisor.common.profiling.msprof import Msprof
 from profiler.advisor.common.profiling.op_summary import OpSummary
@@ -26,7 +26,7 @@ from profiler.advisor.common.enum_params_parser import EnumParamsParser
 from profiler.advisor.dataset.dataset import Dataset
 from profiler.advisor.dataset.profiling.device_info import DeviceInfoParser
 from profiler.advisor.utils.utils import join_prof_path
-from profiler.cluster_analyse.common_func.file_manager import FileManager
+from profiler.prof_common.file_manager import FileManager
 
 
 logger = logging.getLogger()
@@ -36,15 +36,15 @@ class ProfilingDataset(Dataset):
     prof_type = ""
 
     def __init__(self, collection_path, data: dict, **kwargs) -> None:
-        self.cann_version = kwargs.get(constant.CANN_VERSION, EnumParamsParser().get_default(constant.CANN_VERSION))
-        self.prof_type = kwargs.get(constant.PROFILING_TYPE, EnumParamsParser().get_default(constant.PROFILING_TYPE))
+        self.cann_version = kwargs.get(Constant.CANN_VERSION, EnumParamsParser().get_default(Constant.CANN_VERSION))
+        self.prof_type = kwargs.get(Constant.PROFILING_TYPE_UNDER_LINE, EnumParamsParser().get_default(Constant.PROFILING_TYPE_UNDER_LINE))
         self.patterns = self.parse_pattern()
         self.current_version_pattern = self.get_current_version_pattern()
         self._info = None
         super().__init__(collection_path, data)
 
     def build_from_pattern(self, dirs_pattern, current_path, depth):
-        if depth > constant.DEPTH_LIMIT:
+        if depth > Constant.DEPTH_LIMIT:
             logger.error("Recursion depth exceeds limit!")
             return
         depth += 1

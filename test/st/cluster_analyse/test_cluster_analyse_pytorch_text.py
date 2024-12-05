@@ -91,7 +91,7 @@ class TestClusterAnalyseCmdPytorchText(TestCase):
 
     def run_cmd(self, mode):
         cmd = ["msprof-analyze", "cluster", "-d", self.CLUSTER_PATH, "-m", mode,
-               "--output_path", self.OUTPUT_PATH]
+               "--output_path", self.OUTPUT_PATH, "--force"]
         completed_process = subprocess.run(cmd, capture_output=True, shell=False)
         if (completed_process.returncode != self.COMMAND_SUCCESS
                 or not os.path.exists(self.OUTPUT_DATA)):
@@ -99,7 +99,7 @@ class TestClusterAnalyseCmdPytorchText(TestCase):
 
     def run_py3(self, mode):
         cmd = ["python3", self.CLUSTER_ANALYSE, "-d", self.CLUSTER_PATH, "-m", mode,
-               "--output_path", self.OUTPUT_PATH]
+               "--output_path", self.OUTPUT_PATH, "--force"]
         completed_process = subprocess.run(cmd, capture_output=True, shell=False)
         if (completed_process.returncode != self.COMMAND_SUCCESS
                 or not os.path.exists(self.OUTPUT_DATA)):

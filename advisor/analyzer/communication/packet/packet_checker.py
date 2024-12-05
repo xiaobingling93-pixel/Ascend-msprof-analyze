@@ -17,7 +17,7 @@ import os
 from profiler.advisor.dataset.communication.communication_dataset import CommunicationDataset
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
-from profiler.cluster_analyse.common_func.file_manager import FileManager
+from profiler.prof_common.file_manager import FileManager
 from profiler.advisor.utils.utils import convert_to_float
 
 logger = logging.getLogger()

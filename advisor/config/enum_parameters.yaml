@@ -6,7 +6,9 @@ arguments:
       - 7.0.RC1
       - 7.0.0
       - 8.0.RC1
-    default: 8.0.RC1
+      - 8.0.RC2
+      - 8.0.0
+    default: 8.0.0
 
   torch_version:
     type: str
@@ -14,7 +16,12 @@ arguments:
       - 1.11.0
       - 2.1.0
     default: 2.1.0
-
+  mindspore_version:
+    type: str
+    options:
+      - 2.3.0
+      - 2.4.0
+    default: 2.4.0
   analysis_dimensions:
     type: list
     options:
@@ -28,10 +35,11 @@ arguments:
   profiling_type:
     type: str
     options:
-      - ascend_pytorch_profiler
+      - pytorch
       - mslite
       - msprof
-    default: ascend_pytorch_profiler
+      - mindspore
+    default: pytorch
 
 envs:
   ADVISOR_ANALYZE_PROCESSES:

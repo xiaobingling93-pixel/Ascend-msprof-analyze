@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from compare_backend.utils.constant import Constant
+from profiler.prof_common.constant import Constant
 
 
 class ProfilingInfo:

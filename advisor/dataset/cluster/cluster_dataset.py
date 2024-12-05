@@ -20,9 +20,8 @@ import re
 from collections import defaultdict
 from profiler.advisor.dataset.dataset import Dataset
 from profiler.advisor.utils.utils import singleton
-from profiler.cluster_analyse.common_func.file_manager import FileManager
-from profiler.advisor.common import constant as const
-from profiler.cluster_analyse.common_func.constant import Constant
+from profiler.prof_common.file_manager import FileManager
+from profiler.prof_common.constant import Constant
 from profiler.cluster_analyse.cluster_analysis import Interface
 from profiler.advisor.dataset.cluster.cluster_step_trace_time_bean import ClusterStepTraceTimeBean
 from profiler.advisor.dataset.cluster.hccl_collection import HcclInfo
@@ -61,7 +60,7 @@ class ClusterDataset(Dataset):
             raise ValueError(f"Cluster analyze backend failed:{e}") from e
 
     def load_csv_data(self, file_name, data_bean):
-        csv_path = os.path.join(self.collection_path, const.CLUSTER_ANALYSIS_OUTPUT, file_name)
+        csv_path = os.path.join(self.collection_path, Constant.CLUSTER_ANALYSIS_OUTPUT, file_name)
         if not os.path.exists(csv_path):
             msg = "[ERROR] cluster_step_trace_time.csv doesn't exist, terminate analysis."
             raise RuntimeError(msg)
@@ -69,7 +68,7 @@ class ClusterDataset(Dataset):
         return data
 
     def load_json_data(self, file_name):
-        json_path = os.path.join(self.collection_path, const.CLUSTER_ANALYSIS_OUTPUT, file_name)
+        json_path = os.path.join(self.collection_path, Constant.CLUSTER_ANALYSIS_OUTPUT, file_name)
         if not os.path.exists(json_path):
             msg = "[ERROR] cluster_communication.json doesn't exist, terminate analysis."
             raise RuntimeError(msg)
@@ -92,14 +91,14 @@ class ClusterStepTraceTimeDataset(ClusterDataset):
         for step_bean in step_data:
             if step_bean.type == self.RANK:
                 step_rank_record = []
-                step = str(step_bean.step).replace(" ", "") or str(const.DEFAULT_STEP)
+                step = str(step_bean.step).replace(" ", "") or str(Constant.DEFAULT_STEP)
                 rank = str(step_bean.index).replace(" ", "")
                 if step:
                     step_rank_record.append(step)
                 if rank:
                     step_rank_record.append(rank)
 
-                step_rank_index = const.STEP_RANK_SEP.join(step_rank_record)
+                step_rank_index = Constant.STEP_RANK_SEP.join(step_rank_record)
                 step_dict[step_rank_index][0] += step_bean.compute
                 step_dict[step_rank_index][1] += step_bean.communication
                 step_dict[step_rank_index][2] += step_bean.free
@@ -119,7 +118,7 @@ class ClusterStepTraceTimeDataset(ClusterDataset):
     def _parse(self):
         self.cluster_analyze()
         try:
-            step_data = self.load_csv_data(const.CLUSTER_STEP_TIME_CSV, ClusterStepTraceTimeBean)
+            step_data = self.load_csv_data(Constant.CLUSTER_STEP_TIME_CSV, ClusterStepTraceTimeBean)
         except RuntimeError as e:
             logger.error("捕获到异常：%s", e)
             self._step_dict = None
@@ -168,7 +167,7 @@ class ClusterCommunicationDataset(ClusterDataset):
                 self.hccl_dict.setdefault(comm_group, defaultdict(lambda: defaultdict(list)))
             for step, step_dict in group_dict.items():
                 for op, op_dict in step_dict.items():
-                    self.compute_bandwidth(step.lower().lstrip("step") or str(const.DEFAULT_STEP), op_dict)
+                    self.compute_bandwidth(step.lower().lstrip("step") or str(Constant.DEFAULT_STEP), op_dict)
                     self.process_hccl_info(comm_group, step, op, op_dict)
 
     def process_hccl_info(self, group, step, op, op_dict):
@@ -194,14 +193,14 @@ class ClusterCommunicationDataset(ClusterDataset):
                 raise ValueError(msg) from e
             for comm_type, bw_dict in rank_dict.get(self.COMMUNICATION_BANDWIDTH_INFO, {}).items():
                 if comm_type == self.SDMA:
-                    self.rank_bw_dict[f"{step}{const.STEP_RANK_SEP}{rank}"][self.SDMA_SIZE_MB] += \
+                    self.rank_bw_dict[f"{step}{Constant.STEP_RANK_SEP}{rank}"][self.SDMA_SIZE_MB] += \
                         bw_dict.get(self.TRANSIT_SIZE)
-                    self.rank_bw_dict[f"{step}{const.STEP_RANK_SEP}{rank}"][self.SDMA_TIME_MS] += \
+                    self.rank_bw_dict[f"{step}{Constant.STEP_RANK_SEP}{rank}"][self.SDMA_TIME_MS] += \
                         bw_dict.get(self.TRANSIT_TIME)
                 if comm_type == self.RDMA:
-                    self.rank_bw_dict[f"{step}{const.STEP_RANK_SEP}{rank}"][self.RDMA_SIZE_MB] += \
+                    self.rank_bw_dict[f"{step}{Constant.STEP_RANK_SEP}{rank}"][self.RDMA_SIZE_MB] += \
                         bw_dict.get(self.TRANSIT_SIZE)
-                    self.rank_bw_dict[f"{step}{const.STEP_RANK_SEP}{rank}"][self.RDMA_TIME_MS] += \
+                    self.rank_bw_dict[f"{step}{Constant.STEP_RANK_SEP}{rank}"][self.RDMA_TIME_MS] += \
                         bw_dict.get(self.TRANSIT_TIME)
 
         for step_rank in self.rank_bw_dict.keys():
@@ -216,7 +215,7 @@ class ClusterCommunicationDataset(ClusterDataset):
     def _parse(self):
         self.cluster_analyze()
         try:
-            communication_json = self.load_json_data(const.CLUSTER_COMM_JSON)
+            communication_json = self.load_json_data(Constant.CLUSTER_COMM_JSON)
         except RuntimeError as e:
             logger.error("捕获到异常：%s", e)
             self.rank_bw_dict = None

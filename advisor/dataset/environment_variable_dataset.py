@@ -15,8 +15,8 @@
 import os
 import logging
 
-from profiler.advisor.common import constant
-from profiler.cluster_analyse.common_func.file_manager import FileManager
+from profiler.prof_common.constant import Constant
+from profiler.prof_common.file_manager import FileManager
 
 
 class EnvironmentVariableDataset:
@@ -29,7 +29,7 @@ class EnvironmentVariableDataset:
     def get_env_data_file(collection_path: str) -> str:
         for root, _, files in os.walk(collection_path):
             for file_name in files:
-                if file_name == constant.PROFILER_METADATA:
+                if file_name == Constant.PROFILER_METADATA:
                     return os.path.join(root, file_name)
         return ""
 
