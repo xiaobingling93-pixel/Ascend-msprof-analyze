@@ -82,7 +82,6 @@ class TestCommunicationGroupGenerator(unittest.TestCase):
             self.assertEqual(ret_b, set(check.communication_group[Constant.P2P][1]))
             self.assertEqual(ret_c, set(check.communication_group[Constant.P2P][2]))
             self.assertEqual(ret_d, set(check.communication_group[Constant.P2P][3]))
-            print(check.communication_group[Constant.P2P])
 
     def test_generate_p2p_communication_group_when_given_repeat_group_expect_2_group(self):
         check = CommunicationGroupGenerator(self.PARAMS).processor
@@ -110,4 +109,3 @@ class TestCommunicationGroupGenerator(unittest.TestCase):
             ret_b = {8, 9, 10, 11, 12, 13, 14, 15}
             self.assertEqual(ret_a, set(check.communication_group[Constant.P2P][0]))
             self.assertEqual(ret_b, set(check.communication_group[Constant.P2P][1]))
-            print(check.communication_group[Constant.P2P])
