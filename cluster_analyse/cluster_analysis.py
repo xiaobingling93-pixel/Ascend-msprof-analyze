@@ -85,6 +85,7 @@ class Interface:
         PathManager.check_input_directory_path(self.cluster_analysis_output_path)
         FileManager.create_output_dir(self.cluster_analysis_output_path)
         PathManager.check_path_writeable(self.cluster_analysis_output_path)
+        PathManager.check_path_owner_consistent([self.cluster_analysis_output_path])
         params = {
             Constant.COLLECTION_PATH: self.collection_path,
             Constant.DATA_MAP: data_map,
