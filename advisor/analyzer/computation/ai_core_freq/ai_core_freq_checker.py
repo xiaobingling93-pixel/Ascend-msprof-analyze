@@ -1,3 +1,17 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import logging
 
 from profiler.advisor.dataset.timeline_event_dataset import ComputationAnalysisDataset
@@ -23,10 +37,10 @@ class AICoreFreqChecker:
         self.decrease_freq_ops = []
         self.headers = []
         self.op_freq = None
-        self.rank_id = None
+        self.rank = None
         self.stage = None
 
-    def check_ai_core_freq(self, event_dataset: ComputationAnalysisDataset, rank_id=None, stage=None):
+    def check_ai_core_freq(self, event_dataset: ComputationAnalysisDataset, rank=None, stage=None):
         """
         :Param event_dataset: dataset of timeline event
         """
@@ -35,7 +49,7 @@ class AICoreFreqChecker:
                          "because no ai core frequency were recorded in trace_view.json")
             return
 
-        self.rank_id = rank_id
+        self.rank = rank
         self.stage = stage
         self.op_freq = event_dataset.op_freq
         for op_name, op_info in self.op_freq.items():
@@ -47,6 +61,8 @@ class AICoreFreqChecker:
             op_total_duration = round(op_info.get("dur", 0), 2)
             max_freq = convert_to_float(Config().get_config("aic_frequency"))
 
+            if max_freq == 0:
+                raise ValueError("max_freq cannot be zero.")
             decrease_freq_ratio = sum(max_freq - freq for freq in freq_list) / (max_freq * len(freq_list))
             if decrease_freq_ratio >= Config().get_config("frequency_threshold"):
                 self.ai_core_freq_issues = True
@@ -57,16 +73,16 @@ class AICoreFreqChecker:
 
         if self.decrease_freq_ops:
             # 按算子总耗时和降频比率 降序排列
-            self.decrease_freq_ops.sort(key=
+            self.decrease_freq_ops.sort(key =
                                         lambda x: (x[self.TOTAL_DURATION_INDEX], x[self.DECREASE_FREQ_RATIO_INDEX]),
-                                        reverse=True)
+                                        reverse = True)
         if not self.ai_core_freq_issues:
             return
 
         self.desc = (f"{len(self.decrease_freq_ops)} operators are found during frequency reduction, and the reduction "
                      f"ratio is larger than {self.DECREASE_FREQ_RATIO}.")
-        if self.rank_id:
-            self.desc = f"For rank {self.rank_id}, " + self.desc.lower()
+        if self.rank:
+            self.desc = f"For rank {self.rank}, " + self.desc.lower()
         self.suggestions = "Please check the temperature or max power of your machine."
 
     def make_record(self, result: OptimizeResult):
@@ -77,14 +93,21 @@ class AICoreFreqChecker:
             return self.ai_core_freq_issues
 
         sheet_name = "AI Core Frequency"
-        if self.rank_id is not None:
-            sheet_name = f"rank {self.rank_id} AI Core Frequency".capitalize()
+        if self.rank is not None:
+            sheet_name = f"rank {self.rank} AI Core Frequency".capitalize()
 
         optimization_item = OptimizeItem(sheet_name, self.desc, [self.suggestions])
         result.add(OptimizeRecord(optimization_item))
 
-        self.headers = ["Operator name", "Count", "Total duration(us)", "AI CORE frequency decreased ratio",
-                        "Average frequency", "Max frequency", "Min frequency"]
+        self.headers = [
+            "Operator name",
+            "Count",
+            "Total duration(us)",
+            "AI CORE frequency decreased ratio",
+            "Average frequency",
+            "Max frequency",
+            "Min frequency",
+        ]
         result.add_detail(sheet_name, headers=self.headers)
 
         for row in self.decrease_freq_ops:
@@ -106,4 +129,5 @@ class AICoreFreqChecker:
                                            headers=self.headers,
                                            data=self.decrease_freq_ops[:self.SHOW_TOPK_OPS],
                                            add_render_list=add_render_list,
-                                           priority_background_color=priority)
+                                           priority_background_color=priority,
+                                           rank=kwargs.get("rank"))

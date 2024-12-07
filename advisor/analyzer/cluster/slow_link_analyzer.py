@@ -18,11 +18,11 @@ from typing import Dict, List
 import logging
 
 from profiler.advisor.analyzer.base_analyzer import BaseAnalyzer
-from profiler.advisor.common import constant
+from profiler.prof_common.constant import Constant
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.advisor.dataset.cluster.cluster_dataset import ClusterCommunicationDataset
-from profiler.advisor.utils.utils import safe_index
+from profiler.advisor.utils.utils import safe_index_value, convert_to_int
 
 logger = logging.getLogger()
 
@@ -51,6 +51,7 @@ class SlowLinkAnalyzer(BaseAnalyzer):
         self.result = OptimizeResult()
         self.bottelneck = ''
         self.suggestion = ''
+        self.format_datas = {}
         if self.rank_bw_dict is not None:
             self.format_datas = self.format_details()
 
@@ -104,7 +105,7 @@ class SlowLinkAnalyzer(BaseAnalyzer):
 
         data_list = []
         for step_rank, rank_bw in self.rank_bw_dict.items():
-            step_rank_list = list(map(int, step_rank.split(constant.STEP_RANK_SEP)))
+            step_rank_list = list(map(convert_to_int, step_rank.split(Constant.STEP_RANK_SEP)))
             value_list = [rank_bw.get(i, 0) for i in headers]
             data_list.append(step_rank_list + value_list)
         data_list.sort(key=lambda x: (x[0], x[1]))  # 按rank_id排序
@@ -142,11 +143,15 @@ class SlowLinkAnalyzer(BaseAnalyzer):
                                          template_dir="templates",
                                          template_name="cluster_analysis.html",
                                          cann_version=self.cann_version,
-                                         torch_version=self.torch_version,
+                                         profiling_type=self.profiling_type,
+                                         profiling_version=self.profiling_version,
                                          result=result_for_html)
 
     def get_global_step_rank(self, bindwidth_type):
         global_step_rank = {}
+        if not self.format_datas:
+            return global_step_rank
+
         bindwidth_key_map = {self.RDMA: self.RDMA_BANDWIDTH, self.SDMA: self.SDMA_BANDWIDTH}
 
         if bindwidth_type not in bindwidth_key_map:
@@ -154,7 +159,7 @@ class SlowLinkAnalyzer(BaseAnalyzer):
 
         headers = self.format_datas.get("headers")
 
-        bindwidth_index = safe_index(headers, bindwidth_key_map.get(bindwidth_type))
+        bindwidth_index = safe_index_value(headers, bindwidth_key_map.get(bindwidth_type))
 
         if bindwidth_index is not None:
             data_list = [tuple_list[bindwidth_index] for tuple_list in self.format_datas.get("data", [])]
@@ -167,8 +172,8 @@ class SlowLinkAnalyzer(BaseAnalyzer):
             max_bandwidth_index = data_list.index(max_bandwidth)
             min_bandwidth_index = data_list.index(min_bandwidth)
 
-            rank_id_index = safe_index(headers, "rank_id")
-            step_index = safe_index(headers, "step")
+            rank_id_index = safe_index_value(headers, "rank_id")
+            step_index = safe_index_value(headers, "step")
 
             if rank_id_index is None:
                 return global_step_rank
@@ -177,7 +182,7 @@ class SlowLinkAnalyzer(BaseAnalyzer):
             min_bandwidth_rank_id = self.format_datas.get("data")[min_bandwidth_index][rank_id_index]
 
             if step_index is None:
-                max_bandwidth_step, min_bandwidth_step = constant.DEFAULT_STEP, constant.DEFAULT_STEP
+                max_bandwidth_step, min_bandwidth_step = Constant.DEFAULT_STEP, Constant.DEFAULT_STEP
             else:
                 max_bandwidth_step = self.format_datas.get("data")[max_bandwidth_index][step_index]
                 min_bandwidth_step = self.format_datas.get("data")[min_bandwidth_index][step_index]

@@ -1,8 +1,22 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 from abc import ABC, abstractmethod
 import multiprocessing
 import logging
 
-from profiler.advisor.common import constant as const
+from profiler.prof_common.constant import Constant
 from profiler.advisor.common.timeline.event import TimelineEvent
 from profiler.advisor.dataset.timeline_event_dataset import ScheduleAnalysisDataset
 from profiler.advisor.result.result import OptimizeResult
@@ -32,7 +46,7 @@ class TimelineBaseChecker(ABC):
             for op, stack in op_stack.items():
                 if op not in self.matched_op_stacks:
                     self.matched_op_stacks[op] = {}
-                if stack == const.TIMELINE_FUSION_OPS_NO_STACK_FLAG:
+                if stack == Constant.TIMELINE_FUSION_OPS_NO_STACK_FLAG:
                     continue
                 if stack not in self.matched_op_stacks[op]:
                     self.matched_op_stacks[op][stack] = 0
@@ -48,15 +62,15 @@ class TimelineBaseChecker(ABC):
                 continue
 
             matched_ops.append(op)
-            stack = event.args.get(const.CALL_STACKS)
+            stack = event.args.get(Constant.CALL_STACKS)
 
             if not stack:
-                logger.debug("Got empty '%s' for event %s", const.CALL_STACKS, event)
+                logger.debug("Got empty '%s' for event %s", Constant.CALL_STACKS, event)
                 continue
 
             if not self._is_keep_stack(stack):
                 self.framework_black_list = True
-                logger.debug("Drop stack from framework %s", const.FRAMEWORK_STACK_BLACK_LIST)
+                logger.debug("Drop stack from framework %s", Constant.FRAMEWORK_STACK_BLACK_LIST)
                 continue
 
             if self.empty_stacks and stack:
@@ -66,7 +80,7 @@ class TimelineBaseChecker(ABC):
 
         if matched_ops and not stack_record:
             for op in matched_ops:
-                stack_record[op] = const.TIMELINE_FUSION_OPS_NO_STACK_FLAG
+                stack_record[op] = Constant.TIMELINE_FUSION_OPS_NO_STACK_FLAG
 
         return stack_record
 
@@ -77,7 +91,7 @@ class TimelineBaseChecker(ABC):
             return False
 
         final_called_stack = stack_list[0]
-        for framework in const.FRAMEWORK_STACK_BLACK_LIST:
+        for framework in Constant.FRAMEWORK_STACK_BLACK_LIST:
             if framework in final_called_stack.split("/"):
                 return False
         return True

@@ -1,3 +1,4 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0  (the "License");
@@ -35,10 +36,13 @@ class GcAnalyzer(BaseAnalyzer):
 
     @BaseAnalyzer.check_data((ScheduleAnalysisDataset.get_key(),))
     def optimize(self, **kwargs):
+        if "mindspore" in self.profiling_type:
+            logger.warning("The analyzer %s does not support MindSpore.", self.__class__.__name__)
+            return self.result
         gc_checker = GcChecker()
-        gc_checker.check_gc(self.timeline_event_dataset, rank_id=kwargs.get("rank_id"), stage=kwargs.get("stage"))
+        gc_checker.check_gc(self.timeline_event_dataset, rank=kwargs.get("rank"), stage=kwargs.get("stage"))
         gc_checker.make_record(self.result)
-        gc_checker.make_render(self.html_render, priority=self.get_priority())
+        gc_checker.make_render(self.html_render, priority=self.get_priority(), rank=kwargs.get("rank"))
         return self.result
 
     def get_priority(self):

@@ -1,0 +1,10 @@
+problem: "The SDMA bandwidth is lower than {threshold} when computing and communication tasks are performed \n
+concurrently. Generally, parallel computing and communication improves the running efficiency of the model. \n
+Concurrent computing and communication tasks may affect the communication bandwidth."
+sdma_baseline: 18 #M
+threshold: 0.8
+top_num: 10
+solutions:
+  - benchmark data comparison:
+      desc: "compare the performance data before and after the convergence function is enabled to evaluate whether the 
+      impact of bandwidth preemption exceeds the convergence benefits."

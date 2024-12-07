@@ -1,3 +1,19 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+# Copyright (C) 2024-2024. Huawei Technologies Co., Ltd. All rights reserved.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""
 import itertools
 import logging
 from functools import lru_cache
@@ -5,6 +21,47 @@ from collections import deque
 from typing import Dict, Generator, List, Callable, Hashable, Tuple
 
 import networkx as nx
+
+
+class IsomorphismsIterArgsConfig:
+    def __init__(self,
+                 query_graph: nx.Graph,
+                 host_graph: nx.Graph,
+                 *args,
+                 directed: bool = None,
+                 _node_attr_fun: Callable = None,
+                 _node_struct_fun: Callable = None,
+                 _edge_attr_fun: Callable = None,
+                 **kwargs
+                 ):
+        self.query_graph = query_graph
+        self.host_graph = host_graph
+        self.directed = directed
+        self.node_attr_fun = _node_attr_fun
+        self.node_struct_fun = _node_struct_fun
+        self.edge_attr_fun = _edge_attr_fun
+        self.args = args
+        self.kwargs = kwargs
+
+
+class CandidateArgsConfig:
+    def __init__(self,
+                 backbone: Dict,
+                 query_graph: nx.Graph,
+                 host_graph: nx.Graph,
+                 next_node: Hashable = None,
+                 directed: bool = True,
+                 _node_attr_fun: Callable = None,
+                 _node_struct_fun: Callable = None,
+                 _edge_attr_fun: Callable = None):
+        self.backbone = backbone
+        self.query_graph = query_graph
+        self.host_graph = host_graph
+        self.next_node = next_node
+        self.directed = directed
+        self.node_attr_fun = _node_attr_fun
+        self.node_struct_fun = _node_struct_fun
+        self.edge_attr_fun = _edge_attr_fun
 
 
 @lru_cache()
@@ -119,7 +176,7 @@ def find_isomorphisms(query_graph: nx.Graph,
     ```
     """
     candidates = []
-    for query_result in find_isomorphisms_iter(
+    for query_result in find_isomorphisms_iter(IsomorphismsIterArgsConfig(
             query_graph,
             host_graph,
             *args,
@@ -127,32 +184,34 @@ def find_isomorphisms(query_graph: nx.Graph,
             _node_struct_fun=_node_struct_fun,
             _edge_attr_fun=_edge_attr_fun,
             **kwargs
-    ):
+    )):
         candidates.append(query_result)
         if limit and len(candidates) >= limit:
             return candidates
     return candidates
 
 
-def find_isomorphisms_iter(query_graph: nx.Graph,
-                           host_graph: nx.Graph,
-                           directed: bool = None,
-                           _node_attr_fun: Callable = None,
-                           _node_struct_fun: Callable = None,
-                           _edge_attr_fun: Callable = None,
-                           ) -> Generator[Dict[Hashable, Hashable], None, None]:
+def find_isomorphisms_iter(config: IsomorphismsIterArgsConfig) -> Generator[Dict[Hashable, Hashable], None, None]:
     """
     A generation to find one isomorphic subgraph in host_graph for query_graph.
 
-    :param query_graph: The graph object to query
-    :param host_graph: The graph object to be queried
-    :param directed: Whether direction should be considered during search
-    :param _node_attr_fun: The function to match node attr
-    :param _node_struct_fun: The function to match node structural
-    :param _edge_attr_fun: The function to match edge attr
-    :return: Yield mappings from query node IDs to host graph IDs: {query_id: host_id, ...}
+    :param config: An instance of IsomorphismsIterArgsConfig containing the following attributes:
+        - query_graph: The graph object to query
+        - host_graph: The graph object to be queried
+        - directed: Whether direction should be considered during search
+        - node_attr_fun: The function to match node attr
+        - node_struct_fun: The function to match node structural
+        - edge_attr_fun: The function to match edge attr
 
+    :return: Yield mappings from query node IDs to host graph IDs: {query_id: host_id, ...}
     """
+    query_graph: nx.Graph = config.query_graph
+    host_graph: nx.Graph = config.host_graph
+    directed: bool = config.directed
+    _node_attr_fun: Callable = config.node_attr_fun
+    _node_struct_fun: Callable = config.node_struct_fun
+    _edge_attr_fun: Callable = config.edge_attr_fun
+
     if directed is None:
         # query graph and host graph should consider directions.
         if isinstance(query_graph, nx.DiGraph) and \
@@ -167,14 +226,15 @@ def find_isomorphisms_iter(query_graph: nx.Graph,
 
     while len(dq) > 0:
         backbone = dq.pop()
-        next_candidate_backbones = get_next_candidates(backbone=backbone,
-                                                       query_graph=query_graph,
-                                                       host_graph=host_graph,
-                                                       directed=directed,
-                                                       _node_attr_fun=_node_attr_fun,
-                                                       _node_struct_fun=_node_struct_fun,
-                                                       _edge_attr_fun=_edge_attr_fun,
-                                                       )
+        next_candidate_backbones = get_next_candidates(CandidateArgsConfig(
+            backbone=backbone,
+            query_graph=query_graph,
+            host_graph=host_graph,
+            directed=directed,
+            _node_attr_fun=_node_attr_fun,
+            _node_struct_fun=_node_struct_fun,
+            _edge_attr_fun=_edge_attr_fun,
+        ))
         for candidate in next_candidate_backbones:
             # find a legal isomorphism
             if len(candidate) == len(query_graph):
@@ -184,23 +244,27 @@ def find_isomorphisms_iter(query_graph: nx.Graph,
                 dq.appendleft(candidate)
 
 
-def get_next_candidates(
-        backbone: Dict,
-        query_graph: nx.Graph,  # noqa
-        host_graph: nx.Graph,  # noqa
-        next_node: Hashable = None,
-        directed: bool = True,  # noqa
-        _node_attr_fun: Callable = None,  # noqa
-        _node_struct_fun: Callable = None,  # noqa
-        _edge_attr_fun: Callable = None  # noqa
-) -> List[Dict[Hashable, Hashable]]:
+def get_next_candidates(config: CandidateArgsConfig) -> List[Dict[Hashable, Hashable]]:
     """
     Get a list of candidate node assignments for the next "step" of this map.
 
-    :param backbone: Mapping of query node IDs to one set of host graph IDs
-    :param next_node: Optional suggestion for the next node to assign
+    :param config: An instance of CandidateArgsConfig containing the following attributes:
+        - backbone: Dict, a mapping of query node IDs to one set of host graph node IDs.
+        - query_graph: nx.Graph, the query graph whose nodes are being mapped.
+        - host_graph: nx.Graph, the host graph where query nodes are being assigned.
+        - next_node: Hashable, an optional suggestion for the next node to assign from the query graph.
+
     :return: List[Dict[Hashable, Hashable]]: A new list of node mappings with one additional element mapped
     """
+    backbone: Dict = config.backbone
+    query_graph: nx.Graph = config.query_graph
+    host_graph: nx.Graph = config.host_graph
+    next_node: Hashable = config.next_node
+    directed: bool = config.directed
+    _node_attr_fun: Callable = config.node_attr_fun
+    _node_struct_fun: Callable = config.node_struct_fun
+    _edge_attr_fun: Callable = config.edge_attr_fun
+
     node_priority = {n: 1 for n in query_graph.nodes}
     candidate_nodes = []
 

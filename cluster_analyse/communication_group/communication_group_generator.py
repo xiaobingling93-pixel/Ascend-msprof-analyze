@@ -13,20 +13,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from common_func.constant import Constant
+from profiler.prof_common.constant import Constant
 from communication_group.communication_db_group import CommunicationDBGroup
+from communication_group.communication_db_group import CommunicationDBGroupOptimized
 from communication_group.communication_json_group import CommunicationJsonGroup
+
+
+SIMPLIFIED = "SIMPLIFIED"
+ORIGINAL = "ORIGINAL"
 
 
 class CommunicationGroupGenerator:
 
     GROUP_MAP = {
-        Constant.DB: CommunicationDBGroup,
-        Constant.TEXT: CommunicationJsonGroup
+        ORIGINAL: {
+            Constant.DB: CommunicationDBGroup,
+            Constant.TEXT: CommunicationJsonGroup
+        },
+        SIMPLIFIED: {
+            Constant.DB: CommunicationDBGroupOptimized,
+            Constant.TEXT: CommunicationJsonGroup
+        }
     }
 
     def __init__(self, params: dict):
-        self.processor = self.GROUP_MAP.get(params.get(Constant.DATA_TYPE))(params)
+        version = SIMPLIFIED if params.get(Constant.DATA_SIMPLIFICATION) else ORIGINAL
+        self.processor = self.GROUP_MAP.get(version).get(params.get(Constant.DATA_TYPE))(params)
 
     def generate(self):
         return self.processor.generate()

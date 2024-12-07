@@ -13,20 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import sys
-import traceback
-import shutil
-import pandas as pd
+import logging
 from abc import abstractmethod
 
-from common_func.constant import Constant
-from common_func.file_manager import FileManager
+from profiler.prof_common.constant import Constant
+from profiler.prof_common.file_manager import FileManager
 from cluster_utils.data_transfer_adapter import DataTransferAdapter
 
+logger = logging.getLogger()
 
 class BaseAnalysis:
     MAX_RANKS = 1000
+
     def __init__(self, param: dict):
         self.collection_path = param.get(Constant.COLLECTION_PATH)
         self.cluster_analysis_output_path = param.get(Constant.CLUSTER_ANALYSIS_OUTPUT_PATH)
@@ -36,6 +34,7 @@ class BaseAnalysis:
         self.collective_group_dict = param.get(Constant.COMM_DATA_DICT, {}).get(Constant.COLLECTIVE_GROUP)
         self.comm_ops_struct = {}
         self.adapter = DataTransferAdapter()
+        self.data_simplification = param.get(Constant.DATA_SIMPLIFICATION, False)
 
     @staticmethod
     def compute_ratio(dividend: float, divisor: float):
@@ -63,13 +62,13 @@ class BaseAnalysis:
 
     def dump_data(self):
         if not self.comm_ops_struct:
-            print("[WARNING] There is no final comm ops data generated")
+            logger.warning("There is no final comm ops data generated.")
             return
         if self.data_type == Constant.TEXT:
             self.dump_json()
         else:
-            if len(self.data_map) >= self.MAX_RANKS:
-                print("[WARNING]The number of ranks is too large to dump to db, it will be dumped to json file.")
+            if len(self.data_map) >= self.MAX_RANKS and not self.data_simplification:
+                logger.warning("The number of ranks is too large to dump to db, it will be dumped to json file.")
                 self.dump_json()
             else:
                 self.dump_db()
@@ -98,6 +97,6 @@ class BaseAnalysis:
                 setdefault(op_name, {}).setdefault(rank_id, op_info)
 
     def combine_ops_total_info(self):
-        for rank_tup, group_dict in self.comm_ops_struct.items():
-            for step_id, communication_ops in group_dict.items():
+        for _, group_dict in self.comm_ops_struct.items():
+            for _, communication_ops in group_dict.items():
                 self.compute_total_info(communication_ops)

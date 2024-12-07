@@ -13,10 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from abc import ABC
+import os
 import multiprocessing
 
 import pandas as pd
 
+from common_func.path_manager import PathManager
 from compute_advice.compute_advice_base import ComputeAdviceBase
 from compute_advice.npu_fused.op_perf import OpPerfFactory
 from common_func_advisor.constant import Constant
@@ -34,6 +36,7 @@ class NpuSlowAdvice(ComputeAdviceBase, ABC):
     
     @staticmethod
     def save_to_excel(data: pd.DataFrame, file_path: str) -> None:
+        PathManager.check_path_writeable(os.path.dirname(file_path))
         writer = pd.ExcelWriter(file_path, engine="xlsxwriter", mode="w")
         data.index.name = Constant.TITLE.INDEX
         data.to_excel(writer, index=True, sheet_name=NpuSlowAdvice.OP_PERF_SHEET)
@@ -73,6 +76,7 @@ class NpuSlowAdvice(ComputeAdviceBase, ABC):
         return self.data
     
     def process(self):
+        PathManager.check_path_readable(self.kernel_details_path)
         self.data = pd.read_csv(self.kernel_details_path, dtype={"Start Time(us)": str})
         # 去除末尾的\t分隔符
         self.data["Start Time(us)"] = self.data["Start Time(us)"].apply(lambda x: x[:-1])

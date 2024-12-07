@@ -1,8 +1,22 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import logging
 from typing import List
 
 from profiler.advisor.analyzer.computation.operator_checker import OperatorChecker
-from profiler.advisor.common import constant
+from profiler.prof_common.constant import Constant
 from profiler.advisor.config.config import Config
 from profiler.advisor.dataset.profiling.profiling_dataset import ProfilingDataset
 from profiler.advisor.utils.utils import to_percent
@@ -27,11 +41,22 @@ class OperatorBoundChecker(OperatorChecker):
     def pre_check(self, profiling_data) -> bool:
         return not self.is_dynamic_shape(profiling_data)
 
-    def _check_data(self, data):
-        self.format_suggestion_content(data)
-        if not self._check_summary(data):
+    def make_render(self, html_render, record, add_render_list=True, **kwargs):
+        priority = kwargs.get("priority")
+        return html_render.render_template(key="computation",
+                                           template_dir="templates",
+                                           template_name="operator_no_bound.html",
+                                           format_result=self.format_operator_result(record,
+                                                                                     Constant.OPERATOR_OUT_TOPK),
+                                           add_render_list=add_render_list,
+                                           priority_background_color=priority,
+                                           rank=kwargs.get("rank"))
+
+    def _check_data(self, profiling_data):
+        self.format_suggestion_content(profiling_data)
+        if not self._check_summary(profiling_data):
             return False
-        for op_info in data.op_summary.op_list:
+        for op_info in profiling_data.op_summary.op_list:
             return self._check_operator(op_info)
 
         logger.warning(self.SKIP_CHECK_MSG, self._CHECKER, "ratio in op summary")
@@ -45,13 +70,3 @@ class OperatorBoundChecker(OperatorChecker):
         if any(ratio and ratio > Config().operator_bound_ratio for ratio in ratio_list):
             return False
         return True
-
-    def make_render(self, html_render, record, add_render_list=True, **kwargs):
-        priority = kwargs.get("priority")
-        return html_render.render_template(key="computation",
-                                           template_dir="templates",
-                                           template_name="operator_no_bound.html",
-                                           format_result=self.format_operator_result(record,
-                                                                                     constant.OPERATOR_OUT_TOPK),
-                                           add_render_list=add_render_list,
-                                           priority_background_color=priority)

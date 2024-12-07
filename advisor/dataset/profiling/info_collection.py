@@ -1,9 +1,24 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """
 profiling info
 """
 import decimal
 import logging
-
+from typing import List
 from profiler.advisor.utils.utils import lazy_property
 
 logger = logging.getLogger()
@@ -14,6 +29,7 @@ class Info:
     op info
     """
     _attr_pre_fix_list = [""]
+    FFTS_TYPE = "ffts_type"
 
     def add_attr(self, key: str, value: str):
         """
@@ -116,7 +132,7 @@ class OpInfo(Info):
             if hasattr(self, attr):
                 try:
                     if float(getattr(self, attr)) > 0:
-                        if hasattr(self, "ffts_type") and getattr(self, "ffts_type") == "1":
+                        if hasattr(self, self.FFTS_TYPE) and getattr(self, self.FFTS_TYPE) == "1":
                             logger.warning(
                                 "ffts type of op %s is vector buf mac ratio is not 0", getattr(self, "op_name")
                             )
@@ -124,7 +140,7 @@ class OpInfo(Info):
                 except ValueError:
                     pass
         # not cube op
-        if hasattr(self, "ffts_type") and getattr(self, "ffts_type") == "0":
+        if hasattr(self, self.FFTS_TYPE) and getattr(self, self.FFTS_TYPE) == "0":
             logger.warning("ffts type of op %s is cube but mac ratio is 0", getattr(self, "op_name"))
         return False
 
@@ -204,7 +220,7 @@ class TaskInfo:
         get pid
         :return: pid
         """
-        return self._args.get("Task Type", "NA")
+        return self._args.get("task type", "NA")
 
     @property
     def start_time(self):
@@ -244,7 +260,7 @@ class TaskInfo:
         get stream_id
         :return: steram id
         """
-        return self._args.get("Stream Id", "NA")
+        return self._args.get("stream id", "NA")
 
     @property
     def task_id(self):
@@ -252,7 +268,23 @@ class TaskInfo:
         get task id
         :return: task_id
         """
-        return self._args.get("Task Id", "NA")
+        return self._args.get("task id", "NA")
+
+    @property
+    def transport_type(self):
+        """
+        get transport type
+        :return: transport_type
+        """
+        return self._args.get("transport type", "NA")
+
+    @property
+    def link_type(self):
+        """
+        get link type
+        :return: link_type
+        """
+        return self._args.get("link type", "NA")
 
     @property
     def args(self):
@@ -268,3 +300,52 @@ class TaskInfo:
         get category of task
         """
         return self._cat
+
+
+class HcclOp:
+    MIN_SIZE = 512
+
+    def __init__(self, task: TaskInfo):
+        self.op_name = task.name
+        self.start = task.start_time
+        self.end = task.end_time
+        self.sdma_size = 0
+        self.sdma_duration = 0
+        self.rdma_size = 0
+        self.rdma_duration = 0
+        self.reduce_inline_tasks: List[HcclTask] = []
+        self.memcpy_tasks: List[HcclTask] = []
+
+
+class HcclTask:
+    def __init__(self, task: TaskInfo):
+        self._start = task.start_time
+        self._end = task.end_time
+        self._duration = task.dur
+        self._size = task.args.get("size(Byte)", 0)
+        self._transport_type = task.transport_type
+        self._link_type = task.link_type
+
+    @property
+    def start(self):
+        return self._start
+
+    @property
+    def end(self):
+        return self._end
+
+    @property
+    def duration(self):
+        return self._duration
+
+    @property
+    def size(self):
+        return self._size
+
+    @property
+    def transport_type(self):
+        return self._transport_type
+
+    @property
+    def link_type(self):
+        return self._link_type

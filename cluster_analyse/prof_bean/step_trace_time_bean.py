@@ -14,6 +14,10 @@
 # limitations under the License.
 
 
+import logging
+
+logger = logging.getLogger()
+
 class StepTraceTimeBean:
     STEP = "Step"
     COMPLEMENT_HEADER = ["Step", "Type", "Index"]
@@ -27,7 +31,11 @@ class StepTraceTimeBean:
         for field_name in self._data.keys():
             if field_name == self.STEP:
                 continue
-            row.append(float(self._data.get(field_name, )))
+            try:
+                row.append(float(self._data.get(field_name, )))
+            except Exception as e:
+                logger.warning(e)
+                row.append(0)
         return row
 
     @property

@@ -15,6 +15,7 @@
 import os
 from collections import OrderedDict
 import sys
+import logging
 
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))),
                              "cluster_analyse"))
@@ -22,6 +23,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.
                              "compare_tools"))
 
 from profiler.advisor.utils.utils import Timer
+from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.analyzer.computation.profiling_analyzer import AicpuAnalyzer, BlockDimAnalyzer, \
     DynamicShapeAnalyzer, OperatorBoundAnalyzer
 from profiler.advisor.analyzer.schedule.fusion_ops.fusion_ops_analyzer import TimelineFusionOpsAnalyzer
@@ -40,7 +42,12 @@ from profiler.advisor.analyzer.dataloader.dataloader_analyzer import DataloaderA
 from profiler.advisor.analyzer.computation.ai_core_freq.ai_core_freq_analyzer import AICoreFreqAnalyzer
 from profiler.advisor.analyzer.memory.memory_analyzer import MemoryAnalyzer
 from profiler.advisor.analyzer.communication.packet.packet_analyzer import PacketAnalyzer
+from profiler.advisor.analyzer.communication.contention.bandwidth_contention_analyzer import BandwidthContentionAnalyzer
+from profiler.advisor.analyzer.communication.alignment.byte_alignment_analyzer import ByteAlignmentAnalyzer
 from profiler.advisor.analyzer.schedule.gc.gc_analyzer import GcAnalyzer
+from profiler.advisor.analyzer.comparison.comparison_analyzer import ComparisonAnalyzer
+
+logger = logging.getLogger()
 
 
 class Interface:
@@ -50,6 +57,7 @@ class Interface:
     OVERALL = "overall"
     CLUSTER = "cluster"
     MEMORY = "memory"
+    COMPARISON = "comparison"
 
     supported_analyzer = {
         SCHEDULE: OrderedDict({
@@ -69,20 +77,23 @@ class Interface:
             SupportedScopes.FREQ_ANALYSIS: AICoreFreqAnalyzer
         }),
         COMMUNICATION: OrderedDict({SupportedScopes.PACKET: PacketAnalyzer,
-                                    SupportedScopes.COMMUNICATION_RETRANSMISSION_DETECTION: RDMARetransmissionAnalyzer}),
+                                    SupportedScopes.COMMUNICATION_RETRANSMISSION_DETECTION: RDMARetransmissionAnalyzer,
+                                    SupportedScopes.BANDWIDTH_CONTENTION_DETECTION: BandwidthContentionAnalyzer,
+                                    SupportedScopes.BYTE_ALIGNMENT_DETECTION: ByteAlignmentAnalyzer}),
         OVERALL: OrderedDict({SupportedScopes.OVER_ALL: OverallSummaryAnalyzer,
                               SupportedScopes.ENVIRONMENT_VARIABLE_ANALYSIS: EnvironmentVariabelAnalyzer}),
         CLUSTER: OrderedDict({
             SupportedScopes.SLOW_RANK: SlowRankAnalyzer,
             SupportedScopes.SLOW_LINK: SlowLinkAnalyzer
         }),
-        MEMORY: OrderedDict({SupportedScopes.MEMORY: MemoryAnalyzer})
+        MEMORY: OrderedDict({SupportedScopes.MEMORY: MemoryAnalyzer}),
+        COMPARISON: OrderedDict({SupportedScopes.COMPARISON: ComparisonAnalyzer})
     }
 
     all_dimension = list(supported_analyzer.keys())
 
     def __init__(self, **kwargs):
-        self.collection_path = os.path.realpath(kwargs.get("profiling_path"))
+        self.collection_path = os.path.abspath(kwargs.get("profiling_path"))
 
     @staticmethod
     def get_scope(dimension):
@@ -109,8 +120,12 @@ class Interface:
         if scope not in supported_scopes:
             raise ValueError(f"Error scope {scope}, supported scopes are {supported_scopes}")
 
-        analyzer = self.get_analyzer(dimension, scope)(collection_path=self.collection_path, **kwargs)
-        result = analyzer.optimize(**kwargs)
+        try:
+            analyzer = self.get_analyzer(dimension, scope)(collection_path=self.collection_path, **kwargs)
+            result = analyzer.optimize(**kwargs)
+        except Exception as e:
+            logger.error("%s is skipped when an exception is encountered. The exception is as follows: %s", scope, e)
+            return OptimizeResult() if not output_dict else dict(OptimizeResult().data)
 
         if render_html and result.data:
             if hasattr(analyzer, "html_render"):

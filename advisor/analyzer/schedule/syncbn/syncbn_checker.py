@@ -1,10 +1,24 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import logging
 import os
 
 from profiler.advisor.dataset.timeline_event_dataset import ScheduleAnalysisDataset
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
-from profiler.cluster_analyse.common_func.file_manager import FileManager
+from profiler.prof_common.file_manager import FileManager
 
 logger = logging.getLogger()
 
@@ -48,12 +62,14 @@ class SyncBNChecker:
             return
 
         priority = kwargs.get("priority")
+        rank = kwargs.get("rank")
         html_render.render_template(key="schedule",
                                     template_dir="templates",
                                     template_name="sync_batchnorm.html",
                                     desc=self.desc,
                                     solutions=self.solutions,
-                                    priority_background_color=priority)
+                                    priority_background_color=priority,
+                                    rank=rank)
 
     def _init_rule(self):
         syncbn_rule_path = os.path.join(

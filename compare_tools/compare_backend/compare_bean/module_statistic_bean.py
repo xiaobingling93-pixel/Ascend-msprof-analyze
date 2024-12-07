@@ -1,7 +1,22 @@
+# Copyright (c) 2024 , Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import re
 
 from compare_backend.utils.common_func import calculate_diff_ratio
-from compare_backend.utils.constant import Constant
+from profiler.prof_common.constant import Constant
 from compare_backend.utils.excel_config import ExcelConfig
 
 
@@ -41,11 +56,13 @@ class ModuleStatisticBean:
                                                        self._comparison_info.device_total_dur_ms)
         self_diff, _ = calculate_diff_ratio(self._base_info.device_self_dur_ms,
                                             self._comparison_info.device_self_dur_ms)
-        row = [None, self._module_class, self._module_level, self._module_name, "[ TOTAL ]", None,
-               self._base_info.device_self_dur_ms, self._base_info.number, self._base_info.device_total_dur_ms,
-               None, self._comparison_info.device_self_dur_ms, self._comparison_info.number,
-               self._comparison_info.device_total_dur_ms, total_diff, self_diff,
-               total_ratio, self._base_info.call_stack, self._comparison_info.call_stack]
+        row = [
+            None, self._module_class, self._module_level, self._module_name, "[ TOTAL ]", None,
+            self._base_info.device_self_dur_ms, self._base_info.number, self._base_info.device_total_dur_ms,
+            None, self._comparison_info.device_self_dur_ms, self._comparison_info.number,
+            self._comparison_info.device_total_dur_ms, total_diff, self_diff,
+            total_ratio, self._base_info.call_stack, self._comparison_info.call_stack
+        ]
         return row
 
     def get_detail_rows(self):
@@ -57,18 +74,22 @@ class ModuleStatisticBean:
             base_kernel_detals, com_kernel_details = self._get_kernel_detail_rows(base_dur_dict.get("detail", {}),
                                                                                   com_dur_dict.get("detail", {}))
             self_diff, self_ratio = calculate_diff_ratio(sum(base_dur_list), sum(com_dur_list))
-            row = [None, self._module_class, self._module_level, self._module_name, op_name, base_kernel_detals,
-                   sum(base_dur_list), len(base_dur_list), None, com_kernel_details, sum(com_dur_list),
-                   len(com_dur_list), None, None, self_diff, self_ratio, None, None]
+            row = [
+                None, self._module_class, self._module_level, self._module_name, op_name, base_kernel_detals,
+                sum(base_dur_list), len(base_dur_list), None, com_kernel_details, sum(com_dur_list),
+                len(com_dur_list), None, None, self_diff, self_ratio, None, None
+            ]
             rows.append(row)
 
         for op_name, com_dur_dict in self._comparison_info.api_dict.items():
             com_dur_list = com_dur_dict.get("total", [])
             base_kernel_detals, com_kernel_details = self._get_kernel_detail_rows({}, com_dur_dict.get("detail", {}))
             self_diff, self_ratio = calculate_diff_ratio(0, sum(com_dur_list))
-            row = [None, self._module_class, self._module_level, self._module_name, op_name, base_kernel_detals, 0, 0,
-                   None, com_kernel_details, sum(com_dur_list), len(com_dur_list), None, None, self_diff,
-                   self_ratio, None, None]
+            row = [
+                None, self._module_class, self._module_level, self._module_name, op_name, base_kernel_detals, 0, 0,
+                None, com_kernel_details, sum(com_dur_list), len(com_dur_list), None, None, self_diff,
+                self_ratio, None, None
+            ]
             rows.append(row)
         return rows
 

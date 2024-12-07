@@ -14,24 +14,25 @@
 # limitations under the License.
 import os
 
-from profiler.cluster_analyse.common_func.file_manager import FileManager
+from profiler.prof_common.file_manager import FileManager
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem
 from profiler.advisor.result.item import OptimizeRecord
 from profiler.advisor.common.analyzer_scopes import SupportedScopes
 from profiler.advisor.display.html.render import HTMLRender
+from profiler.advisor.utils.utils import convert_to_int
 
 
 class EnvironmentVariabelChecker:
     ENV_SUGGEST_CONDITION = {
-        "ASCEND_GLOBAL_LOG_LEVEL": lambda x: x != "" and x != 3,
-        "HCCL_RDAM_TC": lambda x: x != "",
+        "ASCEND_GLOBAL_LOG_LEVEL": lambda x: x != "" and convert_to_int(x) != 3,
+        "HCCL_RDMA_TC": lambda x: x != "",
         "HCCL_RDMA_SL": lambda x: x != "",
-        "ACLNN_CACHE_LIMIT": lambda x: x == "" or (isinstance(x, int) and x < 10000),
-        "HOST_CACHE_CAPACITY": lambda x: x == "" or x == 0,
-        "ASCEND_ENHANCE_ENABLE": lambda x: x == 0,
-        "PYTORCH_NPU_ALLOC_CONF": lambda x: "expandable_segments:True" not in x,
-        "ASCEND_LAUNCH_BLOCKING": lambda x: x != 1,
+        "ACLNN_CACHE_LIMIT": lambda x: x == "" or convert_to_int(x) < 10000,
+        "HOST_CACHE_CAPACITY": lambda x: x == "" or convert_to_int(x) == 0,
+        "ASCEND_ENHANCE_ENABLE": lambda x: convert_to_int(x) == 0,
+        "PYTORCH_NPU_ALLOC_CONF": lambda x: isinstance(x, str) and "expandable_segments:True" not in x,
+        "ASCEND_LAUNCH_BLOCKING": lambda x: convert_to_int(x) != 1,
     }
 
     HEADERS = ["Environment", "Value", "Description", "Suggestion"]

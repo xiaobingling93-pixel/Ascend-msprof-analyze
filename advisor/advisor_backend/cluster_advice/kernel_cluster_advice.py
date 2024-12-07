@@ -1,10 +1,26 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import os
 import pandas as pd
-from common_func.path_manager import PathManager
-from common_func.constant import Constant
 from common_func_advisor.constant import Constant as AdvisorConstant
 from cluster_advice.cluster_advice_base import ClusterAdviceBase
 from cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
+from profiler.prof_common.file_manager import FileManager
+from profiler.prof_common.constant import Constant
+from profiler.prof_common.path_manager import PathManager
 
 
 class KernelClusterAdvice(ClusterAdviceBase):
@@ -32,6 +48,7 @@ class KernelClusterAdvice(ClusterAdviceBase):
             kernel_file = os.path.join(profiling_dir_path, Constant.SINGLE_OUTPUT, Constant.KERNEL_DETAILS_CSV)
             if kernel_file:
                 # 判断csv文件大小
+                FileManager.check_file_size(kernel_file)
                 PathManager.check_path_readable(kernel_file)
                 # 读取CSV文件
                 df_temp = pd.read_csv(kernel_file)

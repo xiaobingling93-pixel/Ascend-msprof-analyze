@@ -16,8 +16,8 @@ import logging
 import os
 from collections import defaultdict
 from profiler.advisor.utils.utils import singleton
-from profiler.advisor.common import constant as const
-from profiler.cluster_analyse.common_func.file_manager import FileManager
+from profiler.prof_common.constant import Constant
+from profiler.prof_common.file_manager import FileManager
 from profiler.advisor.dataset.cluster.hccl_collection import HcclInfo
 from profiler.advisor.utils.utils import CheckPathAccess
 
@@ -30,8 +30,12 @@ class CommunicationDataset:
 
     def __init__(self, collection_path, data: dict, **kwargs) -> None:
         self.timeline_dir = collection_path
-        self.timeline_data_list = self.get_file_path_from_directory(self.timeline_dir,
-                                                                    lambda file: file.endswith(const.COMMUNICATION_JSON))
+        if not self.timeline_dir.endswith("ascend_pt") and not self.timeline_dir.endswith("ascend_ms"):
+            return
+        self.timeline_data_list = self.get_file_path_from_directory(
+            self.timeline_dir,
+            lambda file: file.endswith(Constant.COMMUNICATION_JSON)
+        )
         self.hccl_dict = defaultdict(list)
         self.step = kwargs.get("step")
         if self.parse():

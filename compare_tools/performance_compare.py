@@ -6,32 +6,45 @@ import sys
 
 sys.path.append(
     os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "cluster_analyse"))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from compare_backend.comparison_generator import ComparisonGenerator
+from profiler.prof_common.analyze_dict import AnalyzeDict
 
 
 def main():
     parser = argparse.ArgumentParser(description="Compare trace of GPU and NPU")
-    parser.add_argument("base_profiling_path", type=str, default='', help="基准性能数据的文件路径")
-    parser.add_argument("comparison_profiling_path", type=str, default='', help="比较性能数据的文件路径")
-    parser.add_argument("--enable_profiling_compare", default=False, action='store_true', help="开启总体性能比较")
-    parser.add_argument("--enable_operator_compare", default=False, action='store_true', help="开启算子性能比较")
-    parser.add_argument("--enable_memory_compare", default=False, action='store_true', help="开启算子内存比较")
-    parser.add_argument("--enable_communication_compare", default=False, action='store_true', help="开启通信性能比较")
-    parser.add_argument("--enable_api_compare", default=False, action='store_true', help="开启host api性能比较")
-    parser.add_argument("--enable_kernel_compare", default=False, action='store_true', help="开启kernel性能比较")
-    parser.add_argument("--disable_details", default=False, action='store_true', help="不展示比对明细")
-    parser.add_argument("--output_path", type=str, default='', help="性能数据比对结果的存放路径")
-    parser.add_argument("--max_kernel_num", type=int, help="每个torch op的kernel数量限制")
+    parser.add_argument("base_profiling_path", type=str, default='', help="Path of the profiling data")
+    parser.add_argument("comparison_profiling_path", type=str, default='', help="Path of the benchmark data")
+    parser.add_argument("--enable_profiling_compare", default=False, action='store_true',
+                        help="Enable overall performance comparison")
+    parser.add_argument("--enable_operator_compare", default=False, action='store_true',
+                        help="Enable operator performance comparison")
+    parser.add_argument("--enable_memory_compare", default=False, action='store_true',
+                        help="Enable operator memory comparison")
+    parser.add_argument("--enable_communication_compare", default=False, action='store_true',
+                        help="Enable communication performance comparison")
+    parser.add_argument("--enable_api_compare", default=False, action='store_true',
+                        help="Enable API performance comparison")
+    parser.add_argument("--enable_kernel_compare", default=False, action='store_true',
+                        help="Enable kernel performance comparison")
+    parser.add_argument("--disable_details", default=False, action='store_true', help="Hide detailed comparison")
+    parser.add_argument("--disable_module", default=False, action='store_true', help="Hide module comparison")
+    parser.add_argument('-o', "--output_path", type=str, default='', help="Path of comparison result")
+    parser.add_argument("--max_kernel_num", type=int, help="The number of kernels per torch op is limited.")
     parser.add_argument("--op_name_map", type=ast.literal_eval, default={},
-                        help="配置GPU与NPU等价的算子名称映射关系，以字典的形式传入")
-    parser.add_argument("--use_input_shape", default=False, action='store_true', help="开启算子的精准匹配")
-    parser.add_argument("--gpu_flow_cat", type=str, default='', help="gpu flow event的分类标识")
-    parser.add_argument("--base_step", type=str, default='', help="基准性能数据指定比对step")
-    parser.add_argument("--comparison_step", type=str, default='', help="比较性能数据指定比对step")
+                        help="The mapping of operator names equivalent to GPUs and NPUs in the form of dictionaries.")
+    parser.add_argument("--use_input_shape", default=False, action='store_true',
+                        help="Enable precise matching of operators")
+    parser.add_argument("--gpu_flow_cat", type=str, default='', help="Identifier of the GPU connection")
+    parser.add_argument("--base_step", type=str, default='', help="Comparison step for performance data to be compared")
+    parser.add_argument("--comparison_step", type=str, default='', help="Comparison step for benchmark performance data")
+    parser.add_argument("--force", action='store_true',
+                        help="Indicates whether to skip file size verification and owner verification")
     args = parser.parse_args()
 
-    ComparisonGenerator(args).run()
+    ComparisonGenerator(AnalyzeDict(vars(args))).run()
+
 
 if __name__ == "__main__":
     start_time = datetime.datetime.now()

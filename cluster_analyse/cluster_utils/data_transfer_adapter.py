@@ -1,6 +1,6 @@
 import copy
 
-from common_func.constant import Constant
+from profiler.prof_common.constant import Constant
 from common_func.table_constant import TableConstant
 
 
@@ -118,12 +118,13 @@ class DataTransferAdapter(object):
         result = list()
 
         def split_matrix_data():
+            group_name = ""
             for op_name, op_data in op_dict.items():
                 for link_key, link_data in op_data.items():
                     if "@" in op_name:
                         hccl_op_name, group_name = op_name.split("@")[0], op_name.split("@")[1]
                     else:
-                        hccl_op_name, group_name = op_name, ""
+                        hccl_op_name = op_name
                     matrix_data = {
                         TableConstant.RANK_SET: str(rank_set),
                         TableConstant.STEP: step,

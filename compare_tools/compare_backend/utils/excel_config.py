@@ -1,4 +1,21 @@
-from compare_backend.utils.constant import Constant
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+# Copyright (C) 2023-2024. Huawei Technologies Co., Ltd. All rights reserved.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""
+
+from profiler.prof_common.constant import Constant
 
 
 class CellFormatType:
@@ -205,45 +222,47 @@ class ExcelConfig(object):
         Constant.API_TABLE: [
             {"name": ORDER, "type": CellFormatType.DEFAULT, "width": 10},
             {"name": API_NAME, "type": CellFormatType.BOLD_STR, "width": 30},
-            {"name": TOTAL_DURATION_MS, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
-            {"name": SELF_TIME_MS, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
-            {"name": AVG_DURATION_MS, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
-            {"name": CALLS, "type": CellFormatType.DEFAULT,"width": 20},
-            {"name": TOTAL_DURATION_MS, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
-            {"name": SELF_TIME_MS, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
-            {"name": AVG_DURATION_MS, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
-            {"name": CALLS, "type": CellFormatType.DEFAULT,"width": 20},
-            {"name": DIFF_TOTAL_RATIO, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
-            {"name": DIFF_SELF_RATIO, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
-            {"name": DIFF_AVG_RATIO, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
-            {"name": DIFF_CALLS_RATIO, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
+            {"name": TOTAL_DURATION_MS, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": SELF_TIME_MS, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": AVG_DURATION_MS, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": CALLS, "type": CellFormatType.DEFAULT, "width": 20},
+            {"name": TOTAL_DURATION_MS, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": SELF_TIME_MS, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": AVG_DURATION_MS, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": CALLS, "type": CellFormatType.DEFAULT, "width": 20},
+            {"name": DIFF_TOTAL_RATIO, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": DIFF_SELF_RATIO, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": DIFF_AVG_RATIO, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": DIFF_CALLS_RATIO, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
         ],
         Constant.KERNEL_COMPARE: [
             {"name": ORDER, "type": CellFormatType.DEFAULT, "width": 10},
             {"name": KERNEL, "type": CellFormatType.BOLD_STR, "width": 30},
-            {"name": INPUT_SHAPE, "type": CellFormatType.DEFAULT,"width": 20},
-            {"name": TOTAL_DURATION, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
-            {"name": AVG_DURATION, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
-            {"name": MAX_DURATION, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
-            {"name": MIN_DURATION, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
-            {"name": CALLS, "type": CellFormatType.DEFAULT,"width": 20},
-            {"name": TOTAL_DURATION, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
-            {"name": AVG_DURATION, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
-            {"name": MAX_DURATION, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
-            {"name": MIN_DURATION, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
-            {"name": CALLS, "type": CellFormatType.DEFAULT,"width": 20},
-            {"name": DIFF_TOTAL_RATIO, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
-            {"name": DIFF_AVG_RATIO, "type": CellFormatType.DEFAULT_FLOAT,"width": 20},
+            {"name": INPUT_SHAPE, "type": CellFormatType.DEFAULT, "width": 20},
+            {"name": TOTAL_DURATION, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": AVG_DURATION, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": MAX_DURATION, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": MIN_DURATION, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": CALLS, "type": CellFormatType.DEFAULT, "width": 20},
+            {"name": TOTAL_DURATION, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": AVG_DURATION, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": MAX_DURATION, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": MIN_DURATION, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": CALLS, "type": CellFormatType.DEFAULT, "width": 20},
+            {"name": DIFF_TOTAL_RATIO, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": DIFF_AVG_RATIO, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
         ]
     }
 
-    OVERHEAD = {Constant.OPERATOR_TABLE: ["B1:F1", "G1:K1"], Constant.MEMORY_TABLE: ["B1:F1", "G1:K1"],
-                Constant.COMMUNICATION_TABLE: ["B1:H1", "I1:O1"], Constant.OPERATOR_TOP_TABLE: ["C1:D1", "E1:F1"],
-                Constant.MEMORY_TOP_TABLE: ["C1:E1", "F1:H1"], Constant.MODULE_TOP_TABLE: ["F1:I1", "J1:M1"],
-                Constant.MODULE_TABLE: ["E1:H1", "I1:L1"],
-                Constant.OVERALL_METRICS_TABLE: ["B1:D1", "E1:G1"],
-                Constant.API_TABLE: ["C1:F1", "G1:J1"],
-                Constant.KERNEL_TABLE: ["D1:H1", "I1:M1"]}
+    OVERHEAD = {
+        Constant.OPERATOR_TABLE: ["B1:F1", "G1:K1"], Constant.MEMORY_TABLE: ["B1:F1", "G1:K1"],
+        Constant.COMMUNICATION_TABLE: ["B1:H1", "I1:O1"], Constant.OPERATOR_TOP_TABLE: ["C1:D1", "E1:F1"],
+        Constant.MEMORY_TOP_TABLE: ["C1:E1", "F1:H1"], Constant.MODULE_TOP_TABLE: ["F1:I1", "J1:M1"],
+        Constant.MODULE_TABLE: ["E1:H1", "I1:L1"],
+        Constant.OVERALL_METRICS_TABLE: ["B1:D1", "E1:G1"],
+        Constant.API_TABLE: ["C1:F1", "G1:J1"],
+        Constant.KERNEL_TABLE: ["D1:H1", "I1:M1"]
+    }
 
     # overall metrics index
     # computing time

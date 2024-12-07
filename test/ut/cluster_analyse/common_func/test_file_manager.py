@@ -5,7 +5,7 @@ import json
 import unittest
 import pytest
 
-from common_func.file_manager import FileManager
+from profiler.prof_common.file_manager import FileManager
 from prof_bean.step_trace_time_bean import StepTraceTimeBean
 
 

@@ -1,3 +1,19 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+# Copyright (C) 2024-2024. Huawei Technologies Co., Ltd. All rights reserved.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""
 import os
 import logging
 import itertools
@@ -5,7 +21,8 @@ from collections import deque
 from dataclasses import dataclass
 from typing import List, Tuple, Dict
 
-from profiler.cluster_analyse.common_func.file_manager import FileManager
+from profiler.prof_common.file_manager import FileManager
+from profiler.advisor.utils.file import FileOpen
 
 logger = logging.getLogger()
 
@@ -90,7 +107,7 @@ class HostGraphParser:
         del self.graphs[0]
 
     @staticmethod
-    def _get_key_value( line):
+    def _get_key_value(line):
         res = line.split(':', 1)
         return res[0].strip(), res[1].strip().strip('"')
 
@@ -220,9 +237,9 @@ class HostGraphParser:
     def _parse(self, graph_file):
         # pylint:disable=broad-except
         graph_list = []
-        with open(graph_file, "r", encoding="gbk") as file:
+        with FileOpen(graph_file, "r") as file:
             try:
-                graph_list = self._parse_line(file, graph_list)
+                graph_list = self._parse_line(file.file_reader, graph_list)
             except Exception:
                 logger.error(
                     "Parse line %s of file %s failed, make sure the format is correct.", self.line_no, graph_file
@@ -265,7 +282,11 @@ class HostGraphParser:
         if not self.graphs:
             self.nodes = {}
             return
-        self.nodes = {node.op_name: node for graph in self.graphs for node in graph.nodes.values()}
+        self.nodes = {
+            node.op_name: node
+            for graph in self.graphs
+            for node in graph.nodes.values()
+        }
 
 
 class QueryGraphNode:
@@ -280,11 +301,12 @@ class QueryGraphNode:
         self._op_pass = op_pass
         QueryGraphNode._ID += 1
 
-    def get_property(self, name):
-        """
-        get property
-        """
-        return getattr(self, name, lambda: None)
+    def __eq__(self, other):
+        return self._op_type == other._op_type and \
+               self._id == other._id
+
+    def __hash__(self):
+        return hash(self._op_type + str(self._id))
 
     @property
     def op_type(self):
@@ -301,13 +323,6 @@ class QueryGraphNode:
     @op_type.setter
     def op_type(self, op_type):
         self._op_type = op_type
-
-    def __eq__(self, other):
-        return self._op_type == other._op_type and \
-               self._id == other._id
-
-    def __hash__(self):
-        return hash(self._op_type + str(self._id))
 
     @staticmethod
     def trim_string(string: str, length: int = -1):
@@ -326,6 +341,12 @@ class QueryGraphNode:
 
         return string[:length]
 
+    def get_property(self, name):
+        """
+        get property
+        """
+        return getattr(self, name, lambda: None)
+
 
 class QueryGraphParser:
     def __init__(self, rule_database_path: str):
@@ -336,35 +357,6 @@ class QueryGraphParser:
     @property
     def fusion_rules(self):
         return self._fusion_rules
-
-    def load_database(self, rule_database):
-        if not os.path.isabs(rule_database):
-            rule_database = os.path.join(os.path.dirname(__file__),
-                                         "../", "../",
-                                         rule_database)
-
-        if not os.path.exists(rule_database):
-            raise FileNotFoundError(f"Path {rule_database} does not exist.")
-
-        database = FileManager.read_yaml_file(rule_database)
-        self.parse_yaml(database)
-
-    def parse_yaml(self, yaml_database):
-        fusion_strategy_list = yaml_database.get("GraphFusion", [])
-        if yaml_database.get("UBFusion", []):
-            fusion_strategy_list.extend(yaml_database.get("UBFusion", []))
-        for fusion_strategy in fusion_strategy_list:
-            if not isinstance(fusion_strategy, dict):
-                continue
-            (fusion_name, strategy), = fusion_strategy.items()
-            version = strategy.get("version", 0)
-            if version == 0 or version == "0":
-                self._fusion_rules[fusion_name] = self.build_query_graph_v0(fusion_name,
-                                                                            strategy.get('struct', []))
-            elif version == 1 or version == "1":
-                self._fusion_rules[fusion_name] = self.build_query_graph_v1(fusion_name,
-                                                                            strategy.get('nodes', []),
-                                                                            strategy.get('edges', []))
 
     @staticmethod
     def build_query_graph_v0(graph_name: str, graph_struct: List[str]) -> List[Tuple]:
@@ -412,3 +404,32 @@ class QueryGraphParser:
             sub_graph = (sub_node, sub_edge, sub_graph_name,)
             graphs.append(sub_graph)
         return graphs
+
+    def load_database(self, rule_database):
+        if not os.path.isabs(rule_database):
+            rule_database = os.path.join(os.path.dirname(__file__),
+                                         "../", "../",
+                                         rule_database)
+
+        if not os.path.exists(rule_database):
+            raise FileNotFoundError(f"Path {rule_database} does not exist.")
+
+        database = FileManager.read_yaml_file(rule_database)
+        self.parse_yaml(database)
+
+    def parse_yaml(self, yaml_database):
+        fusion_strategy_list = yaml_database.get("GraphFusion", [])
+        if yaml_database.get("UBFusion", []):
+            fusion_strategy_list.extend(yaml_database.get("UBFusion", []))
+        for fusion_strategy in fusion_strategy_list:
+            if not isinstance(fusion_strategy, dict):
+                continue
+            (fusion_name, strategy), = fusion_strategy.items()
+            version = strategy.get("version", 0)
+            if version == 0 or version == "0":
+                self._fusion_rules[fusion_name] = self.build_query_graph_v0(fusion_name,
+                                                                            strategy.get('struct', []))
+            elif version == 1 or version == "1":
+                self._fusion_rules[fusion_name] = self.build_query_graph_v1(fusion_name,
+                                                                            strategy.get('nodes', []),
+                                                                            strategy.get('edges', []))

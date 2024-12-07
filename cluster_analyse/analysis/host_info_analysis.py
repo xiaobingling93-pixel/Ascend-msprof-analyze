@@ -14,11 +14,13 @@
 # limitations under the License.
 
 import os
+import logging
 
 from analysis.base_analysis import BaseAnalysis
-from common_func.constant import Constant
+from profiler.prof_common.constant import Constant
 from common_func.db_manager import DBManager
 
+logger = logging.getLogger()
 
 class HostInfoAnalysis(BaseAnalysis):
 
@@ -41,7 +43,7 @@ class HostInfoAnalysis(BaseAnalysis):
         result_db = os.path.join(output_path, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER)
         conn, curs = DBManager.create_connect_db(result_db)
         if not (conn and curs):
-            print(f"[ERROR] Failed to create db {Constant.DB_CLUSTER_COMMUNICATION_ANALYZER}")
+            logger.error("Failed to create db %s", str(Constant.DB_CLUSTER_COMMUNICATION_ANALYZER))
             return
         self.dump_host_info(result_db, conn)
         self.dump_rank_device_map(result_db, conn)
@@ -49,7 +51,7 @@ class HostInfoAnalysis(BaseAnalysis):
 
     def dump_host_info(self, result_db, db_conn):
         if not self.all_rank_host_info:
-            print(f"[WARNING] No host info data be analyzed.")
+            logger.warning("No host info data be analyzed.")
             return
         DBManager.create_tables(result_db, Constant.TABLE_HOST_INFO)
         save_host_info = list(self.all_rank_host_info.items())
@@ -59,7 +61,7 @@ class HostInfoAnalysis(BaseAnalysis):
 
     def dump_rank_device_map(self, result_db, db_conn):
         if not self.all_rank_device_info:
-            print(f"[WARNING] No rank device map data be analyzed.")
+            logger.warning("No rank device map data be analyzed.")
             return
         self.all_rank_device_info.sort()
         DBManager.create_tables(result_db, Constant.TABLE_RANK_DEVICE_MAP)
@@ -87,7 +89,7 @@ class HostInfoAnalysis(BaseAnalysis):
                 sql = "select * from {0}".format(self.TABLE_RANK_DEVICE_MAP)
                 rank_device_info = DBManager.fetch_all_data(curs, sql, is_dict=False)
                 DBManager.destroy_db_connect(conn, curs)
-            host_uid, host_name = host_info[0][0], host_info[0][1]
+            host_uid, host_name = str(host_info[0][0]), str(host_info[0][1])
             for idx, data in enumerate(rank_device_info):
                 rank_device_info[idx] = list(data) + [host_uid, ]
             self.all_rank_host_info[host_uid] = host_name

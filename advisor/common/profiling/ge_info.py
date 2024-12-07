@@ -1,14 +1,29 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-DB
+# Copyright (C) 2024-2024. Huawei Technologies Co., Ltd. All rights reserved.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """
 import logging
 import os
 from typing import Any, List
 
 from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 
 from profiler.advisor.dataset.profiling.db_manager import ConnectionManager
 from profiler.advisor.dataset.profiling.profiling_parser import ProfilingParser
+from profiler.advisor.utils.utils import check_path_valid
 
 logger = logging.getLogger()
 
@@ -28,14 +43,19 @@ class GeInfo(ProfilingParser):
         super().__init__(path)
         self.op_state_info_list = None
 
-    def parse_from_file(self, profiling_db_file):
+    def parse_from_file(self, file: str):
         """
         ge info
         """
-        db_path, db_file = os.path.split(profiling_db_file)
+        db_path, db_file = os.path.split(file)
+        check_path_valid(db_path)
         if not ConnectionManager.check_db_exists(db_path, [db_file]):
             return False
-        conn = ConnectionManager(db_path, db_file)
+        try:
+            conn = ConnectionManager(db_path, db_file)
+        except SQLAlchemyError as e:
+            logger.error("Database error: %s", e)
+            return False
         if conn.check_table_exists(['TaskInfo']):
             with conn().connect() as sql_conn:
                 self.op_state_info_list = sql_conn.execute(text("select op_name, op_state from TaskInfo")).fetchall()

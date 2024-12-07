@@ -16,11 +16,11 @@
 import logging
 
 from profiler.advisor.analyzer.base_analyzer import BaseAnalyzer
-from profiler.advisor.common import constant
+from profiler.prof_common.constant import Constant
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.advisor.dataset.cluster.cluster_dataset import ClusterStepTraceTimeDataset
-from profiler.advisor.utils.utils import safe_index
+from profiler.advisor.utils.utils import safe_index_value, safe_division, convert_to_int, safe_index, convert_to_float
 
 logger = logging.getLogger()
 
@@ -45,6 +45,7 @@ class SlowRankAnalyzer(BaseAnalyzer):
         self.bottelneck = ''
         self.suggestion = ''
         self._steps = set()
+        self.format_datas = {}
         if self.step_trace_dict is not None:
             self.format_datas = self.format_details()
 
@@ -61,8 +62,10 @@ class SlowRankAnalyzer(BaseAnalyzer):
 
     def optimize(self, **kwargs):
         if self.step_trace_dict is None:
-            logger.error("slow_rank 分析失败，原因是数据加载失败，请检查你的cluster_analysis_outpu文件夹 \
-                  如不关心这类数据请忽略")
+            logger.error(
+                "Slow rank analysis failed, "
+                "please ensure file 'step_trace_time.csv' exists in your profiling directory %s",
+                Constant.ASCEND_PROFILER_OUTPUT)
             return self.result
         self.process()
         self.make_record()
@@ -110,8 +113,8 @@ class SlowRankAnalyzer(BaseAnalyzer):
         headers = ["step", "rank_id", "compute(us)", "communication(us)", "free(us)"]
         data_list = []
         for key, value in self.step_trace_dict.items():
-            step, rank_id = key.split(constant.STEP_RANK_SEP)
-            data_list.append([int(step), int(rank_id)] + value)
+            step, rank_id = key.split(Constant.STEP_RANK_SEP)
+            data_list.append([convert_to_int(step), convert_to_int(rank_id)] + value)
             if step and step not in self._steps:
                 self._steps.add(step)
 
@@ -131,17 +134,20 @@ class SlowRankAnalyzer(BaseAnalyzer):
                                          template_dir="templates",
                                          template_name="cluster_analysis.html",
                                          cann_version=self.cann_version,
-                                         torch_version=self.torch_version,
+                                         profiling_type=self.profiling_type,
+                                         profiling_version=self.profiling_version,
                                          result=result_for_html)
 
     def get_global_step_rank(self, dimension):
         global_step_rank = {}
+        if not self.format_datas:
+            return global_step_rank
 
         headers = self.format_datas.get("headers")
 
-        dimension_index = safe_index(headers, dimension)
-        rank_id_index = safe_index(headers, "rank_id")
-        step_index = safe_index(headers, "step")
+        dimension_index = safe_index_value(headers, dimension)
+        rank_id_index = safe_index_value(headers, "rank_id")
+        step_index = safe_index_value(headers, "step")
         if dimension_index is None or rank_id_index is None:
             return global_step_rank
 
@@ -150,6 +156,7 @@ class SlowRankAnalyzer(BaseAnalyzer):
 
         if self.compute_max_gap_ratio(data_list, sum(data_list) / len(
                 data_list)) < self.RATIO_THRESHOLD:
+            logger.info("There is no significant difference in computation time among all ranks")
             return global_step_rank
         max_time_index = data_list.index(max_time)
         min_time_index = data_list.index(min_time)
@@ -161,7 +168,7 @@ class SlowRankAnalyzer(BaseAnalyzer):
             max_time_step = self.format_datas.get("data")[max_time_index][step_index]
             min_time_step = self.format_datas.get("data")[min_time_index][step_index]
         else:
-            max_time_step, min_time_step = constant.DEFAULT_STEP, constant.DEFAULT_STEP
+            max_time_step, min_time_step = Constant.DEFAULT_STEP, Constant.DEFAULT_STEP
 
         global_step_rank["maximum"] = {"rank_id": max_time_rank_id, "step": max_time_step}
         global_step_rank["minimum"] = {"rank_id": min_time_rank_id, "step": min_time_step}
@@ -170,11 +177,13 @@ class SlowRankAnalyzer(BaseAnalyzer):
 
     def get_stage_step_rank(self, dimension):
         stage_step_rank = {}
+        if not self.format_datas:
+            return stage_step_rank
 
         headers = self.format_datas.get("headers")
-        dimension_index = safe_index(headers, dimension)
-        rank_id_index = safe_index(headers, "rank_id")
-        step_index = safe_index(headers, "step")
+        dimension_index = safe_index_value(headers, dimension)
+        rank_id_index = safe_index_value(headers, "rank_id")
+        step_index = safe_index_value(headers, "step")
         if dimension_index is None or rank_id_index is None:
             return stage_step_rank
 
@@ -184,7 +193,7 @@ class SlowRankAnalyzer(BaseAnalyzer):
         if step_index is not None:
             step_list = [tuple_list[step_index] for tuple_list in self.format_datas.get("data")]
         else:
-            step_list = [constant.DEFAULT_STEP] * len(rank_list)
+            step_list = [Constant.DEFAULT_STEP] * len(rank_list)
 
         for index, stage in enumerate(self.stages):
             tmp_step_list, tmp_rank_list, tmp_time_list = [], [], []
@@ -196,8 +205,8 @@ class SlowRankAnalyzer(BaseAnalyzer):
                 tmp_rank_list.append(rank_id)
                 tmp_time_list.append(time)
 
-            if self.compute_max_gap_ratio(tmp_time_list, sum(tmp_time_list) / len(
-                    tmp_time_list)) < self.RATIO_THRESHOLD:
+            if self.compute_max_gap_ratio(tmp_time_list, safe_division(sum(tmp_time_list), len(
+                    tmp_time_list))) < self.RATIO_THRESHOLD:
                 continue
 
             max_time, min_time = max(tmp_time_list), min(tmp_time_list)
@@ -205,12 +214,52 @@ class SlowRankAnalyzer(BaseAnalyzer):
 
             stage_key = f"stage-{index}"
             stage_step_rank[stage_key] = {}
-            stage_step_rank[stage_key]["maximum"] = {"rank_id": tmp_rank_list[max_time_index],
-                                                     "step": tmp_step_list[max_time_index]}
-            stage_step_rank[stage_key]["minimum"] = {"rank_id": tmp_rank_list[min_time_index],
-                                                     "step": tmp_step_list[min_time_index]}
+            stage_step_rank[stage_key]["maximum"] = {
+                "rank_id": tmp_rank_list[max_time_index],
+                "step": tmp_step_list[max_time_index],
+            }
+            stage_step_rank[stage_key]["minimum"] = {
+                "rank_id": tmp_rank_list[min_time_index],
+                "step": tmp_step_list[min_time_index],
+            }
 
         return stage_step_rank
+
+    def get_step_duration(self, rank_id, step=None):
+        # 根据指定rank和step，计算compute, communication, free三个维度之和作为单步耗时，用于计算优先级
+        headers = self.format_datas.get("headers")
+        default_step_duration = 0.0
+
+        free_col_index = safe_index_value(headers, SlowRankAnalyzer.FREE)
+        compute_col_index = safe_index_value(headers, SlowRankAnalyzer.COMPUTE)
+        communicate_col_index = safe_index_value(headers, SlowRankAnalyzer.COMMUNICATION)
+        rank_id_index = safe_index_value(headers, "rank_id")
+        step_index = safe_index_value(headers, "step")
+        if rank_id_index is None:
+            return default_step_duration
+
+        # 获取目标rank_id和step的行索引
+        if step is None or step_index is None:
+            row_index = safe_index_value(
+                [tuple_list[rank_id_index] == rank_id for tuple_list in self.format_datas.get("data")],
+                True
+            )
+        else:
+            index_match_list = []
+            for tuple_list in self.format_datas.get("data"):
+                index_match_list.append(tuple_list[rank_id_index] == rank_id and tuple_list[step_index] == step)
+            row_index = safe_index_value(
+                index_match_list,
+                True
+            )
+        if row_index is None:
+            return default_step_duration
+
+        compute_time = safe_index(safe_index(self.format_datas.get("data"), row_index, []), compute_col_index, 0)
+        communicate_time = safe_index(safe_index(self.format_datas.get("data"), row_index, []), communicate_col_index,
+                                      0)
+        free_time = safe_index(safe_index(self.format_datas.get("data"), row_index, []), free_col_index, 0)
+        return convert_to_float(compute_time) + convert_to_float(communicate_time) + convert_to_float(free_time)
 
     def get_priority(self):
         pass

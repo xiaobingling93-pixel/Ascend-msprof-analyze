@@ -1,4 +1,19 @@
-from compare_backend.utils.constant import Constant
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+from profiler.prof_common.constant import Constant
 
 
 class ProfilingInfo:
@@ -140,8 +155,8 @@ class ProfilingInfo:
 
     @property
     def cube_time(self):
-        return (
-                self.matmul_time_cube + self.matmul_time_vector + self.other_cube_time) / Constant.MILLISECONDS_TO_SECONDS
+        return ((self.matmul_time_cube + self.matmul_time_vector + self.other_cube_time)
+                / Constant.MILLISECONDS_TO_SECONDS)
 
     @property
     def vec_time(self):
@@ -204,9 +219,12 @@ class ProfilingInfo:
         return (self.fa_time_bwd_cube + self.fa_time_bwd_vector) / Constant.MILLISECONDS_TO_SECONDS
 
     def calculate_other_time(self):
-        self.other_time = max(
-            [0, self.compute_time - self.cube_time - self.fa_time_fwd - self.fa_time_bwd -
-             self.pa_time - self.vec_time - self.conv_time_fwd - self.conv_time_bwd])
+        self.other_time = max(0,
+                              (self.compute_time_ms - self.fa_fwd_time -
+                               self.fa_bwd_time - self.conv_fwd_time -
+                               self.conv_bwd_time - self.mm_total_time -
+                               self.vector_total_time - self.sdma_time_tensor_move -
+                               self.other_cube_time - self.page_attention_time) / Constant.MILLISECONDS_TO_SECONDS)
 
     def calculate_schedule_time(self):
         self.scheduling_time = (self.e2e_time - self.compute_time - self.lccl_time - self.communication_not_overlapped)

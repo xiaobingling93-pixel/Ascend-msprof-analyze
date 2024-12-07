@@ -4,14 +4,14 @@ log module
 import logging
 import os
 
-from profiler.advisor.common import constant as const
+from profiler.prof_common.constant import Constant
 
 
 def get_log_level():
-    log_level = os.getenv(const.ADVISOR_LOG_LEVEL, const.DEFAULT_LOG_LEVEL).upper()
+    log_level = os.getenv(Constant.ADVISOR_LOG_LEVEL, Constant.DEFAULT_LOG_LEVEL).upper()
     if not hasattr(logging, log_level):
         raise AttributeError(f"module 'logging' has no attribute '{log_level}', "
-                             f"supported log level: {', '.join(const.SUPPORTED_LOG_LEVEL)}")
+                             f"supported log level: {', '.join(Constant.SUPPORTED_LOG_LEVEL)}")
     return log_level
 
 

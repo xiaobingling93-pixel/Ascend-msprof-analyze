@@ -5,7 +5,7 @@ import unittest
 from unittest import mock
 from unittest.mock import MagicMock
 
-from common_func.constant import Constant
+from profiler.prof_common.constant import Constant
 from advisor_backend.cluster_advice.kernel_cluster_advice import KernelClusterAdvice
 
 

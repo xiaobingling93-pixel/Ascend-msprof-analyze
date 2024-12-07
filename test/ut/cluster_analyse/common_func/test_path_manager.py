@@ -3,7 +3,7 @@ import os
 import time
 import pytest
 
-from common_func.path_manager import PathManager
+from profiler.prof_common.path_manager import PathManager
 
 
 PATH_DIR = "resource"
@@ -46,7 +46,7 @@ class TestPathManager(unittest.TestCase):
         PathManager.input_path_common_check(PATH_FILE)
 
     def test_check_path_owner_consistent(self):
-        PathManager.check_path_owner_consistent(PATH_DIR)
+        PathManager.check_path_owner_consistent([PATH_DIR])
 
     def test_check_path_writeable(self):
         link_name = "test_link" + str(time.time())
@@ -71,7 +71,6 @@ class TestPathManager(unittest.TestCase):
         os.symlink(PATH_FILE, link_name)
         with pytest.raises(RuntimeError) as error:
             PathManager.remove_path_safety(link_name)
-        PathManager.remove_path_safety(path + "not_exist")
         PathManager.remove_path_safety(path)
         os.unlink(link_name)
 

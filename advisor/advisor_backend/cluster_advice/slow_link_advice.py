@@ -16,8 +16,8 @@
 import os
 from collections import defaultdict
 from common_func_advisor.constant import Constant
-from common_func.file_manager import FileManager
 from cluster_advice.cluster_advice_base import ClusterAdviceBase
+from profiler.prof_common.file_manager import FileManager
 
 
 class SlowLinkAdvice(ClusterAdviceBase):
@@ -35,12 +35,13 @@ class SlowLinkAdvice(ClusterAdviceBase):
 
     def __init__(self, collection_path: str, kwargs: dict = None):
         super().__init__(collection_path)
-        self.rank_bw_dict = defaultdict(lambda: {
+        default_value = {
             self.RDMA_TIME_MS: 0,
             self.RDMA_SIZE_MB: 0,
             self.SDMA_TIME_MS: 0,
             self.SDMA_SIZE_MB: 0,
-        })
+        }
+        self.rank_bw_dict = defaultdict(lambda: default_value.copy())
 
     @staticmethod
     def compute_ratio(dividend: float, divisor: float):
@@ -65,9 +66,9 @@ class SlowLinkAdvice(ClusterAdviceBase):
         return self.output_format_data
 
     def process(self, communication_json: dict):
-        for comm_group, group_dict in communication_json.items():
-            for step, step_dict in group_dict.items():
-                for op, op_dict in step_dict.items():
+        for _, group_dict in communication_json.items():
+            for _, step_dict in group_dict.items():
+                for _, op_dict in step_dict.items():
                     self.compute_bandwidth(op_dict)
         if self.rank_bw_dict:
             self.produce_bottleneck(self.RDMA_BANDWIDTH)
@@ -88,7 +89,7 @@ class SlowLinkAdvice(ClusterAdviceBase):
                     self.rank_bw_dict[rank][self.RDMA_SIZE_MB] += bw_dict.get(self.TRANSIT_SIZE)
                     self.rank_bw_dict[rank][self.RDMA_TIME_MS] += bw_dict.get(self.TRANSIT_TIME)
 
-        for rank, rank_dict in self.rank_bw_dict.items():
+        for rank, _ in self.rank_bw_dict.items():
             self.rank_bw_dict[rank][self.RDMA_BANDWIDTH] = self.compute_ratio(
                 self.rank_bw_dict[rank][self.RDMA_SIZE_MB], self.rank_bw_dict[rank][self.RDMA_TIME_MS])
             self.rank_bw_dict[rank][self.SDMA_BANDWIDTH] = self.compute_ratio(
@@ -96,6 +97,8 @@ class SlowLinkAdvice(ClusterAdviceBase):
 
     def produce_bottleneck(self, link_type: str):
         data_list = [rank_dict.get(link_type, 0) for rank_id, rank_dict in self.rank_bw_dict.items()]
+        if len(data_list) == 0:
+            raise ValueError("Cannot calculate avg_bw, data_list is empty!")
         avg_bw = round(sum(data_list) / len(data_list), 3)
         if avg_bw == 0:
             return

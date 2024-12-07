@@ -16,7 +16,7 @@
 # limitations under the License.
 import logging
 
-from profiler.advisor.common import constant as const
+from profiler.prof_common.constant import Constant
 from profiler.advisor.analyzer.base_analyzer import BaseAnalyzer
 from profiler.advisor.dataset.timeline_event_dataset import ScheduleAnalysisDataset
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
@@ -49,9 +49,12 @@ class OpDispatchAnalyzer(BaseAnalyzer):
         :param data: input datasets
         :return: result
         """
+        if "mindspore" in self.profiling_type:
+            logger.warning("The analyzer %s does not support MindSpore.", self.__class__.__name__)
+            return self.result
         self.get_op_compile_info(self.dataset)
         self.make_record(self.result)
-        self.make_render(self.html_render)
+        self.make_render(self.html_render, rank=kwargs.get('rank'))
         return self.result
 
     def get_op_compile_info(self, event_dataset: ScheduleAnalysisDataset):
@@ -60,11 +63,11 @@ class OpDispatchAnalyzer(BaseAnalyzer):
         """
         if hasattr(event_dataset, "ops_compile"):
             self._op_compile = getattr(event_dataset, "ops_compile")
-            if not self._op_compile or self._op_compile.total_count < const.MAX_OP_COMPILE_NUM:
+            if not self._op_compile or self._op_compile.total_count < Constant.MAX_OP_COMPILE_NUM:
                 return
 
             self._issues_record.append(['operator dispatch',
-                                        const.OP_COMPILE_ID,
+                                        Constant.OP_COMPILE_ID,
                                         self._op_compile.total_count,
                                         self._op_compile.total_time])
         else:
@@ -106,7 +109,8 @@ class OpDispatchAnalyzer(BaseAnalyzer):
                                     template_name="operator_dispatch.html",
                                     issues=issues,
                                     optimizers=optimizations,
-                                    priority_background_color=self.get_priority())
+                                    priority_background_color=self.get_priority(),
+                                    rank=kwargs.get("rank"))
 
     def get_priority(self):
         step_duration = getattr(self.dataset, "step_duration", None)

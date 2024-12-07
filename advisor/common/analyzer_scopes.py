@@ -22,6 +22,8 @@ class SupportedScopes:
     SLOW_LINK = "slow_link"
     COMMUNICATION_RETRANSMISSION_DETECTION = "communication_retransmission_analysis"
     PACKET = "packet_analysis"
+    BANDWIDTH_CONTENTION_DETECTION = "bandwidth_contention_analysis"
+    BYTE_ALIGNMENT_DETECTION = "byte_alignment_analysis"
     OVER_ALL = "over_all"
     ENVIRONMENT_VARIABLE_ANALYSIS = "environment_variable_analysis"
     DYNAMIC_SHAPE_ANALYSIS = "dynamic_shape_analysis"
@@ -36,3 +38,4 @@ class SupportedScopes:
     MEMORY = "memory"
     STAGE_COMPUTE = "stage_compute"
     GC_ANALYSIS = "gc_analysis"
+    COMPARISON = "comparison"

@@ -19,8 +19,9 @@ from collections import defaultdict
 from profiler.advisor.dataset.cluster.cluster_dataset import ClusterCommunicationDataset
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
-from profiler.cluster_analyse.common_func.file_manager import FileManager
+from profiler.prof_common.file_manager import FileManager
 from profiler.advisor.dataset.cluster.hccl_collection import HcclInfo
+from profiler.prof_common.constant import Constant
 
 logger = logging.getLogger()
 
@@ -50,8 +51,15 @@ class CommunicationRetransmissionChecker:
         self.step_id = kwargs.get("step")
         self.stage = None
         self.group_statistics = defaultdict(GroupStatistic)
-        self.headers = ["Communication group", "Op name", "Step id", "Rank id", "RDMA transmit size(MB)",
-                        "RDMA transmit time(ms)", "RDMA bandwidth"]
+        self.headers = [
+            "Communication group",
+            "Op name",
+            "Step id",
+            "Rank id",
+            "RDMA transmit size(MB)",
+            "RDMA transmit time(ms)",
+            "RDMA bandwidth",
+        ]
         self._init_rule()
 
     def check_possible_retransmission_occurrence(self, hccl_list: List[HcclInfo]):
@@ -67,6 +75,8 @@ class CommunicationRetransmissionChecker:
         """
         for group_name, hccl_group_dict in hccl_dataset.hccl_dict.items():
             for op_name, hccl_op_dict in hccl_group_dict.items():
+                if op_name == Constant.TOTAL_OP_INFO:
+                    continue
                 for step_id, hccl_list in hccl_op_dict.items():
                     if self.step_id and step_id != self.step_id:  # 传输指定step（self.step_id）情况下，非目标step跳过
                         continue
@@ -95,7 +105,8 @@ class CommunicationRetransmissionChecker:
         optimization_item = OptimizeItem("Communication retransmission analysis", self.desc, self.suggestions)
         result.add(OptimizeRecord(optimization_item))
 
-        sub_table_name = "Comm Retransmission Analysis" if not self.stage else f"Stage-{self.stage}: Comm Retransmission Analysis"
+        sub_table_name = \
+            "Comm Retransmission Analysis" if not self.stage else f"Stage-{self.stage}: Comm Retransmission Analysis"
         result.add_detail(sub_table_name, headers=self.headers)
 
         for row in self.abnormal_rdma_list:

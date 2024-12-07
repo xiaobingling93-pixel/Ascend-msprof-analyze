@@ -1,0 +1,41 @@
+<div class="collapsible">
+  <h2 class="collapsible-header" style="background-color: {{ priority_background_color }};">Bandwidth Contention Analysis</h2>
+  <div class="collapsible-content">
+      <a style="font-weight: bold" id="contention_analysis_description">{{ desc }}</a>
+
+         <table>
+            <tr>
+                <th>Suggestions</th>
+            </tr>
+
+            {% for item in solutions %}
+                {% set rowloop = loop %}
+                {% for key, value in item.items() %}
+
+                <tr>
+                    <td>{{  rowloop.index }}. {{ value.desc }}</td>
+                </tr>
+                {% endfor %}
+            {% endfor %}
+         </table>
+         <br><br>
+         <a style="font-weight: bold" id="Retransmission group details:">The following table lists the {{topk}} operators with the
+             most severe performance deterioration.</a>
+         <table>
+              <tr>
+              {% for header in headers %}
+                  <th> {{ header }} </th>
+              {% endfor %}
+              </tr>
+
+              {% for row in data %}
+              <tr>
+                  {% for element in row %}
+                  <td>{{ element|safe }}</td>
+                  {% endfor %}
+              </tr>
+              {% endfor %}
+         </table>
+
+  </div>
+</div>

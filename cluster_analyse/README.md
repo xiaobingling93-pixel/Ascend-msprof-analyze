@@ -2,7 +2,11 @@
 cluster_analyse（集群分析工具）是在集群场景下，通过此工具来进行集群数据的分析，当前主要对基于通信域的迭代内耗时分析、通信时间分析以及通信矩阵分析为主， 从而定位慢卡、慢节点以及慢链路问题。
 
 ## 性能数据采集
-当前集群调优工具主要支持Ascend PyTorch Profiler采集方式下的集群数据。采集方式参考：[Profiling数据采集](https://gitee.com/ascend/mstt/tree/master/profiler)，此工具只需要通过Ascend PyTorch Porfiler工具采集NPU的性能数据即可。
+当前集群调优工具主要支持PyTorch场景的Ascend PyTorch Profiler采集方式和MindSpore场景的MindSpore Profiler采集方式下的集群数据。
+
+此工具只需要NPU的性能数据作为输入。
+
+Ascend PyTorch Profiler采集方法请参见《[NPU性能数据采集](https://gitee.com/ascend/mstt/tree/master/profiler)》，MindSpore Profiler采集方法请参见《[性能调试](https://www.mindspore.cn/mindinsight/docs/zh-CN/r2.3/performance_profiling_ascend.html)》。
 
 我们要求至少是L1级别的数据。
 ```python
@@ -12,7 +16,7 @@ experimental_config = torch_npu.profiler._ExperimentalConfig(
 ```
 ### 确认数据是否可用
 
-打开采集到的某张卡数据(*ascend_pt结尾的文件夹)，可用的数据应该具备：
+打开采集到的某张卡数据(\*ascend_pt、\*ascend_ms结尾的文件夹)，可用的数据应该具备：
 
 - ./profiler_info_x.json,
 - ./ASCEND_PROFILER_OUTPUT/step_trace_time.csv,
@@ -26,7 +30,7 @@ experimental_config = torch_npu.profiler._ExperimentalConfig(
 - analysis.db
 - ascend_pytorch_profiler_{rank_id}.db
 
-以上csv、json文件与db文件只能存在一类，否则集群分析工具解析异常。
+以上csv、json文件与db文件只能存在一类，否则集群分析工具解析异常。MindSpore场景暂不支持以上db文件。
 
 确认这几个文件生成后，继续下面的集群分析。
 
@@ -36,7 +40,7 @@ experimental_config = torch_npu.profiler._ExperimentalConfig(
 
 1. 参见《[性能工具](../README.md)》完成工具安装。建议安装最新版本。
 
-2. 将所有卡的数据拷贝并汇集到一个目录下，在本目录下运行以下命令即可生成cluster_analysis_output文件夹。
+2. 将所有卡的数据拷贝并汇集到一个目录下，运行以下命令，在该目录下即可生成cluster_analysis_output文件夹。
 
    ```bash
    msprof-analyze cluster -d {cluster profiling data path} -m {mode}
@@ -52,9 +56,11 @@ experimental_config = torch_npu.profiler._ExperimentalConfig(
    
    | 参数名                | 说明                                                         | 是否必选 |
    | --------------------- | ------------------------------------------------------------ | -------- |
-   | --collection_path或-d | 性能数据汇集目录，运行分析脚本之后会在该目录下自动创建cluster_analysis_output文件夹，保存分析数据。 | 是       |
+   | --profiling_path或-d  | 性能数据汇集目录。未配置-o参数时，运行分析脚本之后会在该目录下自动创建cluster_analysis_output文件夹，保存分析数据。 | 是       |
+   | --output_path或-o     | 自定义输出路径，运行分析脚本之后会在该目录下自动创建cluster_analysis_output文件夹，保存分析数据。 | 否       |
    | --mode或-m            | 数据解析模式，取值详见“**--mode参数说明**”表。               | 否       |
-
+   | --data_simplification | 数据精简模式。对于数据量过大的性能数据db文件，可以通过配置该参数将数据精简，并提高工具分析效率。 | 否       |
+   | --force               | 强制跳过用户属主（文件是否属于当前用户）及文件大小（csv文件小于5G，json文件小于10G,db文件小于8G）校验。  | 否       |
    
    --mode参数说明：
    
@@ -63,7 +69,7 @@ experimental_config = torch_npu.profiler._ExperimentalConfig(
    | communication_matrix | 解析通信矩阵数据。                                           | 否       |
    | communication_time   | 解析通信耗时数据。                                           | 否       |
    | all                  | 同时解析通信矩阵communication_matrix和通信耗时数据communication_time，--mode参数默认值为all。 | 否       |
-
+   
    
 
 ### 交付件
@@ -88,13 +94,13 @@ F列：Overlapped，统计计算与通信重叠的耗时。
 
 G列：Communication，通信时间的全部耗时。
 
-H列：Free，空闲时间，只device侧既不在通信也不在计算的耗时，可能在做sdma拷贝或者空等。
+H列：Free，空闲时间，指device侧既不在通信也不在计算的耗时，可能在做sdma拷贝或者空等。
 
-I列：Stage时间，I、J、K列属于pp并行时有效的数值，stage时间代表除recieve算子时间外的时间。
+I列：Stage时间，I、J、K列属于pp并行时有效的数值，stage时间代表除receive算子时间外的时间。
 
 J列：Bubble时间，指receive时间的总和。
 
-K列：Communication（Not Overlapped and Exclude Receive）指剔除recieve算子外的并且不被掩盖的通信时间。
+K列：Communication（Not Overlapped and Exclude Receive）指剔除receive算子外的并且不被掩盖的通信时间。
 
 L列：Preparing，指迭代开始到首个计算或通信算子运行的时间。
 
@@ -132,9 +138,9 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 ```
 **Tips**：可以根据rank互联的带宽以及链路类型，判断是否有慢链路的问题。
 
-- "LOCAL"是片内拷贝，速率非常快，不需要考虑。
-- “HCCS”或“PCIE”是节点内片间拷贝，速度在18GB左右或以上比较正常。
-- “RDMA”是节点间拷贝，910A速度在12GB左右或以上。
+- "LOCAL"是片内拷贝，速度最高。
+- “HCCS”或“PCIE”是节点内片间拷贝，速度居中。
+- “RDMA”是节点间拷贝，速度最低。
 
 #### cluster_communication.json
 
@@ -146,6 +152,6 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 
 解析analysis.db或ascend_pytorch_profiler_{rank_id}.db生成的交付件，根据数据解析模式不同而解析不同的数据，可以使用MindStudio Insight工具展示。
 
+#### communication_group.json
 
-
-
+记录通信域信息，解析analysis.db生成的交付件，collective表示集合通信域，P2P表示点对点通信，用户无须关注该文件。

@@ -1,16 +1,32 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import json
 import os
 import stat
-from textwrap import fill
 from collections import OrderedDict
 
 import click
 import xlsxwriter
 from prettytable import ALL, PrettyTable
 
-from profiler.advisor.common import constant as const
+from profiler.prof_common.constant import Constant
 from profiler.advisor.utils.utils import singleton, logger
 from profiler.advisor.config.config import Config
+from profiler.advisor.utils.file import FdOpen, check_dir_writable
+from profiler.prof_common.file_manager import FileManager
 
 
 class ResultWriter:
@@ -19,36 +35,25 @@ class ResultWriter:
 
     def __init__(self, result_path=None):
         self.result_path = result_path
-        self.workbook = xlsxwriter.Workbook(result_path)
+        check_dir_writable(os.path.dirname(result_path))
+        self.workbook = xlsxwriter.Workbook(result_path, {"nan_inf_to_errors": True})
 
         self.header_format = None
         self.data_cell_format = None
         self._init_header_format()
         self._init_data_cell_format()
 
-    def _init_header_format(self):
-        self.header_format = self.workbook.add_format({
-            "bold": True,
-            "color": "#FFFFFF",
-            "bg_color": "#187498",
-            "align": "center",
-            "border": 1,
-            "font_name": "Arial",
-        })
-
-    def _init_data_cell_format(self):
-        self.data_cell_format = self.workbook.add_format({
-            "bold": False,
-            "align": "left",
-            "valign": "top",
-            "border": 1,
-            "font_name": "Arial",
-            'text_wrap': True
-        })
-
     def add_data(self, sheet_name, headers, data_list):
         if len(sheet_name) > self.MAX_SHEET_NAME_LENGTH:
             sheet_name = sheet_name[:self.MAX_SHEET_NAME_LENGTH]
+
+        worksheet_name_list = [worksheet.name for worksheet in self.workbook.worksheets()]
+        if sheet_name.lower() in [name.lower() for name in worksheet_name_list]:
+            logger.warning(
+                "Exists worksheets %s, skip add duplicate worksheet with name '%s'",
+                           worksheet_name_list, sheet_name
+            )
+            return
 
         sheet = self.workbook.add_worksheet(sheet_name)
 
@@ -70,6 +75,26 @@ class ResultWriter:
         except Exception as e:
             logger.error("Failed to save analysis results, reason is %s", e)
 
+    def _init_header_format(self):
+        self.header_format = self.workbook.add_format({
+            "bold": True,
+            "color": "#FFFFFF",
+            "bg_color": "#187498",
+            "align": "center",
+            "border": 1,
+            "font_name": "Arial",
+        })
+
+    def _init_data_cell_format(self):
+        self.data_cell_format = self.workbook.add_format({
+            "bold": False,
+            "align": "left",
+            "valign": "top",
+            "border": 1,
+            "font_name": "Arial",
+            'text_wrap': True
+        })
+
 
 @singleton
 class SheetRecoder:
@@ -80,10 +105,6 @@ class SheetRecoder:
     @property
     def sheet_data(self):
         return self._sheet_data
-
-    def _init_sheet_name(self, sheet_name):
-        if sheet_name not in self._sheet_data:
-            self._sheet_data[sheet_name] = {}
 
     def add_headers(self, sheet_name, headers):
         self._init_sheet_name(sheet_name)
@@ -101,6 +122,10 @@ class SheetRecoder:
 
     def clear(self):
         self._sheet_data.clear()
+
+    def _init_sheet_name(self, sheet_name):
+        if sheet_name not in self._sheet_data:
+            self._sheet_data[sheet_name] = {}
 
 
 @singleton
@@ -165,12 +190,11 @@ class OptimizeResult:
             return
         tune_op_dict = {"tune_ops_name": self._tune_op_list}
         tune_ops_file = Config().tune_ops_file
+        path = os.path.dirname(tune_ops_file)
+        file_name = os.path.basename(tune_ops_file)
         try:
-
-            with os.fdopen(os.open(tune_ops_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, stat.S_IWUSR | stat.S_IRUSR),
-                           'w', encoding="utf-8") as op_tune_file:
-                json.dump(tune_op_dict, op_tune_file)
-        except OSError as error:
+            FileManager.create_json_file(path, tune_op_dict, file_name, True)
+        except RuntimeError as error:
             logger.error("Dump op_list to %s failed, %s", tune_ops_file, error)
             return
         logger.info("Save tune op name list to %s", tune_ops_file)
@@ -219,4 +243,4 @@ class TerminalResult:
         if table_row_cnt > 0:
             click.echo(self.table)
         else:
-            click.echo(click.style(const.SKIP_ANALYZE_PROMPT, fg='red'))
+            click.echo(click.style(Constant.SKIP_ANALYZE_PROMPT, fg='red'))

@@ -1,4 +1,22 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+# Copyright (C) 2024-2024. Huawei Technologies Co., Ltd. All rights reserved.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""
 from decimal import Decimal
+
+
 class AdvisorDict(dict):
     def __getstate__(self):
         return self.__dict__
@@ -19,6 +37,14 @@ class AdvisorDict(dict):
 class TimelineEvent(AdvisorDict):
 
     def ts_include(self, event):
-        return Decimal(self.ts) <= Decimal(event.ts) and Decimal(self.ts) + Decimal(self.dur) >= Decimal(
-            event.ts) + Decimal(
-            event.dur)
+        self_ts = self.ts
+        event_ts = event.ts
+
+        if not self_ts or not event_ts:
+            return False
+
+        self_dur = self.dur if not isinstance(self.dur, dict) else 0.0
+        event_dur = event.dur if not isinstance(event.dur, dict) else 0.0
+
+        return Decimal(self_ts) <= Decimal(event_ts) and Decimal(self_ts) + Decimal(self_dur) >= Decimal(
+            event_ts) + Decimal(event_dur)

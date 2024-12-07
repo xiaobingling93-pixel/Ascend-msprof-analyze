@@ -1,7 +1,24 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
 from decimal import Decimal
 
 from compare_backend.utils.common_func import convert_to_float, convert_to_decimal
-from compare_backend.utils.constant import Constant
+from compare_backend.compare_config.compare_config import CompareConfig
+from profiler.prof_common.constant import Constant
 
 
 class TraceEventBean:
@@ -17,6 +34,7 @@ class TraceEventBean:
         self._name = ""
         self._args = {}
         self._is_torch_op = False
+        self._input_shape = None
         self.init()
 
     @property
@@ -107,12 +125,20 @@ class TraceEventBean:
         return self._event
 
     @property
+    def input_shapes(self):
+        return self._input_shape
+
+    @property
     def is_torch_op(self) -> bool:
         return self._is_torch_op
 
     @is_torch_op.setter
     def is_torch_op(self, value: bool):
         self._is_torch_op = value
+
+    @input_shapes.setter
+    def input_shapes(self, value: str):
+        self._input_shape = value
 
     @classmethod
     def is_sdma(cls):
@@ -226,19 +252,19 @@ class TraceEventBean:
         """
         这个类在cpu op和gpu中均有用到，这里是在cpu op阶段判断
         """
-        return any(cube_mask in self.lower_name for cube_mask in Constant.CPU_OP_FA_MASK)
+        return any(cube_mask in self.lower_name for cube_mask in CompareConfig().fa_mask)
 
     def is_conv_for_cpu_op(self) -> bool:
         """
         这个类在cpu op和gpu中均有用到，这里是在cpu op阶段判断
         """
-        return self.lower_name.startswith(Constant.CPU_OP_CONV)
+        return any(conv_mask in self.lower_name for conv_mask in CompareConfig().conv_mask)
 
     def is_matmul_for_cpu_op(self) -> bool:
         """
         这个类在cpu op和gpu中均有用到，这里是在cpu op阶段判断
         """
-        return any(bwd_mask in self.lower_name for bwd_mask in Constant.CPU_OP_MATMUL_MASK)
+        return any(bwd_mask in self.lower_name for bwd_mask in CompareConfig().mm_mask)
 
     def is_bwd_for_cpu_op(self) -> bool:
         """
@@ -250,10 +276,10 @@ class TraceEventBean:
         return self.is_matmul_for_cpu_op() or self.is_fa_for_cpu_op() or self.is_conv_for_cpu_op()
 
     def is_vector(self):
-        return not any(cube_mask in self.lower_name for cube_mask in Constant.KERNEL_CUBE_MASK)
+        return not any(cube_mask in self.lower_name for cube_mask in CompareConfig().cube_mask)
 
     def is_cube_kernel_cat(self):
-        return any(cube_mask in self.lower_name for cube_mask in Constant.KERNEL_CUBE_MASK)
+        return any(cube_mask in self.lower_name for cube_mask in CompareConfig().cube_mask)
 
     def init(self):
         if isinstance(self._event, dict):

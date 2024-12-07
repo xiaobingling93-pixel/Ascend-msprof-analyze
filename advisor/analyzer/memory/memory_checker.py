@@ -1,3 +1,17 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import os
 import re
 import logging
@@ -6,7 +20,7 @@ import yaml
 from profiler.advisor.dataset.timeline_event_dataset import ScheduleAnalysisDataset, MemCollector
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
-from profiler.cluster_analyse.common_func.file_manager import FileManager
+
 
 logger = logging.getLogger()
 
@@ -49,9 +63,9 @@ class MemoryOpsChecker:
             for solution in rule.get("solutions", []):
                 if memory_op_name not in solution:
                     continue
-                suggestion = solution.get(memory_op_name, {}).get("desc")
-
-                self.suggestions.append(f"{suggestion} for optimize memory operator {memory_op_name}")
+                suggestions = solution.get(memory_op_name, {}).get("desc")
+                for suggestion in suggestions:
+                    self.suggestions.append(f"For {memory_op_name}: {suggestion}")
 
     def make_record(self, result: OptimizeResult):
         """
@@ -73,4 +87,5 @@ class MemoryOpsChecker:
                                     template_name="memory.html",
                                     desc=self.desc,
                                     suggestions=self.suggestions,
-                                    priority_background_color=priority)
+                                    priority_background_color=priority,
+                                    rank=kwargs.get("rank"))

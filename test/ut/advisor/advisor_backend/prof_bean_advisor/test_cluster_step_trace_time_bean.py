@@ -5,7 +5,6 @@ import unittest
 from unittest import mock
 from unittest.mock import MagicMock
 
-from common_func.constant import Constant
 from advisor_backend.prof_bean_advisor.cluster_step_trace_time_bean import ClusterStepTraceTimeBean
 
 

@@ -1,5 +1,6 @@
 import os
 import sys
+import logging
 from math import ceil
 
 from compare_backend.compare_bean.origin_data_bean.kernel_details_bean import KernelDetailsBean
@@ -7,8 +8,10 @@ from compare_backend.compare_bean.origin_data_bean.memory_record_bean import Mem
 from compare_backend.compare_bean.origin_data_bean.operator_memory_bean import OperatorMemoryBean
 from compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
 from compare_backend.profiling_parser.base_profiling_parser import BaseProfilingParser
-from compare_backend.utils.constant import Constant
-from compare_backend.utils.file_reader import FileReader
+from profiler.prof_common.constant import Constant
+from profiler.prof_common.file_manager import FileManager
+
+logger = logging.getLogger()
 
 
 class NPUProfilingParser(BaseProfilingParser):
@@ -58,6 +61,18 @@ class NPUProfilingParser(BaseProfilingParser):
                 index += 1
         return float(overlap_time)
 
+    @classmethod
+    def _read_csv_data(cls, file_path, bean):
+        data = []
+        file_name = os.path.basename(file_path)
+        try:
+            data = FileManager.read_csv_file(file_path, bean)
+        except FileNotFoundError:
+            logger.warning("The file %s does not exist.", file_name)
+        except Exception:
+            logger.error("Failed to read %s.", file_name)
+        return data
+
     def _get_dispatch_func(self):
         func_list = set()
         if self._enable_memory_compare or self._enable_operator_compare or self._enable_profiling_compare:
@@ -82,13 +97,7 @@ class NPUProfilingParser(BaseProfilingParser):
         return list(func_list)
 
     def _update_kernel_details(self):
-        try:
-            kernel_details = FileReader.read_csv_file(self._kernel_detail_path, KernelDetailsBean)
-        except FileNotFoundError:
-            print("[WARNING] The file kernel_details.csv does not exist.")
-        except Exception:
-            print("[ERROR] Failed to read kernel_details.csv.")
-            return
+        kernel_details = self._read_csv_data(self._kernel_detail_path, KernelDetailsBean)
         if not kernel_details:
             return
         kernels_dict = {}
@@ -106,19 +115,12 @@ class NPUProfilingParser(BaseProfilingParser):
                       " please check whether the data contains this step."
                 raise RuntimeError(msg)
             else:
-                print("[WARNING] Failed to enable enable_kernel_compare, type of kernel_details.csv is null.")
+                logger.warning("Failed to enable enable_kernel_compare, type of kernel_details.csv is null.")
             return
         self._result_data.update_kernel_details(kernels_dict)
 
     def _update_memory_list(self):
-        try:
-            memory_data = FileReader.read_csv_file(self._operator_memory_path, OperatorMemoryBean)
-        except FileNotFoundError:
-            print("[WARNING] The file operator_memory.csv does not exist.")
-            return
-        except Exception:
-            print("[ERROR] Failed to read operator_memory.csv.")
-            return
+        memory_data = self._read_csv_data(self._operator_memory_path, OperatorMemoryBean)
         if memory_data:
             self._dequeue_data.sort(key=lambda x: x.start_time)
         for data in memory_data:
@@ -139,6 +141,14 @@ class NPUProfilingParser(BaseProfilingParser):
                                                       Constant.ALLOCATION_TIME: data.allocation_time,
                                                       Constant.RELEASE_TIME: data.release_time})
 
+    def _update_kernel_dict(self):
+        kernel_details = self._read_csv_data(self._kernel_detail_path, KernelDetailsBean)
+        input_shape_dict = {kernel.start_time: kernel.input_shapes for kernel in kernel_details}
+        for kernel in self._all_kernels.values():
+            input_shape = input_shape_dict.get(kernel.start_time, "")
+            kernel.input_shapes = input_shape
+        super()._update_kernel_dict()
+
     def __match_dequeue_data(self, ts_time: float) -> int:
         if not self._dequeue_data:
             return Constant.INVALID_VALUE
@@ -154,14 +164,15 @@ class NPUProfilingParser(BaseProfilingParser):
 
     def _update_bandwidth(self):
         try:
-            communication_json = FileReader.read_trace_file(self._communication_path)
+            communication_json = FileManager.read_json_file(self._communication_path)
         except FileNotFoundError:
-            print("[WARNING] The file communication.json does not exist.")
+            logger.warning("The file communication.json does not exist.")
+            return
         except Exception:
-            print("[ERROR] Failed to read communication.json.")
+            logger.error("Failed to read communication.json.")
             return
         if not communication_json:
-            print("[WARNING] The communication.json file is empty.")
+            logger.warning("The communication.json file is empty.")
             return
         for _, group_dict in communication_json.items():
             step_dict = group_dict.get("collective", {})
@@ -190,9 +201,9 @@ class NPUProfilingParser(BaseProfilingParser):
         self.__add_sdma_time()
         self.__add_overlap_analysis_time()
         self.__add_communication_wait_time()
-        self._result_data.overall_metrics.calculate_other_time()
         self._result_data.overall_metrics.calculate_schedule_time()
         self._result_data.overall_metrics.trans_time_to_s()
+        self._result_data.overall_metrics.calculate_other_time()
         self._update_bandwidth()
 
     def __add_communication_wait_time(self):
@@ -218,6 +229,7 @@ class NPUProfilingParser(BaseProfilingParser):
             else:
                 last_4_task_mode_dict[task_event.tid] = f"{last_4_task_mode[1:]}O" if last_4_task_mode else "OOOO"
         uncovered_communication_events = list(filter(lambda x: x.is_comm_not_overlap(), self._overlap_analysis))
+        uncovered_communication_events.sort(key=lambda x: x.start_time)
         group_comm_time_dict = {}
         for comm_tid, tid_list in self._group_comm_tid_dict.items():
             min_wait_time = float("inf")
@@ -315,12 +327,12 @@ class NPUProfilingParser(BaseProfilingParser):
 
     def __parse_info_json(self):
         try:
-            json_data = FileReader.read_trace_file(self._info_json_path)
+            json_data = FileManager.read_json_file(self._info_json_path)
         except Exception:
-            print('[ERROR] Failed to read profiler_info.json.')
+            logger.error('Failed to read profiler_info.json.')
             return
         if not isinstance(json_data, dict) or not json_data:
-            print('[WARNING] Invalid profiler info.')
+            logger.warning('Invalid profiler info.')
             return
         level = json_data.get('config', {}).get('experimental_config', {}).get('_profiler_level', '')
         if self.LEVEL_0 != level:
@@ -337,9 +349,9 @@ class NPUProfilingParser(BaseProfilingParser):
 
     def __parse_kernel_csv(self):
         try:
-            kernel_details = FileReader.read_csv_file(self._kernel_detail_path, KernelDetailsBean)
+            kernel_details = FileManager.read_csv_file(self._kernel_detail_path, KernelDetailsBean)
         except Exception:
-            print('[ERROR] Npu kernel details csv file is not available.')
+            logger.error('Npu kernel details csv file is not available.')
             return
         if not kernel_details or kernel_details[0].is_hide_op_pmu():
             self._result_data.overall_metrics.hide_op_details = True
@@ -353,18 +365,18 @@ class NPUProfilingParser(BaseProfilingParser):
 
     def __parse_mem_csv(self):
         try:
-            memory_record = FileReader.read_csv_file(self._memory_record_path, MemoryRecordBean)
+            memory_record = FileManager.read_csv_file(self._memory_record_path, MemoryRecordBean)
         except FileNotFoundError:
-            print('[WARNING] Npu memory record csv file is not available.')
+            logger.warning('Npu memory record csv file is not available.')
         except Exception:
-            print('[ERROR] Load memory info failed.')
+            logger.error('Load memory info failed.')
         else:
             memory_used = max([memory.total_reserved_mb for memory in memory_record]) / 1024
             self._result_data.overall_metrics.set_memory_used(memory_used)
 
     def __add_overlap_analysis_time(self):
         if not self._overlap_analysis:
-            print('[WARNING] Failed to get overlap analysis data.')
+            logger.warning('Failed to get overlap analysis data.')
             return
         min_ts = sys.float_info.max
         max_ts = sys.float_info.min

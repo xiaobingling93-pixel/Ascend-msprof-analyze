@@ -186,36 +186,36 @@
     </div>
 
 <script>
-    var collapsibleHeaders = document.getElementsByClassName("collapsible-header");
+    const collapsibleHeaders = document.getElementsByClassName('collapsible-header');
 
-    for (var i = 0; i < collapsibleHeaders.length; i++) {
-        collapsibleHeaders[i].addEventListener("click", function (event) {
-            var content = this.nextElementSibling;
+    for (let i = 0; i < collapsibleHeaders.length; i++) {
+        collapsibleHeaders[i].addEventListener('click', function (event) {
+            const content = this.nextElementSibling;
 
             // 判断是否展开当前子列表
-            var isExpanded = content.style.display === "block";
+            const isExpanded = content.style.display === 'block';
 
             // 获取同级别的子列表标题元素
-            var siblingHeaders = this.parentNode.parentNode.getElementsByClassName("collapsible-header");
+            const siblingHeaders = this.parentNode.parentNode.getElementsByClassName('collapsible-header');
 
             // 折叠所有同级别的子列表
-            for (var j = 0; j < siblingHeaders.length; j++) {
-                var siblingContent = siblingHeaders[j].nextElementSibling;
+            for (let j = 0; j < siblingHeaders.length; j++) {
+                const siblingContent = siblingHeaders[j].nextElementSibling;
                 if (siblingContent !== content) {
-                    siblingContent.style.display = "none";
-                    siblingHeaders[j].classList.remove("active");
-                    siblingHeaders[j].classList.remove("opened")
+                    siblingContent.style.display = 'none';
+                    siblingHeaders[j].classList.remove('active');
+                    siblingHeaders[j].classList.remove('opened');
                 } else {
-                    siblingHeaders[j].classList.add("opened")
+                    siblingHeaders[j].classList.add('opened');
                 }
             }
 
             // 切换当前子列表的展开状态
-            this.classList.toggle("active");
+            this.classList.toggle('active');
             if (isExpanded) {
-                content.style.display = "none";
+                content.style.display = 'none';
             } else {
-                content.style.display = "block";
+                content.style.display = 'block';
             }
         });
     }

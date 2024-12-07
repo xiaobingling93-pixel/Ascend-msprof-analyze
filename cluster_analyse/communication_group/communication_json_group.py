@@ -14,9 +14,8 @@
 # limitations under the License.
 
 import os
-
-from common_func.constant import Constant
-from common_func.file_manager import FileManager
+ 
+from profiler.prof_common.file_manager import FileManager
 from communication_group.base_communication_group import BaseCommunicationGroup
 
 
@@ -27,7 +26,9 @@ class CommunicationJsonGroup(BaseCommunicationGroup):
         super().__init__(params)
 
     def dump_data(self):
-        FileManager.create_json_file(self.cluster_analysis_output_path, self.communication_group, self.COMMUNICATION_GROUP_JSON)
+        FileManager.create_json_file(
+            self.cluster_analysis_output_path, self.communication_group, self.COMMUNICATION_GROUP_JSON
+        )
 
     def read_communication_func(self: any, params: tuple):
         if len(params) < 3:

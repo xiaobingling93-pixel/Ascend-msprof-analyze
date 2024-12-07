@@ -39,6 +39,8 @@ class PacketAnalyzer(BaseCommunicationAnalyzer):
     @BaseCommunicationAnalyzer.check_data((CommunicationDataset.get_key(),))
     def optimize(self, **kwargs):
         add_render_list = kwargs.get("add_render_list", True)
+        if not hasattr(self.dataset, "hccl_dict"):
+            return self.result
         packet_checker = PacketChecker(**kwargs)
         packet_checker.check_packet(self.dataset)
         if not packet_checker.packet_issues:

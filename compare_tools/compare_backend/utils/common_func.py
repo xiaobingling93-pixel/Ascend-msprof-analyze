@@ -1,14 +1,33 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+# Copyright (C) 2023-2024. Huawei Technologies Co., Ltd. All rights reserved.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""
+
 from decimal import Decimal
 
-import numpy
+import logging
+
+logger = logging.getLogger()
 
 
 def calculate_diff_ratio(base_value: float, comparison_value: float):
     if not base_value and not comparison_value:
         ratio = 1.0
     else:
-        ratio = float('inf') if not base_value else comparison_value / base_value
-    return [comparison_value - base_value, ratio]
+        ratio = float('inf') if not base_value else round(comparison_value / base_value, 4)
+    return [round(comparison_value - base_value, 2), ratio]
 
 
 def update_order_id(data_list: list):
@@ -21,7 +40,7 @@ def convert_to_float(data: any) -> float:
     try:
         float_value = float(data)
     except Exception:
-        print('[ERROR] Invalid profiling data which failed to convert data to float.')
+        logger.error('Invalid profiling data which failed to convert data to float.')
         return 0.0
     return float_value
 
@@ -30,7 +49,7 @@ def convert_to_decimal(data: any) -> Decimal:
     try:
         decimal_value = Decimal(data)
     except Exception:
-        print('[ERROR] Invalid profiling data which failed to convert data to decimal.')
+        logger.error('Invalid profiling data which failed to convert data to decimal.')
         return 0.0
     return decimal_value
 

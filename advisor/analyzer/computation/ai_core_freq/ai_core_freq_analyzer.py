@@ -1,3 +1,17 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import logging
 
 from profiler.advisor.analyzer.base_analyzer import BaseAnalyzer
@@ -33,9 +47,10 @@ class AICoreFreqAnalyzer(BaseAnalyzer):
 
         add_render_list = kwargs.get("add_render_list", True)
         ai_core_freq_checker = AICoreFreqChecker()
-        ai_core_freq_checker.check_ai_core_freq(self.dataset, rank_id=kwargs.get("rank_id"), stage=kwargs.get("stage"))
+        ai_core_freq_checker.check_ai_core_freq(self.dataset, rank=kwargs.get("rank"), stage=kwargs.get("stage"))
         ai_core_freq_checker.make_record(self.result)
-        self.html = ai_core_freq_checker.make_render(self.html_render, add_render_list, priority=self.get_priority())
+        self.html = ai_core_freq_checker.make_render(self.html_render, add_render_list, priority=self.get_priority(),
+                                                     rank=kwargs.get("rank"))
         return self.result
 
     def get_priority(self):

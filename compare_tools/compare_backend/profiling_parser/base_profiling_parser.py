@@ -1,12 +1,15 @@
 from abc import abstractmethod, ABC
 from decimal import Decimal
+import logging
 
 from compare_backend.compare_bean.origin_data_bean.compare_event import KernelEvent, MemoryEvent
 from compare_backend.compare_bean.origin_data_bean.kernel_details_bean import KernelDetailsBean
 from compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
 from compare_backend.compare_bean.profiling_info import ProfilingInfo
-from compare_backend.utils.constant import Constant
-from compare_backend.utils.file_reader import FileReader
+from profiler.prof_common.constant import Constant
+from profiler.prof_common.file_manager import FileManager
+
+logger = logging.getLogger()
 
 
 class ProfilingResult:
@@ -313,22 +316,23 @@ class BaseProfilingParser(ABC):
     def _check_result_data(self):
         if self._enable_operator_compare or self._enable_memory_compare or self._enable_api_compare:
             if not self._result_data.torch_op_data:
-                print(f"[WARNING] Can't find any torch op in the file: {self._profiling_path}")
+                logger.warning("Can't find any torch op in the file: %s", self._profiling_path)
         if self._enable_operator_compare and not self._result_data.kernel_dict:
-            print(f"[WARNING] Can't find any flow event in the file: {self._profiling_path}")
+            logger.warning("Can't find any flow event in the file: %s", self._profiling_path)
         if self._enable_memory_compare and not self._result_data.memory_list:
-            print(f"[WARNING] Can't find any memory event in the file: {self._profiling_path}")
+            logger.warning("Can't find any memory event in the file: %s", self._profiling_path)
         if self._enable_communication_compare and not self._result_data.communication_dict:
-            print(f"[WARNING] Can't find any communication op in the file: {self._profiling_path}")
+            logger.warning("Can't find any communication op in the file: %s", self._profiling_path)
         if self._enable_kernel_compare and not self._result_data.kernel_details:
             if self._profiling_type == Constant.GPU:
-                print(f"[WARNING] kernel compare only support between NPU data and NPU data.")
+                logger.warning(f"kernel compare only support between NPU data and NPU data.")
             else:
-                print(f"[WARNING] Can't find any valid kernels in the file: {self._profiling_path}. Please "
-                      f"make sure that the profiling data is greater than level0 and aic_metrics=PipeUtilization.")
+                logger.warning("Can't find any valid kernels in the file: %s. Please "
+                               "make sure that the profiling data is greater than level0 and "
+                               "aic_metrics=PipeUtilization.", self._profiling_path)
 
     def _read_trace_event(self):
         try:
-            self._trace_events = FileReader.read_trace_file(self._json_path)
+            self._trace_events = FileManager.read_json_file(self._json_path)
         except Exception:
             print(f"[ERROR] Failed to read the file: {self._json_path}")

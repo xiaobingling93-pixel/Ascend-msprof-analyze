@@ -1,6 +1,22 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import logging
 from compare_backend.profiling_parser.base_profiling_parser import ProfilingResult
 from compare_backend.utils.tree_builder import TreeBuilder
-from compare_backend.utils.constant import Constant
+from profiler.prof_common.constant import Constant
+
 
 class OperatorDataPrepare:
     def __init__(self, profiling_data: ProfilingResult, specified_step_id: int = Constant.VOID_STEP):
@@ -47,6 +63,6 @@ class OperatorDataPrepare:
             elif level1_node.is_step_profiler() and level1_node.get_step_id() == self._specified_step_id:
                 result_data.extend(level1_node.child_nodes)
         if not result_data and self._specified_step_id != Constant.VOID_STEP:
-            print(f"[WARNING] There is no operator infomation for step {self._specified_step_id}, " \
-                    "please check whether the data contains this step.")
+            logging.warning("[WARNING] There is no operator infomation for step %s, "
+                            "please check whether the data contains this step.", self._specified_step_id)
         return result_data

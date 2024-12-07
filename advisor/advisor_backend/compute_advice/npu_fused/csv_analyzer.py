@@ -18,6 +18,7 @@ import multiprocessing
 import pandas as pd
 import numpy as np
 
+from common_func.path_manager import PathManager
 from common_func_advisor.constant import Constant
 from .op_perf import OpPerfFactory
 
@@ -27,6 +28,7 @@ class CSVAnalyzer:
         self._path = path
 
     def process(self):
+        PathManager.check_path_readable(self._path)
         df = pd.read_csv(self._path, dtype={"Start Time(us)": str})
         # 分析是否存在可融合的算子
         op_type_list = df["Type"].tolist()

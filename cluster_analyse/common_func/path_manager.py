@@ -17,6 +17,8 @@ import os
 import re
 import shutil
 import platform
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
+
 
 
 class PathManager:
@@ -80,12 +82,11 @@ class PathManager:
             msg = f"Invalid input path which is a soft link."
             raise RuntimeError(msg)
 
-        if platform.system().lower() == cls.WINDOWS:
-            pattern = r'(\.|:|\\|/|_|-|\s|[~0-9a-zA-Z\u4e00-\u9fa5])+'
-        else:
-            pattern = r'(\.|/|_|-|\s|[~0-9a-zA-Z])+'
+        pattern = r'(\.|:|\\|/|_|-|\s|[~0-9a-zA-Z\u4e00-\u9fa5])+'
         if not re.fullmatch(pattern, path):
-            msg = f"Invalid input path."
+            illegal_pattern = r'([^\.\:\\\/\_\-\s~0-9a-zA-Z\u4e00-\u9fa5])+'
+            invalid_obj = re.search(illegal_pattern, path).group()
+            msg = f"Invalid path which has illagal characters \"{invalid_obj}\"."
             raise RuntimeError(msg)
 
         path_split_list = path.split("/")
@@ -96,7 +97,7 @@ class PathManager:
                     raise RuntimeError("Length of input path exceeds the limit.")
 
     @classmethod
-    def check_path_owner_consistent(cls, path: str):
+    def check_path_owner_consistent(cls, path_list: list):
         """
         Function Description:
             check whether the path belong to process owner
@@ -105,16 +106,18 @@ class PathManager:
         Exception Description:
             when invalid path, prompt the user
         """
-        base_name = os.path.basename(path)
-        if not os.path.exists(path):
-            msg = f"Invalid path: {base_name}"
-            raise RuntimeError(msg)
+        if AdditionalArgsManager().force:
+            return
         if platform.system().lower() == cls.WINDOWS:
             return
-        if os.stat(path).st_uid != os.getuid():
-            check_msg = input("The path does not belong to you, do you want to continue? [y/n]")
-            if check_msg.lower() != "y":
-                raise RuntimeError("The user choose not to continue.")
+        for path in path_list:
+            if not os.path.exists(path):
+                continue
+            if os.stat(path).st_uid != os.getuid():
+                check_msg = input("The path does not belong to you, do you want to continue? [y/n]")
+                if check_msg.lower() != "y":
+                    raise RuntimeError("The user choose not to continue.")
+                return
 
     @classmethod
     def check_path_writeable(cls, path):
@@ -126,7 +129,6 @@ class PathManager:
         Exception Description:
             when invalid data throw exception
         """
-        cls.check_path_owner_consistent(path)
         if os.path.islink(path):
             msg = f"Invalid path which is a soft link."
             raise RuntimeError(msg)
@@ -145,7 +147,6 @@ class PathManager:
         Exception Description:
             when invalid data throw exception
         """
-        cls.check_path_owner_consistent(path)
         if os.path.islink(path):
             msg = f"Invalid path which is a soft link."
             raise RuntimeError(msg)
@@ -156,15 +157,17 @@ class PathManager:
 
     @classmethod
     def remove_path_safety(cls, path: str):
+        if not os.path.exists(path):
+            return
         base_name = os.path.basename(path)
         msg = f"Failed to remove path: {base_name}"
+        cls.check_path_writeable(path)
         if os.path.islink(path):
             raise RuntimeError(msg)
-        if os.path.exists(path):
-            try:
-                shutil.rmtree(path)
-            except Exception as err:
-                raise RuntimeError(msg) from err
+        try:
+            shutil.rmtree(path)
+        except Exception as err:
+            raise RuntimeError(msg) from err
 
     @classmethod
     def make_dir_safety(cls, path: str):
@@ -197,4 +200,4 @@ class PathManager:
         if os.path.islink(path):
             msg = f"Invalid input path which is a soft link."
             raise RuntimeError(msg)
-        return os.path.realpath(path)
+        return os.path.abspath(path)
