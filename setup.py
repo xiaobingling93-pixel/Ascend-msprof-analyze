@@ -8,6 +8,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from setuptools import find_packages, setup  # type: ignore
 
 from prof_common.path_manager import PathManager
+from prof_common.file_manager import FileManager
 from prof_common.utils import SafeConfigReader
 
 extras = {
@@ -24,15 +25,12 @@ sections = {
     'EMAIL': ['ms_email']
 }
 
-with open('requirements/build.txt', 'r') as f:
-    requires = f.read().splitlines()
+requires = FileManager.read_common_file('requirements/build.txt').splitlines()
 
-with open('requirements/tests.txt', 'r') as f:
-    tests_requires = f.read().splitlines()
+tests_requires = FileManager.read_common_file('requirements/tests.txt').splitlines()
 tests_requires.extend(set(requires))
 
-with open('version.txt', 'r') as f:
-    version = f.read().strip()
+version = FileManager.read_common_file('version.txt').strip()
 
 config_file_path = "config/config.ini"
 PathManager.check_input_file_path(config_file_path)
