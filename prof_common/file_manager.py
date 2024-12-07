@@ -19,7 +19,6 @@ import json
 import logging
 
 import yaml
-
 from profiler.prof_common.constant import Constant
 from profiler.prof_common.path_manager import PathManager
 from profiler.prof_common.additional_args_manager import AdditionalArgsManager
@@ -28,8 +27,6 @@ logger = logging.getLogger()
 
 
 class FileManager:
-
-
     @classmethod
     def read_json_file(cls, file_path: str) -> dict:
         PathManager.check_path_readable(file_path)
@@ -99,6 +96,22 @@ class FileManager:
         except Exception as e:
             raise RuntimeError(f"Failed to read the file: {base_name}, reason is {str(e)}") from e
         return result_data
+
+    @classmethod
+    def read_common_file(cls, file_path: str) -> str:
+        PathManager.check_path_readable(file_path)
+        base_name = os.path.basename(file_path)
+        file_size = os.path.getsize(file_path)
+        if file_size <= 0:
+            raise RuntimeError(f"The file({base_name}) size is less than or equal to 0.")
+        if not AdditionalArgsManager().force and file_size > Constant.MAX_COMMON_SIZE:
+            raise RuntimeError(f"The file({base_name}) size exceeds the preset max value.")
+        try:
+            with open(file_path, 'r') as f:
+                content = f.read()
+        except Exception as e:
+            raise RuntimeError(f"Failed to read the file: {base_name}, reason is {str(e)}") from e
+        return content
 
     @classmethod
     def create_csv_file(cls, profiler_path: str, data: list, file_name: str, headers: list = None) -> None:
