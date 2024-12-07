@@ -19,7 +19,7 @@ import unittest
 from unittest import mock
 
 from communication_group.communication_group_generator import CommunicationGroupGenerator
-from prof_common.constant import Constant
+from profiler.prof_common.constant import Constant
 
 
 class TestCommunicationGroupGenerator(unittest.TestCase):
