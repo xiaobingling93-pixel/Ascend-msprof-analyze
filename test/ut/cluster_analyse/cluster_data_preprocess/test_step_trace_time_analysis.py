@@ -20,7 +20,7 @@ from unittest import mock
 
 from analysis.step_trace_time_analysis import StepTraceTimeAnalysis
 from prof_bean.step_trace_time_bean import StepTraceTimeBean
-from prof_common.constant import Constant
+from profiler.prof_common.constant import Constant
 
 
 class TestStepTraceTimeAnalysis(unittest.TestCase):
