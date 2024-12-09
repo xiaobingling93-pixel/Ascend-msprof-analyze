@@ -33,7 +33,8 @@ class Args:
                  use_input_shape: bool = False,
                  gpu_flow_cat: str = "",
                  base_step: str = "",
-                 comparison_step: str = ""):
+                 comparison_step: str = "",
+                 use_kernel_type: bool = False):
         self.base_profiling_path = base_profiling_path
         self.comparison_profiling_path = comparison_profiling_path
         self.enable_profiling_compare = enable_profiling_compare
@@ -50,3 +51,4 @@ class Args:
         self.gpu_flow_cat = gpu_flow_cat
         self.base_step = base_step
         self.comparison_step = comparison_step
+        self.use_kernel_type = use_kernel_type

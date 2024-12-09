@@ -8,6 +8,8 @@ from compare_backend.compare_bean.origin_data_bean.memory_record_bean import Mem
 from compare_backend.compare_bean.origin_data_bean.operator_memory_bean import OperatorMemoryBean
 from compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
 from compare_backend.profiling_parser.base_profiling_parser import BaseProfilingParser
+
+from profiler.compare_tools.compare_backend.compare_bean.origin_data_bean.op_stastic_bean import OpStatisticBean
 from profiler.prof_common.constant import Constant
 from profiler.prof_common.file_manager import FileManager
 
@@ -25,6 +27,7 @@ class NPUProfilingParser(BaseProfilingParser):
         self._operator_memory_path = os.path.join(path_dict.get(Constant.ASCEND_OUTPUT_PATH, ""), "operator_memory.csv")
         self._memory_record_path = os.path.join(path_dict.get(Constant.ASCEND_OUTPUT_PATH, ""), "memory_record.csv")
         self._kernel_detail_path = os.path.join(path_dict.get(Constant.ASCEND_OUTPUT_PATH, ""), "kernel_details.csv")
+        self._op_statistic_path = os.path.join(path_dict.get(Constant.ASCEND_OUTPUT_PATH, ""), "op_statistic.csv")
         self._communication_path = os.path.join(path_dict.get(Constant.ASCEND_OUTPUT_PATH, ""), "communication.json")
         self._info_json_path = path_dict.get(Constant.INFO_JSON_PATH, "")
         self._trace_events = [TraceEventBean(event) for event in self._trace_events]
@@ -38,7 +41,9 @@ class NPUProfilingParser(BaseProfilingParser):
         self._group_comm_tid_dict = {}
         self._hccl_tid_name_dict = {}
         self._dispatch_func = self._get_dispatch_func()
-        self._filter_meta_id()
+        if any((self._enable_profiling_compare, self._enable_operator_compare, self._enable_memory_compare,
+                self._enable_api_compare, self._enable_communication_compare)):
+            self._filter_meta_id()
 
     @staticmethod
     def __calculate_overlap_time_with_uncovered_communication(uncovered_communication_events: list, events: list):
@@ -97,6 +102,14 @@ class NPUProfilingParser(BaseProfilingParser):
         return list(func_list)
 
     def _update_kernel_details(self):
+        if self._args.use_kernel_type:
+            op_statistics = self._read_csv_data(self._op_statistic_path, OpStatisticBean)
+            if not op_statistics:
+                return
+            self._result_data.update_kernel_details(
+                {f"{kernel.kernel_type}-{kernel.core_type}": kernel for kernel in op_statistics})
+            return
+
         kernel_details = self._read_csv_data(self._kernel_detail_path, KernelDetailsBean)
         if not kernel_details:
             return
