@@ -1,5 +1,6 @@
 import configparser
 import logging
+import os
 from email.utils import parseaddr
 from typing import Dict, List
 from urllib.parse import urlparse
@@ -20,6 +21,9 @@ class SafeConfigReader:
         self.read_config(config_file)
 
     def read_config(self, path):
+        if not os.path.exists(path):
+            msg = f"The config file {path} does not exists."
+            raise FileNotFoundError(msg)
         PathManager.check_input_file_path(path)
         PathManager.check_path_readable(path)
         PathManager.check_file_size(path)
