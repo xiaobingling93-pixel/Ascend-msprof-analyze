@@ -205,6 +205,7 @@ class Constant(object):
     OVERALL_METRICS_TABLE = "OverallMetrics"
     API_TABLE = "ApiCompare"
     KERNEL_TABLE = "KernelCompare"
+    KERNEL_TYPE_TABLE = "KernelTypeCompare"
 
     # memory
     SIZE = "Size(KB)"

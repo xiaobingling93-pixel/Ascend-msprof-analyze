@@ -37,6 +37,9 @@ from compare_backend.compare_bean.overall_metrics_bean import OverallMetricsBean
 from compare_backend.data_prepare.module_data_prepare import ModuleDataPrepare
 from compare_backend.data_prepare.operator_data_prepare import OperatorDataPrepare
 from compare_backend.generator.base_generator import BaseGenerator
+
+from profiler.compare_tools.compare_backend.comparator.kernel_type_comparator import KernelTypeComparator
+from profiler.compare_tools.compare_backend.compare_bean.kernel_type_compare_bean import KernelTypeCompareBean
 from profiler.prof_common.constant import Constant
 from compare_backend.view.excel_view import ExcelView
 
@@ -140,7 +143,10 @@ class DetailPerformanceGenerator(BaseGenerator):
                 Constant.BASE_DATA: self._profiling_data_dict.get(Constant.BASE_DATA).kernel_details,
                 Constant.COMPARISON_DATA: self._profiling_data_dict.get(Constant.COMPARISON_DATA).kernel_details,
             }
-            comparator_list.append(KernelCompareComparator(kernel_compare_result, KernelCompareBean))
+            if self._args.use_kernel_type:
+                comparator_list.append(KernelTypeComparator(kernel_compare_result, KernelTypeCompareBean))
+            else:
+                comparator_list.append(KernelCompareComparator(kernel_compare_result, KernelCompareBean))
         return comparator_list
 
     def _module_match(self):

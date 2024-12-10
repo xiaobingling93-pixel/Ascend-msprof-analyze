@@ -23,6 +23,7 @@ from profiler.prof_common.constant import Constant
 from profiler.prof_common.analyze_dict import AnalyzeDict
 from profiler.compare_tools.compare_backend.comparison_generator import ComparisonGenerator
 
+
 @click.command(context_settings=Constant.CONTEXT_SETTINGS, name="compare",
                short_help='Compare the performance differences between GPUs and NPUs.')
 @click.option('--profiling_path', '-d', 'comparison_profiling_path', type=click.Path(), required=True,
@@ -48,6 +49,7 @@ from profiler.compare_tools.compare_backend.comparison_generator import Comparis
 @click.option('--comparison_step', type=str, default='', help="Comparison step for benchmark performance data")
 @click.option('--force', is_flag=True, help="Indicates whether to skip file size verification and "
                                             "owner verification")
+@click.option('--use_kernel_type', is_flag=True, help="Indicates whether kernel compare use op_statistic.csv")
 def compare_cli(**kwargs) -> None:
     args = AnalyzeDict(kwargs)
     ComparisonGenerator(args).run()

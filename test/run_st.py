@@ -40,21 +40,10 @@ def run_st():
     timeout = 3600
     global stop_print_thread
 
-    sub_modules_match = {
-        "advisor": ["profiler/advisor/", "profiler/prof_common/", "profiler/test/st/", "profiler/cli/analyze_cli.py",
-                    "profiler/cli/entrance.py"],
-        "cluster_analyse": ["profiler/cluster_analyse/", "profiler/prof_common/", "profiler/test/st/",
-                            "profiler/cli/cluster_cli.py", "profiler/cli/entrance.py"],
-        "compare_tools": ["profiler/compare_tools/", "profiler/prof_common/", "profiler/test/st/",
-                          "profiler/cli/compare_cli.py", "profiler/cli/entrance.py"]
-    }
-    modify_file_data = read_modify_file()
+    modules = ["advisor", "cluster_analyse", "compare_tools"]
     process_list = []
-    for module, match_list in sub_modules_match.items():
-        for match_str in match_list:
-            if match_str in modify_file_data:
-                process_list.append(start_st_process(module))
-                break
+    for module in modules:
+        process_list.append(start_st_process(module))
 
     success, failed = True, False
     start_time = datetime.datetime.utcnow()

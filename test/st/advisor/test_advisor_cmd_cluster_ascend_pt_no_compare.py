@@ -15,7 +15,7 @@ class TestAdvisorCmdClusterAscendPtNoCompare(TestCase):
                              "/home/dcs-50/smoke_project_for_msprof_analyze/mstt_profiler/st_data")
     BASE_PROFILING_PATH = os.path.join(ST_DATA_PATH, "cluster_data_2")
     OUTPUT_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)), "TestAdvisorCmdClusterAscendPtNoCompare")
-    ALL_OUTPUT_PATH = os.path.join(OUTPUT_PATH,"all")
+    ALL_OUTPUT_PATH = os.path.join(OUTPUT_PATH, "all")
     COMPUTATION_OUTPUT_PATH = os.path.join(OUTPUT_PATH, "computation")
     SCHEDULE_OUTPUT_PATH = os.path.join(OUTPUT_PATH, "schedule")
     RESULT_EXCEL = {}
@@ -26,21 +26,21 @@ class TestAdvisorCmdClusterAscendPtNoCompare(TestCase):
         PathManager.make_dir_safety(self.ALL_OUTPUT_PATH)
         PathManager.make_dir_safety(self.COMPUTATION_OUTPUT_PATH)
         PathManager.make_dir_safety(self.SCHEDULE_OUTPUT_PATH)
-        cmd_all = ["msprof-analyze", "advisor", "all" ,"-d", self.BASE_PROFILING_PATH, "-o", self.ALL_OUTPUT_PATH
-            ,"--force"]
+        cmd_all = ["msprof-analyze", "advisor", "all", "-d", self.BASE_PROFILING_PATH, "-o", self.ALL_OUTPUT_PATH
+            , "--force"]
         if execute_cmd(cmd_all) != self.COMMAND_SUCCESS or not os.path.exists(self.ALL_OUTPUT_PATH):
-            self.assertTrue(False,  msg="advisor [all] task failed.")
-        cmd_computation = ["msprof-analyze", "advisor", "computation" ,"-d", self.BASE_PROFILING_PATH, "-o",
-               self.COMPUTATION_OUTPUT_PATH, "--force"]
+            self.assertTrue(False, msg="advisor [all] task failed.")
+        cmd_computation = ["msprof-analyze", "advisor", "computation", "-d", self.BASE_PROFILING_PATH, "-o",
+                           self.COMPUTATION_OUTPUT_PATH, "--force"]
         if execute_cmd(cmd_computation) != self.COMMAND_SUCCESS or not os.path.exists(self.COMPUTATION_OUTPUT_PATH):
-            self.assertTrue(False,  msg="advisor [computation] task failed.")
-        cmd_schedule = ["msprof-analyze", "advisor", "schedule" ,"-d", self.BASE_PROFILING_PATH, "-o",
-               self.SCHEDULE_OUTPUT_PATH, "--force"]
+            self.assertTrue(False, msg="advisor [computation] task failed.")
+        cmd_schedule = ["msprof-analyze", "advisor", "schedule", "-d", self.BASE_PROFILING_PATH, "-o",
+                        self.SCHEDULE_OUTPUT_PATH, "--force"]
         if execute_cmd(cmd_schedule) != self.COMMAND_SUCCESS or not os.path.exists(
                 self.SCHEDULE_OUTPUT_PATH):
-            self.assertTrue(False,  msg="advisor [schedule] task failed.")
+            self.assertTrue(False, msg="advisor [schedule] task failed.")
 
-        self.RESULT_HTML,self.RESULT_EXCEL = get_files(self.OUTPUT_PATH)
+        self.RESULT_HTML, self.RESULT_EXCEL = get_files(self.OUTPUT_PATH)
 
     def teardown_class(self):
         PathManager.remove_path_safety(self.OUTPUT_PATH)
@@ -50,30 +50,30 @@ class TestAdvisorCmdClusterAscendPtNoCompare(TestCase):
             "slow rank",
             "slow link",
             "byte alignment analysis",
+            "Kernel compare of Rank5 and Rank12",
             "Rank 5 dynamic shape operator",
             "Rank 5 aicpu operator",
             "Operator dispatch"
         ]
 
-
         # True presents the attr is nan
-        description_len = [1, 11, 1, 1, 2, 1]
-        suggestion_len = [True, True, 1, 5, 2, 1]
-        problem_count = [True, True, True, 1.0, 2.0, True]
-        total_time = [True, True, True, True, 87845894.04, True]
-        time_ratio = [True, True, True, True, 0.0, True]
-        income = [True, True, True, True, True, True]
-        income_ratio = [True, True, True, True, True, True]
+        description_len = [1, 11, 1, 1, 1, 2, 1]
+        suggestion_len = [True, True, 1, True, 5, 2, 1]
+        problem_count = [True, True, True, True, 1.0, 2.0, True]
+        total_time = [True, True, True, True, True, 87845894.04, True]
+        time_ratio = [True, True, True, True, True, 0.0, True]
+        income = [True, True, True, True, True, True, True]
+        income_ratio = [True, True, True, True, True, True, True]
         try:
-            df = pd.read_excel(self.RESULT_EXCEL.get("all",None), sheet_name='problems', header=0)
+            df = pd.read_excel(self.RESULT_EXCEL.get("all", None), sheet_name='problems', header=0)
         except FileNotFoundError:
-            logging.error("File %s not found.", self.RESULT_EXCEL.get("all",None))
+            logging.error("File %s not found.", self.RESULT_EXCEL.get("all", None))
             return
 
         for index, row in df.iterrows():
             self.assertEqual(category[index], row["category"])
             self.assertEqual(description_len[index], len(row["description"].split("\n")))
-            self.assertEqual(suggestion_len[index], (isinstance(row["suggestion"],float) or
+            self.assertEqual(suggestion_len[index], (isinstance(row["suggestion"], float) or
                                                      len(row["suggestion"].split("\n"))))
             self.assertEqual(problem_count[index], (math.isnan(row["problem count"]) or row["problem count"]))
             self.assertEqual(total_time[index], (math.isnan(row["total_time(us)"]) or
@@ -87,29 +87,29 @@ class TestAdvisorCmdClusterAscendPtNoCompare(TestCase):
         category = [
             "slow rank",
             "slow link",
+            "Kernel compare of Rank5 and Rank12",
             "Rank 5 dynamic shape operator",
             "Rank 5 aicpu operator",
         ]
 
-
         # True presents the attr is nan
-        description_len = [1, 11, 1, 2]
-        suggestion_len = [True, True, 5, 2]
-        problem_count = [True, True, 1.0, 2.0]
-        total_time = [True, True, True, 87845894.04]
-        time_ratio = [True, True, True, 0.0]
-        income = [True, True, True, True]
-        income_ratio = [True, True, True, True]
+        description_len = [1, 11, 1, 1, 2]
+        suggestion_len = [True, True, True, 5, 2]
+        problem_count = [True, True, True, 1.0, 2.0]
+        total_time = [True, True, True, True, 87845894.04]
+        time_ratio = [True, True, True, True, 0.0]
+        income = [True, True, True, True, True]
+        income_ratio = [True, True, True, True, True]
         try:
-            df = pd.read_excel(self.RESULT_EXCEL.get("computation",None), sheet_name='problems', header=0)
+            df = pd.read_excel(self.RESULT_EXCEL.get("computation", None), sheet_name='problems', header=0)
         except FileNotFoundError:
-            logging.error("File %s not found.", self.RESULT_EXCEL.get("computation",None))
+            logging.error("File %s not found.", self.RESULT_EXCEL.get("computation", None))
             return
 
         for index, row in df.iterrows():
             self.assertEqual(category[index], row["category"])
             self.assertEqual(description_len[index], len(row["description"].split("\n")))
-            self.assertEqual(suggestion_len[index], (isinstance(row["suggestion"],float) or
+            self.assertEqual(suggestion_len[index], (isinstance(row["suggestion"], float) or
                                                      len(row["suggestion"].split("\n"))))
             self.assertEqual(problem_count[index], (math.isnan(row["problem count"]) or row["problem count"]))
             self.assertEqual(total_time[index], (math.isnan(row["total_time(us)"]) or
@@ -126,7 +126,6 @@ class TestAdvisorCmdClusterAscendPtNoCompare(TestCase):
             "Operator dispatch"
         ]
 
-
         # True presents the attr is nan
         description_len = [1, 11, 1]
         suggestion_len = [True, True, 1]
@@ -136,15 +135,15 @@ class TestAdvisorCmdClusterAscendPtNoCompare(TestCase):
         income = [True, True, True]
         income_ratio = [True, True, True]
         try:
-            df = pd.read_excel(self.RESULT_EXCEL.get("schedule",None), sheet_name='problems', header=0)
+            df = pd.read_excel(self.RESULT_EXCEL.get("schedule", None), sheet_name='problems', header=0)
         except FileNotFoundError:
-            logging.error("File %s not found.", self.RESULT_EXCEL.get("schedule",None))
+            logging.error("File %s not found.", self.RESULT_EXCEL.get("schedule", None))
             return
 
         for index, row in df.iterrows():
             self.assertEqual(category[index], row["category"])
             self.assertEqual(description_len[index], len(row["description"].split("\n")))
-            self.assertEqual(suggestion_len[index], (isinstance(row["suggestion"],float) or
+            self.assertEqual(suggestion_len[index], (isinstance(row["suggestion"], float) or
                                                      len(row["suggestion"].split("\n"))))
             self.assertEqual(problem_count[index], (math.isnan(row["problem count"]) or row["problem count"]))
             self.assertEqual(total_time[index], (math.isnan(row["total_time(us)"]) or
@@ -155,49 +154,49 @@ class TestAdvisorCmdClusterAscendPtNoCompare(TestCase):
                                                    round(row["income ratio"], 2)))
 
     def test_slow_rank(self):
-        step = [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
-        rank_id = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
+        step = [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]
+        rank_id = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
         compute_us = [
-            14302466.71,14308948.28,14311412.46,
-            14242056.74,14972627.53,14974042.28,
-            14964095.87,14945901.57,13878006.78,
-            13826069.33,13853184.69,13910409.81,
-            13612993.03,13669912.48,13779569.04,
+            14302466.71, 14308948.28, 14311412.46,
+            14242056.74, 14972627.53, 14974042.28,
+            14964095.87, 14945901.57, 13878006.78,
+            13826069.33, 13853184.69, 13910409.81,
+            13612993.03, 13669912.48, 13779569.04,
             13826274.64
         ]
         communication_us = [
-            50636595.62,50670520.26,50698886.74,
-            50741670.92,50257498.54,50286645.51,
-            50294747.07,50289541.49,51211928.02,
-            51161276.14,51187346.34,51169195.18,
-            51544052.84,51556067.16,51374012.81,
+            50636595.62, 50670520.26, 50698886.74,
+            50741670.92, 50257498.54, 50286645.51,
+            50294747.07, 50289541.49, 51211928.02,
+            51161276.14, 51187346.34, 51169195.18,
+            51544052.84, 51556067.16, 51374012.81,
             51425588.65
         ]
         free_us = [
-            682939.022,634478.74,609248.76,
-            645123.76,396550.744,377863.438,
-            363100.664,377397.078,537692.3,
-            568293.626,525516.858,549405.358,
-            458639.564,400809.38,396422.698,
+            682939.022, 634478.74, 609248.76,
+            645123.76, 396550.744, 377863.438,
+            363100.664, 377397.078, 537692.3,
+            568293.626, 525516.858, 549405.358,
+            458639.564, 400809.38, 396422.698,
             367782.33
         ]
 
         test_pattern = ["all", "computation", "schedule"]
         for pattern in test_pattern:
             try:
-                df = pd.read_excel(self.RESULT_EXCEL.get(pattern,None), sheet_name='slow rank', header=0)
+                df = pd.read_excel(self.RESULT_EXCEL.get(pattern, None), sheet_name='slow rank', header=0)
             except FileNotFoundError:
-                logging.error("File %s not found.", self.RESULT_EXCEL.get(pattern,None))
+                logging.error("File %s not found.", self.RESULT_EXCEL.get(pattern, None))
                 return
 
             for index, row in df.iterrows():
                 self.assertEqual(step[index], row["step"])
                 self.assertEqual(rank_id[index], row["rank_id"])
-                self.assertEqual(compute_us[index], round(row["compute(us)"],2))
+                self.assertEqual(compute_us[index], round(row["compute(us)"], 2))
                 self.assertEqual(communication_us[index], round(row["communication(us)"], 2))
-                self.assertEqual(free_us[index], round(row["free(us)"],3))
+                self.assertEqual(free_us[index], round(row["free(us)"], 3))
 
-            soup = BeautifulSoup(open(self.RESULT_HTML.get(pattern,None)), 'html.parser')
+            soup = BeautifulSoup(open(self.RESULT_HTML.get(pattern, None)), 'html.parser')
             for h2 in soup.find_all('h2'):
                 if h2.contents[0] == "slow rank":
                     div_content = h2.next.next.next
@@ -209,11 +208,11 @@ class TestAdvisorCmdClusterAscendPtNoCompare(TestCase):
                         self.assertEqual(str(rank_id[row_index - 1]), row.find_all('td')[1].text)
                         self.assertEqual(str(compute_us[row_index - 1]), row.find_all('td')[2].text)
                         self.assertEqual(str(communication_us[row_index - 1]), row.find_all('td')[3].text)
-                        self.assertEqual(str(round(free_us[row_index - 1],2)), row.find_all('td')[4].text)
+                        self.assertEqual(str(round(free_us[row_index - 1], 2)), row.find_all('td')[4].text)
 
     def test_slow_link(self):
-        step = [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
-        rank_id = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
+        step = [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]
+        rank_id = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
         rdma_bandwidth = [
             4.7729, 4.8102, 4.7966,
             4.8765, 4.7619, 4.7982,
@@ -223,11 +222,11 @@ class TestAdvisorCmdClusterAscendPtNoCompare(TestCase):
             4.7541
         ]
         rdma_size = [
-            892743.4811,892743.4811,892743.4811,
-            892743.4811,892743.4811,892743.4811,
-            892743.4811,892743.4811,892743.4811,
-            892743.4811,892743.4811,892743.4811,
-            892743.4811,892743.4811,892743.4811,
+            892743.4811, 892743.4811, 892743.4811,
+            892743.4811, 892743.4811, 892743.4811,
+            892743.4811, 892743.4811, 892743.4811,
+            892743.4811, 892743.4811, 892743.4811,
+            892743.4811, 892743.4811, 892743.4811,
             892743.4811
         ]
         rdma_time = [
@@ -266,9 +265,9 @@ class TestAdvisorCmdClusterAscendPtNoCompare(TestCase):
         test_pattern = ["all", "computation", "schedule"]
         for pattern in test_pattern:
             try:
-                df = pd.read_excel(self.RESULT_EXCEL.get(pattern,None), sheet_name='slow link', header=0)
+                df = pd.read_excel(self.RESULT_EXCEL.get(pattern, None), sheet_name='slow link', header=0)
             except FileNotFoundError:
-                logging.error("File %s not found.", self.RESULT_EXCEL.get(pattern,None))
+                logging.error("File %s not found.", self.RESULT_EXCEL.get(pattern, None))
                 return
 
             for index, row in df.iterrows():
@@ -281,7 +280,7 @@ class TestAdvisorCmdClusterAscendPtNoCompare(TestCase):
                 self.assertEqual(sdma_size[index], round(row["SDMA size(mb)"], 3))
                 self.assertEqual(sdma_time[index], round(row["SDMA time(ms)"], 4))
 
-            soup = BeautifulSoup(open(self.RESULT_HTML.get(pattern,None)), 'html.parser')
+            soup = BeautifulSoup(open(self.RESULT_HTML.get(pattern, None)), 'html.parser')
             for h2 in soup.find_all('h2'):
                 if h2.contents[0] == "slow link":
                     div_content = h2.next.next.next
@@ -291,12 +290,12 @@ class TestAdvisorCmdClusterAscendPtNoCompare(TestCase):
                             continue
                         self.assertEqual(str(step[row_index - 1]), row.find_all('td')[0].text)
                         self.assertEqual(str(rank_id[row_index - 1]), row.find_all('td')[1].text)
-                        self.assertEqual(str(round(rdma_bandwidth[row_index - 1],2)), row.find_all('td')[2].text)
-                        self.assertEqual(str(round(rdma_size[row_index - 1],2)), row.find_all('td')[3].text)
-                        self.assertEqual(str(round(rdma_time[row_index - 1],2)), row.find_all('td')[4].text)
-                        self.assertEqual(str(round(sdma_bandwidth[row_index - 1],2)), row.find_all('td')[5].text)
-                        self.assertEqual(str(round(sdma_size[row_index - 1],2)), row.find_all('td')[6].text)
-                        self.assertEqual(str(round(sdma_time[row_index - 1],2)), row.find_all('td')[7].text)
+                        self.assertEqual(str(round(rdma_bandwidth[row_index - 1], 2)), row.find_all('td')[2].text)
+                        self.assertEqual(str(round(rdma_size[row_index - 1], 2)), row.find_all('td')[3].text)
+                        self.assertEqual(str(round(rdma_time[row_index - 1], 2)), row.find_all('td')[4].text)
+                        self.assertEqual(str(round(sdma_bandwidth[row_index - 1], 2)), row.find_all('td')[5].text)
+                        self.assertEqual(str(round(sdma_size[row_index - 1], 2)), row.find_all('td')[6].text)
+                        self.assertEqual(str(round(sdma_time[row_index - 1], 2)), row.find_all('td')[7].text)
 
     def test_Byte_Alignment_Analysis(self):
         op_name = [
@@ -332,9 +331,9 @@ class TestAdvisorCmdClusterAscendPtNoCompare(TestCase):
         test_pattern = ["all"]
         for pattern in test_pattern:
             try:
-                df = pd.read_excel(self.RESULT_EXCEL.get(pattern,None), sheet_name='Byte Alignment Analysis', header=0)
+                df = pd.read_excel(self.RESULT_EXCEL.get(pattern, None), sheet_name='Byte Alignment Analysis', header=0)
             except FileNotFoundError:
-                logging.error("File %s not found.", self.RESULT_EXCEL.get(pattern,None))
+                logging.error("File %s not found.", self.RESULT_EXCEL.get(pattern, None))
                 return
 
             for index, row in df.iterrows():
@@ -344,7 +343,7 @@ class TestAdvisorCmdClusterAscendPtNoCompare(TestCase):
                 self.assertEqual(abnormal_duration[index], row["abnormal duration(us)"])
                 self.assertEqual(bandwidth[index], row["bandwidth(GB/s)"])
 
-            soup = BeautifulSoup(open(self.RESULT_HTML.get(pattern,None)), 'html.parser')
+            soup = BeautifulSoup(open(self.RESULT_HTML.get(pattern, None)), 'html.parser')
             for h2 in soup.find_all('h2'):
                 if h2.contents[0] == "Byte Alignment Analysis":
                     div_content = h2.next.next.next
@@ -354,24 +353,23 @@ class TestAdvisorCmdClusterAscendPtNoCompare(TestCase):
                             continue
                         self.assertEqual(str(op_name[row_index - 1]), row.find_all('td')[0].text)
                         self.assertEqual(str(total_size[row_index - 1]), row.find_all('td')[1].text)
-                        self.assertEqual(str(round(duration[row_index - 1],2)), row.find_all('td')[2].text)
-                        self.assertEqual(str(round(abnormal_duration[row_index - 1],2)), row.find_all('td')[3].text)
-                        self.assertEqual(str(round(bandwidth[row_index - 1],4)), row.find_all('td')[4].text)
-
+                        self.assertEqual(str(round(duration[row_index - 1], 2)), row.find_all('td')[2].text)
+                        self.assertEqual(str(round(abnormal_duration[row_index - 1], 2)), row.find_all('td')[3].text)
+                        self.assertEqual(str(round(bandwidth[row_index - 1], 4)), row.find_all('td')[4].text)
 
     def test_aicpu_operator(self):
         op_name = [
             "aclnnEqScalar_EqualAiCpu_Equal",
             "aclnnPowTensorScalar_SquareAiCpu_Square"
         ]
-        op_type = ["Equal","Square"]
-        task_duration = [85.502,74.862]
-        input_shapes = ["\"17;\"","\"17\""]
-        input_data_types = ["DOUBLE;DOUBLE","INT64"]
-        input_formats = ["FORMAT_ND;FORMAT_ND","FORMAT_ND"]
-        output_shapes = ["\"17\"","\"17\""]
-        output_data_types = ["BOOL","INT64"]
-        output_formats = ["FORMAT_ND","FORMAT_ND"]
+        op_type = ["Equal", "Square"]
+        task_duration = [85.502, 74.862]
+        input_shapes = ["\"17;\"", "\"17\""]
+        input_data_types = ["DOUBLE;DOUBLE", "INT64"]
+        input_formats = ["FORMAT_ND;FORMAT_ND", "FORMAT_ND"]
+        output_shapes = ["\"17\"", "\"17\""]
+        output_data_types = ["BOOL", "INT64"]
+        output_formats = ["FORMAT_ND", "FORMAT_ND"]
         stack_info = [True, True]
 
         t0_description = ["Square, Equal"]
@@ -385,12 +383,12 @@ class TestAdvisorCmdClusterAscendPtNoCompare(TestCase):
         t2_counts = ["1"]
         t2_elapsed_time = ["74.86"]
 
-        test_pattern = ["all","computation"]
+        test_pattern = ["all", "computation"]
         for pattern in test_pattern:
             try:
-                df = pd.read_excel(self.RESULT_EXCEL.get(pattern,None), sheet_name='Rank 5 AICPU operator', header=0)
+                df = pd.read_excel(self.RESULT_EXCEL.get(pattern, None), sheet_name='Rank 5 AICPU operator', header=0)
             except FileNotFoundError:
-                logging.error("File %s not found.", self.RESULT_EXCEL.get(pattern,None))
+                logging.error("File %s not found.", self.RESULT_EXCEL.get(pattern, None))
                 return
 
             for index, row in df.iterrows():
@@ -405,7 +403,7 @@ class TestAdvisorCmdClusterAscendPtNoCompare(TestCase):
                 self.assertEqual(output_formats[index], row["output_formats"])
                 self.assertEqual(stack_info[index], math.isnan(row["stack_info"]))
 
-            soup = BeautifulSoup(open(self.RESULT_HTML.get(pattern,None)), 'html.parser')
+            soup = BeautifulSoup(open(self.RESULT_HTML.get(pattern, None)), 'html.parser')
             for h2 in soup.find_all('h2'):
                 if h2.contents[0] == "AICPU Issues":
                     div_content = h2.next.next.next
@@ -445,14 +443,14 @@ class TestAdvisorCmdClusterAscendPtNoCompare(TestCase):
 
         test_pattern = ["all", "schedule"]
         for pattern in test_pattern:
-            df = pd.read_excel(self.RESULT_EXCEL.get(pattern,None), sheet_name='operator dispatch', header=0)
+            df = pd.read_excel(self.RESULT_EXCEL.get(pattern, None), sheet_name='operator dispatch', header=0)
             for index, row in df.iterrows():
                 self.assertEqual(issues[index], row["Issues"])
                 self.assertEqual(op_name[index], row["op name"])
                 self.assertEqual(counts[index], row["counts"])
                 self.assertEqual(total_time[index], round(row["total time"], 4))
 
-            soup = BeautifulSoup(open(self.RESULT_HTML.get(pattern,None)), 'html.parser')
+            soup = BeautifulSoup(open(self.RESULT_HTML.get(pattern, None)), 'html.parser')
             for h2 in soup.find_all('h2'):
                 if h2.contents[0] == "Operator Dispatch Issues":
                     div_content = h2.next.next.next

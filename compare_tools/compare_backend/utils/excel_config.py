@@ -96,6 +96,8 @@ class ExcelConfig(object):
     DIFF_AVG_RATIO = "Diff Avg Ratio"
     DIFF_CALLS_RATIO = "Diff Calls Ratio"
     KERNEL = "Kernel"
+    KERNEL_TYPE = "Kernel Type"
+    CORE_TYPE = "Core Type"
 
     HEADERS = {
         Constant.OPERATOR_TABLE: [
@@ -235,10 +237,27 @@ class ExcelConfig(object):
             {"name": DIFF_AVG_RATIO, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
             {"name": DIFF_CALLS_RATIO, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
         ],
-        Constant.KERNEL_COMPARE: [
+        Constant.KERNEL_TABLE: [
             {"name": ORDER, "type": CellFormatType.DEFAULT, "width": 10},
             {"name": KERNEL, "type": CellFormatType.BOLD_STR, "width": 30},
             {"name": INPUT_SHAPE, "type": CellFormatType.DEFAULT, "width": 20},
+            {"name": TOTAL_DURATION, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": AVG_DURATION, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": MAX_DURATION, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": MIN_DURATION, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": CALLS, "type": CellFormatType.DEFAULT, "width": 20},
+            {"name": TOTAL_DURATION, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": AVG_DURATION, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": MAX_DURATION, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": MIN_DURATION, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": CALLS, "type": CellFormatType.DEFAULT, "width": 20},
+            {"name": DIFF_TOTAL_RATIO, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+            {"name": DIFF_AVG_RATIO, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
+        ],
+        Constant.KERNEL_TYPE_TABLE: [
+            {"name": ORDER, "type": CellFormatType.DEFAULT, "width": 10},
+            {"name": KERNEL_TYPE, "type": CellFormatType.BOLD_STR, "width": 30},
+            {"name": CORE_TYPE, "type": CellFormatType.DEFAULT, "width": 20},
             {"name": TOTAL_DURATION, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
             {"name": AVG_DURATION, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
             {"name": MAX_DURATION, "type": CellFormatType.DEFAULT_FLOAT, "width": 20},
@@ -261,7 +280,8 @@ class ExcelConfig(object):
         Constant.MODULE_TABLE: ["E1:H1", "I1:L1"],
         Constant.OVERALL_METRICS_TABLE: ["B1:D1", "E1:G1"],
         Constant.API_TABLE: ["C1:F1", "G1:J1"],
-        Constant.KERNEL_TABLE: ["D1:H1", "I1:M1"]
+        Constant.KERNEL_TABLE: ["D1:H1", "I1:M1"],
+        Constant.KERNEL_TYPE_TABLE: ["D1:H1", "I1:M1"]
     }
 
     # overall metrics index
