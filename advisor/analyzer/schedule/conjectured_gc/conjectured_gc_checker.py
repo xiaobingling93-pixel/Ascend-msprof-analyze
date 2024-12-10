@@ -27,9 +27,25 @@ logger = logging.getLogger()
 
 class AbnormalGcStatistic:
     def __init__(self):
-        self.count = 0
-        self.duration = 0
+        self._count = 0
+        self._duration = 0
         self._events = []
+
+    @property
+    def count(self):
+        return self._count
+
+    @count.setter
+    def count(self, value):
+        self._count = value
+
+    @property
+    def duration(self):
+        return self._duration
+
+    @duration.setter
+    def duration(self, value):
+        self._duration = value
 
     @property
     def events(self):
@@ -89,13 +105,13 @@ class ConjecturedGcChecker:
         if not self.gc_statistic.count:
             return
 
-        self.optimization_item.append(OptimizeItem("Compatible Gc", self.desc, self.suggestions))
+        self.optimization_item.append(OptimizeItem("Conjectured Gc", self.desc, self.suggestions))
         for optimization in self.optimization_item:
             result.add(OptimizeRecord(optimization))
         headers = self.headers
         if self.rank is not None:
             headers = ["Rank id"] + headers
-        sub_table_name = "CompatibleGcAnalysis" if not self.stage else f"Stage-{self.stage}: CompatibleGcAnalysis"
+        sub_table_name = "ConjecturedGcAnalysis" if not self.stage else f"Stage-{self.stage}: ConjecturedGcAnalysis"
         result.add_detail(sub_table_name, headers=headers)
 
         for row in self.gc_statistic.export():
@@ -112,6 +128,7 @@ class ConjecturedGcChecker:
         html_render.render_template(key="schedule",
                                     template_dir="templates",
                                     template_name="gc.html",
+                                    title="Conjectured GC Analysis",
                                     desc=self.desc,
                                     solutions=self.solutions,
                                     headers=self.headers,

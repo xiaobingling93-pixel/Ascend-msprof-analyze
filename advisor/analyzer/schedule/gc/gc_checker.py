@@ -96,6 +96,7 @@ class GcChecker:
         html_render.render_template(key="schedule",
                                     template_dir="templates",
                                     template_name="gc.html",
+                                    title="GC Analysis",
                                     desc=self.desc,
                                     solutions=self.solutions,
                                     headers=self.headers,
