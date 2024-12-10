@@ -23,25 +23,28 @@ from compare_backend.utils.torch_op_node import TorchOpNode
 
 
 class ModuleNode:
+    __slots__ = ['_event', '_parent_node', '_child_nodes', '_module_level', '_kernel_self_list', '_kernel_total_list',
+                 '_call_stack', '_root_torch_op_node', '_cur_torch_op_node']
     ts = "ts"
     kernels = "kernels"
+    _call_stack_pool = {}
 
     def __init__(self, event: TraceEventBean, parent_node=None):
         self._event = event
         self._parent_node = parent_node
         self._child_nodes = []
-        self._module_name = f"{parent_node.module_name}/{event.name}" if parent_node else event.name
         self._module_level = parent_node.module_level + 1 if parent_node else 1
         self._kernel_self_list = []
         self._kernel_total_list = []
-        self._call_stack = f"{parent_node.call_stack};\n{event.name}" if parent_node and parent_node.call_stack \
+        call_stack = f"{parent_node.call_stack};\n{event.name}" if parent_node and parent_node.call_stack \
             else event.name
+        self._call_stack = self._call_stack_pool.setdefault(call_stack, call_stack)
         self._root_torch_op_node = TorchOpNode()
         self._cur_torch_op_node = self._root_torch_op_node
 
     @property
     def module_name(self):
-        return self._module_name
+        return f"{self._parent_node.module_name}/{self._event.name}" if self._parent_node else self._event.name
 
     @property
     def module_class(self):
@@ -130,7 +133,7 @@ class ModuleNode:
         return None
 
     def reset_call_stack(self, call_stack):
-        self._call_stack = call_stack
+        self._call_stack = self._call_stack_pool.setdefault(call_stack, call_stack)
 
     def update_child_nodes(self, node):
         self._child_nodes.append(node)

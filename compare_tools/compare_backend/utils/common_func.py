@@ -16,8 +16,9 @@
 """
 
 from decimal import Decimal
-
 import logging
+
+import numpy as np
 
 logger = logging.getLogger()
 
@@ -56,27 +57,24 @@ def convert_to_decimal(data: any) -> Decimal:
 
 def longest_common_subsequence_matching(base_ops: list, comparison_ops: list, name_func: any) -> list:
     if not comparison_ops:
-        result_data = [None] * len(base_ops)
-        for index, value in enumerate(base_ops):
-            result_data[index] = [value, None]
-        return result_data
+        return [[value, None] for value in base_ops]
     if not base_ops:
-        result_data = [None] * len(comparison_ops)
-        for index, value in enumerate(comparison_ops):
-            result_data[index] = [None, value]
-        return result_data
+        return [[None, value] for value in comparison_ops]
 
     comparison_len, base_len = len(comparison_ops), len(base_ops)
     if comparison_len * base_len > 50 * 10 ** 8:
         print('[WARNING] The comparison time is expected to exceed 30 minutes, if you want to see the results quickly, '
               'you can restart comparison task and turn on the switch --disable_details.')
-    dp_flag = set()  # flag for only comparison op
-    pre_list = [0] * (base_len + 1)
-    cur_list = [0] * (base_len + 1)
 
-    comparison_index = 1
+    pre_list = np.zeros(base_len + 1, dtype=np.int32)
+    cur_list = np.zeros(base_len + 1, dtype=np.int32)
+
     all_base_data = [hash(name_func(op)) for op in base_ops]
     all_comparison_data = [hash(name_func(op)) for op in comparison_ops]
+
+    dp_flag = BitMap((comparison_len + 1) * (base_len + 1))  # flag for only comparison op
+
+    comparison_index = 1
     for comparison_data in iter(all_comparison_data):
         base_index = 1
         for base_data in all_base_data:
@@ -117,3 +115,19 @@ def longest_common_subsequence_matching(base_ops: list, comparison_ops: list, na
         base_index -= 1
     matched_op.reverse()
     return matched_op
+
+
+class BitMap:
+
+    def __init__(self, size):
+        self.size = size
+        # 使用 bytearray 存储位信息
+        self.bits = bytearray((size + 7) // 8)
+
+    def __contains__(self, n: int) -> bool:
+        """检查数字是否在位图中"""
+        return bool(self.bits[n >> 3] & (1 << (n & 7)))
+
+    def add(self, n: int):
+        """添加一个数字到位图"""
+        self.bits[n >> 3] |= 1 << (n & 7)  # n >> 3 等价于 n // 8, n & 7 等价于 n % 8

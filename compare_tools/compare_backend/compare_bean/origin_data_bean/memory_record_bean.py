@@ -17,6 +17,8 @@ from compare_backend.utils.common_func import convert_to_float
 
 
 class MemoryRecordBean:
+    __slots__ = ['_data', '_total_reserved_mb']
+
     def __init__(self, data: dict):
         self._data = data
         self._total_reserved_mb = 0.0

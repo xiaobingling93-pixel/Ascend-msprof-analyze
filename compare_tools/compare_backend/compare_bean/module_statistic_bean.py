@@ -21,6 +21,7 @@ from compare_backend.utils.excel_config import ExcelConfig
 
 
 class ModuleStatisticBean:
+    __slots__ = ['_module_name', '_module_class', '_module_level', '_base_info', '_comparison_info']
     TABLE_NAME = Constant.MODULE_TOP_TABLE
     HEADERS = ExcelConfig.HEADERS.get(TABLE_NAME)
     OVERHEAD = ExcelConfig.OVERHEAD.get(TABLE_NAME)
@@ -95,6 +96,8 @@ class ModuleStatisticBean:
 
 
 class ModuleStatisticInfo:
+    __slots__ = ['_data_list', 'device_self_dur_ms', 'device_total_dur_ms', 'call_stack', 'number', 'api_dict']
+
     def __init__(self, data_list: list):
         self._data_list = data_list
         self.device_self_dur_ms = 0

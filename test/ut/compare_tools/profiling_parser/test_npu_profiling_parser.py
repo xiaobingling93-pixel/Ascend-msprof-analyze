@@ -122,9 +122,11 @@ class TestNPUProfilingParser(unittest.TestCase):
     def test_filter_meta_id(self):
         with patch("compare_backend.profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"), \
                 patch("compare_backend.profiling_parser.npu_profiling_parser.NPUProfilingParser.__init__",
-                      return_value=None):
+                      return_value=None), \
+                patch(
+                    "compare_backend.profiling_parser.npu_profiling_parser.BaseProfilingParser._trace_event_generator",
+                    return_value=(TraceEventBean(event) for event in self.meta_events)):
             res = NPUProfilingParser({}, {})
-            res._trace_events = [TraceEventBean(event) for event in self.meta_events]
             res._hccl_op_tid_list = []
             res._hccl_tid_name_dict = {}
             res._group_comm_tid_dict = {}

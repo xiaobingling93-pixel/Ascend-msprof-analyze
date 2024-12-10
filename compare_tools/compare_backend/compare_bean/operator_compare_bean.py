@@ -21,6 +21,7 @@ from compare_backend.utils.tree_builder import TreeBuilder
 
 
 class OperatorCompareBean:
+    __slots__ = ['_index', '_base_op', '_comparison_op']
     TABLE_NAME = Constant.OPERATOR_TABLE
     HEADERS = ExcelConfig.HEADERS.get(TABLE_NAME)
     OVERHEAD = ExcelConfig.OVERHEAD.get(TABLE_NAME)
@@ -44,6 +45,8 @@ class OperatorCompareBean:
 
 
 class OperatorInfo:
+    __slots__ = ['operator_name', 'input_shape', 'input_type', 'device_dur', 'kernel_details', '_kernel_list']
+
     def __init__(self, torch_op: TorchOpNode):
         self.operator_name = None
         self.input_shape = None

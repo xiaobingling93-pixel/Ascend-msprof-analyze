@@ -21,6 +21,7 @@ from compare_backend.utils.tree_builder import TreeBuilder
 
 
 class MemoryCompareBean:
+    __slots__ = ['_index', '_base_op', '_comparison_op']
     TABLE_NAME = Constant.MEMORY_TABLE
     HEADERS = ExcelConfig.HEADERS.get(TABLE_NAME)
     OVERHEAD = ExcelConfig.OVERHEAD.get(TABLE_NAME)
@@ -44,6 +45,8 @@ class MemoryCompareBean:
 
 
 class MemoryInfo:
+    __slots__ = ['operator_name', 'input_shape', 'input_type', 'size', 'memory_details', '_memory_list']
+
     def __init__(self, torch_op: TorchOpNode):
         self.operator_name = None
         self.input_shape = None

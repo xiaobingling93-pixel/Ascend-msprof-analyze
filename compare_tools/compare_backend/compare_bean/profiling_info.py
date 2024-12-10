@@ -17,6 +17,18 @@ from profiler.prof_common.constant import Constant
 
 
 class ProfilingInfo:
+    __slots__ = ['profiling_type', 'other_time', 'lccl_num', 'compute_time', 'communication_not_overlapped',
+                 'wait_time', 'memory_used', 'e2e_time', 'scheduling_time', 'lccl_time', 'minimal_profiling',
+                 'hide_op_details', 'is_level0', 'fa_time_fwd_cube', 'fa_num_fwd_cube', 'fa_time_bwd_cube',
+                 'fa_num_bwd_cube', 'fa_time_fwd_vector', 'fa_num_fwd_vector', 'fa_time_bwd_vector',
+                 'fa_num_bwd_vector',
+                 'conv_time_fwd_cube', 'conv_num_fwd_cube', 'conv_time_bwd_cube', 'conv_num_bwd_cube',
+                 'conv_time_fwd_vector', 'conv_num_fwd_vector', 'conv_time_bwd_vector', 'conv_num_bwd_vector',
+                 'matmul_time_cube', 'matmul_num_cube', 'matmul_time_vector', 'matmul_num_vector',
+                 'page_attention_time', 'page_attention_num', 'vector_time_trans', 'vector_num_trans',
+                 'vector_time_notrans', 'vector_num_notrans', 'sdma_time_tensor_move', 'sdma_num_tensor_move',
+                 'sdma_time_stream', 'sdma_num_stream', 'other_cube_time', 'other_cube_num', 'RDMA_bandwidth',
+                 'SDMA_bandwidth', 'communication_group_time']
     TABLE_NAME = Constant.PERFORMANCE_TABLE
     HEADERS = []
     OVERHEAD = []

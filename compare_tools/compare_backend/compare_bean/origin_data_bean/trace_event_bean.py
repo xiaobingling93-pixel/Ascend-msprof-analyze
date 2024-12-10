@@ -22,9 +22,14 @@ from profiler.prof_common.constant import Constant
 
 
 class TraceEventBean:
+    _COMPUTE_TASK_TYPES = frozenset({'AI_CORE', 'MIX_AIC', 'MIX_AIV', 'AI_CPU',
+                                     'AI_VECTOR_CORE', 'FFTS_PLUS'})
+    _SDMA_TASK_TYPES = frozenset({'SDMA_SQE', 'PCIE_DMA_SQE'})
+    __slots__ = ['_id', '_pid', '_tid', '_ts', '_dur', '_ph', '_cat', '_name', '_args', '_is_torch_op',
+                 '_input_shape']
 
     def __init__(self, event: dict):
-        self._event = event
+        self._id = None
         self._pid = 0
         self._tid = 0
         self._ts = Decimal(0)
@@ -35,7 +40,8 @@ class TraceEventBean:
         self._args = {}
         self._is_torch_op = False
         self._input_shape = None
-        self.init()
+        self.init(event)
+        del event
 
     @property
     def pid(self) -> int:
@@ -75,7 +81,7 @@ class TraceEventBean:
 
     @property
     def id(self) -> str:
-        return self._event.get("id")
+        return self._id
 
     @property
     def stream_id(self) -> int:
@@ -119,10 +125,6 @@ class TraceEventBean:
     @property
     def addr(self) -> str:
         return self._args.get("Addr")
-
-    @property
-    def event(self) -> dict:
-        return self._event
 
     @property
     def input_shapes(self):
@@ -200,11 +202,11 @@ class TraceEventBean:
     def is_comm_not_overlap(self):
         return self._name == 'Communication(Not Overlapped)'
 
-    def is_dict(self):
-        return isinstance(self._event, dict)
-
     def is_kernel_cat(self):
         return self.lower_cat == "kernel"
+
+    def is_memory_copy_cat(self):
+        return self.lower_cat == "gpu_memcpy"
 
     def is_nccl_name(self):
         return self.lower_name.startswith("nccl")
@@ -216,10 +218,10 @@ class TraceEventBean:
         return self.lower_name == '[memory]' and self.device_id >= 0
 
     def is_compute_event(self):
-        return self.task_type in ('AI_CORE', 'MIX_AIC', 'MIX_AIV', 'AI_CPU', 'AI_VECTOR_CORE', 'FFTS_PLUS')
+        return self.task_type in self._COMPUTE_TASK_TYPES
 
     def is_sdma_event(self):
-        return self.task_type in ('SDMA_SQE', 'PCIE_DMA_SQE')
+        return self.task_type in self._SDMA_TASK_TYPES
 
     def is_event_wait(self):
         return self.task_type == 'EVENT_WAIT_SQE'
@@ -281,13 +283,14 @@ class TraceEventBean:
     def is_cube_kernel_cat(self):
         return any(cube_mask in self.lower_name for cube_mask in CompareConfig().cube_mask)
 
-    def init(self):
-        if isinstance(self._event, dict):
-            self._pid = self._event.get("pid", 0)
-            self._tid = self._event.get("tid", 0)
-            self._ts = self._event.get("ts", 0)
-            self._dur = self._event.get("dur", 0)
-            self._ph = self._event.get("ph", "")
-            self._cat = self._event.get("cat", "")
-            self._name = self._event.get("name", "")
-            self._args = self._event.get("args", {})
+    def init(self, event):
+        if isinstance(event, dict):
+            self._id = event.get("id")
+            self._pid = event.get("pid", 0)
+            self._tid = event.get("tid", 0)
+            self._ts = event.get("ts", 0)
+            self._dur = event.get("dur", 0)
+            self._ph = str(event.get("ph", ""))
+            self._cat = event.get("cat", "")
+            self._name = event.get("name", "")
+            self._args = event.get("args", {})

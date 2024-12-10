@@ -19,6 +19,8 @@ from compare_backend.utils.excel_config import ExcelConfig
 
 
 class ApiInfo:
+    __slots__ = ['_data_list', 'name', 'total_dur', 'self_time', 'avg_dur', 'number']
+
     def __init__(self, op_name: str, data_list: list):
         self._data_list = data_list
         self.name = op_name
@@ -38,6 +40,7 @@ class ApiInfo:
 
 
 class ApiCompareBean:
+    __slots__ = ['_name', '_base_api', '_comparison_api']
     TABLE_NAME = Constant.API_TABLE
     HEADERS = ExcelConfig.HEADERS.get(TABLE_NAME)
     OVERHEAD = ExcelConfig.OVERHEAD.get(TABLE_NAME)
@@ -63,4 +66,3 @@ class ApiCompareBean:
         ]
         row.extend(diff_fields)
         return row
-
