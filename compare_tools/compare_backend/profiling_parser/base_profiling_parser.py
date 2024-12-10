@@ -78,7 +78,9 @@ class BaseProfilingParser(ABC):
         self._all_kernels = {}
         self._comm_task_list = []
         self._comm_list = []
-        self._read_trace_event()
+        if any((self._enable_profiling_compare, self._enable_operator_compare, self._enable_memory_compare,
+                self._enable_api_compare, self._enable_communication_compare)):
+            self._read_trace_event()
         self._cur_func_index = 0
         self._categorize_performance_index = 0
         self._cpu_cube_op = None
@@ -127,9 +129,11 @@ class BaseProfilingParser(ABC):
         if self._step_id != Constant.VOID_STEP and self._profiling_type == Constant.GPU:
             msg = "[WARNING] step id is invalid in GPU data, please use this when comparing between NPU datas."
             raise RuntimeError(msg)
-        self._dispatch_events()
-        self._update_kernel_dict()
-        self._update_communication_dict()
+        if any((self._enable_profiling_compare, self._enable_operator_compare, self._enable_memory_compare,
+                self._enable_api_compare, self._enable_communication_compare)):
+            self._dispatch_events()
+            self._update_kernel_dict()
+            self._update_communication_dict()
         if self._enable_memory_compare:
             self._update_memory_list()
         if self._enable_profiling_compare:

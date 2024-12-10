@@ -1,3 +1,5 @@
+from profiler.compare_tools.compare_backend.comparator.kernel_type_comparator import KernelTypeComparator
+from profiler.compare_tools.compare_backend.compare_bean.kernel_type_compare_bean import KernelTypeCompareBean
 from profiler.prof_common.constant import Constant
 
 from compare_backend.comparator.operator_comparator import OperatorComparator
@@ -9,6 +11,7 @@ from compare_backend.compare_bean.kernel_compare_bean import KernelCompareBean
 from compare_backend.data_prepare.operator_data_prepare import OperatorDataPrepare
 from compare_backend.data_prepare.sequence_pre_matching import SequencePreMatching
 
+
 class CompareInterface:
     def __init__(self, data_dict: dict, args_manager: any):
         self._data_dict = data_dict
@@ -19,10 +22,13 @@ class CompareInterface:
             kernel_compare_result = {
                 Constant.BASE_DATA: self._data_dict.get(Constant.BASE_DATA).kernel_details,
                 Constant.COMPARISON_DATA: self._data_dict.get(Constant.COMPARISON_DATA).kernel_details}
-            return KernelCompareComparator(kernel_compare_result, KernelCompareBean).generate_data()
+            if self._args_manager.use_kernel_type:
+                return KernelTypeComparator(kernel_compare_result, KernelTypeCompareBean).generate_data()
+            else:
+                return KernelCompareComparator(kernel_compare_result, KernelCompareBean).generate_data()
 
         base_op_prepare = OperatorDataPrepare(self._data_dict.get(Constant.BASE_DATA),
-                                                self._args_manager.base_step)
+                                              self._args_manager.base_step)
         comparison_op_prepare = OperatorDataPrepare(self._data_dict.get(Constant.COMPARISON_DATA),
                                                     self._args_manager.comparison_step)
 
@@ -37,10 +43,10 @@ class CompareInterface:
                                                      comparison_op_prepare.get_top_layer_ops())
             return OperatorComparator(op_compare_result, OperatorCompareBean).generate_data()
         return {}
-            
+
     def _operator_match(self, base_ops, comparison_ops):
         base_bwd_tid = self._data_dict.get(Constant.BASE_DATA).bwd_tid
         comparison_bwd_tid = self._data_dict.get(Constant.COMPARISON_DATA).bwd_tid
-        return SequencePreMatching(self._args_manager.args, base_bwd_tid, comparison_bwd_tid).run(SequencePreMatching.OP_TYPE,
-                                                                                     base_ops, comparison_ops)
-                
+        return SequencePreMatching(self._args_manager.args, base_bwd_tid, comparison_bwd_tid).run(
+            SequencePreMatching.OP_TYPE,
+            base_ops, comparison_ops)

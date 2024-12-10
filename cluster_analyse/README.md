@@ -43,13 +43,13 @@ experimental_config = torch_npu.profiler._ExperimentalConfig(
 2. 将所有卡的数据拷贝并汇集到一个目录下，运行以下命令，在该目录下即可生成cluster_analysis_output文件夹。
 
    ```bash
-   msprof-analyze cluster -d {cluster profiling data path} -m {mode}
+   msprof-analyze cluster -d {cluster profiling data path} [-m mode] [-o output_path] [--data_simplification] [--force]
    ```
 
    或
    
    ```bash
-   python3 cluster_analysis.py -d {cluster profiling data path} -m {mode}
+   python3 cluster_analysis.py -d {cluster profiling data path} [-m mode] [-o output_path] [--data_simplification] [--force]
    ```
 
    参数说明：
@@ -59,8 +59,8 @@ experimental_config = torch_npu.profiler._ExperimentalConfig(
    | --profiling_path或-d  | 性能数据汇集目录。未配置-o参数时，运行分析脚本之后会在该目录下自动创建cluster_analysis_output文件夹，保存分析数据。 | 是       |
    | --output_path或-o     | 自定义输出路径，运行分析脚本之后会在该目录下自动创建cluster_analysis_output文件夹，保存分析数据。 | 否       |
    | --mode或-m            | 数据解析模式，取值详见“**--mode参数说明**”表。               | 否       |
-   | --data_simplification | 数据精简模式。对于数据量过大的性能数据db文件，可以通过配置该参数将数据精简，并提高工具分析效率。 | 否       |
-   | --force               | 强制跳过用户属主（文件是否属于当前用户）及文件大小（csv文件小于5G，json文件小于10G,db文件小于8G）校验。  | 否       |
+   | --data_simplification | 数据精简模式。对于数据量过大的性能数据db文件，可以通过配置该参数将数据精简，并提高工具分析效率。配置该参数表示开启数据精简，默认未配置表示关闭。 | 否       |
+   | --force               | 强制执行cluster。配置后可强制跳过如下情况：<br/>        指定的目录、文件的用户属主不属于当前用户，忽略属主判断直接执行。<br/>        csv文件大于5G、json文件大于10G、db文件大于8G，忽略文件过大判断直接执行。<br/>配置该参数表示开启强制执行，默认未配置表示关闭。 | 否       |
    
    --mode参数说明：
    
