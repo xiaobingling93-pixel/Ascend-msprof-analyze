@@ -28,6 +28,7 @@ class EnvironmentVariabelAnalyzer(BaseAnalyzer):
         super().__init__(collection_path, n_processes, **kwargs)
         self.dataset = self.get_first_data_by_key(self.dataset_list, EnvironmentVariableDataset.get_key())
 
+    @BaseAnalyzer.check_data((EnvironmentVariableDataset.get_key(),))
     def optimize(self, **kwargs):
         try:
             PathManager.check_input_directory_path(self.collection_path)

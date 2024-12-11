@@ -89,7 +89,7 @@ class BaseAnalyzer(VersionControl, metaclass=ABCMeta):
                     if data_key not in data:
                         return None
 
-                logger.info("Enable analysis %s with %s", self.__class__.__name__, ",".join(data_list))
+                logger.info("Start analysis %s with %s", self.__class__.__name__, ",".join(data_list))
                 return func(self, **kwargs)
 
             return wrapper

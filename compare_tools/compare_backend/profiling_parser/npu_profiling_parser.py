@@ -128,7 +128,7 @@ class NPUProfilingParser(BaseProfilingParser):
                       " please check whether the data contains this step."
                 raise RuntimeError(msg)
             else:
-                logger.warning("Failed to enable enable_kernel_compare, type of kernel_details.csv is null.")
+                logger.warning("Failed to enable enable_kernel_compare,kernel_details.csv lacks duration.")
             return
         self._result_data.update_kernel_details(kernels_dict)
 
