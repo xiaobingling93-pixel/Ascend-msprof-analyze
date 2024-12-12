@@ -20,6 +20,8 @@ from profiler.prof_common.constant import Constant
 
 
 class KernelEvent:
+    __slots__ = ['_event', '_device_type']
+
     def __init__(self, event: TraceEventBean, device_type: str):
         self._event = event
         self._device_type = device_type

@@ -26,6 +26,7 @@ from profiler.prof_common.file_manager import FileManager
 
 @Singleton
 class ArgsManager:
+    __slots__ = ['_args', '_base_path_dict', '_comparison_path_dict', '_base_step', '_comparison_step']
 
     def __init__(self, args: any):
         self._args = args
@@ -101,7 +102,7 @@ class ArgsManager:
     @classmethod
     def check_profiling_path(cls, path_dict: dict):
         PathManager.input_path_common_check(path_dict.get(Constant.PROFILING_PATH))
-        path_list = [path_dict.get(Constant.PROFILING_PATH)] if path_dict.get(
+        path_list = [path_dict.get(Constant.PROFILING_PATH, "")] if path_dict.get(
             Constant.PROFILING_TYPE) == Constant.GPU else [
             path_dict.get(Constant.PROFILING_PATH, ""),
             path_dict.get(Constant.TRACE_PATH, ""),

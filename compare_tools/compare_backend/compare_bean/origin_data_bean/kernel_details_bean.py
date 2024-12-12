@@ -24,6 +24,9 @@ from profiler.prof_common.constant import Constant
 
 
 class KernelDetailsBean:
+    __slots__ = ['_data', '_op_type', '_name', '_input_shapes', '_aiv_vec_time', '_aicore_time', '_mac_time',
+                 '_duration', '_start_time', '_step_id']
+
     def __init__(self, data: dict):
         self._data = data
         self._op_type = ""

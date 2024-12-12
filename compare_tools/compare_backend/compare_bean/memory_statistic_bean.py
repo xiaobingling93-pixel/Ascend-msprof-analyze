@@ -20,6 +20,7 @@ from compare_backend.utils.excel_config import ExcelConfig
 
 
 class MemoryStatisticBean:
+    __slots__ = ['_name', '_base_info', '_comparison_info']
     TABLE_NAME = Constant.MEMORY_TOP_TABLE
     HEADERS = ExcelConfig.HEADERS.get(TABLE_NAME)
     OVERHEAD = ExcelConfig.OVERHEAD.get(TABLE_NAME)
@@ -41,6 +42,8 @@ class MemoryStatisticBean:
 
 
 class MemoryStatisticInfo:
+    __slots__ = ['_data_list', 'duration_ms', 'size_mb', 'number']
+
     def __init__(self, data_list: list):
         self._data_list = data_list
         self.duration_ms = 0

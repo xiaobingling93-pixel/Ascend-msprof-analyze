@@ -20,6 +20,7 @@ from compare_backend.utils.tree_builder import TreeBuilder
 
 
 class OperatorStatisticBean:
+    __slots__ = ['_name', '_base_info', '_comparison_info']
     TABLE_NAME = Constant.OPERATOR_TOP_TABLE
     HEADERS = ExcelConfig.HEADERS.get(TABLE_NAME)
     OVERHEAD = ExcelConfig.OVERHEAD.get(TABLE_NAME)
@@ -41,6 +42,8 @@ class OperatorStatisticBean:
 
 
 class OperatorStatisticInfo:
+    __slots__ = ['_data_list', 'device_dur_ms', 'number']
+
     def __init__(self, data_list: list):
         self._data_list = data_list
         self.device_dur_ms = 0

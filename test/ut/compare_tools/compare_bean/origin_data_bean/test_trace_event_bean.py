@@ -74,10 +74,6 @@ class TestTraceEventBean(unittest.TestCase):
         self.assertTrue(TraceEventBean({"name": "Communication(Not Overlapped)"}).is_comm_not_overlap())
         self.assertFalse(TraceEventBean({"name": "add"}).is_comm_not_overlap())
 
-    def test_is_dict(self):
-        self.assertTrue(TraceEventBean({}).is_dict())
-        self.assertFalse(TraceEventBean([]).is_dict())
-
     def test_is_kernel_cat(self):
         self.assertTrue(TraceEventBean({"cat": "Kernel"}).is_kernel_cat())
         self.assertFalse(TraceEventBean({"cat": "cpu_op"}).is_kernel_cat())

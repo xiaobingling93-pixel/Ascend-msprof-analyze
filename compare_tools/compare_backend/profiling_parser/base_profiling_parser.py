@@ -2,12 +2,15 @@ from abc import abstractmethod, ABC
 from decimal import Decimal
 import logging
 
+import ijson
+
 from compare_backend.compare_bean.origin_data_bean.compare_event import KernelEvent, MemoryEvent
 from compare_backend.compare_bean.origin_data_bean.kernel_details_bean import KernelDetailsBean
 from compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
 from compare_backend.compare_bean.profiling_info import ProfilingInfo
 from profiler.prof_common.constant import Constant
 from profiler.prof_common.file_manager import FileManager
+from profiler.prof_common.path_manager import PathManager
 
 logger = logging.getLogger()
 
@@ -57,13 +60,13 @@ class ProfilingResult:
 
 
 class BaseProfilingParser(ABC):
+    trace_event_item = {Constant.GPU: "traceEvents.item", Constant.NPU: "item"}
 
     def __init__(self, args: any, path_dict: dict, step_id: int = Constant.VOID_STEP):
         self._args = args
         self._profiling_type = path_dict.get(Constant.PROFILING_TYPE)
         self._profiling_path = path_dict.get(Constant.PROFILING_PATH)
         self._json_path = path_dict.get(Constant.TRACE_PATH)
-        self._trace_events = [] if self._profiling_path == Constant.NPU else {}
         self._enable_profiling_compare = args.enable_profiling_compare
         self._enable_operator_compare = args.enable_operator_compare
         self._enable_memory_compare = args.enable_memory_compare
@@ -78,9 +81,6 @@ class BaseProfilingParser(ABC):
         self._all_kernels = {}
         self._comm_task_list = []
         self._comm_list = []
-        if any((self._enable_profiling_compare, self._enable_operator_compare, self._enable_memory_compare,
-                self._enable_api_compare, self._enable_communication_compare)):
-            self._read_trace_event()
         self._cur_func_index = 0
         self._categorize_performance_index = 0
         self._cpu_cube_op = None
@@ -230,9 +230,7 @@ class BaseProfilingParser(ABC):
         if not self._dispatch_func:
             return
         index_list = list(range(0, len(self._dispatch_func))) * 2
-        for event in self._trace_events:
-            if not event.is_dict():
-                continue
+        for event in self._trace_event_generator(self._profiling_type):
             if event.is_m_mode():
                 continue
             self.__picking_event(event, index_list)
@@ -335,8 +333,10 @@ class BaseProfilingParser(ABC):
                                "make sure that the profiling data is greater than level0 and "
                                "aic_metrics=PipeUtilization.", self._profiling_path)
 
-    def _read_trace_event(self):
-        try:
-            self._trace_events = FileManager.read_json_file(self._json_path)
-        except Exception:
-            print(f"[ERROR] Failed to read the file: {self._json_path}")
+    def _trace_event_generator(self, profiling_type):
+        PathManager.check_path_readable(self._json_path)
+        FileManager.check_file_size(self._json_path)
+        item = self.trace_event_item.get(profiling_type)
+        with open(self._json_path, 'r') as file:
+            for event in ijson.items(file, item):
+                yield TraceEventBean(event)

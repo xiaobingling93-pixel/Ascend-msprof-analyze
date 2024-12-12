@@ -19,6 +19,7 @@ from compare_backend.utils.common_func import convert_to_float, convert_to_decim
 
 
 class OperatorMemoryBean:
+    __slots__ = ['_data', '_name', '_size', '_allocation_time', '_release_time']
 
     def __init__(self, data: dict):
         self._data = data
