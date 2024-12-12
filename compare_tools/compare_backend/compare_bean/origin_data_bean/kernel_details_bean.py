@@ -107,6 +107,11 @@ class KernelDetailsBean:
             return True
         return False
 
+    def is_invalid_op_type(self):
+        if pd.isna(self.op_type) or self.op_type == "N/A" or self.op_type == "":
+            return True
+        return False
+
     def is_fa_bwd(self):
         return 'bwd' in self.op_type.lower() or 'grad' in self.op_type.lower()
 

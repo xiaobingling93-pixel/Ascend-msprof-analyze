@@ -50,7 +50,7 @@ class TestCompareToolsCmdPytorchNpuVsNpu(TestCase):
                    "Min Duration(us)", "Calls", "Total Duration(us).1", "Avg Duration(us).1", "Max Duration(us).1",
                    "Min Duration(us).1", "Calls.1", "Diff Total Ratio", "Diff Avg Ratio"]
         df = pd.read_excel(self.RESULT_EXCEL, sheet_name="KernelCompare", header=2)
-        self.assertEqual(len(df), 488, msg="pytorch npu vs npu step compare results quantity is wrong")
+        self.assertEqual(len(df), 498, msg="pytorch npu vs npu step compare results quantity is wrong")
         self.assertEqual(headers, df.columns.tolist(), msg="pytorch npu vs npu step compare results headers is wrong")
 
     def test_communication_compare(self):
