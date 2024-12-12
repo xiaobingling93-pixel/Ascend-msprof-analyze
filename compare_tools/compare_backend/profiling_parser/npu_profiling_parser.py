@@ -114,7 +114,7 @@ class NPUProfilingParser(BaseProfilingParser):
             return
         kernels_dict = {}
         for kernel in kernel_details:
-            if kernel.is_invalid():
+            if kernel.is_invalid_op_type():
                 continue
             if self._step_id != Constant.VOID_STEP and kernel.step_id != self._step_id:
                 continue
