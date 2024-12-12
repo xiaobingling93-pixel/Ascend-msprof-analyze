@@ -19,7 +19,7 @@ class TestCompatibleGcAdvice(unittest.TestCase):
         dimension = "schedule"
         scope = SupportedScopes.CONJECTURED_GC_ANALYSIS
         result = interface.get_result(dimension, scope, render_html=1, output_dict=False, profiling_path="./ascend_pt")
-        assert len(result.data.get("'CompatibleGcAnalysis'", [])) == 0
+        assert len(result.data.get("ConjecturedGcAnalysis", [])) == 0
         result.clear()
 
     @staticmethod
@@ -28,7 +28,7 @@ class TestCompatibleGcAdvice(unittest.TestCase):
         dimension = "schedule"
         scope = SupportedScopes.CONJECTURED_GC_ANALYSIS
         result = interface.get_result(dimension, scope, render_html=1, output_dict=False, profiling_path="./ascend_pt")
-        assert len(result.data.get("CompatibleGcAnalysis", {}).get("data", [])) == 2
+        assert len(result.data.get("ConjecturedGcAnalysis", {}).get("data", [])) == 2
         result.clear()
 
     @classmethod
@@ -53,7 +53,7 @@ class TestCompatibleGcAdvice(unittest.TestCase):
             "name": "Free", "pid": 4139906593, "tid": 3, "ts": "1723545784434032.646", "dur": 500000.58, "ph": "X"
         }
         free_event2 = {
-            "name": "Free", "pid": 4139906593, "tid": 3, "ts": "1723545784784032.326", "dur": 200000.76, "ph": "X"
+            "name": "Free", "pid": 4139906593, "tid": 3, "ts": "1723545784984032.326", "dur": 200000.76, "ph": "X"
         }
         return [py_pid_data, ascend_pid_data, cann_pid_data, ah_event1, ah_event2, free_event1, free_event2]
 
@@ -87,17 +87,17 @@ class TestCompatibleGcAdvice(unittest.TestCase):
         # acl apis
         api_event1 = {
             "name": "AscendCL@aclCreateDataBuffer", "pid": 4139906273, "tid": 4042877, "ts": "1723545784534032.000",
-            "dur": 2000, "args": {"Thread Id": 4042877, "Mode": "ACL_OP", "level": "acl", "id": "aclCreateDataBuffer",
+            "dur": 200000, "args": {"Thread Id": 4042877, "Mode": "ACL_OP", "level": "acl", "id": "aclCreateDataBuffer",
                                   "item_id": "0", "connection_id": 63899}, "ph": "X"
         }
         api_event2 = {
             "name": "AscendCL@aclCreateTensorDesc", "pid": 4139906273, "tid": 4042877, "ts": "1723545784556032.450",
-            "dur": 4000, "args": {"Thread Id": 4042877, "Mode": "ACL_OP", "level": "acl", "id": "aclCreateTensorDesc",
+            "dur": 400000, "args": {"Thread Id": 4042877, "Mode": "ACL_OP", "level": "acl", "id": "aclCreateTensorDesc",
                                   "item_id": "0", "connection_id": 63900}, "ph": "X"
         }
         api_event3 = {
-            "name": "AscendCL@opCompile", "pid": 4139906273, "tid": 4044446, "ts": "1723545784572032.870",
-            "dur": 15000.36, "args": {"Thread Id": 4044446, "Mode": "ACL_OP", "level": "acl", "id": "opCompile",
+            "name": "AscendCL@opCompile", "pid": 4139906273, "tid": 4044446, "ts": "1723545784992032.870",
+            "dur": 1500000.36, "args": {"Thread Id": 4044446, "Mode": "ACL_OP", "level": "acl", "id": "opCompile",
                                       "item_id": "0", "connection_id": 63992}, "ph": "X"
         }
 

@@ -12,7 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import logging
 import os
 
 from profiler.advisor.dataset.timeline_event_dataset import ScheduleAnalysisDataset
@@ -22,7 +21,6 @@ from profiler.advisor.utils.utils import convert_to_float, convert_to_int, safe_
 from profiler.prof_common.constant import Constant
 from profiler.prof_common.file_manager import FileManager
 
-logger = logging.getLogger()
 
 
 class AbnormalGcStatistic:
@@ -62,12 +60,12 @@ class AbnormalGcStatistic:
 class ConjecturedGcChecker:
     ACL_EVENT_DUR = "acl_event_dur"
     ACL_EVENT_COUNT = "acl_event_count"
+    HEADERS = ["timestamp", "duration(us)"]
 
     def __init__(self):
         self.stage = None
         self.rank = None
         self.optimization_item = []
-        self.gc_issues = False
         self.gc_problem_with_free = ""
         self.desc = ""
         self.suggestions = []
@@ -75,12 +73,13 @@ class ConjecturedGcChecker:
         self.gc_threshold = 0
         self.gc_topk_num = 0
         self.gc_statistic = AbnormalGcStatistic()
-        self.headers = ["timestamp", "duration(us)"]
         self._init_rule()
 
     def check_gc(self, event_dataset: ScheduleAnalysisDataset, rank=None, stage=None):
         """
-        :Param event_dataset: dataset of timeline event
+        Param event_dataset: dataset of timeline event
+              rank: rank id
+              stage: a stage of a model that is assigned to specific computational device
         """
         if event_dataset.gc_events:
             return
@@ -106,9 +105,8 @@ class ConjecturedGcChecker:
             return
 
         self.optimization_item.append(OptimizeItem("Conjectured Gc", self.desc, self.suggestions))
-        for optimization in self.optimization_item:
-            result.add(OptimizeRecord(optimization))
-        headers = self.headers
+        result.add(OptimizeRecord(self.optimization_item[-1]))
+        headers = self.HEADERS
         if self.rank is not None:
             headers = ["Rank id"] + headers
         sub_table_name = "ConjecturedGcAnalysis" if not self.stage else f"Stage-{self.stage}: ConjecturedGcAnalysis"
@@ -131,7 +129,7 @@ class ConjecturedGcChecker:
                                     title="Conjectured GC Analysis",
                                     desc=self.desc,
                                     solutions=self.solutions,
-                                    headers=self.headers,
+                                    headers=self.HEADERS,
                                     datas=self.gc_statistic.export()[:show_num],
                                     num=show_num,
                                     priority_background_color=priority,
@@ -147,8 +145,7 @@ class ConjecturedGcChecker:
             free_event_start_time = convert_to_float(free_event.ts)
             free_event_end_time = free_event_start_time + convert_to_float(free_event.dur)
             if free_event_name not in free_include_acl_events:
-                free_include_acl_events[free_event_name] = {}
-                free_include_acl_events[free_event_name]["ts"] = free_event.ts
+                free_include_acl_events[free_event_name] = {"ts": free_event.ts}
 
             while acl_event_index < len(acl_events):
                 acl_event = acl_events[acl_event_index]

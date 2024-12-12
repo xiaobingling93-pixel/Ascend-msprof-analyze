@@ -12,7 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import logging
 
 from profiler.advisor.analyzer.base_analyzer import BaseAnalyzer
 from profiler.advisor.result.result import OptimizeResult
@@ -20,8 +19,6 @@ from profiler.advisor.analyzer.schedule.conjectured_gc.conjectured_gc_checker im
 from profiler.advisor.display.html.render import HTMLRender
 from profiler.advisor.dataset.timeline_event_dataset import ScheduleAnalysisDataset
 from profiler.advisor.display.html.priority_background_color import PriorityBackgroundColor
-
-logger = logging.getLogger()
 
 
 class ConjecturedGcAnalyzer(BaseAnalyzer):
