@@ -41,3 +41,7 @@ ASCEND_LAUNCH_BLOCKING:
         当设置为1时，强制算子同步运行，从而更容易调试和跟踪代码中的问题。\n
         如果设置为0，则任务将以异步模式执行。"
   suggest: "export ASCEND_LAUNCH_BLOCKING=1"
+HCCL_ALGO:
+  desc: "用于配置集合通信Server间跨机通信算法，支持如下几种取值：ring, H-D_R, NHR, NHR_V1, NB, pipeline.\n
+         当不设置此环境变量时，会根据产品形态、节点数以及数据量自动选择算法。"
+  suggest: "建议通过执行命令'unset HCCL_ALGO'取消此环境变量的设置"

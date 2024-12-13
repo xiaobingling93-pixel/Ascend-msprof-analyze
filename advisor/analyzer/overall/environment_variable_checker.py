@@ -34,6 +34,7 @@ class EnvironmentVariabelChecker:
         "ASCEND_ENHANCE_ENABLE": lambda x: convert_to_int(x) == 0,
         "PYTORCH_NPU_ALLOC_CONF": lambda x: isinstance(x, str) and "expandable_segments:True" not in x,
         "ASCEND_LAUNCH_BLOCKING": lambda x: convert_to_int(x) != 1,
+        "HCCL_ALGO": lambda x: x != "",
     }
 
     HEADERS = ["Environment", "Value", "Description", "Suggestion"]
