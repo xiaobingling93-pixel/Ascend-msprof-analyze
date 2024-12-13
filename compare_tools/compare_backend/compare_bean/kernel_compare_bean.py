@@ -19,6 +19,8 @@ from compare_backend.utils.excel_config import ExcelConfig
 
 
 class KernelCompareInfo:
+    __slots__ = ['_kernel_type', '_input_shapes', '_total_dur', '_number', '_max_dur', '_min_dur']
+
     def __init__(self, data_list: list):
         self._kernel_type = None
         self._input_shapes = None
@@ -42,29 +44,30 @@ class KernelCompareInfo:
     @property
     def input_shapes(self):
         return self._input_shapes
-    
+
     @property
     def total_dur(self):
         return self._total_dur if self._total_dur else 0.0
-    
+
     @property
     def number(self):
         return self._number
-    
+
     @property
     def max_dur(self):
         return self._max_dur
-    
+
     @property
     def min_dur(self):
         return self._min_dur
-    
+
     @property
     def avg_dur(self):
         return round(self._total_dur / self._number, 2) if self._total_dur and self._number else 0.0
 
 
 class KernelCompareBean:
+    __slots__ = ['_base_kernel', '_comparison_kernel', '_kernel_type', '_input_shapes']
     TABLE_NAME = Constant.KERNEL_TABLE
     HEADERS = ExcelConfig.HEADERS.get(TABLE_NAME)
     OVERHEAD = ExcelConfig.OVERHEAD.get(TABLE_NAME)

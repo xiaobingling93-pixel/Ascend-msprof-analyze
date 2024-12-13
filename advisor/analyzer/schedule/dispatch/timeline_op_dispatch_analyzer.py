@@ -43,6 +43,7 @@ class OpDispatchAnalyzer(BaseAnalyzer):
         self._issues_record = []
         self.optimization_item = []
 
+    @BaseAnalyzer.check_data((ScheduleAnalysisDataset.get_key(),))
     def optimize(self, **kwargs):
         """
         optimize operator

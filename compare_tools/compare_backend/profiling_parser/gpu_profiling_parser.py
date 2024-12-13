@@ -13,7 +13,6 @@ class GPUProfilingParser(BaseProfilingParser):
 
     def __init__(self, args: any, path_dict: dict, step_id: int = Constant.VOID_STEP):
         super().__init__(args, path_dict, step_id)
-        self._trace_events = [TraceEventBean(event) for event in self._trace_events.get("traceEvents", [])]
         self._flow_cat = (args.gpu_flow_cat,) if args.gpu_flow_cat else self.FLOW_CAT
         self._compute_stream_id = self._infer_compute_stream_id()
         self._marks = defaultdict(int)
@@ -58,10 +57,11 @@ class GPUProfilingParser(BaseProfilingParser):
     def _calculate_performance_time(self):
         min_ts = sys.float_info.max
         max_ts = sys.float_info.min
-        self._trace_events.sort(key=lambda x: x.start_time)
+        kernels = list(self._all_kernels.values())
+        kernels.sort(key=lambda x: x.start_time)
         flow_dict_new = self._get_flow_time_dict()
         computing_events = []
-        for event in self._trace_events:
+        for event in kernels:
             if event.stream:
                 min_ts = min(event.start_time, min_ts)
                 max_ts = max(event.end_time, max_ts)
@@ -120,7 +120,7 @@ class GPUProfilingParser(BaseProfilingParser):
         return event.lower_cat in self.TORCH_OP_CAT
 
     def _is_kernel_event(self, event: TraceEventBean):
-        return event.is_kernel_cat()
+        return event.is_kernel_cat() or event.is_memory_copy_cat()
 
     def _is_flow_event(self, event: TraceEventBean):
         return event.lower_cat in self._flow_cat
@@ -136,7 +136,7 @@ class GPUProfilingParser(BaseProfilingParser):
         func_set = set()
         if self._enable_memory_compare or self._enable_operator_compare or self._enable_profiling_compare:
             func_set.add(self._picking_torch_op_event)
-        if self._enable_communication_compare:
+        if self._enable_communication_compare or self._enable_profiling_compare:
             func_set.add(self._picking_kernel_event)
         if self._enable_operator_compare:
             func_set.add(self._picking_python_function_event)
@@ -156,7 +156,7 @@ class GPUProfilingParser(BaseProfilingParser):
         if not self._enable_profiling_compare:
             return -1
         kernel_stream_ids = []
-        for event in self._trace_events:
+        for event in self._trace_event_generator(Constant.GPU):
             if event.is_kernel_except_nccl() and event.stream:
                 kernel_stream_ids.append(event.stream)
         if not kernel_stream_ids:
@@ -165,7 +165,7 @@ class GPUProfilingParser(BaseProfilingParser):
         return counter.most_common(1)[0][0]
 
     def _find_bwd_tid(self):
-        for event in self._trace_events:
+        for event in self._trace_event_generator(Constant.GPU):
             if event.is_fwdbwd() and event.is_flow_end():
                 self._bwd_tid = event.tid
                 break

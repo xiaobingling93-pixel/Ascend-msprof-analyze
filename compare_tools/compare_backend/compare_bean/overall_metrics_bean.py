@@ -21,6 +21,7 @@ from compare_backend.utils.excel_config import ExcelConfig, CellFormatType
 
 
 class OverallMetricsBean:
+    __slots__ = ['_base_data', '_comparison_data']
     TABLE_NAME = Constant.OVERALL_METRICS_TABLE
     HEADERS = ExcelConfig.HEADERS.get(TABLE_NAME)
     OVERHEAD = ExcelConfig.OVERHEAD.get(TABLE_NAME)
@@ -89,6 +90,8 @@ class OverallMetricsBean:
 
 
 class OverallMetricsInfo:
+    __slots__ = ['_profiling_info', '_comm_group_list', '_overall_metrics_data']
+
     def __init__(self, profiling_info: ProfilingInfo):
         self._profiling_info = profiling_info
         self._comm_group_list = list(profiling_info.communication_group_time.keys())
@@ -290,30 +293,30 @@ class OverallMetricsInfo:
     def _init_overall_metrics_data(self):
         overall_metrics_data = {
             "before_group": {
-            ExcelConfig.COMPUTING: self.computing_data,
-            ExcelConfig.FA_FWD: self.fa_fwd_data,
-            ExcelConfig.FA_FWD_CUBE: self.fa_fwd_cube_data,
-            ExcelConfig.FA_FWD_VECTOR: self.fa_fwd_vector_data,
-            ExcelConfig.FA_BWD: self.fa_bwd_data,
-            ExcelConfig.FA_BWD_CUBE: self.fa_bwd_cube_data,
-            ExcelConfig.FA_BWD_VECTOR: self.fa_bwd_vector_data,
-            ExcelConfig.CONV_FWD: self.conv_fwd_data,
-            ExcelConfig.CONV_FWD_CUBE: self.conv_fwd_cube_data,
-            ExcelConfig.CONV_FWD_VECTOR: self.conv_fwd_vector_data,
-            ExcelConfig.CONV_BWD: self.conv_bwd_data,
-            ExcelConfig.CONV_BWD_CUBE: self.conv_bwd_cube_data,
-            ExcelConfig.CONV_BWD_VECTOR: self.conv_bwd_vector_data,
-            ExcelConfig.MM: self.mm_data,
-            ExcelConfig.MM_CUBE: self.mm_cube_data,
-            ExcelConfig.MM_VECTOR: self.mm_vector_data,
-            ExcelConfig.PA: self.pa_data,
-            ExcelConfig.VECTOR: self.vector_data,
-            ExcelConfig.VECTOR_TRANS: self.vector_trans_data,
-            ExcelConfig.VECTOR_NO_TRANS: self.vector_no_trans_data,
-            ExcelConfig.CUBE: self.cube_data,
-            ExcelConfig.SDMA_TM: self.sdma_tm_data,
-            ExcelConfig.OTHER: self.other_data,
-            ExcelConfig.COMMUNICATION_TIME: self.communication_data
+                ExcelConfig.COMPUTING: self.computing_data,
+                ExcelConfig.FA_FWD: self.fa_fwd_data,
+                ExcelConfig.FA_FWD_CUBE: self.fa_fwd_cube_data,
+                ExcelConfig.FA_FWD_VECTOR: self.fa_fwd_vector_data,
+                ExcelConfig.FA_BWD: self.fa_bwd_data,
+                ExcelConfig.FA_BWD_CUBE: self.fa_bwd_cube_data,
+                ExcelConfig.FA_BWD_VECTOR: self.fa_bwd_vector_data,
+                ExcelConfig.CONV_FWD: self.conv_fwd_data,
+                ExcelConfig.CONV_FWD_CUBE: self.conv_fwd_cube_data,
+                ExcelConfig.CONV_FWD_VECTOR: self.conv_fwd_vector_data,
+                ExcelConfig.CONV_BWD: self.conv_bwd_data,
+                ExcelConfig.CONV_BWD_CUBE: self.conv_bwd_cube_data,
+                ExcelConfig.CONV_BWD_VECTOR: self.conv_bwd_vector_data,
+                ExcelConfig.MM: self.mm_data,
+                ExcelConfig.MM_CUBE: self.mm_cube_data,
+                ExcelConfig.MM_VECTOR: self.mm_vector_data,
+                ExcelConfig.PA: self.pa_data,
+                ExcelConfig.VECTOR: self.vector_data,
+                ExcelConfig.VECTOR_TRANS: self.vector_trans_data,
+                ExcelConfig.VECTOR_NO_TRANS: self.vector_no_trans_data,
+                ExcelConfig.CUBE: self.cube_data,
+                ExcelConfig.SDMA_TM: self.sdma_tm_data,
+                ExcelConfig.OTHER: self.other_data,
+                ExcelConfig.COMMUNICATION_TIME: self.communication_data
             }
         }
         if self._comm_group_list:

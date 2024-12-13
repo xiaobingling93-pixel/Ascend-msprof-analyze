@@ -19,6 +19,7 @@ from compare_backend.utils.common_func import calculate_diff_ratio
 
 
 class CommunicationInfo:
+    __slots__ = ['comm_op_name', 'task_name', 'calls', 'total_duration', 'avg_duration', 'max_duration', 'min_duration']
 
     def __init__(self, name: str, data_list: list, is_task: bool):
         self.comm_op_name = None
@@ -39,6 +40,7 @@ class CommunicationInfo:
 
 
 class CommunicationBean:
+    __slots__ = ['_name', '_base_comm', '_comparison_comm']
     TABLE_NAME = Constant.COMMUNICATION_TABLE
     HEADERS = ExcelConfig.HEADERS.get(TABLE_NAME)
     OVERHEAD = ExcelConfig.OVERHEAD.get(TABLE_NAME)

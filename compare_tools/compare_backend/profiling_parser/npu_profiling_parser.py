@@ -30,7 +30,6 @@ class NPUProfilingParser(BaseProfilingParser):
         self._op_statistic_path = os.path.join(path_dict.get(Constant.ASCEND_OUTPUT_PATH, ""), "op_statistic.csv")
         self._communication_path = os.path.join(path_dict.get(Constant.ASCEND_OUTPUT_PATH, ""), "communication.json")
         self._info_json_path = path_dict.get(Constant.INFO_JSON_PATH, "")
-        self._trace_events = [TraceEventBean(event) for event in self._trace_events]
         self._hccl_pid = None
         self._hccl_op_tid_list = []
         self._kernel_pid = None
@@ -115,7 +114,7 @@ class NPUProfilingParser(BaseProfilingParser):
             return
         kernels_dict = {}
         for kernel in kernel_details:
-            if kernel.is_invalid():
+            if kernel.is_invalid_op_type():
                 continue
             if self._step_id != Constant.VOID_STEP and kernel.step_id != self._step_id:
                 continue
@@ -128,7 +127,7 @@ class NPUProfilingParser(BaseProfilingParser):
                       " please check whether the data contains this step."
                 raise RuntimeError(msg)
             else:
-                logger.warning("Failed to enable enable_kernel_compare, type of kernel_details.csv is null.")
+                logger.warning("Failed to enable enable_kernel_compare,kernel_details.csv lacks duration.")
             return
         self._result_data.update_kernel_details(kernels_dict)
 
@@ -298,7 +297,7 @@ class NPUProfilingParser(BaseProfilingParser):
 
     def _filter_meta_id(self):
         thread_events, thread_sort_events = [], []
-        for event in self._trace_events:
+        for event in self._trace_event_generator(Constant.NPU):
             if event.is_fwdbwd() and event.is_flow_end():
                 self._bwd_tid = event.tid
             if not event.is_m_mode():

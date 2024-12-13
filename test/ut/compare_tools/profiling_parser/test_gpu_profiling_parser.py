@@ -69,7 +69,11 @@ class TestGpuProfilingParser(unittest.TestCase):
                       return_value=None):
             res = GPUProfilingParser({}, {})
             res._profiling_type = "GPU"
-            res._trace_events = [TraceEventBean(event) for event in self.trace_events]
+            res._all_kernels = {}
+            for event in self.trace_events:
+                event_name = event.get("name")
+                event_ts = str(event.get("ts"))
+                res._all_kernels[event_name + event_ts] = TraceEventBean(event)
             res._result_data = ProfilingResult("GPU")
             res._compute_stream_id = 3
             res._flow_dict = {}

@@ -73,7 +73,6 @@ def analyze_all(**kwargs) -> None:
 @click.option("-pt",
               "--profiling_type",
               metavar="",
-              default=EnumParamsParser().get_default(Constant.PROFILING_TYPE_UNDER_LINE),
               required=False,
               type=click.Choice(EnumParamsParser().get_options(Constant.PROFILING_TYPE_UNDER_LINE)),
               help="enter the profiling type, selectable range ascend_pytorch_profiler, mslite ,msprof")
@@ -107,7 +106,6 @@ def analyze_schedule(**kwargs) -> None:
 @click.option("-pt",
               "--profiling_type",
               metavar="",
-              default=EnumParamsParser().get_default(Constant.PROFILING_TYPE_UNDER_LINE),
               required=False,
               type=click.Choice(EnumParamsParser().get_options(Constant.PROFILING_TYPE_UNDER_LINE)),
               help="enter the profiling type, selectable range ascend_pytorch_profiler, mslite ,msprof")

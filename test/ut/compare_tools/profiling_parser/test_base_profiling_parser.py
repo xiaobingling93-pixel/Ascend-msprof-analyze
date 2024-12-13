@@ -150,13 +150,6 @@ class TestBaseProfilingParser(unittest.TestCase):
             result_data = parser.load_data()
             self.assertEqual(len(result_data.kernel_dict.get(12)), 2)
 
-    def test_read_trace_event_when_invalid_json_path(self):
-        with patch("compare_backend.profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"):
-            parser = ProfilingParser()
-            parser.init({}, {})
-            parser._read_trace_event()
-            self.assertEqual(parser._trace_events, [])
-
     def test_update_communication_dict(self):
         result = {'allreduce': {'comm_list': [2.0], 'comm_task': {'notify_wait': [1.0]}}}
         with patch("compare_backend.profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"):

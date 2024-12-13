@@ -24,6 +24,9 @@ from profiler.prof_common.constant import Constant
 
 
 class KernelDetailsBean:
+    __slots__ = ['_data', '_op_type', '_name', '_input_shapes', '_aiv_vec_time', '_aicore_time', '_mac_time',
+                 '_duration', '_start_time', '_step_id']
+
     def __init__(self, data: dict):
         self._data = data
         self._op_type = ""
@@ -101,6 +104,11 @@ class KernelDetailsBean:
 
     def is_invalid(self):
         if pd.isna(self.aiv_vec_time) and pd.isna(self.mac_time):
+            return True
+        return False
+
+    def is_invalid_op_type(self):
+        if pd.isna(self.op_type) or self.op_type == "N/A" or self.op_type == "":
             return True
         return False
 

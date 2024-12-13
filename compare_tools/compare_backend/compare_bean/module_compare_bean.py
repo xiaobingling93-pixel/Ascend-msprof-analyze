@@ -22,6 +22,7 @@ from compare_backend.utils.torch_op_node import TorchOpNode
 
 
 class ModuleCompareBean:
+    __slots__ = ['_base_module', '_comparison_module', 'module_class', 'module_level', 'module_name']
     TABLE_NAME = Constant.MODULE_TABLE
     HEADERS = ExcelConfig.HEADERS.get(TABLE_NAME)
     OVERHEAD = ExcelConfig.OVERHEAD.get(TABLE_NAME)
@@ -66,6 +67,9 @@ class ModuleCompareBean:
 
 
 class ModuleInfo:
+    __slots__ = ['module_class', 'module_level', 'module_name', 'device_self_time', 'device_total_time',
+                 'top_layer_ops', 'call_stack']
+
     def __init__(self, module: ModuleNode):
         self.module_class = ""
         self.module_level = ""
@@ -85,6 +89,8 @@ class ModuleInfo:
 
 
 class OpInfo:
+    __slots__ = ['operator_name', 'kernel_details', 'device_self_time', 'call_stack']
+
     def __init__(self, operator: TorchOpNode):
         self.operator_name = ""
         self.kernel_details = ""

@@ -21,6 +21,8 @@ from profiler.prof_common.constant import Constant
 
 
 class TorchOpNode:
+    __slots__ = ['_event', '_parent_node', '_child_nodes', '_kernel_list', '_kernel_num', '_memory_allocated_list']
+
     def __init__(self, event=TraceEventBean, parent_node=None):
         self._event = event
         self._parent_node = parent_node
