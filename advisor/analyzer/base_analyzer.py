@@ -48,6 +48,7 @@ class BaseAnalyzer(VersionControl, metaclass=ABCMeta):
         self.n_processes = n_processes
         self.kwargs = kwargs
         self.collection_path = collection_path
+        self.output_path = kwargs.get("output_path", None)
         self.cann_version = kwargs.get(Constant.CANN_VERSION, EnumParamsParser().get_default(Constant.CANN_VERSION))
         self.profiling_type = self.identify_profiling_type(
             EnumParamsParser().get_options(Constant.PROFILING_TYPE_UNDER_LINE))

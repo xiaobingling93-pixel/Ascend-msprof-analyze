@@ -655,8 +655,8 @@ class AnalyzerController:
         if not self._is_cluster:
             job_list = self.single_rank_analysis(profiling_path, benchmark_profiling_path)
         else:
-            self.slow_rank_analyzer = SlowRankAnalyzer(profiling_path)
-            self.slow_link_analyzer = SlowLinkAnalyzer(profiling_path)
+            self.slow_rank_analyzer = SlowRankAnalyzer(profiling_path, output_path=self.kwargs.get("output_path"))
+            self.slow_link_analyzer = SlowLinkAnalyzer(profiling_path, output_path=self.kwargs.get("output_path"))
             job_list = self.do_cluster_analysis(profiling_path, benchmark_profiling_path)
 
         for i, (dimension, scope, interface, kwargs) in enumerate(job_list[::-1]):
