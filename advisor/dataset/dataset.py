@@ -30,10 +30,13 @@ class Dataset:
     dataset base class
     """
 
-    def __init__(self, collection_path, data=None) -> None:
+    def __init__(self, collection_path, data=None, **kwargs) -> None:
         if data is None:
             data = {}
         self.collection_path = os.path.abspath(os.path.join(Config().work_path, collection_path))
+        self.output_path = kwargs.get("output_path", None)
+        if not self.output_path:
+            self.output_path = self.collection_path
         logger.debug("init %s with %s", self.__class__.__name__, self.collection_path)
         if self._parse():
             key = self.get_key()

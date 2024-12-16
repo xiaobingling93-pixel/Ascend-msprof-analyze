@@ -32,13 +32,13 @@ logger = logging.getLogger()
 class ClusterDataset(Dataset):
 
     def __init__(self, collection_path, data: dict, **kwargs) -> None:
-        super().__init__(collection_path, data)
+        super().__init__(collection_path, data, **kwargs)
 
     def is_cluster_analysis_output_exist(self):
         """
         check whether input path is valid
         """
-        for filename in os.listdir(self.collection_path):
+        for filename in os.listdir(self.output_path):
             if filename == 'cluster_analysis_output':
                 logger.info("Cluster has been analyzed "
                             "because of the existence of cluster analysis output directory.")
@@ -51,7 +51,8 @@ class ClusterDataset(Dataset):
             return
         parameter = {
             Constant.COLLECTION_PATH: self.collection_path,
-            Constant.ANALYSIS_MODE: "all"
+            Constant.ANALYSIS_MODE: "all",
+            Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: self.output_path
         }
         logger.info("cluster analysis is in the process, please wait...")
         try:
@@ -60,7 +61,7 @@ class ClusterDataset(Dataset):
             raise ValueError(f"Cluster analyze backend failed:{e}") from e
 
     def load_csv_data(self, file_name, data_bean):
-        csv_path = os.path.join(self.collection_path, Constant.CLUSTER_ANALYSIS_OUTPUT, file_name)
+        csv_path = os.path.join(self.output_path, Constant.CLUSTER_ANALYSIS_OUTPUT, file_name)
         if not os.path.exists(csv_path):
             msg = "[ERROR] cluster_step_trace_time.csv doesn't exist, terminate analysis."
             raise RuntimeError(msg)
@@ -68,7 +69,7 @@ class ClusterDataset(Dataset):
         return data
 
     def load_json_data(self, file_name):
-        json_path = os.path.join(self.collection_path, Constant.CLUSTER_ANALYSIS_OUTPUT, file_name)
+        json_path = os.path.join(self.output_path, Constant.CLUSTER_ANALYSIS_OUTPUT, file_name)
         if not os.path.exists(json_path):
             msg = "[ERROR] cluster_communication.json doesn't exist, terminate analysis."
             raise RuntimeError(msg)
@@ -84,7 +85,7 @@ class ClusterStepTraceTimeDataset(ClusterDataset):
     def __init__(self, collection_path: str, data: dict, **kwargs):
         self._step_dict = defaultdict()
         self._stages = []
-        super().__init__(collection_path, data)
+        super().__init__(collection_path, data, **kwargs)
 
     def format_data(self, step_data: list):
         step_dict = defaultdict(lambda: [0, 0, 0])
@@ -144,7 +145,7 @@ class ClusterCommunicationDataset(ClusterDataset):
     def __init__(self, collection_path: str, data: dict, **kwargs):
         self.rank_bw_dict = defaultdict(self.create_rank_bw_dict)
         self.hccl_dict = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
-        super().__init__(collection_path, data)
+        super().__init__(collection_path, data, **kwargs)
 
     @staticmethod
     def compute_ratio(dividend: float, divisor: float):
