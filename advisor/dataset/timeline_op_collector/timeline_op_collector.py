@@ -357,7 +357,7 @@ class FreeEventsCollector(BaseOpCollector):
         sync_stream_rule_path = os.path.join(
             os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))),
             "rules",
-            "gc.yaml")
+            "conjectured_gc.yaml")
 
         gc_rule = FileManager.read_yaml_file(sync_stream_rule_path)
         return gc_rule

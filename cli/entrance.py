@@ -65,3 +65,4 @@ msprof_analyze_cli.add_command(analyze_cli, name="advisor")
 msprof_analyze_cli.add_command(compare_cli, name="compare")
 msprof_analyze_cli.add_command(cluster_cli, name="cluster")
 msprof_analyze_cli.add_command(auto_complete_cli, name="auto-completion")
+

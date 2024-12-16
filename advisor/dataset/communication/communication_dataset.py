@@ -67,7 +67,7 @@ class CommunicationDataset:
             logger.warning("Expected existed directory, but got %s", path)
 
         for root, _, files in os.walk(path):
-            if root.endswith("cluster_analysis_output"):
+            if os.path.basename(root) != "ASCEND_PROFILER_OUTPUT":
                 continue
             for filename in files:
                 filepath = os.path.join(root, filename)

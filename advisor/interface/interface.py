@@ -45,6 +45,7 @@ from profiler.advisor.analyzer.communication.packet.packet_analyzer import Packe
 from profiler.advisor.analyzer.communication.contention.bandwidth_contention_analyzer import BandwidthContentionAnalyzer
 from profiler.advisor.analyzer.communication.alignment.byte_alignment_analyzer import ByteAlignmentAnalyzer
 from profiler.advisor.analyzer.schedule.gc.gc_analyzer import GcAnalyzer
+from profiler.advisor.analyzer.schedule.conjectured_gc.conjectured_gc_analyzer import ConjecturedGcAnalyzer
 from profiler.advisor.analyzer.comparison.comparison_analyzer import ComparisonAnalyzer
 
 logger = logging.getLogger()
@@ -66,6 +67,7 @@ class Interface:
             SupportedScopes.SYNCHRONIZE_STREAM: SynchronizeStreamAnalyzer,
             SupportedScopes.TIMELINE_FUSION_OPS: TimelineFusionOpsAnalyzer,
             SupportedScopes.DATALOADER: DataloaderAnalyzer,
+            SupportedScopes.CONJECTURED_GC_ANALYSIS: ConjecturedGcAnalyzer,
             SupportedScopes.GC_ANALYSIS: GcAnalyzer
         }),
         COMPUTATION: OrderedDict({
