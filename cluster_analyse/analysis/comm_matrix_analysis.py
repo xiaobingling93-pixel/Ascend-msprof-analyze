@@ -20,8 +20,10 @@ from collections import defaultdict
 from analysis.base_analysis import BaseAnalysis
 from profiler.prof_common.constant import Constant
 from common_func.db_manager import DBManager
+from common_func.utils import increase_shared_value
 
-logger = logging.getLogger()
+logger = logging.getLogger("cluster")
+
 
 class CommMatrixAnalysis(BaseAnalysis):
     SAVED_JSON = "cluster_communication_matrix.json"
@@ -38,12 +40,16 @@ class CommMatrixAnalysis(BaseAnalysis):
         link_info_dict[Constant.TRANSIT_TIME_MS] += single_link_dict.get(Constant.TRANSIT_TIME_MS, 0)
         link_info_dict[Constant.TRANSIT_SIZE_MB] += single_link_dict.get(Constant.TRANSIT_SIZE_MB, 0)
 
-    def run(self):
+    def run(self, completed_processes, lock):
         if not self.communication_ops:
+            increase_shared_value(completed_processes, lock)
+            logger.info("CommMatrixAnalysis completed")
             return
         self.split_op_by_group()
         self.combine_ops_total_info()
         self.dump_data()
+        increase_shared_value(completed_processes, lock)
+        logger.info("CommMatrixAnalysis completed")
 
     def dump_db(self):
         res_comm_matrix = self.adapter.transfer_matrix_from_json_to_db(self.comm_ops_struct)

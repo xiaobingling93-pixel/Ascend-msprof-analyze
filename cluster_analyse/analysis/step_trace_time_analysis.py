@@ -17,12 +17,13 @@ import os
 import logging
 
 from common_func.db_manager import DBManager
+from common_func.utils import increase_shared_value
 from profiler.prof_common.constant import Constant
 from profiler.prof_common.file_manager import FileManager
 from prof_bean.step_trace_time_bean import StepTraceTimeBean
 from cluster_utils.parallel_strategy_calculator import ParallelStrategyCalculator
 
-logger = logging.getLogger()
+logger = logging.getLogger("cluster")
 
 
 class StepTraceTimeAnalysis:
@@ -50,11 +51,13 @@ class StepTraceTimeAnalysis:
             ret.append(max(item))
         return ret
 
-    def run(self):
+    def run(self, completed_processes, lock):
         self.load_step_trace_time_data()
         self.analyze_step_time()
         self.partition_ranks_data()
         self.dump_data()
+        increase_shared_value(completed_processes, lock)
+        logger.warning("StepTraceTimeAnalysis completed")
 
     def partition_ranks_data(self):
         if not self.distributed_args:

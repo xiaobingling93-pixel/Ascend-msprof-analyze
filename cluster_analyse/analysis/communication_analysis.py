@@ -20,11 +20,12 @@ from collections import defaultdict
 from analysis.base_analysis import BaseAnalysis
 from common_func.table_constant import TableConstant
 from common_func.db_manager import DBManager
+from common_func.utils import increase_shared_value
 from prof_bean.communication_bandwidth_bean import CommunicationBandwidthBean
 from prof_bean.communication_time_bean import CommunicationTimeBean
 from profiler.prof_common.constant import Constant
 
-logger = logging.getLogger()
+logger = logging.getLogger("cluster")
 
 
 class CommunicationAnalysis(BaseAnalysis):
@@ -49,12 +50,16 @@ class CommunicationAnalysis(BaseAnalysis):
             sql = "insert into {} values ({value})".format(table_name, value="?," * (len(res_value[0]) - 1) + "?")
             DBManager.executemany_sql(conn, sql, res_value)
 
-    def run(self):
+    def run(self, completed_processes, lock):
         if not self.communication_ops:
+            increase_shared_value(completed_processes, lock)
+            logger.info("CommunicationAnalysis completed")
             return
         self.split_op_by_group()
         self.combine_ops_total_info()
         self.dump_data()
+        increase_shared_value(completed_processes, lock)
+        logger.info("CommunicationAnalysis completed")
 
     def dump_db(self):
         res_comm_time, res_comm_bandwidth = self.adapter.transfer_comm_from_json_to_db(self.comm_ops_struct)
@@ -154,13 +159,17 @@ class CommunicationAnalysisOptimized(BaseAnalysis):
                 setdefault(formatted_data.group_name, []).extend([formatted_data])
         return data_dict
 
-    def run(self):
+    def run(self, completed_processes, lock):
         if not self._communication_ops[0] or not self._communication_ops[1]:
+            increase_shared_value(completed_processes, lock)
+            logger.info("CommunicationAnalysisOptimized completed")
             return
         self._aggregate_time = self._format_time_data(self._communication_ops[0])
         self._aggregate_bandwidth = self._format_bandwidth_data(self._communication_ops[1])
         self._compute_total_info()
         self._dump_data()
+        increase_shared_value(completed_processes, lock)
+        logger.info("CommunicationAnalysisOptimized completed")
 
     def _format_bandwidth_data(self, communication_data: dict):
         data_dict = {}
