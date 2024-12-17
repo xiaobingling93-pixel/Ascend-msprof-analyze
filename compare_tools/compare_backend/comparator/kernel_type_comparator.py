@@ -15,6 +15,6 @@ class KernelTypeComparator(BaseComparator):
             comparison_kernel = comparison_kernels.pop(key, OpStatisticBean({}))
             self._rows.append(self._bean(base_kernel, comparison_kernel).row)
         for comparison_kernel in comparison_kernels.values():
-            self._rows.append(OpStatisticBean({}), comparison_kernel)
+            self._rows.append(self._bean(OpStatisticBean({}), comparison_kernel).row)
         self._rows.sort(key=lambda x: x[-2], reverse=True)  # order by diff column
         update_order_id(self._rows)

@@ -68,3 +68,11 @@ def convert_to_float(num):
     except (ValueError, FloatingPointError):
         logger.error(f"Can not convert %s to float", num)
     return 0
+
+
+def convert_to_int(num):
+    try:
+        return int(num)
+    except (ValueError, NameError):
+        logger.error(f"Can not convert %s to int", num)
+    return 0
