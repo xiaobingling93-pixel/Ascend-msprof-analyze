@@ -53,6 +53,9 @@ class ProfilingParser(BaseProfilingParser):
     def _get_dispatch_func(self):
         pass
 
+    def _calculate_mc2_communication_time(self):
+        pass
+
 
 class MockEvent:
     def __init__(self, pid, tid, ts, ph="M"):

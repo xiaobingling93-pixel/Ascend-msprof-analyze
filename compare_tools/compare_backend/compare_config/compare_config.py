@@ -8,7 +8,7 @@ from profiler.prof_common.utils import SafeConfigReader
 @Singleton
 class CompareConfig:
     _REQUIRED_SECTIONS = {
-        "OP_MASK": ["FA_MASK", "CONV_MASK", "MATMUL_MASK", "CUBE_MASK", "TRANS_MASK"]
+        "OP_MASK": ["FA_MASK", "CONV_MASK", "MATMUL_MASK", "CUBE_MASK", "TRANS_MASK", "MC2_KERNEL"]
     }
 
     def __init__(self, cls):
@@ -21,6 +21,7 @@ class CompareConfig:
         self._mm_mask = self.get_mask_by_key("MATMUL_MASK")
         self._cube_mask = self.get_mask_by_key("CUBE_MASK")
         self._trans_mask = self.get_mask_by_key("TRANS_MASK")
+        self._mc2_kernel = self.get_mask_by_key("MC2_KERNEL")
 
     @property
     def fa_mask(self):
@@ -42,5 +43,9 @@ class CompareConfig:
     def trans_mask(self):
         return self._trans_mask
 
+    @property
+    def mc2_kernel(self):
+        return self._mc2_kernel
+
     def get_mask_by_key(self, key):
-        return set((mask.strip() for mask in self.config.get("OP_MASK", key).split(",") if mask.strip()))
+        return set((mask.strip().lower() for mask in self.config.get("OP_MASK", key).split(",") if mask.strip()))

@@ -90,6 +90,11 @@ class KernelDetailsBean:
     def step_id(self) -> int:
         return int(self._step_id) if self._step_id else Constant.VOID_STEP
 
+    @property
+    def mc2_computing_time(self):
+        return (max(float(self._data.get("aic_mac_time(us)", 0)), float(self._data.get("aic_mte2_time(us)", 0))) +
+                float(self._data.get("aiv_time(us)", 0)))
+
     def is_hide_op_pmu(self):
         if "mac_time(us)" in self._data.keys() or "aiv_vec_time(us)" in self._data.keys():
             return False
@@ -139,6 +144,9 @@ class KernelDetailsBean:
 
     def is_cube_kernel_cat(self):
         return self.mac_time > 0 or self.aicore_time > 0
+
+    def is_mc2(self):
+        return self._name.lower() in CompareConfig().mc2_kernel
 
     def init(self):
         self._op_type = self._data.get('Type', "")

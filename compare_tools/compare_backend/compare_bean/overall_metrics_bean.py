@@ -36,7 +36,37 @@ class OverallMetricsBean:
     def rows(self):
         rows_data = []
         rows_data.extend(
+            self._get_rows(self._base_data.get("before_mc2", {}), self._comparison_data.get("before_mc2", {})))
+
+        base_mc2_data = self._base_data.get("mc2", {})
+        comparison_mc2_data = self._comparison_data.get("mc2", {})
+        default_value = [0, 0, "/"]
+        for kernel_name, base_data in base_mc2_data.items():
+            comparison_data = comparison_mc2_data.pop(kernel_name, {})
+            self._append_data(rows_data, self._get_row_data(kernel_name, base_data.get("mc2", default_value),
+                                                            comparison_data.get("mc2", default_value)))
+            self._append_data(rows_data,
+                              self._get_row_data(ExcelConfig.MC2_COMPUTING_TIME,
+                                                 base_data.get(ExcelConfig.MC2_COMPUTING_TIME, default_value),
+                                                 comparison_data.get(ExcelConfig.MC2_COMPUTING_TIME, default_value)))
+            self._append_data(rows_data,
+                              self._get_row_data(ExcelConfig.MC2_COMMUNICATION_TIME,
+                                                 base_data.get(ExcelConfig.MC2_COMMUNICATION_TIME, default_value),
+                                                 comparison_data.get(ExcelConfig.MC2_COMMUNICATION_TIME,
+                                                                     default_value)))
+        for kernel_name, comparison_data in comparison_mc2_data.items():
+            self._append_data(rows_data, self._get_row_data(kernel_name, default_value,
+                                                            comparison_data.get("mc2", default_value)))
+            self._append_data(rows_data, self._get_row_data(ExcelConfig.MC2_COMPUTING_TIME, default_value,
+                                                            comparison_data.get(ExcelConfig.MC2_COMPUTING_TIME,
+                                                                                default_value)))
+            self._append_data(rows_data, self._get_row_data(ExcelConfig.MC2_COMMUNICATION_TIME, default_value,
+                                                            comparison_data.get(ExcelConfig.MC2_COMMUNICATION_TIME,
+                                                                                default_value)))
+
+        rows_data.extend(
             self._get_rows(self._base_data.get("before_group", {}), self._comparison_data.get("before_group", {})))
+
         base_group_data = self._base_data.get("group", {})
         comparison_group_data = self._comparison_data.get("group", {})
         default_value = [0, 0, "/"]
@@ -58,6 +88,7 @@ class OverallMetricsBean:
                                                             comparison_data.get(ExcelConfig.WAIT, default_value)))
             self._append_data(rows_data, self._get_row_data(ExcelConfig.TRANSMIT, default_value,
                                                             comparison_data.get(ExcelConfig.TRANSMIT, default_value)))
+
         rows_data.extend(
             self._get_rows(self._base_data.get("after_group", {}), self._comparison_data.get("after_group", {})))
         return rows_data
@@ -290,10 +321,25 @@ class OverallMetricsInfo:
         return [self._profiling_info.get_transmit_time_by_group(group_name),
                 self._profiling_info.get_transmit_time_by_group(group_name) / self.e2e_time, "/"]
 
+    def mc2_data_by_name(self, kernel_name: str):
+        return [self._profiling_info.get_mc2_time_by_name(kernel_name),
+                self._profiling_info.get_mc2_time_by_name(kernel_name) / self.e2e_time,
+                self._profiling_info.get_mc2_number_by_name(kernel_name)]
+
+    def mc2_computing_data_by_name(self, kernel_name: str):
+        return [self._profiling_info.get_mc2_computing_time_by_name(kernel_name),
+                self._profiling_info.get_mc2_computing_time_by_name(kernel_name) / self.e2e_time, "/"]
+
+    def mc2_communication_data_by_name(self, kernel_name: str):
+        return [self._profiling_info.get_mc2_communication_time_by_name(kernel_name),
+                self._profiling_info.get_mc2_communication_time_by_name(kernel_name) / self.e2e_time, "/"]
+
     def _init_overall_metrics_data(self):
         overall_metrics_data = {
+            "before_mc2": {
+                ExcelConfig.COMPUTING: self.computing_data
+            },
             "before_group": {
-                ExcelConfig.COMPUTING: self.computing_data,
                 ExcelConfig.FA_FWD: self.fa_fwd_data,
                 ExcelConfig.FA_FWD_CUBE: self.fa_fwd_cube_data,
                 ExcelConfig.FA_FWD_VECTOR: self.fa_fwd_vector_data,
@@ -317,6 +363,12 @@ class OverallMetricsInfo:
                 ExcelConfig.SDMA_TM: self.sdma_tm_data,
                 ExcelConfig.OTHER: self.other_data,
                 ExcelConfig.COMMUNICATION_TIME: self.communication_data
+            },
+            "after_group": {
+                ExcelConfig.FREE_TIME: self.free_time_data,
+                ExcelConfig.SDMA: self.sdma_data,
+                ExcelConfig.FREE: self.free_data,
+                ExcelConfig.E2E_TIME: self.e2e_time_data
             }
         }
         if self._comm_group_list:
@@ -328,10 +380,12 @@ class OverallMetricsInfo:
                     ExcelConfig.WAIT: self.wait_data_by_group(group_name),
                     ExcelConfig.TRANSMIT: self.transmit_data_by_group(group_name)
                 }
-        overall_metrics_data["after_group"] = {
-            ExcelConfig.FREE_TIME: self.free_time_data,
-            ExcelConfig.SDMA: self.sdma_data,
-            ExcelConfig.FREE: self.free_data,
-            ExcelConfig.E2E_TIME: self.e2e_time_data
-        }
+        for kernel_name in self._profiling_info.mc2_time_dict.keys():
+            mc2_name_index = f"\t{kernel_name}"
+            ExcelConfig.ROW_STYLE_MAP[mc2_name_index] = CellFormatType.LIGHT_BLUE_NORMAL
+            overall_metrics_data.setdefault("mc2", {})[mc2_name_index] = {
+                "mc2": self.mc2_data_by_name(kernel_name),
+                ExcelConfig.MC2_COMPUTING_TIME: self.mc2_computing_data_by_name(kernel_name),
+                ExcelConfig.MC2_COMMUNICATION_TIME: self.mc2_communication_data_by_name(kernel_name)
+            }
         return overall_metrics_data

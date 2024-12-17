@@ -28,7 +28,7 @@ class ProfilingInfo:
                  'page_attention_time', 'page_attention_num', 'vector_time_trans', 'vector_num_trans',
                  'vector_time_notrans', 'vector_num_notrans', 'sdma_time_tensor_move', 'sdma_num_tensor_move',
                  'sdma_time_stream', 'sdma_num_stream', 'other_cube_time', 'other_cube_num', 'RDMA_bandwidth',
-                 'SDMA_bandwidth', 'communication_group_time']
+                 'SDMA_bandwidth', 'communication_group_time', 'mc2_time_dict']
     TABLE_NAME = Constant.PERFORMANCE_TABLE
     HEADERS = []
     OVERHEAD = []
@@ -89,6 +89,8 @@ class ProfilingInfo:
         self.other_cube_num = 0
         self.RDMA_bandwidth = 0.0
         self.SDMA_bandwidth = 0.0
+
+        self.mc2_time_dict = {}
 
         # 按group展示通信的卡间等待和传输耗时
         self.communication_group_time = {}
@@ -341,6 +343,14 @@ class ProfilingInfo:
     def set_SDMA_bandwidth(self, bandwidth: float):
         self.SDMA_bandwidth = bandwidth
 
+    def update_mc2_info(self, kernel_name, mc2_time, computing_time, communication_time):
+        default_dict = {Constant.MC2_TIME: 0, Constant.MC2_COMPUTING: 0, Constant.MC2_COMMUNICATION: 0,
+                        Constant.MC2_NUMBER: 0}
+        self.mc2_time_dict.setdefault(kernel_name, default_dict)[Constant.MC2_TIME] += mc2_time
+        self.mc2_time_dict.setdefault(kernel_name, default_dict)[Constant.MC2_COMPUTING] += computing_time
+        self.mc2_time_dict.setdefault(kernel_name, default_dict)[Constant.MC2_COMMUNICATION] += communication_time
+        self.mc2_time_dict.setdefault(kernel_name, default_dict)[Constant.MC2_NUMBER] += 1
+
     def trans_time_to_s(self):
         # 新指标单位为ms
         self.fa_time_fwd_cube /= Constant.MILLISECONDS_TO_SECONDS
@@ -376,3 +386,15 @@ class ProfilingInfo:
     def get_communication_time_by_group(self, group_name: str):
         return (self.communication_group_time.get(group_name, {}).get(Constant.WAIT_TIME, 0)
                 + self.communication_group_time.get(group_name, {}).get(Constant.TRANSMIT_TIME, 0)) / 10 ** 3
+
+    def get_mc2_time_by_name(self, kernel_name: str):
+        return self.mc2_time_dict.get(kernel_name, {}).get(Constant.MC2_TIME, 0) / 10 ** 3
+
+    def get_mc2_computing_time_by_name(self, kernel_name: str):
+        return self.mc2_time_dict.get(kernel_name, {}).get(Constant.MC2_COMPUTING, 0) / 10 ** 3
+
+    def get_mc2_communication_time_by_name(self, kernel_name: str):
+        return self.mc2_time_dict.get(kernel_name, {}).get(Constant.MC2_COMMUNICATION, 0) / 10 ** 3
+
+    def get_mc2_number_by_name(self, kernel_name: str):
+        return self.mc2_time_dict.get(kernel_name, {}).get(Constant.MC2_NUMBER, 0)

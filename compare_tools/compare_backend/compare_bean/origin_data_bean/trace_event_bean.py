@@ -157,6 +157,13 @@ class TraceEventBean:
         """
         return False
 
+    @classmethod
+    def is_mc2(cls) -> bool:
+        """
+        GPU没有mc2算子，全部返回False
+        """
+        return False
+
     def is_m_mode(self) -> bool:
         return self._ph == "M"
 
@@ -282,6 +289,9 @@ class TraceEventBean:
 
     def is_cube_kernel_cat(self):
         return any(cube_mask in self.lower_name for cube_mask in CompareConfig().cube_mask)
+
+    def is_c_core_sqe(self):
+        return self.name == "C_CORE_SQE"
 
     def init(self, event):
         if isinstance(event, dict):

@@ -26,6 +26,9 @@ class GPUProfilingParser(BaseProfilingParser):
     def _update_kernel_details(self):
         pass
 
+    def _calculate_mc2_communication_time(self):
+        pass
+
     def _update_memory_list(self):
         if not self._enable_memory_compare:
             return

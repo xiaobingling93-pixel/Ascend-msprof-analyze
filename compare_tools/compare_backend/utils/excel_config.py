@@ -288,6 +288,9 @@ class ExcelConfig(object):
     # computing time
     COMPUTING = "Computing Time"
 
+    MC2_COMMUNICATION_TIME = "\t\tCommunication"
+    MC2_COMPUTING_TIME = "\t\tComputing"
+
     FA_FWD = "\tFlash Attention (Forward)"
     FA_FWD_CUBE = "\t\tFlash Attention (Forward) (Cube)"
     FA_FWD_VECTOR = "\t\tFlash Attention (Forward) (Vector)"

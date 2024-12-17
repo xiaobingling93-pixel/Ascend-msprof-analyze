@@ -39,6 +39,8 @@ class NPUProfilingParser(BaseProfilingParser):
         self._overlap_analysis = []
         self._group_comm_tid_dict = {}
         self._hccl_tid_name_dict = {}
+        self._c_core_sqe_list = []
+        self._c_core_sqe_index = 0
         self._dispatch_func = self._get_dispatch_func()
         if any((self._enable_profiling_compare, self._enable_operator_compare, self._enable_memory_compare,
                 self._enable_api_compare, self._enable_communication_compare)):
@@ -286,6 +288,24 @@ class NPUProfilingParser(BaseProfilingParser):
             return True
         return False
 
+    def _calculate_mc2_communication_time(self, kernel: KernelDetailsBean):
+        sqe_data = []
+        while self._c_core_sqe_index < len(self._c_core_sqe_list):
+            end_time = self._c_core_sqe_list[self._c_core_sqe_index].end_time
+            if end_time < kernel.start_time:
+                self._c_core_sqe_index += 1
+                continue
+            if end_time <= kernel.end_time:
+                sqe_data.append(self._c_core_sqe_list[self._c_core_sqe_index])
+                self._c_core_sqe_index += 1
+                continue
+            break
+        communication_time = 0
+        for i in range(0, len(sqe_data), 2):
+            if i + 1 < len(sqe_data):
+                communication_time += sqe_data[i + 1].end_time - sqe_data[i].end_time
+        return float(communication_time)
+
     def _is_kernel_event(self, event: TraceEventBean):
         return event.pid == self._kernel_pid and event.is_x_mode()
 
@@ -361,7 +381,7 @@ class NPUProfilingParser(BaseProfilingParser):
 
     def __parse_kernel_csv(self):
         try:
-            kernel_details = FileManager.read_csv_file(self._kernel_detail_path, KernelDetailsBean)
+            kernel_details = self._read_csv_data(self._kernel_detail_path, KernelDetailsBean)
         except Exception:
             logger.error('Npu kernel details csv file is not available.')
             return
@@ -372,17 +392,21 @@ class NPUProfilingParser(BaseProfilingParser):
         ordered_computing_events = sorted(
             ((flow_dict_new.get(kernel.start_time, 0), kernel) for kernel in kernel_details if not kernel.is_invalid()),
             key=lambda x: x[0])
+        self._c_core_sqe_list = list(filter(lambda x: x.is_c_core_sqe(), self._all_kernels.values()))
+        self._c_core_sqe_list.sort(key=lambda x: x.start_time)
         for flow_start_time, event in ordered_computing_events:
             self.categorize_computing_performance_data(event, flow_start_time)
 
     def __parse_mem_csv(self):
         try:
-            memory_record = FileManager.read_csv_file(self._memory_record_path, MemoryRecordBean)
+            memory_record = self._read_csv_data(self._memory_record_path, MemoryRecordBean)
         except FileNotFoundError:
             logger.warning('Npu memory record csv file is not available.')
+            return
         except Exception:
             logger.error('Load memory info failed.')
-        else:
+            return
+        if memory_record:
             memory_used = max([memory.total_reserved_mb for memory in memory_record]) / 1024
             self._result_data.overall_metrics.set_memory_used(memory_used)
 
