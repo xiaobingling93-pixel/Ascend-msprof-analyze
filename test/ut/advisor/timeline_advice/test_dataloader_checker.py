@@ -16,7 +16,7 @@ class TestDataloaderChecker(unittest.TestCase):
     def setUp(self) -> None:
         rule_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
             os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))),
-            "advisor", "rules", "dataloader.yaml")
+            "advisor", "rules", "cn", "dataloader.yaml")
 
         with open(rule_path, "rb") as file:
             self.rule = yaml.safe_load(file)

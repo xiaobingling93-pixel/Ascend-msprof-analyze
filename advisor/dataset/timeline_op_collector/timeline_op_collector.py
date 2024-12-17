@@ -3,6 +3,7 @@ import math
 import os
 from abc import abstractmethod, ABCMeta
 
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 from profiler.prof_common.constant import Constant
 from profiler.advisor.common.timeline.event import TimelineEvent
 from profiler.advisor.utils.utils import convert_to_float
@@ -109,8 +110,10 @@ class MemCollector(BaseOpCollector):
 
     @staticmethod
     def _load_rule():
+        language = AdditionalArgsManager().language
         memory_rule_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))),
                                         "rules",
+                                        language,
                                         "memory.yaml")
 
         memory_rule = FileManager.read_yaml_file(memory_rule_path)
@@ -354,9 +357,11 @@ class FreeEventsCollector(BaseOpCollector):
 
     @staticmethod
     def _load_rule():
+        language = AdditionalArgsManager().language
         sync_stream_rule_path = os.path.join(
             os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))),
             "rules",
+            language,
             "conjectured_gc.yaml")
 
         gc_rule = FileManager.read_yaml_file(sync_stream_rule_path)

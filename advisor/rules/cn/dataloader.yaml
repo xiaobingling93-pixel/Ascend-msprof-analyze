@@ -1,0 +1,8 @@
+dataloader_duration_threshold: 10000 # us
+problem: "dataloader加载数据速度较慢，一次迭代花费{dataloader_duration}us，通常小于{dataloader_duration_threshold}us。"
+solutions:
+   - "请检查数据目录的磁盘I/O。如果您正在ModelArts中训练模型，请将数据移动到“/cache”或装载更高效的云磁盘以获得更好的I/O。"
+   - "请检查运行时是否有任何其他可能影响数据加载的多进程操作，例如启动训练任务时使用命令'taskset…'绑定训练进程核。"
+   - "请检查数据的格式，避免使用tar、tar.gz、zip等文件格式。"
+   - "请为dataloader设置'pin_memory=True'。"
+   - "尝试调整dataloader参数'num_workers'。"

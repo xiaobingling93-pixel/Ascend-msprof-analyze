@@ -19,6 +19,7 @@ from profiler.advisor.dataset.communication.communication_dataset import Communi
 from profiler.advisor.dataset.profiling.profiling_dataset import ProfilingDataset
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 from profiler.prof_common.file_manager import FileManager
 from profiler.advisor.utils.utils import convert_to_float
 from profiler.advisor.dataset.cluster.hccl_collection import HcclInfo
@@ -157,9 +158,11 @@ class BandwidthContentionChecker:
                                            priority_background_color=priority)
 
     def _init_rule(self):
+        language = AdditionalArgsManager().language
         contention_rule_path = os.path.join(
             os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))),
             "rules",
+            language,
             "bandwidth_contention.yaml"
         )
 

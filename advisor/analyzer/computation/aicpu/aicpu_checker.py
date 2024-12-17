@@ -22,6 +22,7 @@ from profiler.advisor.analyzer.schedule.fusion_ops.timeline_api_stack_checker im
 from profiler.advisor.dataset.dataset import Dataset
 from profiler.advisor.dataset.profiling.profiling_dataset import ProfilingDataset
 from profiler.advisor.dataset.timeline_event_dataset import ComputationAnalysisDataset
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 from profiler.prof_common.file_manager import FileManager
 from profiler.prof_common.constant import Constant
 
@@ -46,7 +47,9 @@ class AicpuChecker(OperatorChecker):
         self.total_task_duration = 0.0
         self.aicpu_task_duration = 0.0
 
-    def load_aicpu_rules(self, rule_path="rules/aicpu_rules.yaml"):
+    def load_aicpu_rules(self):
+        language = AdditionalArgsManager().language
+        rule_path = "rules/aicpu_rules.yaml"
         if not os.path.isabs(rule_path):
             rule_path = os.path.join(os.path.dirname(__file__),
                                      "../../../", rule_path)

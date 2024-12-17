@@ -1,4 +1,4 @@
-problem: "The SDMA bandwidth is lower than {threshold} when computing and communication tasks are performed \n
+problem: "The SDMA bandwidth is lower than {threshold} GB/s when computing and communication tasks are performed \n
 concurrently. Generally, parallel computing and communication improves the running efficiency of the model. \n
 Concurrent computing and communication tasks may affect the communication bandwidth."
 sdma_baseline: 18 #M

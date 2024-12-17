@@ -1,0 +1,14 @@
+problem: "Found {memory_op_num} {memory_op_name}, cost {memory_op_dur} us, which will lead to large amount of free time."
+max_total_duration: 10000 #us
+solutions:
+  - AscendCL@aclMallocMemInner:
+      desc:
+        - "Please set env by command 'export PYTORCH_NPU_ALLOC_CONF=expandable_segments:True' and then start your training job"
+  - AscendCL@aclrtFreePhysical:
+      desc:
+        - "Execute 'npu-smi info' to observe the HBM-Usage while training, if reach the maximum of HBM-Usage, please reduce your batch size/micro batch size"
+        - "Profiling with the parameters 'with_stack=True' firstly. Then search 'empty_cache' or 'emptyCache' in trace_view.json, if exists, remove the code like 'torch.cuda.empty_cache()' or 'torch.npu.empty_cache()' according to the 'call stack' of relevant event in trace_view.json"
+  - AscendCL@aclrtFree:
+      desc:
+        - "Execute 'npu-smi info' to observe the HBM-Usage while training, if reach the maximum of HBM-Usage, please reduce your batch size/micro batch size"
+        - "Profiling with the parameters 'with_stack=True' firstly. Then search 'empty_cache' or 'emptyCache' in trace_view.json, if exists, remove the code like 'torch.cuda.empty_cache()' or 'torch.npu.empty_cache()' according to the 'call stack' of relevant event in trace_view.json"

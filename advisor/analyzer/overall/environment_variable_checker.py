@@ -14,6 +14,7 @@
 # limitations under the License.
 import os
 
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 from profiler.prof_common.file_manager import FileManager
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem
@@ -44,9 +45,11 @@ class EnvironmentVariabelChecker:
 
     @staticmethod
     def read_environment_info():
+        language = AdditionalArgsManager().language
         environment_variable_info_path = os.path.join(
             os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))),
             "rules",
+            language,
             "environment_variable_info.yaml"
         )
         return FileManager.read_yaml_file(environment_variable_info_path)

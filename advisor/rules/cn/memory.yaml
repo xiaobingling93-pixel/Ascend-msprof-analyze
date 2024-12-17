@@ -1,0 +1,14 @@
+problem: "发现了{memory_op_num}个{memory_op_name}算子，花费{memory_op_dur}us，这将导致大量的空闲时间。"
+max_total_duration: 10000 #us
+solutions:
+  - AscendCL@aclMallocMemInner:
+      desc:
+        - "请通过命令'export PYTORCH_NPU_ALLOC_CONF=expandable_segments:True'设置环境变量，然后开始训练任务。"
+  - AscendCL@aclrtFreePhysical:
+      desc:
+        - "在训练时执行'npu-smi info'观察HBM使用情况，如果达到HBM使用的最大值，请减小您的批大小/微批大小。"
+        - "首先使用参数'with_stack=True'采集Profiling。然后在trace_view.json中搜索'empty_cache'或'emptyCache'。如果存在，根据trace_view.json中相关事件的调用堆栈删除'torch.cuda.empty_cache()'或 'torch.npu.empty_cache()'等代码。"
+  - AscendCL@aclrtFree:
+      desc:
+        - "在训练时执行'npu-smi info'观察HBM使用情况，如果达到HBM使用的最大值，请减小您的批大小/微批大小。"
+        - "首先使用参数'with_stack=True'采集Profiling。然后在trace_view.json中搜索'empty_cache'或'emptyCache'。如果存在，根据trace_view.json中相关事件的调用堆栈删除'torch.cuda.empty_cache()'或 'torch.npu.empty_cache()'等代码。"

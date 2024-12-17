@@ -19,6 +19,7 @@ from profiler.advisor.dataset.timeline_event_dataset import ScheduleAnalysisData
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.advisor.utils.utils import convert_to_float, convert_to_int
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 from profiler.prof_common.constant import Constant
 from profiler.prof_common.file_manager import FileManager
 
@@ -106,9 +107,11 @@ class GcChecker:
                                     rank=rank)
 
     def _init_rule(self):
+        language = AdditionalArgsManager().language
         gc_rule_path = os.path.join(
             os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))),
             "rules",
+            language,
             "gc.yaml"
         )
         gc_rule = FileManager.read_yaml_file(gc_rule_path)
