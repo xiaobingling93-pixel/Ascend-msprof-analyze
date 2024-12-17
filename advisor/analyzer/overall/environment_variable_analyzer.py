@@ -20,6 +20,8 @@ from profiler.advisor.dataset.environment_variable_dataset import EnvironmentVar
 from profiler.advisor.analyzer.overall.environment_variable_checker import EnvironmentVariabelChecker
 from profiler.advisor.display.html.priority_background_color import PriorityBackgroundColor
 
+logger = logging.getLogger()
+
 
 class EnvironmentVariabelAnalyzer(BaseAnalyzer):
     dataset_cls_list = [EnvironmentVariableDataset]
@@ -30,6 +32,9 @@ class EnvironmentVariabelAnalyzer(BaseAnalyzer):
 
     @BaseAnalyzer.check_data((EnvironmentVariableDataset.get_key(),))
     def optimize(self, **kwargs):
+        if "mindspore" in self.profiling_type:
+            logger.info("The analyzer %s does not support MindSpore.", self.__class__.__name__)
+            return self.result
         try:
             PathManager.check_input_directory_path(self.collection_path)
         except RuntimeError as e:
