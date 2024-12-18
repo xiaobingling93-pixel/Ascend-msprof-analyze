@@ -68,7 +68,7 @@ class ComparisonChecker:
             return
         self.compare_mode = compare_mode
         if ("Api" in compare_mode) and self.benchmark_profiling_path.endswith("ascend_ms"):
-            logger.warning("The current compare mode %s does not support Mindspore.", compare_mode)
+            logger.info("The current compare mode %s does not support Mindspore.", compare_mode)
             return
         compare_interface = ComparisonInterface(self.profiling_path, self.benchmark_profiling_path, self.step,
                                                 self.benchmark_step)
