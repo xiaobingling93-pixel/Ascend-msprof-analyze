@@ -29,7 +29,13 @@ from profiler.prof_common.file_manager import FileManager
 from profiler.prof_common.path_manager import PathManager
 
 COMM_FEATURE_LIST = ['all', 'communication_time', 'communication_matrix']
-logger = logging.getLogger()
+
+logger = logging.getLogger("cluster")
+stream_handler = logging.StreamHandler()
+stream_handler.setLevel(logging.INFO)
+formatter = logging.Formatter('\r\033[K[%(asctime)s][%(levelname)s] %(message)s', datefmt='%Y-%m-%d,%H:%M:%S')
+stream_handler.setFormatter(formatter)
+logger.addHandler(stream_handler)
 
 
 class Interface:
@@ -95,7 +101,9 @@ class Interface:
             Constant.DATA_SIMPLIFICATION: self.origin_params.get(Constant.DATA_SIMPLIFICATION, False),
             Constant.FORCE: self.force
         }
+        logger.info("Begin generate communication data.")
         comm_data_dict = CommunicationGroupGenerator(params).generate()
+        logger.info("Communication data read completed.")
         params[Constant.COMM_DATA_DICT] = comm_data_dict
         AnalysisFacade(params).cluster_analyze()
         logger.info("The cluster analysis result file has been generated: %s", self.cluster_analysis_output_path)

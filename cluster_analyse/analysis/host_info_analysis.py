@@ -19,8 +19,10 @@ import logging
 from analysis.base_analysis import BaseAnalysis
 from profiler.prof_common.constant import Constant
 from common_func.db_manager import DBManager
+from common_func.utils import increase_shared_value
 
-logger = logging.getLogger()
+logger = logging.getLogger("cluster")
+
 
 class HostInfoAnalysis(BaseAnalysis):
 
@@ -32,11 +34,15 @@ class HostInfoAnalysis(BaseAnalysis):
         self.all_rank_host_info = {}
         self.all_rank_device_info = []
 
-    def run(self):
+    def run(self, completed_processes, lock):
         if self.data_type != Constant.DB:
+            increase_shared_value(completed_processes, lock)
+            logger.info("HostInfoAnalysis completed")
             return
         self.analyze_host_info()
         self.dump_db()
+        increase_shared_value(completed_processes, lock)
+        logger.info("HostInfoAnalysis completed")
 
     def dump_db(self):
         output_path = os.path.join(self.cluster_analysis_output_path, Constant.CLUSTER_ANALYSIS_OUTPUT)
