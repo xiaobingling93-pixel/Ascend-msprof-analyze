@@ -281,7 +281,8 @@ class OverallMetricsInfo:
                           self._profiling_info.fa_bwd_time - self._profiling_info.conv_fwd_time -
                           self._profiling_info.conv_bwd_time - self._profiling_info.mm_total_time -
                           self._profiling_info.vector_total_time - self._profiling_info.sdma_time_tensor_move -
-                          self._profiling_info.other_cube_time - self._profiling_info.page_attention_time))
+                          self._profiling_info.other_cube_time - self._profiling_info.page_attention_time -
+                          self._profiling_info.all_mc2_time))
         return [other_time, other_time / self.e2e_time, "/"]
 
     @property

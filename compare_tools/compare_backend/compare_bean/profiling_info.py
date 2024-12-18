@@ -169,7 +169,7 @@ class ProfilingInfo:
 
     @property
     def cube_time(self):
-        return ((self.matmul_time_cube + self.matmul_time_vector + self.other_cube_time)
+        return ((self.matmul_time_cube + self.matmul_time_vector + self.other_cube_time + self.all_mc2_time)
                 / Constant.MILLISECONDS_TO_SECONDS)
 
     @property
@@ -232,12 +232,16 @@ class ProfilingInfo:
     def fa_time_bwd(self):
         return (self.fa_time_bwd_cube + self.fa_time_bwd_vector) / Constant.MILLISECONDS_TO_SECONDS
 
+    @property
+    def all_mc2_time(self):
+        return sum((self.get_mc2_time_by_name(kernel_name) for kernel_name in self.mc2_time_dict.keys()))
+
     def calculate_other_time(self):
         self.other_time = max(0,
                               (self.compute_time_ms - self.fa_fwd_time -
                                self.fa_bwd_time - self.conv_fwd_time -
                                self.conv_bwd_time - self.mm_total_time -
-                               self.vector_total_time - self.sdma_time_tensor_move -
+                               self.vector_total_time - self.sdma_time_tensor_move - self.all_mc2_time -
                                self.other_cube_time - self.page_attention_time) / Constant.MILLISECONDS_TO_SECONDS)
 
     def calculate_schedule_time(self):
