@@ -118,6 +118,6 @@ class TestByteAlignmentAnalyzer(unittest.TestCase):
         dimension = Interface.COMMUNICATION
         scope = SupportedScopes.BYTE_ALIGNMENT_DETECTION
         result = interface.get_result(dimension, scope, render_html=1, output_dict=False, profiling_path=self.TMP_DIR)
-        self.assertEqual(2, len(result.data.get("Byte Alignment Analysis", [])))
-        self.assertEqual(3, len(result.data.get("Byte Alignment Analysis", []).get('data')))
+        self.assertEqual(2, len(result.data.get("字节对齐分析", [])))
+        self.assertEqual(3, len(result.data.get("字节对齐分析", []).get('data')))
         result.clear()

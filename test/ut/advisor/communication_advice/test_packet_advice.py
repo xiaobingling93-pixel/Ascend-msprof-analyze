@@ -170,6 +170,6 @@ class TestPacketAdvice(unittest.TestCase):
         dimension = Interface.COMMUNICATION
         scope = SupportedScopes.PACKET
         result = interface.get_result(dimension, scope, render_html=1, output_dict=False, profiling_path=self.TMP_DIR)
-        self.assertEqual(2, len(result.data.get("Packet Analysis", [])))
-        self.assertEqual(1, len(result.data.get("Packet Analysis", []).get('data')))
+        self.assertEqual(2, len(result.data.get("包分析", [])))
+        self.assertEqual(1, len(result.data.get("包分析", []).get('data')))
         result.clear()

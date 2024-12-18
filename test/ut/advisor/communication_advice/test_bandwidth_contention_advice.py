@@ -212,6 +212,6 @@ class TestBandwidthContentionAdvice(unittest.TestCase):
         dimension = Interface.COMMUNICATION
         scope = SupportedScopes.BANDWIDTH_CONTENTION_DETECTION
         result = interface.get_result(dimension, scope, render_html=1, output_dict=False, profiling_path=self.TMP_DIR)
-        self.assertEqual(2, len(result.data.get("Bandwidth Contention Analysis", [])))
-        self.assertEqual(1, len(result.data.get("Bandwidth Contention Analysis", []).get('data')))
+        self.assertEqual(2, len(result.data.get("带宽分析", [])))
+        self.assertEqual(1, len(result.data.get("带宽分析", []).get('data')))
         result.clear()

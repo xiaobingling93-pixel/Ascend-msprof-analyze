@@ -16,7 +16,7 @@ class TestSyncBNChecker(unittest.TestCase):
     def setUp(self) -> None:
         rule_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
             os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))),
-            "advisor", "rules", "en", "sync_batchnorm.yaml")
+            "advisor", "rules", "cn", "sync_batchnorm.yaml")
 
         with open(rule_path, "rb") as file:
             self.rule = yaml.safe_load(file)

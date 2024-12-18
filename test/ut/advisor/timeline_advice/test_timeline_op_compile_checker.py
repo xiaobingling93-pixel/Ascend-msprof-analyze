@@ -26,7 +26,7 @@ class TestOperatorDispatchAnalyzer(unittest.TestCase):
 
         results = op_dispatch_analyzer.optimize(**kwargs)
         self.assertTrue(results.page_dict)
-        self.assertIsNotNone(results.sheet_recorder.sheet_data.get("operator dispatch"))
+        self.assertIsNotNone(results.sheet_recorder.sheet_data.get("算子下发"))
 
     @patch("profiler.prof_common.constant.Constant.MAX_OP_COMPILE_NUM", 5)
     def test_ops_dispatch_make_render(self):

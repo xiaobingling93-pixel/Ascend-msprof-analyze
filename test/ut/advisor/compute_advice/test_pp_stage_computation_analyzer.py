@@ -43,7 +43,7 @@ class TestPPStageComputationAnalyzer(unittest.TestCase):
         pp_stage_computation_analyzer._merge_multiprocess_result()
         data = dict(pp_stage_computation_analyzer.result.data)
 
-        problems = data.get("problems", {}).get("data", [])
+        problems = data.get("问题综述", {}).get("data", [])
         self.assertEqual(len(problems), self.rank_num)
         for i in range(self.rank_num):
             self.assertTrue(f"rank {i} ai cpu issues" in data)
