@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-class OverallSummaryAnalyzePrompt(object):
+class OverallSummaryPrompt(object):
     OVERALL_SUMMARY_ANALYZER = "整网耗时分析"
     ADVICE_MAP = {
         "计算时长": "如果你想了解更多详细建议请看mstt_advisor_*.html",

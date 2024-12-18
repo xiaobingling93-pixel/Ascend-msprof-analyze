@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-class OverallSummaryAnalyzePrompt(object):
+class OverallSummaryPrompt(object):
     OVERALL_SUMMARY_ANALYZER = "Overall Summary"
     ADVICE_MAP = {
         "Computing Time": "if you want more detailed advice please go to mstt_advisor_*.html",

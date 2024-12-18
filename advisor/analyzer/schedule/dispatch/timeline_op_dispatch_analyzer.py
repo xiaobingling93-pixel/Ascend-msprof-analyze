@@ -16,6 +16,7 @@
 # limitations under the License.
 import logging
 
+from profiler.advisor.display.prompt.base_prompt import BasePrompt
 from profiler.prof_common.constant import Constant
 from profiler.advisor.analyzer.base_analyzer import BaseAnalyzer
 from profiler.advisor.dataset.timeline_event_dataset import ScheduleAnalysisDataset
@@ -81,24 +82,19 @@ class OpDispatchAnalyzer(BaseAnalyzer):
         """
         if not self._op_compile or len(self._issues_record) <= 0:
             return
-
-        language = AdditionalArgsManager().language
-        if language == "en":
-            from profiler.advisor.display.prompt.en.timeline_op_dispatch_prompt import TimelineOpDispatchPrompt
-        else:
-            from profiler.advisor.display.prompt.cn.timeline_op_dispatch_prompt import TimelineOpDispatchPrompt
-
+        
+        prompt_class = BasePrompt.get_prompt_class(self.__class__.__name__)
         self.optimization_item.append(OptimizeItem(
-            TimelineOpDispatchPrompt.PRIBLEM,
-            TimelineOpDispatchPrompt.DESCRIPTION.format(self._op_compile.total_count),
-            [TimelineOpDispatchPrompt.SUGGESTION]))
+            prompt_class.PROBLEM,
+            prompt_class.DESCRIPTION.format(self._op_compile.total_count),
+            [prompt_class.SUGGESTION]))
         for optimization in self.optimization_item:
             result.add(OptimizeRecord(optimization))
 
         record_title = ["Issues", "op name", "counts", "total time"]
-        result.add_detail(TimelineOpDispatchPrompt.PRIBLEM, headers=record_title)
+        result.add_detail(prompt_class.PROBLEM, headers=record_title)
         for op_info in self._issues_record:
-            result.add_detail(TimelineOpDispatchPrompt.PRIBLEM, detail=op_info)
+            result.add_detail(prompt_class.PROBLEM, detail=op_info)
 
     def make_render(self, html_render, **kwargs):
         issues = []

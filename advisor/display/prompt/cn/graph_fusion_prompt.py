@@ -14,6 +14,6 @@
 # limitations under the License.
 
 class GraphFusionPrompt(object):
-    PRIBLEM = "融合问题"
+    PROBLEM = "融合问题"
     DESCRIPTION = "发现 {} 个融合问题"
     SUGGESTION = "在mstt_advisor*.html中查看融合问题的细节信息"

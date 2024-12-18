@@ -1,4 +1,5 @@
-problem: "Found the data size of {count} communication operators is not aligned, which deteriorates the communication performance."
+problem: "Byte Alignment Analysis"
+description: "Found the data size of {count} communication operators is not aligned, which deteriorates the communication performance."
 min_size: 512 # byte
 top_num: 5
 solutions:

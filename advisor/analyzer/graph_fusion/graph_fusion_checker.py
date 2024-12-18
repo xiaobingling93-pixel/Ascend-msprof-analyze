@@ -17,6 +17,7 @@ from typing import List
 
 from tqdm import tqdm
 
+from profiler.advisor.display.prompt.base_prompt import BasePrompt
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord, StatisticsItem
 from profiler.advisor.common.graph.graph import Graph
@@ -181,16 +182,11 @@ class GraphFusionRules:
         if not self.candidates:
             return
 
-        language = AdditionalArgsManager().language
-        if language == "en":
-            from profiler.advisor.display.prompt.cn.graph_fusion_prompt import GraphFusionPrompt
-        else:
-            from profiler.advisor.display.prompt.en.graph_fusion_prompt import GraphFusionPrompt
-
+        prompt_class = BasePrompt.get_prompt_class(self.__class__.__name__)
         optimization_item = OptimizeItem(
-            GraphFusionPrompt.PRIBLEM,
-            GraphFusionPrompt.DESCRIPTION.format(len(self.candidates)),
-            [GraphFusionPrompt.SUGGESTION]
+            prompt_class.PROBLEM,
+            prompt_class.DESCRIPTION.format(len(self.candidates)),
+            [prompt_class.SUGGESTION]
         )
         total_time = 0.0
         for candidate in self.task_duration_list:

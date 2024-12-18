@@ -17,6 +17,7 @@ import logging
 from textwrap import fill
 from typing import List
 
+from profiler.advisor.display.prompt.base_prompt import BasePrompt
 from profiler.prof_common.constant import Constant
 from profiler.advisor.common.enum_params_parser import EnumParamsParser
 from profiler.advisor.common.version_control import VersionControl
@@ -50,7 +51,11 @@ class OperatorChecker(VersionControl):
         self._op_list: List[OpInfo] = []
         self._tune_op_list: List[str] = []
 
-        self._init_prompt_by_language()
+        self.prompt_class = BasePrompt.get_prompt_class("OperatorChecker")
+        self.pytorch_op_tune_suggestion = self.prompt_class.PYTORCH_OPERATOR_TUNE_SUGGESTION
+        self.mslite_op_tune_suggestion = self.prompt_class.MSLITE_OPERATOR_TUNE_SUGGESTION
+        self.pytorch_release_suggestion = self.prompt_class.PYTORCH_RELEASE_SUGGESTION
+        self.mslite_release_suggestion = self.prompt_class.MSLITE_RELEASE_SUGGESTION
 
     @staticmethod
     def get_ratio(op_info: OpInfo, attr: str) -> float:
@@ -114,7 +119,7 @@ class OperatorChecker(VersionControl):
         """
 
         if rank is not None:
-            self._PROBLEM = self.rank_id.format(rank) + self._PROBLEM.lower()
+            self._PROBLEM = self.prompt_class.RANK_ID.format(rank) + self._PROBLEM.lower()
 
         task_duration_list = [float(op_info.get_attr("task_duration"))
                               for op_info in self._op_list
@@ -331,16 +336,3 @@ class OperatorChecker(VersionControl):
             logger.warning(self.SKIP_CHECK_MSG, self._CHECKER, "op summary")
             return False
         return True
-
-    def _init_prompt_by_language(self):
-        language = AdditionalArgsManager().language
-        if language == "en":
-            from profiler.advisor.display.prompt.en.operator_prompt import OperatorPrompt
-        else:
-            from profiler.advisor.display.prompt.cn.operator_prompt import OperatorPrompt
-
-        self.rank_id = OperatorPrompt.RANK_ID
-        self.pytorch_op_tune_suggestion = OperatorPrompt.PYTORCH_OPERATOR_TUNE_SUGGESTION
-        self.mslite_op_tune_suggestion = OperatorPrompt.MSLITE_OPERATOR_TUNE_SUGGESTION
-        self.pytorch_release_suggestion = OperatorPrompt.PYTORCH_RELEASE_SUGGESTION
-        self.mslite_release_suggestion = OperatorPrompt.MSLITE_RELEASE_SUGGESTION

@@ -19,6 +19,7 @@ from typing import List
 from profiler.advisor.analyzer.computation.operator_checker import OperatorChecker
 from profiler.advisor.config.config import Config
 from profiler.advisor.dataset.profiling.info_collection import OpInfo
+from profiler.advisor.display.prompt.base_prompt import BasePrompt
 from profiler.advisor.result.item import OptimizeItem, StatisticsItem, OptimizeRecord
 from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 from profiler.prof_common.file_manager import FileManager
@@ -34,7 +35,12 @@ class DynamicShapeChecker(OperatorChecker):
 
     def __init__(self, cann_version) -> None:
         super().__init__(cann_version=cann_version)
-        self._init_prompt_by_language()
+        self.prompt_class = BasePrompt.get_prompt_class(self.__class__.__name__)
+        self._PROBLEM = self.prompt_class.PROBLEM
+        self._description = self.prompt_class.DESCRIPTION
+        self.enable_compiled_suggestion = self.prompt_class.ENABLE_COMPILED_SUGGESTION
+        self._SUGGESTION = [self.prompt_class.ENABLE_COMPILED_SUGGESTION]
+        self.release_suggestion = self.prompt_class.RELEASE_SUGGESTION
 
     def check(self, profiling_data) -> bool:
         return self.is_dynamic_shape(profiling_data)
@@ -44,7 +50,7 @@ class DynamicShapeChecker(OperatorChecker):
         make record for what and how to optimize
         """
         if rank is not None:
-            self._PROBLEM = self.rank_id + self._PROBLEM.lower()
+            self._PROBLEM = self.prompt_class.RANK_ID + self._PROBLEM.lower()
         optimization_item = OptimizeItem(
             self._PROBLEM,
             self._description,
@@ -79,17 +85,3 @@ class DynamicShapeChecker(OperatorChecker):
                                            add_render_list=add_render_list,
                                            priority_background_color=priority,
                                            rank=kwargs.get("rank"))
-
-    def _init_prompt_by_language(self):
-        language = AdditionalArgsManager().language
-        if language == "en":
-            from profiler.advisor.display.prompt.en.dynamic_shape_prompt import DynamicShapePrompt
-        else:
-            from profiler.advisor.display.prompt.cn.dynamic_shape_prompt import DynamicShapePrompt
-
-        self.rank_id = DynamicShapePrompt.RANK_ID
-        self._PROBLEM = DynamicShapePrompt.PROBLEM
-        self._description = DynamicShapePrompt.DESCRIPTION
-        self.enable_compiled_suggestion = DynamicShapePrompt.ENABLE_COMPILED_SUGGESTION
-        self._SUGGESTION = [DynamicShapePrompt.ENABLE_COMPILED_SUGGESTION]
-        self.release_suggestion = DynamicShapePrompt.RELEASE_SUGGESTION

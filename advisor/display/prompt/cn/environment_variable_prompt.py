@@ -14,6 +14,6 @@
 # limitations under the License.
 
 class EnvironmentVariablePrompt(object):
-    PRIBLEM = "环境变量分析"
+    PROBLEM = "环境变量分析"
     DESCRIPTION = "描述并给出最优的环境变量配置建议"
     SUGGESTION = "请设置最优的环境变量"

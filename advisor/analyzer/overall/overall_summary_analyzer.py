@@ -17,6 +17,7 @@ import os
 
 from profiler.advisor.analyzer.base_analyzer import BaseAnalyzer
 from profiler.advisor.display.html.render import HTMLRender
+from profiler.advisor.display.prompt.base_prompt import BasePrompt
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.advisor.result.result import OptimizeResult
 from profiler.compare_tools.compare_interface.comparison_interface import ComparisonInterface
@@ -42,7 +43,11 @@ class OverallSummaryAnalyzer(BaseAnalyzer):
         self.bottleneck_str = ""
         self.over_summary_analysis = {}
 
-        self._init_prompt_by_language()
+        self.prompt_class = BasePrompt.get_prompt_class(self.__class__.__name__)
+        self.over_summary_analyzer = self.prompt_class.OVERALL_SUMMARY_ANALYZER
+        self.advice_map = self.prompt_class.PERFORMANCE_TIME_DICT
+        self.time_name_map = self.prompt_class.TIME_NAME_MAP
+        self.performance_time_dict = self.prompt_class.PERFORMANCE_TIME_DICT
 
     @staticmethod
     def calculate_ratio(dividend, divisor):
@@ -229,18 +234,6 @@ class OverallSummaryAnalyzer(BaseAnalyzer):
 
     def get_priority(self):
         pass
-
-    def _init_prompt_by_language(self):
-        language = AdditionalArgsManager().language
-        if language == "en":
-            from profiler.advisor.display.prompt.en.overall_summary_analyzer_prompt import OverallSummaryAnalyzePrompt
-        else:
-            from profiler.advisor.display.prompt.cn.overall_summary_analyzer_prompt import OverallSummaryAnalyzePrompt
-
-        self.over_summary_analyzer = OverallSummaryAnalyzePrompt.OVERALL_SUMMARY_ANALYZER
-        self.advice_map = OverallSummaryAnalyzePrompt.PERFORMANCE_TIME_DICT
-        self.time_name_map = OverallSummaryAnalyzePrompt.TIME_NAME_MAP
-        self.performance_time_dict = OverallSummaryAnalyzePrompt.PERFORMANCE_TIME_DICT
 
 
 def get_profile_path(collection_path):

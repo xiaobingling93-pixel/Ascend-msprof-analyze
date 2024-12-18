@@ -20,6 +20,7 @@ import re
 from tqdm import tqdm
 
 from profiler.advisor.analyzer.base_analyzer import BaseAnalyzer
+from profiler.advisor.display.prompt.base_prompt import BasePrompt
 from profiler.prof_common.constant import Constant
 from profiler.advisor.common.analyzer_scopes import SupportedScopes
 from profiler.advisor.common.timeline.event import TimelineEvent
@@ -95,35 +96,32 @@ class TimelineFusionOpsAnalyzer(BaseAnalyzer):
         """
         if not self.matched_op_stacks:
             return
-        language = AdditionalArgsManager().language
-        if language == "en":
-            from profiler.advisor.display.prompt.en.fusion_ops_prompt import FusionOpsPrompt
-        else:
-            from profiler.advisor.display.prompt.cn.fusion_ops_prompt import FusionOpsPrompt
+        
+        prompt_class = BasePrompt.get_prompt_class(self.__class__.__name__)
 
-        desc = FusionOpsPrompt.DESCRIPTION.format(self.cann_version, self.torch_version,
+        desc = prompt_class.DESCRIPTION.format(self.cann_version, self.profiling_version,
                                                   len(format_timeline_result(self.matched_op_stacks)))
-        suggestion = FusionOpsPrompt.SUGGESTION
+        suggestion = prompt_class.SUGGESTION
         if self.empty_stacks:
-            desc += FusionOpsPrompt.EMPTY_STACK_DESCRIPTION
-            suggestion = FusionOpsPrompt.EMPTY_STACKS_SUGGESTION.format(
+            desc += prompt_class.EMPTY_STACK_DESCRIPTION
+            suggestion = prompt_class.EMPTY_STACKS_SUGGESTION.format(
                 timeline_profiling_doc_url=Config().timeline_with_stack_doc_url
             )
 
-        optimization_item = OptimizeItem(FusionOpsPrompt.PROBLEM, desc, [suggestion])
+        optimization_item = OptimizeItem(prompt_class.PROBLEM, desc, [suggestion])
 
         self.result.add(OptimizeRecord(optimization_item))
         record_title = ["Affinity API", "Code stacks", "Stack called counts"]
-        self.result.add_detail(FusionOpsPrompt.PROBLEM, headers=record_title)
+        self.result.add_detail(prompt_class.PROBLEM, headers=record_title)
 
         for api_name, stacks_info in format_timeline_result(self.matched_op_stacks).items():
             if not stacks_info:
                 detail = [api_name, "null", "null"]
-                self.result.add_detail(FusionOpsPrompt.PROBLEM, detail=detail)
+                self.result.add_detail(prompt_class.PROBLEM, detail=detail)
             else:
                 for stack in stacks_info:
                     detail = [api_name, *stack]
-                    self.result.add_detail(FusionOpsPrompt.PROBLEM, detail=detail)
+                    self.result.add_detail(prompt_class.PROBLEM, detail=detail)
 
     def make_render(self, **kwargs):
         rank = kwargs.get("rank")

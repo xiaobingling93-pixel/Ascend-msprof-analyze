@@ -14,6 +14,6 @@
 # limitations under the License.
 
 class EnvironmentVariablePrompt(object):
-    PRIBLEM = "Environment Variable Analysis"
+    PROBLEM = "Environment Variable Analysis"
     DESCRIPTION = "Describe and suggest the optimal environment variable settings"
     SUGGESTION = "Please set the optimal environment variable"

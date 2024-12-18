@@ -14,6 +14,7 @@
 # limitations under the License.
 import os
 
+from profiler.advisor.display.prompt.base_prompt import BasePrompt
 from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 from profiler.prof_common.file_manager import FileManager
 from profiler.advisor.result.result import OptimizeResult
@@ -83,22 +84,17 @@ class EnvironmentVariabelChecker:
     def make_record(self, result: OptimizeResult):
         if not self.env_suggest_csv:
             return
-
-        language = AdditionalArgsManager().language
-        if language == "en":
-            from profiler.advisor.display.prompt.en.environment_variable_prompt import EnvironmentVariablePrompt
-        else:
-            from profiler.advisor.display.prompt.cn.environment_variable_prompt import EnvironmentVariablePrompt
-
+        
+        prompt_class = BasePrompt.get_prompt_class(self.__class__.__name__)
         optimization_item = OptimizeItem(
-            EnvironmentVariablePrompt.PRIBLEM,
-            EnvironmentVariablePrompt.DESCRIPTION,
-            [EnvironmentVariablePrompt.SUGGESTION]
+            prompt_class.PROBLEM,
+            prompt_class.DESCRIPTION,
+            [prompt_class.SUGGESTION]
         )
         result.add(OptimizeRecord(optimization_item))
-        result.add_detail(EnvironmentVariablePrompt.PRIBLEM, headers=self.HEADERS)
+        result.add_detail(prompt_class.PROBLEM, headers=self.HEADERS)
         for env_suggest in self.env_suggest_csv:
-            result.add_detail(EnvironmentVariablePrompt.PRIBLEM, detail=env_suggest)
+            result.add_detail(prompt_class.PROBLEM, detail=env_suggest)
 
     def make_render(self, html_render: HTMLRender):
         if not self.env_suggest_html:

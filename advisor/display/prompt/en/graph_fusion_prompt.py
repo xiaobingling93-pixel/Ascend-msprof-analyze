@@ -14,6 +14,6 @@
 # limitations under the License.
 
 class GraphFusionPrompt(object):
-    PRIBLEM = "Fusion Issue"
+    PROBLEM = "Fusion Issue"
     DESCRIPTION = "Found {} fusion issues"
     SUGGESTION = "Check fusion issues detail in mstt_advisor*.html"

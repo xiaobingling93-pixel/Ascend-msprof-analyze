@@ -16,6 +16,7 @@ import logging
 from typing import List
 
 from profiler.advisor.analyzer.computation.operator_checker import OperatorChecker
+from profiler.advisor.display.prompt.base_prompt import BasePrompt
 from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 from profiler.prof_common.constant import Constant
 from profiler.advisor.config.config import Config
@@ -37,7 +38,9 @@ class OperatorBoundChecker(OperatorChecker):
 
     def __init__(self, cann_version) -> None:
         super().__init__(cann_version=cann_version)
-        self._init_prompt_by_language()
+        self.prompt_class = BasePrompt.get_prompt_class(self.__class__.__name__)
+        self._PROBLEM = self.prompt_class.PROBLEM
+        self._description = self.prompt_class.DESCRIPTION.format(to_percent(Config().operator_bound_ratio))
 
     def pre_check(self, profiling_data) -> bool:
         return not self.is_dynamic_shape(profiling_data)
@@ -71,13 +74,3 @@ class OperatorBoundChecker(OperatorChecker):
         if any(ratio and ratio > Config().operator_bound_ratio for ratio in ratio_list):
             return False
         return True
-
-    def _init_prompt_by_language(self):
-        language = AdditionalArgsManager().language
-        if language == "en":
-            from profiler.advisor.display.prompt.en.operator_bound_prompt import OperatorBoundPrompt
-        else:
-            from profiler.advisor.display.prompt.cn.operator_bound_prompt import OperatorBoundPrompt
-
-        self._PROBLEM = OperatorBoundPrompt.PROBLEM
-        self._description = OperatorBoundPrompt.DESCRIPTION.format(to_percent(Config().operator_bound_ratio))

@@ -13,10 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-class TimelineOpDispatchPrompt(object):
-    PRIBLEM = "Operator Dispatch"
-    DESCRIPTION = "Found {} operator compile issues."
-    SUGGESTION = "Please place the following code at the entrance of the python script to disable jit compile. \n" \
-                 "Code: `torch_npu.npu.set_compile_mode(jit_compile=False) \n" \
-                 "torch_npu.npu.config.allow_internal_format = False` \n"
-
+class OpDispatchPrompt(object):
+    PROBLEM = "算子下发"
+    DESCRIPTION = "发现{}个算子编译问题。"
+    SUGGESTION = "请在python脚本入口添加以下代码关闭在线编译：\n" \
+                 "'torch_npu.npu.set_compile_mode(jit_compile=False) \n" \
+                 "torch_npu.npu.config.allow_internal_format = False' \n"

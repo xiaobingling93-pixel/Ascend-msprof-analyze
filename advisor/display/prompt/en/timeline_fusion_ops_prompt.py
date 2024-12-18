@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-class FusionOpsPrompt(object):
+class TimelineFusionOpsPrompt(object):
     PROBLEM = "Affinity Apis"
     DESCRIPTION = "On the runtime env cann-{} and torch-{}, found {} apis to be replaced"
     SUGGESTION = "Please replace training api according to sub table 'Affinity training api'"

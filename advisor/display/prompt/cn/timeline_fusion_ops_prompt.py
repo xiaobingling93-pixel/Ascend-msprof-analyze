@@ -13,9 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-class TimelineOpDispatchPrompt(object):
-    PRIBLEM = "算子下发"
-    DESCRIPTION = "发现{}个算子编译问题。"
-    SUGGESTION = "请在python脚本入口添加以下代码关闭在线编译：\n" \
-                 "'torch_npu.npu.set_compile_mode(jit_compile=False) \n" \
-                 "torch_npu.npu.config.allow_internal_format = False' \n"
+class TimelineFusionOpsPrompt(object):
+    PROBLEM = "亲和API接口"
+    DESCRIPTION = "目前运行环境版本为cann-{}和torch-{}，发现有{}个api接口可以替换。"
+    SUGGESTION = "请根据子表'Affinity training api'替换训练api接口"
+    EMPTY_STACK_DESCRIPTION = ",但没有堆栈"
+    EMPTY_STACKS_SUGGESTION = "这些API接口没有代码堆栈。如果采集profiling时参数为'with_stack=False'，" \
+                              "请参考{}设置'with_stack=True'。" \
+                              "另外，由于反向传播没有堆栈，请忽略以下亲和APIs。"
