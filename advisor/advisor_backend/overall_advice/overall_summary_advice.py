@@ -38,17 +38,6 @@ class OverallSummaryAdvice(AdviceBase):
 
         self._init_prompt_by_language()
 
-    def _init_prompt_by_language(self):
-        language = AdditionalArgsManager().language
-        if language == "en":
-            from profiler.advisor.display.prompt.en.overall_summary_advice_prompt import OverallSummaryAdvicePrompt
-        else:
-            from profiler.advisor.display.prompt.cn.overall_summary_advice_prompt import OverallSummaryAdvicePrompt
-
-        self.advice_map = OverallSummaryAdvicePrompt.PERFORMANCE_TIME_DICT
-        self.time_name_map = OverallSummaryAdvicePrompt.TIME_NAME_MAP
-        self.performance_time_dict = OverallSummaryAdvicePrompt.PERFORMANCE_TIME_DICT
-
     @staticmethod
     def split_duration_and_num(time_value: str) -> tuple:
         split_data = time_value.split("s")  # time value example: 0.229s(1756)
@@ -168,3 +157,14 @@ class OverallSummaryAdvice(AdviceBase):
         self.output_format_data[self.DATA] = self.cur_data
         self.output_format_data[self.BOTTLENECK] = self.cur_bottleneck
         self.output_format_data[self.ADVICE] = self.cur_advices
+
+    def _init_prompt_by_language(self):
+        language = AdditionalArgsManager().language
+        if language == "en":
+            from profiler.advisor.display.prompt.en.overall_summary_advice_prompt import OverallSummaryAdvicePrompt
+        else:
+            from profiler.advisor.display.prompt.cn.overall_summary_advice_prompt import OverallSummaryAdvicePrompt
+
+        self.advice_map = OverallSummaryAdvicePrompt.PERFORMANCE_TIME_DICT
+        self.time_name_map = OverallSummaryAdvicePrompt.TIME_NAME_MAP
+        self.performance_time_dict = OverallSummaryAdvicePrompt.PERFORMANCE_TIME_DICT

@@ -39,16 +39,6 @@ class OperatorBoundChecker(OperatorChecker):
         super().__init__(cann_version=cann_version)
         self._init_prompt_by_language()
 
-    def _init_prompt_by_language(self):
-        language = AdditionalArgsManager().language
-        if language == "en":
-            from profiler.advisor.display.prompt.en.operator_bound_prompt import OperatorBoundPrompt
-        else:
-            from profiler.advisor.display.prompt.cn.operator_bound_prompt import OperatorBoundPrompt
-
-        self._PROBLEM = OperatorBoundPrompt.PROBLEM
-        self._description = OperatorBoundPrompt.DESCRIPTION.format(to_percent(Config().operator_bound_ratio))
-
     def pre_check(self, profiling_data) -> bool:
         return not self.is_dynamic_shape(profiling_data)
 
@@ -81,3 +71,13 @@ class OperatorBoundChecker(OperatorChecker):
         if any(ratio and ratio > Config().operator_bound_ratio for ratio in ratio_list):
             return False
         return True
+
+    def _init_prompt_by_language(self):
+        language = AdditionalArgsManager().language
+        if language == "en":
+            from profiler.advisor.display.prompt.en.operator_bound_prompt import OperatorBoundPrompt
+        else:
+            from profiler.advisor.display.prompt.cn.operator_bound_prompt import OperatorBoundPrompt
+
+        self._PROBLEM = OperatorBoundPrompt.PROBLEM
+        self._description = OperatorBoundPrompt.DESCRIPTION.format(to_percent(Config().operator_bound_ratio))

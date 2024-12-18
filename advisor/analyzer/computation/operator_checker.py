@@ -52,19 +52,6 @@ class OperatorChecker(VersionControl):
 
         self._init_prompt_by_language()
 
-    def _init_prompt_by_language(self):
-        language = AdditionalArgsManager().language
-        if language == "en":
-            from profiler.advisor.display.prompt.en.operator_prompt import OperatorPrompt
-        else:
-            from profiler.advisor.display.prompt.cn.operator_prompt import OperatorPrompt
-
-        self.rank_id = OperatorPrompt.RANK_ID
-        self.pytorch_op_tune_suggestion = OperatorPrompt.PYTORCH_OPERATOR_TUNE_SUGGESTION
-        self.mslite_op_tune_suggestion = OperatorPrompt.MSLITE_OPERATOR_TUNE_SUGGESTION
-        self.pytorch_release_suggestion = OperatorPrompt.PYTORCH_RELEASE_SUGGESTION
-        self.mslite_release_suggestion = OperatorPrompt.MSLITE_RELEASE_SUGGESTION
-
     @staticmethod
     def get_ratio(op_info: OpInfo, attr: str) -> float:
         if not op_info.has_attr(attr):
@@ -344,3 +331,16 @@ class OperatorChecker(VersionControl):
             logger.warning(self.SKIP_CHECK_MSG, self._CHECKER, "op summary")
             return False
         return True
+
+    def _init_prompt_by_language(self):
+        language = AdditionalArgsManager().language
+        if language == "en":
+            from profiler.advisor.display.prompt.en.operator_prompt import OperatorPrompt
+        else:
+            from profiler.advisor.display.prompt.cn.operator_prompt import OperatorPrompt
+
+        self.rank_id = OperatorPrompt.RANK_ID
+        self.pytorch_op_tune_suggestion = OperatorPrompt.PYTORCH_OPERATOR_TUNE_SUGGESTION
+        self.mslite_op_tune_suggestion = OperatorPrompt.MSLITE_OPERATOR_TUNE_SUGGESTION
+        self.pytorch_release_suggestion = OperatorPrompt.PYTORCH_RELEASE_SUGGESTION
+        self.mslite_release_suggestion = OperatorPrompt.MSLITE_RELEASE_SUGGESTION

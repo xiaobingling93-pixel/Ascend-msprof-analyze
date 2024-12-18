@@ -44,18 +44,6 @@ class OverallSummaryAnalyzer(BaseAnalyzer):
 
         self._init_prompt_by_language()
 
-    def _init_prompt_by_language(self):
-        language = AdditionalArgsManager().language
-        if language == "en":
-            from profiler.advisor.display.prompt.en.overall_summary_analyzer_prompt import OverallSummaryAnalyzePrompt
-        else:
-            from profiler.advisor.display.prompt.cn.overall_summary_analyzer_prompt import OverallSummaryAnalyzePrompt
-
-        self.over_summary_analyzer = OverallSummaryAnalyzePrompt.OVERALL_SUMMARY_ANALYZER
-        self.advice_map = OverallSummaryAnalyzePrompt.PERFORMANCE_TIME_DICT
-        self.time_name_map = OverallSummaryAnalyzePrompt.TIME_NAME_MAP
-        self.performance_time_dict = OverallSummaryAnalyzePrompt.PERFORMANCE_TIME_DICT
-
     @staticmethod
     def calculate_ratio(dividend, divisor):
         if not divisor:
@@ -241,6 +229,18 @@ class OverallSummaryAnalyzer(BaseAnalyzer):
 
     def get_priority(self):
         pass
+
+    def _init_prompt_by_language(self):
+        language = AdditionalArgsManager().language
+        if language == "en":
+            from profiler.advisor.display.prompt.en.overall_summary_analyzer_prompt import OverallSummaryAnalyzePrompt
+        else:
+            from profiler.advisor.display.prompt.cn.overall_summary_analyzer_prompt import OverallSummaryAnalyzePrompt
+
+        self.over_summary_analyzer = OverallSummaryAnalyzePrompt.OVERALL_SUMMARY_ANALYZER
+        self.advice_map = OverallSummaryAnalyzePrompt.PERFORMANCE_TIME_DICT
+        self.time_name_map = OverallSummaryAnalyzePrompt.TIME_NAME_MAP
+        self.performance_time_dict = OverallSummaryAnalyzePrompt.PERFORMANCE_TIME_DICT
 
 
 def get_profile_path(collection_path):

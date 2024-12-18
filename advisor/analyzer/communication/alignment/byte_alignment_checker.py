@@ -144,7 +144,7 @@ class ByteAlignmentChecker:
         if not self.desc or not self.solutions or not isinstance(self.solutions, list):
             raise RuntimeError("The configuration file of the byte alignment analyzer is abnormal. Please check.")
         for solution in self.solutions:
-            for key, val in solution.items():
+            for _, val in solution.items():
                 self.suggestions.append(f"{val.get('desc')}")
 
     def _get_priority(self):

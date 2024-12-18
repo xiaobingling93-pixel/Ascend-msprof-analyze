@@ -38,18 +38,6 @@ class BlockDimChecker(OperatorChecker):
         super(BlockDimChecker, self).__init__(cann_version=cann_version)
         self._init_prompt_by_language()
 
-    def _init_prompt_by_language(self):
-        language = AdditionalArgsManager().language
-        if language == "en":
-            from profiler.advisor.display.prompt.en.block_dim_prompt import BlockDimPrompt
-        else:
-            from profiler.advisor.display.prompt.cn.block_dim_prompt import BlockDimPrompt
-
-        self._PROBLEM = BlockDimPrompt.PROBLEM
-        self._description = BlockDimPrompt.DESCRIPTION
-        self.aiv_num_desc = BlockDimPrompt.AIV_NUM_DESCRIPTION
-        self.top_duration_op_desc = BlockDimPrompt.TOP_DURATION_OP_DESCRIPTION
-
     def pre_check(self, profiling_data) -> bool:
         return not self.is_dynamic_shape(profiling_data)
 
@@ -118,3 +106,15 @@ class BlockDimChecker(OperatorChecker):
         if is_block_dim and self._aiv_num and int(op_info.mix_block_dim) % self._aiv_num == 0:
             return False
         return True
+
+    def _init_prompt_by_language(self):
+        language = AdditionalArgsManager().language
+        if language == "en":
+            from profiler.advisor.display.prompt.en.block_dim_prompt import BlockDimPrompt
+        else:
+            from profiler.advisor.display.prompt.cn.block_dim_prompt import BlockDimPrompt
+
+        self._PROBLEM = BlockDimPrompt.PROBLEM
+        self._description = BlockDimPrompt.DESCRIPTION
+        self.aiv_num_desc = BlockDimPrompt.AIV_NUM_DESCRIPTION
+        self.top_duration_op_desc = BlockDimPrompt.TOP_DURATION_OP_DESCRIPTION
