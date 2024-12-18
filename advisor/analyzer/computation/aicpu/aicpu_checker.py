@@ -47,7 +47,7 @@ class AicpuChecker(OperatorChecker):
 
     def load_aicpu_rules(self):
         language = AdditionalArgsManager().language
-        rule_path = "rules/" + language + "/aicpu_rules.yaml"
+        rule_path = "rules/aicpu_rules.yaml"
         if not os.path.isabs(rule_path):
             rule_path = os.path.join(os.path.dirname(__file__),
                                      "../../../", rule_path)
