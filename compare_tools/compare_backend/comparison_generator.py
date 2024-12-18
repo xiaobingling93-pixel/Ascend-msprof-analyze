@@ -63,14 +63,10 @@ class ComparisonGenerator:
             Constant.BASE_DATA: self._data_dict.get(Constant.BASE_DATA).overall_metrics,
             Constant.COMPARISON_DATA: self._data_dict.get(Constant.COMPARISON_DATA).overall_metrics,
         }
-        generator_list = [
-            OverallPerformanceGenerator(overall_data, self._args_manager.args),
-            DetailPerformanceGenerator(self._data_dict, self._args_manager.args),
-        ]
-        for generator in generator_list:
-            generator.start()
-        for generator in generator_list:
-            generator.join()
+        overall_generator = OverallPerformanceGenerator(overall_data, self._args_manager.args)
+        overall_generator.start()
+        DetailPerformanceGenerator(self._data_dict, self._args_manager.args).run()
+        overall_generator.join()
 
     def run_interface(self, compare_type: str) -> dict:
         try:
