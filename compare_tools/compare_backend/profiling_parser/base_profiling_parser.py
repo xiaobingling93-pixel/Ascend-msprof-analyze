@@ -124,6 +124,10 @@ class BaseProfilingParser(ABC):
     def _get_dispatch_func(self):
         raise NotImplementedError("Function _get_dispatch_func need to be implemented.")
 
+    @abstractmethod
+    def _calculate_mc2_communication_time(self, kernel: KernelDetailsBean):
+        raise NotImplementedError("Function _calculate_mc2_communication_time need to be implemented.")
+
     def load_data(self) -> ProfilingResult:
         self._result_data.update_bwd_tid(self._bwd_tid)
         if self._step_id != Constant.VOID_STEP and self._profiling_type == Constant.GPU:
@@ -149,6 +153,11 @@ class BaseProfilingParser(ABC):
             return
         if tk.is_sdma():
             self._result_data.overall_metrics.update_sdma_tensor_move_info(tk.dur)
+            return
+        if tk.is_mc2():
+            communication_time = self._calculate_mc2_communication_time(tk)
+            computing_time = tk.mc2_computing_time
+            self._result_data.overall_metrics.update_mc2_info(tk.name, tk.dur, computing_time, communication_time)
             return
         if flow_start_time:
             while self._categorize_performance_index < len(self.cpu_cube_op):

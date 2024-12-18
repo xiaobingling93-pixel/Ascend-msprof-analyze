@@ -14,9 +14,9 @@
 # limitations under the License.
 
 
-    
 import os
 import stat
+
 
 class Constant(object):
     COLLECTION_PATH = "collection_path"
@@ -50,7 +50,7 @@ class Constant(object):
     DIR_AUTHORITY = 0o750
     MAX_JSON_SIZE = 1024 * 1024 * 1024 * 10
     MAX_CSV_SIZE = 1024 * 1024 * 1024 * 5
-    MAX_COMMON_SIZE= 1024 * 1024 * 1024
+    MAX_COMMON_SIZE = 1024 * 1024 * 1024
     MAX_TRACE_SIZE = 1024 * 1024 * 1024 * 5
     MAX_PATH_LENGTH = 4096
     MAX_READ_DB_FILE_BYTES = 1024 * 1024 * 1024 * 8
@@ -135,14 +135,14 @@ class Constant(object):
     ALL = "all"
     COMMUNICATION_TIME = "communication_time"
     COMMUNICATION_MATRIX = "communication_matrix"
-    
+
     STEP = "step"
 
     DATA_SIMPLIFICATION = "data_simplification"
     FORCE = "force"
-    
+
     # compare tools
-    
+
     GPU = "GPU"
     NPU = "NPU"
     NA = 'N/A'
@@ -285,8 +285,8 @@ class Constant(object):
     }
     AFFINITY_TRAINING_API = "Affinity training api"
     TIMELINE_EMPTY_STACKS_PROMPT = "These APIs have no code stack. If parameter 'with_stack=False' while profiling, " \
-                                "please refer to {timeline_profiling_doc_url} to set 'with_stack=True'. " \
-                                "Otherwise, ignore following affinity APIs due to backward broadcast lack of stack."
+                                   "please refer to {timeline_profiling_doc_url} to set 'with_stack=True'. " \
+                                   "Otherwise, ignore following affinity APIs due to backward broadcast lack of stack."
 
     CLUSTER_ANALYSIS = "Cluster analysis"
     SLOW_RANK_TIME_RATIO_THRESHOLD = 0.05
@@ -317,7 +317,8 @@ class Constant(object):
     CLOUD_RULE_REGION_CN_NORTH_9 = "cn-north-9"
     CLOUD_RULE_REGION_CN_NORTH_7 = "cn-north-7"
     CLOUD_RULE_REGION_CN_SOUTHWEST_2 = "cn-southwest-2"
-    CLOUD_RULE_REGION_LIST = [CLOUD_RULE_REGION_CN_NORTH_7, CLOUD_RULE_REGION_CN_NORTH_9, CLOUD_RULE_REGION_CN_SOUTHWEST_2]
+    CLOUD_RULE_REGION_LIST = [CLOUD_RULE_REGION_CN_NORTH_7, CLOUD_RULE_REGION_CN_NORTH_9,
+                              CLOUD_RULE_REGION_CN_SOUTHWEST_2]
     INNER_REGION_LIST = [CLOUD_RULE_REGION_CN_NORTH_7]
     DEFAULT_CLOUD_RULE_REGION = CLOUD_RULE_REGION_CN_SOUTHWEST_2
 
@@ -386,3 +387,8 @@ class Constant(object):
     MINDSPORE_VERSION = "mindspore_version"
     PYTORCH = "pytorch"
     MINDSPORE = "mindspore"
+
+    MC2_TIME = "mc2"
+    MC2_COMPUTING = "mc2_p"
+    MC2_COMMUNICATION = "mc2_m"
+    MC2_NUMBER = "mc2_num"

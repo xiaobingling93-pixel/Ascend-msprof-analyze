@@ -18,32 +18,40 @@ def print_stout(output):
             break
 
 
+def stop_stout_threads(thread_list):
+    global stop_print_thread
+    stop_print_thread = True
+    for stout_thread in thread_list:
+        if stout_thread.is_alive():
+            stout_thread.join()
+
+
 def start_st_process(module_name):
     st_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "st", module_name)
     cmd = ["python3", "-m", "pytest", "-s", st_path]
     process = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     stout_thread = threading.Thread(target=print_stout, args=(process.stdout,))
     stout_thread.start()
-    return process
+    return process, stout_thread
 
 
-def read_modify_file():
-    modify_file = os.path.join(os.path.dirname(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__)))))),
-        "modify_files.txt")
-    with open(modify_file, "rt") as file:
-        data = file.read()
-    return data
+def stop_st_process(process_list):
+    for process in process_list:
+        if process.poll() is None:
+            process.terminate()
+            process.wait()
 
 
 def run_st():
     timeout = 3600
-    global stop_print_thread
 
     modules = ["advisor", "cluster_analyse", "compare_tools"]
     process_list = []
+    thread_list = []
     for module in modules:
-        process_list.append(start_st_process(module))
+        process, stout_thread = start_st_process(module)
+        process_list.append(process)
+        thread_list.append(stout_thread)
 
     success, failed = True, False
     start_time = datetime.datetime.utcnow()
@@ -51,7 +59,8 @@ def run_st():
         duration = datetime.datetime.utcnow() - start_time
         if duration.total_seconds() >= timeout:
             logging.error("run st use case timeout.")
-            stop_print_thread = True
+            stop_stout_threads(thread_list)
+            stop_st_process(process_list)
             return failed
         for process in process_list:
             if process.poll() is None:
@@ -59,9 +68,10 @@ def run_st():
             if process.returncode == 0:
                 process_list.remove(process)
                 continue
-            stop_print_thread = True
+            stop_stout_threads(thread_list)
+            stop_st_process(process_list)
             return failed
-    stop_print_thread = True
+    stop_stout_threads(thread_list)
     return success
 
 
