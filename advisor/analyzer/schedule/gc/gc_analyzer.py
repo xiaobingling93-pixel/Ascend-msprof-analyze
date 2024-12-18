@@ -37,7 +37,7 @@ class GcAnalyzer(BaseAnalyzer):
     @BaseAnalyzer.check_data((ScheduleAnalysisDataset.get_key(),))
     def optimize(self, **kwargs):
         if "mindspore" in self.profiling_type:
-            logger.warning("The analyzer %s does not support MindSpore.", self.__class__.__name__)
+            logger.info("The analyzer %s does not support MindSpore.", self.__class__.__name__)
             return self.result
         gc_checker = GcChecker()
         gc_checker.check_gc(self.timeline_event_dataset, rank=kwargs.get("rank"), stage=kwargs.get("stage"))
