@@ -22,6 +22,7 @@ from profiler.advisor.result.item import OptimizeRecord
 from profiler.advisor.common.analyzer_scopes import SupportedScopes
 from profiler.advisor.display.html.render import HTMLRender
 from profiler.advisor.utils.utils import convert_to_int
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 
 
 class EnvironmentVariabelChecker:
@@ -82,18 +83,22 @@ class EnvironmentVariabelChecker:
     def make_record(self, result: OptimizeResult):
         if not self.env_suggest_csv:
             return
-        desc = f"Describe and suggest the optimal environment variable settings"
-        suggestion = "Please set the optimal environment variable"
+
+        language = AdditionalArgsManager().language
+        if language == "en":
+            from profiler.advisor.display.prompt.en.environment_variable_prompt import EnvironmentVariablePrompt
+        else:
+            from profiler.advisor.display.prompt.cn.environment_variable_prompt import EnvironmentVariablePrompt
 
         optimization_item = OptimizeItem(
-            SupportedScopes.ENVIRONMENT_VARIABLE_ANALYSIS,
-            desc,
-            [suggestion]
+            EnvironmentVariablePrompt.PRIBLEM,
+            EnvironmentVariablePrompt.DESCRIPTION,
+            [EnvironmentVariablePrompt.SUGGESTION]
         )
         result.add(OptimizeRecord(optimization_item))
-        result.add_detail(SupportedScopes.ENVIRONMENT_VARIABLE_ANALYSIS, headers=self.HEADERS)
+        result.add_detail(EnvironmentVariablePrompt.PRIBLEM, headers=self.HEADERS)
         for env_suggest in self.env_suggest_csv:
-            result.add_detail(SupportedScopes.ENVIRONMENT_VARIABLE_ANALYSIS, detail=env_suggest)
+            result.add_detail(EnvironmentVariablePrompt.PRIBLEM, detail=env_suggest)
 
     def make_render(self, html_render: HTMLRender):
         if not self.env_suggest_html:

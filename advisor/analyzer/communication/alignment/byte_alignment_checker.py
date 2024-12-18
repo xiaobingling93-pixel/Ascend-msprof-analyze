@@ -18,6 +18,7 @@ from typing import List
 from profiler.advisor.dataset.communication.hccl_detail_dataset import HcclDetailDataset
 from profiler.advisor.dataset.profiling.info_collection import HcclTask
 from profiler.advisor.display.html.priority_background_color import PriorityBackgroundColor
+from profiler.advisor.display.prompt.base_prompt import BasePrompt
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.prof_common.additional_args_manager import AdditionalArgsManager
@@ -77,12 +78,12 @@ class ByteAlignmentChecker:
         """
         make record for what and how to optimize
         """
-        optimization_item = OptimizeItem("byte alignment analysis", self.desc, self.suggestions)
+        optimization_item = OptimizeItem(self.problem, self.desc, self.suggestions)
         result.add(OptimizeRecord(optimization_item))
 
-        sub_table_name = "Byte Alignment Analysis" if not self.stage else f"Stage-{self.stage}: " \
-                                                                          f"Byte Alignment Analysis"
+        sub_table_name = BasePrompt.get_sub_table_name(self.problem, self.stage)
         result.add_detail(sub_table_name, headers=self.headers)
+
         for hccl_op in self.abnormal_ops:
             result.add_detail(sub_table_name, detail=hccl_op)
 
@@ -135,7 +136,8 @@ class ByteAlignmentChecker:
         )
 
         byte_alignment_rule = FileManager.read_yaml_file(rule_path)
-        self.desc = byte_alignment_rule.get("problem")
+        self.problem = byte_alignment_rule.get("problem")
+        self.desc = byte_alignment_rule.get("description")
         self.min_size = byte_alignment_rule.get("min_size", self._MIN_SIZE)
         self.topk = byte_alignment_rule.get("top_num", 3)
         self.solutions = byte_alignment_rule.get("solutions")
@@ -143,7 +145,7 @@ class ByteAlignmentChecker:
             raise RuntimeError("The configuration file of the byte alignment analyzer is abnormal. Please check.")
         for solution in self.solutions:
             for key, val in solution.items():
-                self.suggestions.append(f"{key}, {val.get('desc')}")
+                self.suggestions.append(f"{val.get('desc')}")
 
     def _get_priority(self):
         if safe_division(self.abnormal_ops_dur, self.total_ops_dur) < self._LOW_PRIORITY:

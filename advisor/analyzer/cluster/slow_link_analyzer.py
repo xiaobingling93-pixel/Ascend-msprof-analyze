@@ -23,6 +23,7 @@ from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.advisor.dataset.cluster.cluster_dataset import ClusterCommunicationDataset
 from profiler.advisor.utils.utils import safe_index_value, convert_to_int
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 
 logger = logging.getLogger()
 
@@ -86,11 +87,19 @@ class SlowLinkAnalyzer(BaseAnalyzer):
             logger.info("The slow link (identified bottleneck) cannot provide a bottleneck \
                            because the analysis data is missing bandwidth information.")
             return
-        self.bottelneck += f'{link_type}: \n' \
-                           f'    The average is {avg_bw}, \n' \
-                           f'    while the maximum  is {round(max(data_list), 3)}GB/s \n' \
-                           f'    and the minimum is {round(min(data_list), 3)}GB/s. \n' \
-                           f'    the difference is {round(max(data_list) - min(data_list), 3)}GB/s. \n'
+        language = AdditionalArgsManager().language
+        if language == "en":
+            self.bottelneck += f'{link_type}: \n' \
+                               f'    The average is {avg_bw}, \n' \
+                               f'    while the maximum  is {round(max(data_list), 3)}GB/s \n' \
+                               f'    and the minimum is {round(min(data_list), 3)}GB/s. \n' \
+                               f'    the difference is {round(max(data_list) - min(data_list), 3)}GB/s. \n'
+        else:
+            self.bottelneck += f'{link_type}： \n' \
+                               f'    平均值是 {avg_bw}， \n' \
+                               f'    但最大值是 {round(max(data_list), 3)}GB/s ，\n' \
+                               f'    最小值是 {round(min(data_list), 3)}GB/s。\n' \
+                               f'    差距为 {round(max(data_list) - min(data_list), 3)}GB/s。 \n'
 
     def format_details(self):
         if not self.rank_bw_dict:

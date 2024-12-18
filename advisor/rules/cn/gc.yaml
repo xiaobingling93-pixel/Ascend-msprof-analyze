@@ -1,4 +1,5 @@
-gc_problem_with_count: "检测到异常垃圾收集（GC）事件｛gc_count｝次，总时间为｛gc_total_time｝毫秒。\n
+problem: GC分析
+gc_problem_with_count: "检测到异常垃圾收集（GC）事件{gc_count}次，总时间为{gc_total_time}毫秒。\n
                         GC操作耗时且会阻塞整个过程。因此，模型训练过程中的某些步骤比其他步骤需要更长的时间。"
 gc_threshold: 1000 #us
 top_num: 10

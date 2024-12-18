@@ -21,6 +21,7 @@ from profiler.advisor.dataset.timeline_event_dataset import ComputationAnalysisD
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.advisor.utils.utils import get_analyze_processes, ParallelJob
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 
 logger = logging.getLogger()
 
@@ -90,17 +91,33 @@ class OpStackFinder:
         if not self._stack_record:
             return
 
-        desc = f"Found {len(self._stack_record)} called stacks for"
-        if self.op_name and self.task_type:
-            desc += f" operators with name '{self.op_name}' with task type '{self.task_type}'"
-        elif self.op_name and not self.task_type:
-            desc += f" operators with name '{self.op_name}'"
-        elif self.task_type and not self.op_name:
-            desc += f" operators with task type '{self.task_type}'"
-        else:
-            desc += " all operators"
+        language = AdditionalArgsManager().language
+        if language == "en":
+            desc = f"Found {len(self._stack_record)} called stacks for"
+            if self.op_name and self.task_type:
+                desc += f" operators with name '{self.op_name}' with task type '{self.task_type}'"
+            elif self.op_name and not self.task_type:
+                desc += f" operators with name '{self.op_name}'"
+            elif self.task_type and not self.op_name:
+                desc += f" operators with task type '{self.task_type}'"
+            else:
+                desc += " all operators"
 
-        suggestion = f"Please use command 'ma-advisor analyze profiling' to analyze operators"
+            suggestion = f"Please use command 'ma-advisor analyze profiling' to analyze operators"
+        else:
+            desc = f"发现以下{len(self._stack_record)}个算子的调用堆栈，"
+            if self.op_name and self.task_type:
+                desc += f"任务类型为'{self.task_type}'的'{self.op_name}'算子"
+            elif self.op_name and not self.task_type:
+                desc += f"'{self.op_name}'算子"
+            elif self.task_type and not self.op_name:
+                desc += f"算子类型为'{self.task_type}'"
+            else:
+                desc += "包括全部算子"
+
+            suggestion = f"请用命令'ma-advisor analyze profiling'分析算子"
+
+
         optimization_item = OptimizeItem(
             "Operator stacks",
             desc,

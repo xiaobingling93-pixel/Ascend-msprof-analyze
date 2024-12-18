@@ -22,6 +22,7 @@ import click
 import xlsxwriter
 from prettytable import ALL, PrettyTable
 
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 from profiler.prof_common.constant import Constant
 from profiler.advisor.utils.utils import singleton, logger
 from profiler.advisor.config.config import Config
@@ -152,7 +153,11 @@ class OptimizeResult:
                 self._tune_op_list.append(operator_name)
 
     def add(self, overview_item):
-        sheet_name = "problems"
+        language = AdditionalArgsManager().language
+        if language == "en":
+            sheet_name = "problems"
+        else:
+            sheet_name = "问题综述"
 
         headers = overview_item.headers
         data = overview_item.data
@@ -208,11 +213,19 @@ class TerminalResult:
 
     def __init__(self):
         self.width, _ = self.get_terminal_size()
-        if self.width is None:
-            self.table = PrettyTable(["No.", "Category", "Description", "Suggestion"])
+        language = AdditionalArgsManager().language
+        if language == "en":
+            if self.width is None:
+                self.table = PrettyTable(["No.", "Category", "Description", "Suggestion"])
+            else:
+                self.table = PrettyTable(["No.", "Category", "Description", "Suggestion"],
+                                         max_table_width=max(self.width - 20, 180))
         else:
-            self.table = PrettyTable(["No.", "Category", "Description", "Suggestion"],
-                                     max_table_width=max(self.width - 20, 180))
+            if self.width is None:
+                self.table = PrettyTable(["No.", "类型", "描述", "建议"])
+            else:
+                self.table = PrettyTable(["No.", "类型", "描述", "建议"],
+                                         max_table_width=max(self.width - 20, 180))
         self.table.hrules = ALL
         self.result_list = []
 

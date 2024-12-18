@@ -17,6 +17,7 @@ import os
 from typing import List
 from profiler.advisor.dataset.communication.communication_dataset import CommunicationDataset
 from profiler.advisor.dataset.profiling.profiling_dataset import ProfilingDataset
+from profiler.advisor.display.prompt.base_prompt import BasePrompt
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.prof_common.additional_args_manager import AdditionalArgsManager
@@ -24,6 +25,7 @@ from profiler.prof_common.file_manager import FileManager
 from profiler.advisor.utils.utils import convert_to_float
 from profiler.advisor.dataset.cluster.hccl_collection import HcclInfo
 from profiler.advisor.dataset.profiling.info_collection import OpInfo
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 
 logger = logging.getLogger()
 
@@ -136,12 +138,12 @@ class BandwidthContentionChecker:
         """
         make record for what and how to optimize
         """
-        optimization_item = OptimizeItem("bandwidth contention analysis", self.desc, self.suggestions)
+        optimization_item = OptimizeItem(self.problem, self.desc, self.suggestions)
         result.add(OptimizeRecord(optimization_item))
 
-        sub_table_name = "Bandwidth Contention Analysis" if not self.stage else f"Stage-{self.stage}: " \
-                                                                                f"Bandwidth Contention Analysis"
+        sub_table_name = BasePrompt.get_sub_table_name(self.problem, self.stage)
         result.add_detail(sub_table_name, headers=self.headers)
+
         for hccl_op in self.abnormal_sdma_list:
             result.add_detail(sub_table_name, detail=[hccl_op.name, round(hccl_op.dur, 4), round(hccl_op.bandwidth, 2)])
 
@@ -167,7 +169,8 @@ class BandwidthContentionChecker:
         )
 
         contention_rule = FileManager.read_yaml_file(contention_rule_path)
-        self.desc = contention_rule.get("problem")
+        self.problem = contention_rule.get("problem")
+        self.desc = contention_rule.get("description")
         self.threshold = contention_rule.get("threshold", 0) * contention_rule.get("sdma_baseline", 0)
         self.contention_topk = contention_rule.get("top_num", 3)
         self.solutions = contention_rule.get("solutions")
@@ -175,4 +178,4 @@ class BandwidthContentionChecker:
             raise RuntimeError("The configuration file of the bandwidth contention analyzer is abnormal. Please check.")
         for solution in self.solutions:
             for key, val in solution.items():
-                self.suggestions.append(f"{key}, {val.get('desc')}")
+                self.suggestions.append(f"{val.get('desc')}")

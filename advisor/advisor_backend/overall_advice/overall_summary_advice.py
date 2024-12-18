@@ -19,30 +19,10 @@ from profiler.prof_common.constant import Constant
 
 from compare_interface.comparison_interface import ComparisonInterface
 
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
+
 
 class OverallSummaryAdvice(AdviceBase):
-    advice_map = {
-        "Computing Time": "if you want more detailed advice please use msprof-analyze advisor computation.",
-        "Uncovered Communication Time": "if you want more detailed advice, please use msprof-analyze advisor schedule.",
-        "Free Time": "if you want more detailed advice please use msprof-analyze advisor schedule."
-    }
-    time_name_map = {
-        "Computing Time": "computing",
-        "Uncovered Communication Time": "communication",
-        "Free Time": "free",
-        'Cube Time(Num)': 'Cube Time',
-        'Vector Time(Num)': 'Vector Time',
-        'Flash Attention Time(Forward)(Num)': 'Flash Attention Time(Forward)',
-        'Flash Attention Time(Backward)(Num)': 'Flash Attention Time(Backward)',
-        'Other Time': "Other Computing Time",
-        'SDMA Time(Num)': 'SDMA Time'
-    }
-    performance_time_dict = {
-        "Computing Time": ['Cube Time(Num)', 'Vector Time(Num)', 'Flash Attention Time(Forward)(Num)',
-                           'Flash Attention Time(Backward)(Num)', 'Other Time'],
-        "Uncovered Communication Time(Wait Time)": [],
-        "Free Time": ['SDMA Time(Num)']
-    }
 
     def __init__(self, collection_path: str, kwargs: dict):
         super().__init__(collection_path)
@@ -55,6 +35,19 @@ class OverallSummaryAdvice(AdviceBase):
         self._headers = []
         self._base_data = []
         self._comparison_data = []
+
+        self._init_prompt_by_language()
+
+    def _init_prompt_by_language(self):
+        language = AdditionalArgsManager().language
+        if language == "en":
+            from profiler.advisor.display.prompt.en.overall_summary_advice_prompt import OverallSummaryAdvicePrompt
+        else:
+            from profiler.advisor.display.prompt.cn.overall_summary_advice_prompt import OverallSummaryAdvicePrompt
+
+        self.advice_map = OverallSummaryAdvicePrompt.PERFORMANCE_TIME_DICT
+        self.time_name_map = OverallSummaryAdvicePrompt.TIME_NAME_MAP
+        self.performance_time_dict = OverallSummaryAdvicePrompt.PERFORMANCE_TIME_DICT
 
     @staticmethod
     def split_duration_and_num(time_value: str) -> tuple:

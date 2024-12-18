@@ -1,4 +1,5 @@
-problem: "过小的通信数据包可能会导致host传递瓶颈。\n"
+problem: "包分析"
+description: "过小的通信数据包可能会导致host传递瓶颈。\n"
 sdma_problem: "在SDMA通信中，通信数据量的{abnormal_ratio}小于{min_size}MB，总时间为{abnormal_time}ms。\n"
 rdma_problem: "在RDMA通信中，通信数据量的{abnormal_ratio}小于{min_size}MB，总时间为{abnormal_time}ms。\n"
 min_sdma_size: 16 #M

@@ -23,6 +23,7 @@ from profiler.advisor.common.graph.graph import Graph
 from profiler.advisor.common.graph.graph_parser import QueryGraphParser
 from profiler.advisor.dataset.graph_dataset import GraphDataset
 from profiler.advisor.common.graph.graph_match import find_isomorphisms
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 
 logger = logging.getLogger()
 
@@ -180,10 +181,16 @@ class GraphFusionRules:
         if not self.candidates:
             return
 
+        language = AdditionalArgsManager().language
+        if language == "en":
+            from profiler.advisor.display.prompt.cn.graph_fusion_prompt import GraphFusionPrompt
+        else:
+            from profiler.advisor.display.prompt.en.graph_fusion_prompt import GraphFusionPrompt
+
         optimization_item = OptimizeItem(
-            "fusion issue",
-            f"Found {len(self.candidates)} fusion issues",
-            ["Check fusion issues detail in mstt_advisor*.html"]
+            GraphFusionPrompt.PRIBLEM,
+            GraphFusionPrompt.DESCRIPTION.format(len(self.candidates)),
+            [GraphFusionPrompt.SUGGESTION]
         )
         total_time = 0.0
         for candidate in self.task_duration_list:

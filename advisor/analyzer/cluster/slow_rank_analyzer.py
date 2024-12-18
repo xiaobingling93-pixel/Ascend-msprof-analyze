@@ -21,6 +21,7 @@ from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.advisor.dataset.cluster.cluster_dataset import ClusterStepTraceTimeDataset
 from profiler.advisor.utils.utils import safe_index_value, safe_division, convert_to_int, safe_index, convert_to_float
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 
 logger = logging.getLogger()
 
@@ -30,6 +31,7 @@ class SlowRankAnalyzer(BaseAnalyzer):
     RANK = "rank"
     RATIO_THRESHOLD = 0.05
     BOTTLENECK_LIST = ['Computing', 'Communication', "Free"]
+    BOTTLENECK_LIST_CN = ['计算', '通信', "空闲"]
     dataset_cls_list = [ClusterStepTraceTimeDataset]
     COMPUTE = "compute(us)"
     FREE = "free(us)"
@@ -80,16 +82,26 @@ class SlowRankAnalyzer(BaseAnalyzer):
                 self.produce_bottleneck(self.step_trace_dict, i, mean_total_time)
 
         if not self.bottelneck:
-            self.bottelneck = "There is no slow rank issues"
+            language = AdditionalArgsManager().language
+            if language == "en":
+                self.bottelneck = "There is no slow rank issues"
+            else:
+                self.bottelneck = "没有慢节点问题"
 
     def produce_bottleneck(self, step_dict: dict, produce_type: int, mean_total_time: float):
         data_list = [data_tuple[produce_type] for rank_id, data_tuple in step_dict.items()]
         max_ratio = self.compute_max_gap_ratio(data_list, mean_total_time)
         if max_ratio > self.RATIO_THRESHOLD:
-            self.bottelneck += f'{self.BOTTLENECK_LIST[produce_type]} \n' \
-                               f'    has some issues in the cluster, \n' \
-                               f'    because the max difference of {self.BOTTLENECK_LIST[produce_type]} time \n' \
-                               f'    has reached {round(max_ratio * mean_total_time / 1000, 3)}ms. \n'
+            language = AdditionalArgsManager().language
+            if language == "en":
+                self.bottelneck += f'{self.BOTTLENECK_LIST[produce_type]} \n' \
+                                   f'    has some issues in the cluster, \n' \
+                                   f'    because the max difference of {self.BOTTLENECK_LIST[produce_type]} time \n' \
+                                   f'    has reached {round(max_ratio * mean_total_time / 1000, 3)}ms. \n'
+            else:
+                self.bottelneck += f'集群中的{self.BOTTLENECK_LIST_CN[produce_type]}有问题， \n' \
+                                   f'因为{self.BOTTLENECK_LIST_CN[produce_type]}时间的最大差距已经达到 \n' \
+                                   f'{round(max_ratio * mean_total_time / 1000, 3)}ms。 \n'
 
     def make_record(self):
         """

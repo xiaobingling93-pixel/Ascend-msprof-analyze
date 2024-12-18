@@ -23,6 +23,7 @@ from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.display.html.render import HTMLRender
 from profiler.advisor.display.html.priority_background_color import PriorityBackgroundColor
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 
 logger = logging.getLogger()
 
@@ -51,7 +52,7 @@ class OpDispatchAnalyzer(BaseAnalyzer):
         :return: result
         """
         if "mindspore" in self.profiling_type:
-            logger.info("The analyzer %s does not support MindSpore.", self.__class__.__name__)
+            logger.warning("The analyzer %s does not support MindSpore.", self.__class__.__name__)
             return self.result
         self.get_op_compile_info(self.dataset)
         self.make_record(self.result)
@@ -80,17 +81,24 @@ class OpDispatchAnalyzer(BaseAnalyzer):
         """
         if not self._op_compile or len(self._issues_record) <= 0:
             return
-        desc = f"Found {self._op_compile.total_count} operator compile issues."
-        suggestion = ("Please place the following code at the entrance of the python script to disable jit compile. " \
-                      "Code: `torch_npu.npu.set_compile_mode(jit_compile=False); "
-                      "torch_npu.npu.config.allow_internal_format = False`")
-        self.optimization_item.append(OptimizeItem("Operator dispatch", desc, [suggestion]))
+
+        language = AdditionalArgsManager().language
+        if language == "en":
+            from profiler.advisor.display.prompt.en.timeline_op_dispatch_prompt import TimelineOpDispatchPrompt
+        else:
+            from profiler.advisor.display.prompt.cn.timeline_op_dispatch_prompt import TimelineOpDispatchPrompt
+
+        self.optimization_item.append(OptimizeItem(
+            TimelineOpDispatchPrompt.PRIBLEM,
+            TimelineOpDispatchPrompt.DESCRIPTION.format(self._op_compile.total_count),
+            [TimelineOpDispatchPrompt.SUGGESTION]))
         for optimization in self.optimization_item:
             result.add(OptimizeRecord(optimization))
+
         record_title = ["Issues", "op name", "counts", "total time"]
-        result.add_detail('operator dispatch', headers=record_title)
+        result.add_detail(TimelineOpDispatchPrompt.PRIBLEM, headers=record_title)
         for op_info in self._issues_record:
-            result.add_detail('operator dispatch', detail=op_info)
+            result.add_detail(TimelineOpDispatchPrompt.PRIBLEM, detail=op_info)
 
     def make_render(self, html_render, **kwargs):
         issues = []

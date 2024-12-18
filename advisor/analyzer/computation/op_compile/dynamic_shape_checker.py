@@ -20,25 +20,35 @@ from profiler.advisor.analyzer.computation.operator_checker import OperatorCheck
 from profiler.advisor.config.config import Config
 from profiler.advisor.dataset.profiling.info_collection import OpInfo
 from profiler.advisor.result.item import OptimizeItem, StatisticsItem, OptimizeRecord
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
+from profiler.prof_common.file_manager import FileManager
 
 logger = logging.getLogger()
 
 
 class DynamicShapeChecker(OperatorChecker):
-    ENABLE_COMPILED_SUGGESTION = "1. Please try to set environment by execute `export HOST_CACHE_CAPACITY=20`.\n." \
-                                 "2. Please place the following code at the entrance of the python script to disable jit compile.\n " \
-                                 "Code: `torch_npu.npu.set_compile_mode(jit_compile=False);\n " \
-                                 "torch_npu.npu.config.allow_internal_format = False`.\n"
-    _SUGGESTION: List[str] = [ENABLE_COMPILED_SUGGESTION]
     _CHECKER = "dynamic shape operator"
-    _PROBLEM = "Dynamic shape operator"
-    _description = f"Found all operators are dynamic shape"
     _op_list: List[OpInfo] = []
     _tune_op_list: List[str] = []  # record op name to be tuned, and save to tune_ops_file.cfg
     _op_views: List = []
 
     def __init__(self, cann_version) -> None:
         super().__init__(cann_version=cann_version)
+        self._init_prompt_by_language()
+
+    def _init_prompt_by_language(self):
+        language = AdditionalArgsManager().language
+        if language == "en":
+            from profiler.advisor.display.prompt.en.dynamic_shape_prompt import DynamicShapePrompt
+        else:
+            from profiler.advisor.display.prompt.cn.dynamic_shape_prompt import DynamicShapePrompt
+
+        self.rank_id = DynamicShapePrompt.RANK_ID
+        self._PROBLEM = DynamicShapePrompt.PROBLEM
+        self._description = DynamicShapePrompt.DESCRIPTION
+        self.enable_compiled_suggestion = DynamicShapePrompt.ENABLE_COMPILED_SUGGESTION
+        self._SUGGESTION = [DynamicShapePrompt.ENABLE_COMPILED_SUGGESTION]
+        self.release_suggestion = DynamicShapePrompt.RELEASE_SUGGESTION
 
     def check(self, profiling_data) -> bool:
         return self.is_dynamic_shape(profiling_data)
@@ -47,9 +57,8 @@ class DynamicShapeChecker(OperatorChecker):
         """
         make record for what and how to optimize
         """
-
         if rank is not None:
-            self._PROBLEM = f"rank {rank} ".capitalize() + self._PROBLEM.lower()
+            self._PROBLEM = self.rank_id + self._PROBLEM.lower()
         optimization_item = OptimizeItem(
             self._PROBLEM,
             self._description,
@@ -69,9 +78,8 @@ class DynamicShapeChecker(OperatorChecker):
         release_suggestion_list = []
         for suggestion in optimization_item.suggestion:
             release_suggestion = copy.deepcopy(suggestion)
-            if release_suggestion == DynamicShapeChecker.ENABLE_COMPILED_SUGGESTION:
-                release_suggestion += \
-                    f"for details please refer to link : <a href={Config().enable_compiled_tune_url} target='_blank'>LINK</a>"
+            if release_suggestion == self.enable_compiled_suggestion:
+                release_suggestion += self.release_suggestion.format(Config().enable_compiled_tune_url)
             release_suggestion_list.append(release_suggestion.replace('\n', '<br>'))
         format_result = {"record": record.__dict__, "suggestion": '<br> '.join(release_suggestion_list)}
         return format_result

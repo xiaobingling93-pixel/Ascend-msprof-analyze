@@ -17,6 +17,7 @@ import os
 from typing import Dict, List
 from collections import defaultdict
 from profiler.advisor.dataset.cluster.cluster_dataset import ClusterCommunicationDataset
+from profiler.advisor.display.prompt.base_prompt import BasePrompt
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.prof_common.additional_args_manager import AdditionalArgsManager
@@ -100,11 +101,10 @@ class CommunicationRetransmissionChecker:
         """
         make record for what and how to optimize
         """
-        optimization_item = OptimizeItem("Communication retransmission analysis", self.desc, self.suggestions)
+        optimization_item = OptimizeItem(self.problem, self.desc, self.suggestions)
         result.add(OptimizeRecord(optimization_item))
 
-        sub_table_name = \
-            "Comm Retransmission Analysis" if not self.stage else f"Stage-{self.stage}: Comm Retransmission Analysis"
+        sub_table_name = BasePrompt.get_sub_table_name(self.problem, self.stage)
         result.add_detail(sub_table_name, headers=self.headers)
 
         for row in self.abnormal_rdma_list:
@@ -130,7 +130,8 @@ class CommunicationRetransmissionChecker:
         )
 
         syncbn_rule = FileManager.read_yaml_file(syncbn_rule_path)
-        self.desc = syncbn_rule.get("problem")
+        self.problem = syncbn_rule.get("problem")
+        self.desc = syncbn_rule.get("description")
         self.min_retransmission_time = syncbn_rule.get("min_retransmission_time")
 
         self.solutions = syncbn_rule.get("solutions")

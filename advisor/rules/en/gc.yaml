@@ -1,3 +1,4 @@
+problem: "GC Analysis"
 gc_problem_with_count: "Abnormal garbage collection (GC) event is detected for {gc_count} times, and the total time is {gc_total_time} ms\n.
 The GC operation is time-consuming and blocks the entire process.  As a result, some steps in the model training process take a longer time than other steps."
 gc_threshold: 1000 #us

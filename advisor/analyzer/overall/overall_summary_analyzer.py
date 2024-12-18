@@ -21,41 +21,10 @@ from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.advisor.result.result import OptimizeResult
 from profiler.compare_tools.compare_interface.comparison_interface import ComparisonInterface
 from profiler.prof_common.constant import Constant
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
+
 
 class OverallSummaryAnalyzer(BaseAnalyzer):
-    OVERALL_SUMMARY_ANALYZER = "overall summary"
-    advice_map = {
-        "Computing Time": "if you want more detailed advice please go to mstt_advisor_*.html",
-        "Uncovered Communication Time": "if you want more detailed advice please go to mstt_advisor_*.html",
-        "Free Time": "if you want more detailed advice please go to mstt_advisor_*.html"
-    }
-    time_name_map = {
-        "Computing Time": "computing",
-        "Uncovered Communication Time": "communication",
-        "Free Time": "free",
-        'Cube Time(Num)': 'Cube Time',
-        'Vector Time(Num)': 'Vector Time',
-        'Flash Attention Time(Forward)(Num)': 'Flash Attention Time(Forward)',
-        'Flash Attention Time(Backward)(Num)': 'Flash Attention Time(Backward)',
-        'Other Time': "Other Computing Time",
-        'SDMA Time(Num)': 'SDMA Time'
-    }
-    performance_time_dict = {
-        "Computing Time": "computing_time_ms",
-        "    -- Flash Attention": "fa_time_ms",
-        "    -- Conv": "conv_time_ms",
-        "    -- Matmul": "matmul_time_ms",
-        "    -- Vector": "vector_time_ms",
-        "    -- SDMA(Tensor Move)": "tensor_move_time_ms",
-        "    -- Other Cube": "other_cube_time_ms",
-        "Uncovered Communication Time": "uncovered_communication_time_ms",
-        "    -- Wait": "wait_time_ms",
-        "    -- Transmit": "transmit_time_ms",
-        "Free Time": "free_time_ms",
-        "    -- SDMA": "sdma_time_ms",
-        "    -- Free": "free_ms",
-        "E2E Time": "e2e_time_ms"
-    }
 
     def __init__(self, collection_path: str, n_processes: int = 1, **kwargs):
         profile_path = get_profile_path(collection_path)
@@ -73,6 +42,20 @@ class OverallSummaryAnalyzer(BaseAnalyzer):
         self.bottleneck_str = ""
         self.over_summary_analysis = {}
 
+        self._init_prompt_by_language()
+
+    def _init_prompt_by_language(self):
+        language = AdditionalArgsManager().language
+        if language == "en":
+            from profiler.advisor.display.prompt.en.overall_summary_analyzer_prompt import OverallSummaryAnalyzePrompt
+        else:
+            from profiler.advisor.display.prompt.cn.overall_summary_analyzer_prompt import OverallSummaryAnalyzePrompt
+
+        self.over_summary_analyzer = OverallSummaryAnalyzePrompt.OVERALL_SUMMARY_ANALYZER
+        self.advice_map = OverallSummaryAnalyzePrompt.PERFORMANCE_TIME_DICT
+        self.time_name_map = OverallSummaryAnalyzePrompt.TIME_NAME_MAP
+        self.performance_time_dict = OverallSummaryAnalyzePrompt.PERFORMANCE_TIME_DICT
+
     @staticmethod
     def calculate_ratio(dividend, divisor):
         if not divisor:
@@ -81,11 +64,19 @@ class OverallSummaryAnalyzer(BaseAnalyzer):
 
     @staticmethod
     def get_time_category_dict(overall_dict: dict):
-        time_category_dict = {
-            "Computing Time": round(overall_dict.get('computing_time_ms', 0.0), 3),
-            "Uncovered Communication Time": round(overall_dict.get('uncovered_communication_time_ms', 0.0), 3),
-            "Free Time": round(overall_dict.get('free_time_ms', 0.0), 3)
-        }
+        language = AdditionalArgsManager().language
+        if language == "en":
+            time_category_dict = {
+                "Computing Time": round(overall_dict.get('computing_time_ms', 0.0), 3),
+                "Uncovered Communication Time": round(overall_dict.get('uncovered_communication_time_ms', 0.0), 3),
+                "Free Time": round(overall_dict.get('free_time_ms', 0.0), 3)
+            }
+        else:
+            time_category_dict = {
+                "计算时长": round(overall_dict.get('computing_time_ms', 0.0), 3),
+                "未被掩盖的通信时长": round(overall_dict.get('uncovered_communication_time_ms', 0.0), 3),
+                "空闲时长": round(overall_dict.get('free_time_ms', 0.0), 3)
+            }
         return time_category_dict
 
     def path_check(self):
@@ -111,14 +102,25 @@ class OverallSummaryAnalyzer(BaseAnalyzer):
         if not overall_data:
             return
         e2e_time = round(sum([data for data in overall_data.values()]), 3)
-        overall_bottleneck = f"The Model E2E Time is {e2e_time}ms.\n"
+
+        language = AdditionalArgsManager().language
+        if language == "en":
+            overall_bottleneck = f"The Model E2E Time is {e2e_time}ms.\n"
+        else:
+            overall_bottleneck = f"模型E2E的时间是{e2e_time}ms。\n"
         comparison_bottleneck = ""
         for time_type, time_value in overall_data.items():
             # add overall bottleneck
-            overall_bottleneck += f"    -- {time_type} is {time_value}ms\n"
+            if language == "en":
+                overall_bottleneck += f"    -- {time_type} is {time_value}ms\n"
+            else:
+                overall_bottleneck += f"    -- {time_type}是{time_value}ms\n"
             if time_type == "Free Time" and self._is_minimal_profiling and self.calculate_ratio(time_value,
                                                                                                 e2e_time) > 0.1:
-                overall_bottleneck += "percentage of free time exceed the threshold 10%."
+                if language == "en":
+                    overall_bottleneck += "percentage of free time exceed the threshold 10%."
+                else:
+                    overall_bottleneck += "空闲时间的百分比超过了阈值的10%。"
             if not self._has_benchmark_profiling:
                 continue
             # add comparison bottleneck
@@ -127,7 +129,10 @@ class OverallSummaryAnalyzer(BaseAnalyzer):
             ).get(time_type)
             if time_value > base_duration:
                 ratio = "{:.2%}".format(self.calculate_ratio(time_value - base_duration, base_duration))
-                comparison_bottleneck += f"{time_type} exceeds the benchmark by {ratio}\n"
+                if language == "en":
+                    comparison_bottleneck += f"{time_type} exceeds the benchmark by {ratio}\n"
+                else:
+                    comparison_bottleneck += f"{time_type}超过了基线{ratio}。\n"
         self.cur_bottleneck["overall_data"] = overall_bottleneck
         if comparison_bottleneck:
             self.cur_bottleneck["comparison_result"] = comparison_bottleneck
@@ -202,18 +207,18 @@ class OverallSummaryAnalyzer(BaseAnalyzer):
         if not self.bottleneck_str and not self.cur_advices:
             return
         optimization_item = OptimizeItem(
-            OverallSummaryAnalyzer.OVERALL_SUMMARY_ANALYZER,
+            self.over_summary_analyzer,
             self.bottleneck_str,
             self.cur_advices
         )
         self.result.add(OptimizeRecord(optimization_item))
 
         self.result.add_detail(
-            OverallSummaryAnalyzer.OVERALL_SUMMARY_ANALYZER,
+            self.over_summary_analyzer,
             headers=self.over_summary_analysis["headers"]
         )
         for data in self.over_summary_analysis["data"]:
-            self.result.add_detail(OverallSummaryAnalyzer.OVERALL_SUMMARY_ANALYZER, detail=data)
+            self.result.add_detail(self.over_summary_analyzer, detail=data)
 
     def make_render(self):
         if not self.bottleneck_str and not self.cur_advices:
@@ -226,7 +231,7 @@ class OverallSummaryAnalyzer(BaseAnalyzer):
             "details": [self.over_summary_analysis]
         }
         self.html_render.render_template(key="overall",
-                                         title=OverallSummaryAnalyzer.OVERALL_SUMMARY_ANALYZER,
+                                         title="Overall Summary",
                                          template_dir="templates",
                                          template_name="cluster_analysis.html",
                                          cann_version=self.cann_version,

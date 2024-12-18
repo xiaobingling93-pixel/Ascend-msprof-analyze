@@ -1,7 +1,7 @@
 ASCEND_GLOBAL_LOG_LEVEL:
   desc: "日志级别: 0-调试，1-信息，2-警告，3-错误。\n
          默认为错误级别。"
-  suggest: "调试或信息级别可能会导致培训性能下降，\n
+  suggest: "调试或信息级别可能会导致训练性能下降，\n
            建议通过执行命令'export ASCEND_GLOBAL_LOGLEVEL=3来设置错误级别。"
 HCCL_RDAM_TC:
   desc: "配置网络端口发送的RoCE数据包的DSCP值。\n
@@ -18,7 +18,7 @@ HCCL_RDMA_SL:
   suggest_html: "请参考 <a href=https://support.huawei.com/enterprise/zh/doc/EDOC1100371278/5eeeed85?idPath=23710424 target='_blank'>链接</a>"
 ACLNN_CACHE_LIMIT:
   desc: "缓存的aclnn算子的数量。"
-  suggest: "在aclnn和host耗时过长时，可以设置一个较大的数字，例如'export ACLNN_CACHE_LIMIT=100000'。"
+  suggest: "在alcnn和host耗时过长时，可以设置一个较大的数字，例如'export ACLNN_CACHE_LIMIT=100000'。"
 HOST_CACHE_CAPACITY:
   desc: "启用动态shape缓存。\n
         默认值为0，表示数据缓存已禁用。\n

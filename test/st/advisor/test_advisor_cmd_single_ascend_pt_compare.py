@@ -26,7 +26,7 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
     def setup_class(self):
         PathManager.make_dir_safety(self.ALL_OUTPUT_PATH)
         cmd_all = ["msprof-analyze", "advisor", "all", "-d", self.BASE_PROFILING_PATH, "-bp",
-                   self.COMPARISON_PROFILING_PATH, "-o", self.ALL_OUTPUT_PATH, "--force"]
+                   self.COMPARISON_PROFILING_PATH, "-o", self.ALL_OUTPUT_PATH, "-l", "en", "--force"]
         if execute_cmd(cmd_all) != self.COMMAND_SUCCESS or not os.path.exists(self.ALL_OUTPUT_PATH):
             self.assertTrue(False, msg="advisor [all] [bp] task failed.")
         self.RESULT_HTML, self.RESULT_EXCEL = get_files(self.OUTPUT_PATH)
