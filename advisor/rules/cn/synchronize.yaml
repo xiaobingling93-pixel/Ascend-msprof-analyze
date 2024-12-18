@@ -1,0 +1,5 @@
+problem: "SynchronizeStream会降低训练效率。发现{synchronize_num}个SynchronizeStreams和{node_launch_num}个NodeLaunch，SynchronizeStream和NodeLaunch的共现率为{co_occur_ratio}。"
+min_co_occurrence_ratio: 0.5
+solutions:
+  - 关闭算子同步特性:
+      desc: "请检查您的环境变量'ASCEND_LAUNCH_BLOCKING'，如果ASCEND_LAUNCH_BLOCKING=1，请执行'unset ASCEND_LAUNCH_BLOCKING'，再开始训练任务。"

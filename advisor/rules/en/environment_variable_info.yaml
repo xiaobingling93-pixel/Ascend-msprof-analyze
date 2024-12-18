@@ -17,7 +17,7 @@ HCCL_RDMA_SL:
   suggest_html: "Please refer to <a href=https://support.huawei.com/enterprise/zh/doc/EDOC1100371278/5eeeed85?idPath=23710424 target='_blank'>LINK</a>"
 ACLNN_CACHE_LIMIT:
   desc: "Number of cached aclnn operators."
-  suggest: "Setting a large number when alcnn and host bound, such as 'export ACLNN_CACHE_LIMIT=100000'"
+  suggest: "Setting a large number when aclnn and host bound, such as 'export ACLNN_CACHE_LIMIT=100000'"
 HOST_CACHE_CAPACITY:
   desc: "Enable dynamic shape cache.\n
          The default value is 0, indicating that the data cache is disabled.\n

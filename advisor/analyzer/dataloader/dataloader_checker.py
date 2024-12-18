@@ -20,6 +20,7 @@ import yaml
 from profiler.advisor.dataset.timeline_event_dataset import ScheduleAnalysisDataset
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 from profiler.prof_common.file_manager import FileManager
 
 logger = logging.getLogger()
@@ -80,9 +81,11 @@ class DataloaderChecker:
                                     rank=kwargs.get("rank"))
 
     def _init_rule(self):
+        language = AdditionalArgsManager().language
         dataloader_rule_path = os.path.join(
             os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))),
             "rules",
+            language,
             "dataloader.yaml"
         )
         dataloader_rule = FileManager.read_yaml_file(dataloader_rule_path)

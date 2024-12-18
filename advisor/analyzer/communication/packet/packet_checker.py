@@ -17,6 +17,7 @@ import os
 from profiler.advisor.dataset.communication.communication_dataset import CommunicationDataset
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 from profiler.prof_common.file_manager import FileManager
 from profiler.advisor.utils.utils import convert_to_float
 
@@ -128,9 +129,11 @@ class PacketChecker:
                                            priority_background_color=priority)
 
     def _init_rule(self):
+        language = AdditionalArgsManager().language
         syncbn_rule_path = os.path.join(
             os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))),
             "rules",
+            language,
             "packet.yaml"
         )
 

@@ -16,6 +16,7 @@ import logging
 import os
 
 from profiler.advisor.analyzer.schedule.timeline_base_checker import TimelineBaseChecker
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 from profiler.prof_common.constant import Constant
 from profiler.advisor.config.config import Config
 from profiler.advisor.dataset.timeline_event_dataset import ScheduleAnalysisDataset
@@ -112,9 +113,11 @@ class SynchronizeStreamChecker(TimelineBaseChecker):
         return PriorityBackgroundColor.high
 
     def _init_rule(self):
+        language = AdditionalArgsManager().language
         synchronize_rule_path = os.path.join(
             os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))),
             "rules",
+            language,
             "synchronize.yaml"
         )
 

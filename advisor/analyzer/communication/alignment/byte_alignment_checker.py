@@ -20,6 +20,7 @@ from profiler.advisor.dataset.profiling.info_collection import HcclTask
 from profiler.advisor.display.html.priority_background_color import PriorityBackgroundColor
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 from profiler.prof_common.file_manager import FileManager
 from profiler.advisor.utils.utils import safe_division
 from profiler.prof_common.constant import Constant
@@ -125,9 +126,11 @@ class ByteAlignmentChecker:
         return [size, duration, abnormal_dur, flag]
 
     def _init_rule(self):
+        language = AdditionalArgsManager().language
         rule_path = os.path.join(
             os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))),
             "rules",
+            language,
             "byte_alignment.yaml"
         )
 

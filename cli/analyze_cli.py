@@ -46,6 +46,12 @@ def analyze_cli(**kwargs):
 @click.option("--force",
               is_flag=True,
               help="Indicates whether to skip file size verification and owner verification")
+@click.option("-l",
+              "--language",
+              type=str,
+              required=False,
+              default="en",
+              help="Language of the profiling advisor.")
 @debug_option
 def analyze_all(**kwargs) -> None:
     try:
@@ -79,6 +85,12 @@ def analyze_all(**kwargs) -> None:
 @click.option("--force",
               is_flag=True,
               help="Indicates whether to skip file size verification and owner verification")
+@click.option("-l",
+              "--language",
+              type=str,
+              required=False,
+              default="en",
+              help="Language of the profiling advisor.")
 @debug_option
 def analyze_schedule(**kwargs) -> None:
     try:
@@ -112,6 +124,12 @@ def analyze_schedule(**kwargs) -> None:
 @click.option("--force",
               is_flag=True,
               help="Indicates whether to skip file size verification and owner verification")
+@click.option("-l",
+              "--language",
+              type=str,
+              required=False,
+              default="en",
+              help="Language of the profiling advisor.")
 @debug_option
 def analyze_computation(**kwargs) -> None:
     try:
