@@ -14,6 +14,7 @@
 # limitations under the License.
 import os
 import logging
+from collections import OrderedDict
 from datetime import datetime
 
 from compare_backend.comparator.communication_comparator import CommunicationComparator
@@ -36,7 +37,6 @@ from compare_backend.compare_bean.kernel_compare_bean import KernelCompareBean
 from compare_backend.compare_bean.overall_metrics_bean import OverallMetricsBean
 from compare_backend.data_prepare.module_data_prepare import ModuleDataPrepare
 from compare_backend.data_prepare.operator_data_prepare import OperatorDataPrepare
-from compare_backend.generator.base_generator import BaseGenerator
 
 from profiler.compare_tools.compare_backend.comparator.kernel_type_comparator import KernelTypeComparator
 from profiler.compare_tools.compare_backend.compare_bean.kernel_type_compare_bean import KernelTypeCompareBean
@@ -46,11 +46,17 @@ from compare_backend.view.excel_view import ExcelView
 from compare_backend.data_prepare.sequence_pre_matching import SequencePreMatching
 
 
-class DetailPerformanceGenerator(BaseGenerator):
+class DetailPerformanceGenerator:
     def __init__(self, profiling_data_dict: dict, args: any):
-        super().__init__(profiling_data_dict, args)
+        self._profiling_data_dict = profiling_data_dict
+        self._args = args
+        self._result_data = OrderedDict()
         self._base_step_id = int(args.base_step) if args.base_step else Constant.VOID_STEP
         self._comparison_step_id = int(args.comparison_step) if args.comparison_step else Constant.VOID_STEP
+
+    def run(self):
+        self.compare()
+        self.generate_view()
 
     def compare(self):
         enable_compare = [
