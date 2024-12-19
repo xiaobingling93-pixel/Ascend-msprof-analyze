@@ -144,6 +144,9 @@ class PathManager:
         Exception Description:
             when invalid data throw exception
         """
+        if not os.path.exists(path):
+            msg = f"The path does not exist: {path}"
+            raise FileNotFoundError(msg)
         if os.path.islink(path):
             msg = f"Invalid path which is a soft link."
             raise RuntimeError(msg)

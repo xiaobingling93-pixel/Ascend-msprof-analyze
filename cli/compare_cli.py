@@ -22,6 +22,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from profiler.prof_common.constant import Constant
 from profiler.prof_common.analyze_dict import AnalyzeDict
 from profiler.compare_tools.compare_backend.comparison_generator import ComparisonGenerator
+from profiler.advisor.utils.utils import debug_option
 
 
 @click.command(context_settings=Constant.CONTEXT_SETTINGS, name="compare",
@@ -50,6 +51,7 @@ from profiler.compare_tools.compare_backend.comparison_generator import Comparis
 @click.option('--force', is_flag=True, help="Indicates whether to skip file size verification and "
                                             "owner verification")
 @click.option('--use_kernel_type', is_flag=True, help="Indicates whether kernel compare use op_statistic.csv")
+@debug_option
 def compare_cli(**kwargs) -> None:
     args = AnalyzeDict(kwargs)
     ComparisonGenerator(args).run()

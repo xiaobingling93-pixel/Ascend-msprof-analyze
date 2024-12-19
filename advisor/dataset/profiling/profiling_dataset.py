@@ -65,7 +65,7 @@ class ProfilingDataset(Dataset):
                 is_success = data_object.parse_data()
                 if is_success:
                     setattr(self, item, data_object)
-                else:
+                elif current_path:
                     logger.info("Skip parse %s with file pattern %s from local path %s", 
                                 self.current_version_pattern.get('class_attr').get(item),
                                 file_pattern_list, current_path
