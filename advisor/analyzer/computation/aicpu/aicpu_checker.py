@@ -40,10 +40,10 @@ class AicpuChecker(OperatorChecker):
         super(AicpuChecker, self).__init__(cann_version=cann_version)
         self.aicpu_rules: Dict = {}
         self.aicpu_checker: Dict = {}
-        self.load_aicpu_rules()
         self.total_task_duration = 0.0
         self.aicpu_task_duration = 0.0
         self.double_suggestion = None
+        self.load_aicpu_rules()
 
     def load_aicpu_rules(self):
         language = AdditionalArgsManager().language

@@ -37,12 +37,12 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
     def test_all_problems(self):
         category = [
             "Kernel compare of Target and Benchmark",
-            "byte alignment analysis",
-            "bandwidth contention analysis",
+            "Byte Alignment Analysis",
+            "Bandwidth Contention Analysis",
             "AICPU operator",
-            "Dynamic shape operator",
-            "Affinity apis",
-            "Operator dispatch"
+            "Dynamic Shape Operator",
+            "Affinity Apis",
+            "Operator Dispatch"
         ]
 
         # True presents the attr is nan
@@ -270,7 +270,7 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
         ignore_api = ["torch_npu.optim.NpuFusedAdamW", "torch_npu.npu_confusion_transpose"]
 
         try:
-            df = pd.read_excel(self.RESULT_EXCEL.get("all", None), sheet_name='Affinity apis', header=0)
+            df = pd.read_excel(self.RESULT_EXCEL.get("all", None), sheet_name='Affinity Apis', header=0)
         except FileNotFoundError:
             logging.error("File %s not found.", str(self.RESULT_EXCEL.get("all", None)))
             return
@@ -300,7 +300,7 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
         t1_elapsed_time = ['58486.704798215804']
 
         try:
-            df = pd.read_excel(self.RESULT_EXCEL.get("all", None), sheet_name='operator dispatch', header=0)
+            df = pd.read_excel(self.RESULT_EXCEL.get("all", None), sheet_name='Operator Dispatch', header=0)
         except FileNotFoundError:
             logging.error("File %s not found.", str(self.RESULT_EXCEL.get("all", None)))
             return

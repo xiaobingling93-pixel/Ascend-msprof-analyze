@@ -16,7 +16,6 @@
 class OpDispatchPrompt(object):
     PROBLEM = "Operator Dispatch"
     DESCRIPTION = "Found {} operator compile issues."
-    SUGGESTION = "Please place the following code at the entrance of the python script to disable jit compile. \n" \
-                 "Code: `torch_npu.npu.set_compile_mode(jit_compile=False) \n" \
-                 "torch_npu.npu.config.allow_internal_format = False` \n"
-
+    SUGGESTION = "Please place the following code at the entrance of the python script to disable jit compile. " \
+                 "Code: `torch_npu.npu.set_compile_mode(jit_compile=False); " \
+                 "torch_npu.npu.config.allow_internal_format = False`"

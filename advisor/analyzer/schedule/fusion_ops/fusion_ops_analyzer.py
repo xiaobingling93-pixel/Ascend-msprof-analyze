@@ -104,9 +104,7 @@ class TimelineFusionOpsAnalyzer(BaseAnalyzer):
         suggestion = prompt_class.SUGGESTION
         if self.empty_stacks:
             desc += prompt_class.EMPTY_STACK_DESCRIPTION
-            suggestion = prompt_class.EMPTY_STACKS_SUGGESTION.format(
-                timeline_profiling_doc_url=Config().timeline_with_stack_doc_url
-            )
+            suggestion = prompt_class.EMPTY_STACKS_SUGGESTION.format(Config().timeline_with_stack_doc_url)
 
         optimization_item = OptimizeItem(prompt_class.PROBLEM, desc, [suggestion])
 

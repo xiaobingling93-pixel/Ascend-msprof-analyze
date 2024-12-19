@@ -49,5 +49,7 @@ class AdditionalArgsManager:
 
     def init(self, args: Dict):
         self._args = args
-        self._force = self._args.get("force", False)
-        self._language = self._args.get("language", "cn")
+        if self._args.get("force", None):
+            self._force = self._args.get("force", False)
+        if self._args.get("language", None):
+            self._language = self._args.get("language", "cn")

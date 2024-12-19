@@ -66,13 +66,12 @@ class OperatorChecker(VersionControl):
             return 0
         return float(value)
 
-    @classmethod
-    def get_name(cls):
+    def get_name(self):
         """
         get name of checker
         :return: checker name
         """
-        return cls._PROBLEM
+        return self._PROBLEM
 
     def check(self, profiling_data: ProfilingDataset) -> bool:
         """

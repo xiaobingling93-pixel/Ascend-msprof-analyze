@@ -20,7 +20,7 @@ def split_camel_case(word):
     result = []
     current_word = []
     for char in word:
-        if char.isupper():
+        if char.isupper() and char != "I":
             if current_word:
                 result.append(current_word)
             current_word = char
