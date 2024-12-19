@@ -165,6 +165,6 @@ class TestRdmaAdvice(unittest.TestCase):
         dimension = Interface.COMMUNICATION
         scope = SupportedScopes.COMMUNICATION_RETRANSMISSION_DETECTION
         result = interface.get_result(dimension, scope, render_html=1, output_dict=False, profiling_path=self.TMP_DIR)
-        self.assertEqual(2, len(result.data.get("Comm Retransmission Analysis", [])))
-        self.assertEqual(2, len(result.data.get("Comm Retransmission Analysis", []).get('data')))
+        self.assertEqual(2, len(result.data.get("通信重传分析", [])))
+        self.assertEqual(2, len(result.data.get("通信重传分析", []).get('data')))
         result.clear()

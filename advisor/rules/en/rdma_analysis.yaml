@@ -1,4 +1,5 @@
-problem: "RDMA communication retransmission occurs. A single retransmission takes more than 4s. Retransmission problems 
+problem: "Communication retransmission analysis"
+description: "RDMA communication retransmission occurs. A single retransmission takes more than 4s. Retransmission problems 
 are detected in {group_count} communication domains. \n
 Advised to perform the following suggestions"
 min_retransmission_time: 4000 #ms

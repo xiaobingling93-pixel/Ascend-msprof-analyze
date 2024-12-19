@@ -284,10 +284,6 @@ class Constant(object):
         TIMELINE_ACL_TO_NPU_NO_STACK_CODE: "Incoming flow is 'acl_to_npu', without call stacks in profiling."
     }
     AFFINITY_TRAINING_API = "Affinity training api"
-    TIMELINE_EMPTY_STACKS_PROMPT = "These APIs have no code stack. If parameter 'with_stack=False' while profiling, " \
-                                   "please refer to {timeline_profiling_doc_url} to set 'with_stack=True'. " \
-                                   "Otherwise, ignore following affinity APIs due to backward broadcast lack of stack."
-
     CLUSTER_ANALYSIS = "Cluster analysis"
     SLOW_RANK_TIME_RATIO_THRESHOLD = 0.05
 

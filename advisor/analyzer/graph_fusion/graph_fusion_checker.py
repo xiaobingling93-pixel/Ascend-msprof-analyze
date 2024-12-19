@@ -17,12 +17,14 @@ from typing import List
 
 from tqdm import tqdm
 
+from profiler.advisor.display.prompt.base_prompt import BasePrompt
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord, StatisticsItem
 from profiler.advisor.common.graph.graph import Graph
 from profiler.advisor.common.graph.graph_parser import QueryGraphParser
 from profiler.advisor.dataset.graph_dataset import GraphDataset
 from profiler.advisor.common.graph.graph_match import find_isomorphisms
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 
 logger = logging.getLogger()
 
@@ -180,10 +182,11 @@ class GraphFusionRules:
         if not self.candidates:
             return
 
+        prompt_class = BasePrompt.get_prompt_class(self.__class__.__name__)
         optimization_item = OptimizeItem(
-            "fusion issue",
-            f"Found {len(self.candidates)} fusion issues",
-            ["Check fusion issues detail in mstt_advisor*.html"]
+            prompt_class.PROBLEM,
+            prompt_class.DESCRIPTION.format(len(self.candidates)),
+            [prompt_class.SUGGESTION]
         )
         total_time = 0.0
         for candidate in self.task_duration_list:

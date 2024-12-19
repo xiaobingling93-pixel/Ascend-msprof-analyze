@@ -16,6 +16,8 @@ import logging
 from typing import List
 
 from profiler.advisor.analyzer.computation.operator_checker import OperatorChecker
+from profiler.advisor.display.prompt.base_prompt import BasePrompt
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 from profiler.prof_common.constant import Constant
 from profiler.advisor.config.config import Config
 from profiler.advisor.dataset.profiling.profiling_dataset import ProfilingDataset
@@ -27,16 +29,18 @@ logger = logging.getLogger()
 class OperatorBoundChecker(OperatorChecker):
     _MIN_TASK_DURATION = 20  # min task duration 20us
     _CHECKER = "operator no bound"
-    _PROBLEM = "operator no bound"
     _SUGGESTION: List[str] = []
-    _description = (
-            f"There is no mte, cube, vector, scalar ratio is more than {to_percent(Config().operator_bound_ratio)};\n" +
-            f"Top task duration operators need to be tuned are as follows: \n")
     _ITEMS = [
         "op_name", "op_type", "task_type", "task_duration", "vec_ratio", "mac_ratio", "scalar_ratio", "mte1_ratio",
         "mte2_ratio", "mte3_ratio", "block_dim", "input_shapes", "input_data_types", "input_formats", "output_shapes",
         "output_data_types", "output_formats"
     ]
+
+    def __init__(self, cann_version) -> None:
+        super().__init__(cann_version=cann_version)
+        self.prompt_class = BasePrompt.get_prompt_class(self.__class__.__name__)
+        self._PROBLEM = self.prompt_class.PROBLEM
+        self._description = self.prompt_class.DESCRIPTION.format(to_percent(Config().operator_bound_ratio))
 
     def pre_check(self, profiling_data) -> bool:
         return not self.is_dynamic_shape(profiling_data)

@@ -142,6 +142,6 @@ class TestFrequencyAdvice(unittest.TestCase):
         dimension = "computation"
         scope = SupportedScopes.FREQ_ANALYSIS
         result = interface.get_result(dimension, scope, render_html=1, output_dict=False, profiling_path=self.TMP_DIR)
-        self.assertEqual(2, len(result.data.get("AI Core Frequency", dict()).get("data", [])))
+        self.assertEqual(2, len(result.data.get("AIcore频率", dict()).get("data", [])))
         result.clear()
         ComputationAnalysisDataset.reset_all_instances()

@@ -36,7 +36,7 @@ from profiler.advisor.utils.utils import singleton
 class AdditionalArgsManager:
     def __init__(self):
         self._args = None
-        self._language = "en"
+        self._language = "cn"
         self._force = False
 
     @property
@@ -49,5 +49,7 @@ class AdditionalArgsManager:
 
     def init(self, args: Dict):
         self._args = args
-        self._force = self._args.get("force", False)
-        self._language = self._args.get("language", "en")
+        if self._args.get("force", None):
+            self._force = self._args.get("force", False)
+        if self._args.get("language", None):
+            self._language = self._args.get("language", "cn")

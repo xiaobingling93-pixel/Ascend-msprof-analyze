@@ -20,6 +20,7 @@ import re
 from tqdm import tqdm
 
 from profiler.advisor.analyzer.base_analyzer import BaseAnalyzer
+from profiler.advisor.display.prompt.base_prompt import BasePrompt
 from profiler.prof_common.constant import Constant
 from profiler.advisor.common.analyzer_scopes import SupportedScopes
 from profiler.advisor.common.timeline.event import TimelineEvent
@@ -29,6 +30,7 @@ from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.advisor.utils.utils import format_timeline_result
 from profiler.advisor.common.timeline.fusion_ops_db import init_timeline_ops_db
 from profiler.advisor.display.html.priority_background_color import PriorityBackgroundColor
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 
 logger = logging.getLogger()
 
@@ -94,36 +96,30 @@ class TimelineFusionOpsAnalyzer(BaseAnalyzer):
         """
         if not self.matched_op_stacks:
             return
+        
+        prompt_class = BasePrompt.get_prompt_class(self.__class__.__name__)
 
-        desc = f"Found {len(format_timeline_result(self.matched_op_stacks))} apis to be replaced" \
-               f" based on the runtime env cann-{self.cann_version} and torch-{self.profiling_version}"
-        suggestion = "Please replace training api according to sub table 'Affinity training api'"
+        desc = prompt_class.DESCRIPTION.format(self.cann_version, self.profiling_version,
+                                                  len(format_timeline_result(self.matched_op_stacks)))
+        suggestion = prompt_class.SUGGESTION
         if self.empty_stacks:
-            desc += ", but with no stack"
-            suggestion = Constant.TIMELINE_EMPTY_STACKS_PROMPT.format(
-                timeline_profiling_doc_url=Config().timeline_with_stack_doc_url
-            )
+            desc += prompt_class.EMPTY_STACK_DESCRIPTION
+            suggestion = prompt_class.EMPTY_STACKS_SUGGESTION.format(Config().timeline_with_stack_doc_url)
 
-        sheet_name = "Affinity apis"
-        optimization_item = OptimizeItem(
-            sheet_name,
-            desc,
-            [suggestion]
-        )
+        optimization_item = OptimizeItem(prompt_class.PROBLEM, desc, [suggestion])
 
         self.result.add(OptimizeRecord(optimization_item))
-
         record_title = ["Affinity API", "Code stacks", "Stack called counts"]
-        self.result.add_detail(sheet_name, headers=record_title)
+        self.result.add_detail(prompt_class.PROBLEM, headers=record_title)
 
         for api_name, stacks_info in format_timeline_result(self.matched_op_stacks).items():
             if not stacks_info:
                 detail = [api_name, "null", "null"]
-                self.result.add_detail(sheet_name, detail=detail)
+                self.result.add_detail(prompt_class.PROBLEM, detail=detail)
             else:
                 for stack in stacks_info:
                     detail = [api_name, *stack]
-                    self.result.add_detail(sheet_name, detail=detail)
+                    self.result.add_detail(prompt_class.PROBLEM, detail=detail)
 
     def make_render(self, **kwargs):
         rank = kwargs.get("rank")

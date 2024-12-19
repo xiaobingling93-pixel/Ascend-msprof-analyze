@@ -48,9 +48,9 @@ def analyze_cli(**kwargs):
               help="Indicates whether to skip file size verification and owner verification")
 @click.option("-l",
               "--language",
-              type=str,
+              type=click.Choice(["cn", "en"]),
               required=False,
-              default="en",
+              default="cn",
               help="Language of the profiling advisor.")
 @debug_option
 def analyze_all(**kwargs) -> None:
@@ -87,9 +87,9 @@ def analyze_all(**kwargs) -> None:
               help="Indicates whether to skip file size verification and owner verification")
 @click.option("-l",
               "--language",
-              type=str,
+              type=click.Choice(["cn", "en"]),
               required=False,
-              default="en",
+              default="cn",
               help="Language of the profiling advisor.")
 @debug_option
 def analyze_schedule(**kwargs) -> None:
@@ -126,9 +126,9 @@ def analyze_schedule(**kwargs) -> None:
               help="Indicates whether to skip file size verification and owner verification")
 @click.option("-l",
               "--language",
-              type=str,
+              type=click.Choice(["cn", "en"]),
               required=False,
-              default="en",
+              default="cn",
               help="Language of the profiling advisor.")
 @debug_option
 def analyze_computation(**kwargs) -> None:

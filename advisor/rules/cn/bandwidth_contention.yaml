@@ -1,4 +1,5 @@
-problem: "在执行计算和通信任务时，SDMA带宽低于 {threshold}GB/s。通常，并行计算和通信可以提高模型的运行效率。并发计算和通信任务可能会影响通信带宽。"
+problem: "带宽分析"
+description: "在执行计算和通信任务时，SDMA带宽低于 {threshold}GB/s。通常，并行计算和通信可以提高模型的运行效率。并发计算和通信任务可能会影响通信带宽。"
 sdma_baseline: 18 #M
 threshold: 0.8
 top_num: 10

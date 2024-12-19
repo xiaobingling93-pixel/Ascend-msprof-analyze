@@ -1,4 +1,5 @@
-problem: "{count}个通信算子的数据大小未对齐，这会降低通信性能。"
+problem: "字节对齐分析"
+description: "{count}个通信算子的数据大小未对齐，这会降低通信性能。"
 min_size: 512 # byte
 top_num: 5
 solutions:

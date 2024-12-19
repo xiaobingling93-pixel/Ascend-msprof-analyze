@@ -16,9 +16,11 @@ import logging
 from typing import List
 
 from profiler.advisor.analyzer.computation.operator_checker import OperatorChecker
+from profiler.advisor.display.prompt.base_prompt import BasePrompt
 from profiler.prof_common.constant import Constant
 from profiler.advisor.config.config import Config
 from profiler.advisor.dataset.profiling.profiling_dataset import ProfilingDataset
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 
 logger = logging.getLogger()
 
@@ -26,14 +28,21 @@ logger = logging.getLogger()
 class BlockDimChecker(OperatorChecker):
     _SUGGESTION: List[str] = []
     _CHECKER = "block dim"
-    _PROBLEM = "block dim"
     _aicore_num = 0
     _aiv_num = 0
-    _description = "some operator does not make full use of {} ai core"
     _ITEMS = [
         "op_name", "op_type", "task_type", "task_duration", "income", "block_dim", "mix_block_dim", "input_shapes",
         "input_data_types", "input_formats", "output_shapes", "output_data_types", "output_formats"
     ]
+
+    def __init__(self, cann_version):
+        super(BlockDimChecker, self).__init__(cann_version=cann_version)
+        self.prompt_class = BasePrompt.get_prompt_class(self.__class__.__name__)
+
+        self._PROBLEM = self.prompt_class.PROBLEM
+        self._description = self.prompt_class.DESCRIPTION
+        self.aiv_num_desc = self.prompt_class.AIV_NUM_DESCRIPTION
+        self.top_duration_op_desc = self.prompt_class.TOP_DURATION_OP_DESCRIPTION
 
     def pre_check(self, profiling_data) -> bool:
         return not self.is_dynamic_shape(profiling_data)
@@ -82,11 +91,11 @@ class BlockDimChecker(OperatorChecker):
                 self._aiv_num = int(Config().get_config("aiv_num"))
             except ValueError as e:
                 logger.warning("get aiv_num failed, please check info.json： %s", e)
+
         self._description = self._description.format(self._aicore_num)
         if self._aiv_num:
-            self._description += f" or {self._aiv_num} ai vector core"
-        self._description += f";\n Top-{OperatorChecker._MAX_TUNE_OP_NUM} operator of " \
-                             "task duration are as follows:\n"
+            self._description += self.aiv_num_desc.format(self._aiv_num)
+        self._description += self.top_duration_op_desc.format(OperatorChecker._MAX_TUNE_OP_NUM)
         return True
 
     def _check_operator(self, op_info) -> bool:

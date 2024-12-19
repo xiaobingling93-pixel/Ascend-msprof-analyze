@@ -15,11 +15,13 @@
 import logging
 import os
 from profiler.advisor.dataset.communication.communication_dataset import CommunicationDataset
+from profiler.advisor.display.prompt.base_prompt import BasePrompt
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 from profiler.prof_common.file_manager import FileManager
 from profiler.advisor.utils.utils import convert_to_float
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 
 logger = logging.getLogger()
 
@@ -110,10 +112,11 @@ class PacketChecker:
         """
         make record for what and how to optimize
         """
-        optimization_item = OptimizeItem("Packet analysis", self.desc, self.suggestions)
+        optimization_item = OptimizeItem(self.problem, self.desc, self.suggestions)
         result.add(OptimizeRecord(optimization_item))
 
-        sub_table_name = "Packet Analysis" if not self.stage else f"Stage-{self.stage}: Packet Analysis"
+        sub_table_name = BasePrompt.get_sub_table_name(self.problem, self.stage)
+
         result.add_detail(sub_table_name, headers=self.headers)
         result.add_detail(sub_table_name, detail=self.small_packet_detail)
 
@@ -138,7 +141,8 @@ class PacketChecker:
         )
 
         syncbn_rule = FileManager.read_yaml_file(syncbn_rule_path)
-        self.desc = syncbn_rule.get("problem")
+        self.problem = syncbn_rule.get("problem")
+        self.desc = syncbn_rule.get("description")
         self.sdma_desc = syncbn_rule.get("sdma_problem")
         self.rdma_desc = syncbn_rule.get("rdma_problem")
         self.min_sdma_size = convert_to_float(syncbn_rule.get("min_sdma_size"))

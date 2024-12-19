@@ -15,10 +15,12 @@
 import logging
 
 from profiler.advisor.dataset.timeline_event_dataset import ComputationAnalysisDataset
+from profiler.advisor.display.prompt.base_prompt import BasePrompt
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.advisor.config.config import Config
 from profiler.advisor.utils.utils import convert_to_float
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 
 logger = logging.getLogger()
 
@@ -79,24 +81,24 @@ class AICoreFreqChecker:
         if not self.ai_core_freq_issues:
             return
 
-        self.desc = (f"{len(self.decrease_freq_ops)} operators are found during frequency reduction, and the reduction "
-                     f"ratio is larger than {self.DECREASE_FREQ_RATIO}.")
-        if self.rank:
-            self.desc = f"For rank {self.rank}, " + self.desc.lower()
-        self.suggestions = "Please check the temperature or max power of your machine."
-
     def make_record(self, result: OptimizeResult):
         """
         make record for what and how to optimize
         """
         if not self.ai_core_freq_issues:
             return self.ai_core_freq_issues
+        
+        prompt_class = BasePrompt.get_prompt_class(self.__class__.__name__)
 
-        sheet_name = "AI Core Frequency"
+        problem = prompt_class.PROBLEM
         if self.rank is not None:
-            sheet_name = f"rank {self.rank} AI Core Frequency".capitalize()
+            problem += prompt_class.RANK_ID.format(self.rank)
 
-        optimization_item = OptimizeItem(sheet_name, self.desc, [self.suggestions])
+        self.desc = prompt_class.DESCRIPTION.format(len(self.decrease_freq_ops), self.DECREASE_FREQ_RATIO)
+        if self.rank:
+            self.desc = prompt_class.RANK_DESCRIPTION.format(self.rank) + self.desc.lower()
+
+        optimization_item = OptimizeItem(problem, self.desc, [prompt_class.SUGGESTION])
         result.add(OptimizeRecord(optimization_item))
 
         self.headers = [
@@ -108,10 +110,10 @@ class AICoreFreqChecker:
             "Max frequency",
             "Min frequency",
         ]
-        result.add_detail(sheet_name, headers=self.headers)
+        result.add_detail(problem, headers=self.headers)
 
         for row in self.decrease_freq_ops:
-            result.add_detail(sheet_name, detail=row)
+            result.add_detail(problem, detail=row)
         return True
 
     def make_render(self, html_render, add_render_list=True, **kwargs):

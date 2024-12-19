@@ -17,6 +17,7 @@ import logging
 from textwrap import fill
 from typing import List
 
+from profiler.advisor.display.prompt.base_prompt import BasePrompt
 from profiler.prof_common.constant import Constant
 from profiler.advisor.common.enum_params_parser import EnumParamsParser
 from profiler.advisor.common.version_control import VersionControl
@@ -25,6 +26,7 @@ from profiler.advisor.dataset.profiling.info_collection import OpInfo
 from profiler.advisor.dataset.profiling.profiling_dataset import ProfilingDataset
 from profiler.advisor.result.item import OptimizeItem, StatisticsItem, OptimizeRecord
 from profiler.advisor.utils.utils import safe_division, convert_to_float
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 
 logger = logging.getLogger()
 
@@ -43,18 +45,17 @@ class OperatorChecker(VersionControl):
     _SUGGESTION: List[str] = []
     SKIP_CHECK_MSG = "Skip %s checker because of not containing %s"
     _tune_op_info_list: List[OpInfo] = []
-    PyTorch_OPERATOR_TUNE_SUGGESTION = f"Optimize operator by AOE, such as:\n" \
-                                       f"'aoe --job_type=2 --model_path=$user_dump_path " \
-                                       f"--tune_ops_file={Config().tune_ops_file}'\n"
-    MSLite_OPERATOR_TUNE_SUGGESTION = f"Optimize operator by AOE in mindspore lite framework, such as:\n" \
-                                      f"converter_lite --fmk=ONNX --optimize=ascend_oriented --saveType=MINDIR " \
-                                      f"--modelFile=$user_model.onnx --outputFile=user_model " \
-                                      f"--configFile=./config.txt\n"
 
     def __init__(self, cann_version: str):
         self.cann_version = cann_version
         self._op_list: List[OpInfo] = []
         self._tune_op_list: List[str] = []
+
+        self.prompt_class = BasePrompt.get_prompt_class("OperatorChecker")
+        self.pytorch_op_tune_suggestion = self.prompt_class.PYTORCH_OPERATOR_TUNE_SUGGESTION
+        self.mslite_op_tune_suggestion = self.prompt_class.MSLITE_OPERATOR_TUNE_SUGGESTION
+        self.pytorch_release_suggestion = self.prompt_class.PYTORCH_RELEASE_SUGGESTION
+        self.mslite_release_suggestion = self.prompt_class.MSLITE_RELEASE_SUGGESTION
 
     @staticmethod
     def get_ratio(op_info: OpInfo, attr: str) -> float:
@@ -65,13 +66,12 @@ class OperatorChecker(VersionControl):
             return 0
         return float(value)
 
-    @classmethod
-    def get_name(cls):
+    def get_name(self):
         """
         get name of checker
         :return: checker name
         """
-        return cls._PROBLEM
+        return self._PROBLEM
 
     def check(self, profiling_data: ProfilingDataset) -> bool:
         """
@@ -118,7 +118,7 @@ class OperatorChecker(VersionControl):
         """
 
         if rank is not None:
-            self._PROBLEM = f"rank {rank} ".capitalize() + self._PROBLEM.lower()
+            self._PROBLEM = self.prompt_class.RANK_ID.format(rank) + self._PROBLEM.lower()
 
         task_duration_list = [float(op_info.get_attr("task_duration"))
                               for op_info in self._op_list
@@ -196,17 +196,12 @@ class OperatorChecker(VersionControl):
         release_suggestion_list = []
         for suggestion in optimization_item.suggestion:
             release_suggestion = copy.deepcopy(suggestion)
-            if release_suggestion == OperatorChecker.PyTorch_OPERATOR_TUNE_SUGGESTION:
-                release_suggestion += \
-                    (f"for details please refer to link : <a href={Config().pytorch_aoe_operator_tune_url} target='_blank'>LINK</a>")
-            elif release_suggestion == OperatorChecker.MSLite_OPERATOR_TUNE_SUGGESTION:
-                release_suggestion += \
-                    (f"\nThe config file for MSLite AOE usage is as follows:\n" \
-                     f"[ascend_context]\n" \
-                     f"aoe_mode=\"operator tuning\"\n" \
-                     f"--tune_ops_file={Config().tune_ops_file}\n"
-                     f"\nFor details please refer to link : <a href="
-                     f"{Config().mslite_infer_aoe_operator_tune_url} target='_blank'>LINK</a>")
+            if release_suggestion == self.pytorch_op_tune_suggestion:
+                release_suggestion += (self.pytorch_release_suggestion.format(Config().pytorch_aoe_operator_tune_url))
+            elif release_suggestion == self.mslite_op_tune_suggestion:
+                release_suggestion += (self.mslite_release_suggestion.format(
+                    Config().tune_ops_file, Config().mslite_infer_aoe_operator_tune_url))
+
             release_suggestion_list.append(release_suggestion.replace('\n', '<br>'))
         format_result = {
             "record": record.__dict__,
@@ -322,9 +317,9 @@ class OperatorChecker(VersionControl):
 
     def format_suggestion_content(self, profiling_data: ProfilingDataset) -> None:
         if profiling_data.prof_type == EnumParamsParser().profiling_type.ascend_pytorch_profiler:
-            self._SUGGESTION.append(self.PyTorch_OPERATOR_TUNE_SUGGESTION)
+            self._SUGGESTION.append(self.pytorch_op_tune_suggestion)
         elif profiling_data.prof_type == EnumParamsParser.profiling_type.mslite:
-            self._SUGGESTION.append(self.MSLite_OPERATOR_TUNE_SUGGESTION)
+            self._SUGGESTION.append(self.mslite_op_tune_suggestion)
 
     def _check_data(self, profiling_data):
         return True

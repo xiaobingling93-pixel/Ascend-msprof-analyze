@@ -16,6 +16,7 @@ import logging
 import os
 
 from profiler.advisor.dataset.timeline_event_dataset import ScheduleAnalysisDataset
+from profiler.advisor.display.prompt.base_prompt import BasePrompt
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.advisor.utils.utils import convert_to_float, convert_to_int
@@ -74,13 +75,14 @@ class GcChecker:
         if not self.gc_issues:
             return
 
-        self.optimization_item.append(OptimizeItem("GC", self.desc, self.suggestions))
+        self.optimization_item.append(OptimizeItem(self.problem, self.desc, self.suggestions))
         for optimization in self.optimization_item:
             result.add(OptimizeRecord(optimization))
         headers = self.headers
         if self.rank is not None:
             headers = ["Rank id"] + headers
-        sub_table_name = "GcAnalysis" if not self.stage else f"Stage-{self.stage}: GcAnalysis"
+
+        sub_table_name = BasePrompt.get_sub_table_name(self.problem, self.stage)
         result.add_detail(sub_table_name, headers=headers)
 
         for row in self.abnormal_gc_list:
@@ -115,6 +117,8 @@ class GcChecker:
             "gc.yaml"
         )
         gc_rule = FileManager.read_yaml_file(gc_rule_path)
+
+        self.problem = gc_rule.get("problem")
         self.gc_threshold = convert_to_float(gc_rule.get("gc_threshold", 0))
         self.gc_topk_num = convert_to_int(gc_rule.get("top_num", 0))
         self.gc_problem_with_count = gc_rule.get("gc_problem_with_count", "")
