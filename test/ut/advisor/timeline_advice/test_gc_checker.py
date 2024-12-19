@@ -19,7 +19,7 @@ class TestGcAdvice(unittest.TestCase):
         dimension = "schedule"
         scope = SupportedScopes.GC_ANALYSIS
         result = interface.get_result(dimension, scope, render_html=1, output_dict=False, profiling_path="./ascend_pt")
-        assert len(result.data.get("GcAnalysis", [])) == 0
+        assert len(result.data.get("GC分析", [])) == 0
         result.clear()
 
     @staticmethod
@@ -28,7 +28,7 @@ class TestGcAdvice(unittest.TestCase):
         dimension = "schedule"
         scope = SupportedScopes.GC_ANALYSIS
         result = interface.get_result(dimension, scope, render_html=1, output_dict=False, profiling_path="./ascend_pt")
-        assert len(result.data.get("GcAnalysis", {}).get("data", [])) == 2
+        assert len(result.data.get("GC分析", {}).get("data", [])) == 2
         result.clear()
 
     @classmethod

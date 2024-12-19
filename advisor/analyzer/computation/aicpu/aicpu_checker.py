@@ -47,10 +47,12 @@ class AicpuChecker(OperatorChecker):
 
     def load_aicpu_rules(self):
         language = AdditionalArgsManager().language
-        rule_path = "rules/aicpu_rules.yaml"
-        if not os.path.isabs(rule_path):
-            rule_path = os.path.join(os.path.dirname(__file__),
-                                     "../../../", rule_path)
+        rule_path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))),
+            "rules",
+            language,
+            "aicpu_rules.yaml"
+        )
 
         if not os.path.exists(rule_path):
             logger.warning("Skip analyze aicpu issues, because %s does not exist.", rule_path)
