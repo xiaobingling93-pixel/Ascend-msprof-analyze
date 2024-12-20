@@ -17,13 +17,13 @@ import logging
 from profiler.advisor.analyzer.base_analyzer import BaseAnalyzer
 from profiler.prof_common.path_manager import PathManager
 from profiler.advisor.dataset.environment_variable_dataset import EnvironmentVariableDataset
-from profiler.advisor.analyzer.overall.environment_variable_checker import EnvironmentVariabelChecker
+from profiler.advisor.analyzer.overall.environment_variable_checker import EnvironmentVariableChecker
 from profiler.advisor.display.html.priority_background_color import PriorityBackgroundColor
 
 logger = logging.getLogger()
 
 
-class EnvironmentVariabelAnalyzer(BaseAnalyzer):
+class EnvironmentVariableAnalyzer(BaseAnalyzer):
     dataset_cls_list = [EnvironmentVariableDataset]
 
     def __init__(self, collection_path: str, n_processes: int = 1, **kwargs):
@@ -41,7 +41,7 @@ class EnvironmentVariabelAnalyzer(BaseAnalyzer):
             logging.error("Invalid path: %s", str(e))
             return self.result
         self.collection_path = PathManager.get_realpath(self.collection_path)
-        checker = EnvironmentVariabelChecker()
+        checker = EnvironmentVariableChecker()
         checker.format_env_suggest(self.dataset)
         checker.make_record(self.result)
         checker.make_render(self.html_render)

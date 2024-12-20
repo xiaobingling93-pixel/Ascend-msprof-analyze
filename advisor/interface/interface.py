@@ -34,7 +34,7 @@ from profiler.advisor.analyzer.cluster.slow_link_analyzer import SlowLinkAnalyze
 from profiler.advisor.analyzer.communication.retransmission.communication_retransmission_analyzer import \
     RDMARetransmissionAnalyzer
 from profiler.advisor.analyzer.overall.overall_summary_analyzer import OverallSummaryAnalyzer
-from profiler.advisor.analyzer.overall.environment_variable_analyzer import EnvironmentVariabelAnalyzer
+from profiler.advisor.analyzer.overall.environment_variable_analyzer import EnvironmentVariableAnalyzer
 from profiler.advisor.analyzer.schedule.dispatch.timeline_op_dispatch_analyzer import OpDispatchAnalyzer
 from profiler.advisor.analyzer.schedule.syncbn.syncbn_analyzer import SyncBNAnalyzer
 from profiler.advisor.analyzer.schedule.synchronize_stream.synchronize_stream_analyzer import SynchronizeStreamAnalyzer
@@ -83,7 +83,7 @@ class Interface:
                                     SupportedScopes.BANDWIDTH_CONTENTION_DETECTION: BandwidthContentionAnalyzer,
                                     SupportedScopes.BYTE_ALIGNMENT_DETECTION: ByteAlignmentAnalyzer}),
         OVERALL: OrderedDict({SupportedScopes.OVER_ALL: OverallSummaryAnalyzer,
-                              SupportedScopes.ENVIRONMENT_VARIABLE_ANALYSIS: EnvironmentVariabelAnalyzer}),
+                              SupportedScopes.ENVIRONMENT_VARIABLE_ANALYSIS: EnvironmentVariableAnalyzer}),
         CLUSTER: OrderedDict({
             SupportedScopes.SLOW_RANK: SlowRankAnalyzer,
             SupportedScopes.SLOW_LINK: SlowLinkAnalyzer

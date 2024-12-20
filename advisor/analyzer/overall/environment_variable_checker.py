@@ -26,7 +26,7 @@ from profiler.advisor.utils.utils import convert_to_int
 from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 
 
-class EnvironmentVariabelChecker:
+class EnvironmentVariableChecker:
     ENV_SUGGEST_CONDITION = {
         "ASCEND_GLOBAL_LOG_LEVEL": lambda x: x != "" and convert_to_int(x) != 3,
         "HCCL_RDMA_TC": lambda x: x != "",

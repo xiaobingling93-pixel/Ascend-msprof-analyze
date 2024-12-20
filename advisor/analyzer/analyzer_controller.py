@@ -406,8 +406,8 @@ class AnalyzerController:
         return job_list
 
     def overall(self, profiling_path):
-        from profiler.advisor.analyzer.overall.environment_variable_analyzer import EnvironmentVariabelAnalyzer
-        env_analyzer = EnvironmentVariabelAnalyzer(profiling_path)
+        from profiler.advisor.analyzer.overall.environment_variable_analyzer import EnvironmentVariableAnalyzer
+        env_analyzer = EnvironmentVariableAnalyzer(profiling_path)
         env_analyzer.optimize()
 
         if self._is_cluster:
