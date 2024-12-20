@@ -12,7 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 from profiler.prof_common.constant import Constant
 
 
@@ -341,10 +340,10 @@ class ProfilingInfo:
     def is_not_minimal_profiling(self) -> bool:
         return self.profiling_type == Constant.NPU and not self.minimal_profiling
 
-    def set_RDMA_bandwidth(self, bandwidth: float):
+    def set_rdma_bandwidth(self, bandwidth: float):
         self.RDMA_bandwidth = bandwidth
 
-    def set_SDMA_bandwidth(self, bandwidth: float):
+    def set_sdma_bandwidth(self, bandwidth: float):
         self.SDMA_bandwidth = bandwidth
 
     def update_mc2_info(self, kernel_name, mc2_time, computing_time, communication_time):

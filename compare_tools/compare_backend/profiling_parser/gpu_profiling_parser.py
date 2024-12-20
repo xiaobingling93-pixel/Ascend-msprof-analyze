@@ -1,3 +1,18 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import logging
 import sys
 from collections import defaultdict, Counter
 
@@ -130,7 +145,7 @@ class GPUProfilingParser(BaseProfilingParser):
 
     def __parse_memory_reserved(self):
         if not self._memory_events:
-            print("[INFO] Gpu profiling data doesn't contain memory info.")
+            logging.info("Gpu profiling data doesn't contain memory info.")
             return
         memory_used = max([event.total_reserved for event in self._memory_events]) / 1024 ** 3
         self._result_data.overall_metrics.set_memory_used(memory_used)

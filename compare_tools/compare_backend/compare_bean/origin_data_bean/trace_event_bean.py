@@ -12,12 +12,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-
 from decimal import Decimal
 
 from compare_backend.utils.common_func import convert_to_float, convert_to_decimal
 from compare_backend.compare_config.compare_config import CompareConfig
+
 from profiler.prof_common.constant import Constant
 
 

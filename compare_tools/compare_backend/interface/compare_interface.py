@@ -1,7 +1,17 @@
-from profiler.compare_tools.compare_backend.comparator.kernel_type_comparator import KernelTypeComparator
-from profiler.compare_tools.compare_backend.compare_bean.kernel_type_compare_bean import KernelTypeCompareBean
-from profiler.prof_common.constant import Constant
-
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 from compare_backend.comparator.operator_comparator import OperatorComparator
 from compare_backend.comparator.api_compare_comparator import ApiCompareComparator
 from compare_backend.comparator.kernel_compare_comparator import KernelCompareComparator
@@ -10,6 +20,10 @@ from compare_backend.compare_bean.api_compare_bean import ApiCompareBean
 from compare_backend.compare_bean.kernel_compare_bean import KernelCompareBean
 from compare_backend.data_prepare.operator_data_prepare import OperatorDataPrepare
 from compare_backend.data_prepare.sequence_pre_matching import SequencePreMatching
+from compare_backend.comparator.kernel_type_comparator import KernelTypeComparator
+from compare_backend.compare_bean.kernel_type_compare_bean import KernelTypeCompareBean
+
+from profiler.prof_common.constant import Constant
 
 
 class CompareInterface:

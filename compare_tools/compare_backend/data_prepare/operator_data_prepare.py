@@ -13,8 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
+
 from compare_backend.profiling_parser.base_profiling_parser import ProfilingResult
 from compare_backend.utils.tree_builder import TreeBuilder
+
 from profiler.prof_common.constant import Constant
 
 

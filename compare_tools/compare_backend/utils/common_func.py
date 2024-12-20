@@ -1,8 +1,7 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-# Copyright (C) 2023-2024. Huawei Technologies Co., Ltd. All rights reserved.
-# Licensed under the Apache License, Version 2.0 (the "License");
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
@@ -13,8 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-
 from decimal import Decimal
 import logging
 
@@ -63,8 +60,8 @@ def longest_common_subsequence_matching(base_ops: list, comparison_ops: list, na
 
     comparison_len, base_len = len(comparison_ops), len(base_ops)
     if comparison_len * base_len > 50 * 10 ** 8:
-        print('[WARNING] The comparison time is expected to exceed 30 minutes, if you want to see the results quickly, '
-              'you can restart comparison task and turn on the switch --disable_details.')
+        logging.warning('The comparison time is expected to exceed 30 minutes, if you want to see the results quickly, '
+                        'you can restart comparison task and turn on the switch --disable_details.')
 
     pre_list = np.zeros(base_len + 1, dtype=np.int32)
     cur_list = np.zeros(base_len + 1, dtype=np.int32)
