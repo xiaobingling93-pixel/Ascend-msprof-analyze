@@ -50,7 +50,7 @@ class DynamicShapeChecker(OperatorChecker):
         make record for what and how to optimize
         """
         if rank is not None:
-            self._PROBLEM = self.prompt_class.RANK_ID + self._PROBLEM.lower()
+            self._PROBLEM = self.prompt_class.RANK_ID.format(rank) + self._PROBLEM.lower()
         optimization_item = OptimizeItem(
             self._PROBLEM,
             self._description,
