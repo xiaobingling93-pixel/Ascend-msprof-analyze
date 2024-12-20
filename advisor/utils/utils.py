@@ -522,3 +522,10 @@ def convert_to_int(data: any) -> int:
         logger.error(f"Can not convert %s to int.", data)
         return 0
     return int_value
+
+
+def convert_to_int_with_exception(data: any) -> int:
+    if data == "":
+        logger.warning("convert_to_int_with_exception: a empty string was encountered.")
+        return 0
+    return convert_to_int(data)
