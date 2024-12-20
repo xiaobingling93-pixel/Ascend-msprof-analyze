@@ -90,10 +90,14 @@ class ProfilingAnalyzer(BaseAnalyzer, ABC):
 class DynamicShapeAnalyzer(ProfilingAnalyzer):
     def __init__(self, collection_path, **kwargs) -> None:
         super().__init__(collection_path, **kwargs)
-        if collection_path.endswith("ascend_ms"):
-            logger.info("Dynamic shape analyzer does not support Mindspore.")
-            return
         self.checker = DynamicShapeChecker(self.cann_version)
+
+    @BaseAnalyzer.check_data((ProfilingDataset.get_key(),))
+    def optimize(self, **kwargs) -> OptimizeResult:
+        if "mindspore" in self.profiling_type:
+            logger.info("The analyzer %s does not support MindSpore.", self.__class__.__name__)
+            return self.result
+        return super().optimize.__wrapped__(self, **kwargs)
 
 
 class BlockDimAnalyzer(ProfilingAnalyzer):
