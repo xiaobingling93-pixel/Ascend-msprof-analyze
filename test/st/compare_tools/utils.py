@@ -3,10 +3,14 @@ import os
 import re
 import logging
 
+COMMAND_SUCCESS = 0
+
 
 def execute_cmd(cmd):
     logging.info('Execute command:%s' % " ".join(cmd))
-    completed_process = subprocess.run(cmd, capture_output=True, shell=False, check=True)
+    completed_process = subprocess.run(cmd, shell=False, stderr=subprocess.PIPE)
+    if completed_process.returncode != COMMAND_SUCCESS:
+        logging.error(completed_process.stderr.decode())
     return completed_process.returncode
 
 
