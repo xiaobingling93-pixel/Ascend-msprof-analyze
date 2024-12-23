@@ -15,8 +15,9 @@
 from math import isclose
 
 from compare_backend.comparator.base_comparator import BaseComparator
-from profiler.prof_common.constant import Constant
 from compare_backend.utils.excel_config import ExcelConfig
+
+from profiler.prof_common.constant import Constant
 
 
 class OverallMetricsComparator(BaseComparator):

@@ -16,8 +16,9 @@ from math import isclose
 
 from compare_backend.compare_bean.profiling_info import ProfilingInfo
 from compare_backend.utils.common_func import calculate_diff_ratio
-from profiler.prof_common.constant import Constant
 from compare_backend.utils.excel_config import ExcelConfig, CellFormatType
+
+from profiler.prof_common.constant import Constant
 
 
 class OverallMetricsBean:

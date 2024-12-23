@@ -1,6 +1,21 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import argparse
 import ast
 import datetime
+import logging
 import os.path
 import sys
 
@@ -38,7 +53,8 @@ def main():
                         help="Enable precise matching of operators")
     parser.add_argument("--gpu_flow_cat", type=str, default='', help="Identifier of the GPU connection")
     parser.add_argument("--base_step", type=str, default='', help="Comparison step for performance data to be compared")
-    parser.add_argument("--comparison_step", type=str, default='', help="Comparison step for benchmark performance data")
+    parser.add_argument("--comparison_step", type=str, default='',
+                        help="Comparison step for benchmark performance data")
     parser.add_argument("--force", action='store_true',
                         help="Indicates whether to skip file size verification and owner verification")
     parser.add_argument("--use_kernel_type", action='store_true',
@@ -49,7 +65,7 @@ def main():
 
 
 if __name__ == "__main__":
-    start_time = datetime.datetime.now()
+    start_time = datetime.datetime.utcnow()
     main()
-    end_time = datetime.datetime.now()
-    print(f'[INFO] The comparison task has been completed in a total time of {end_time - start_time}')
+    end_time = datetime.datetime.utcnow()
+    logging.info(f'The comparison task has been completed in a total time of {end_time - start_time}')

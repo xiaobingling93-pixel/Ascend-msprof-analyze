@@ -17,9 +17,10 @@ from queue import Queue
 
 from compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
 from compare_backend.profiling_parser.base_profiling_parser import ProfilingResult
-from profiler.prof_common.constant import Constant
 from compare_backend.utils.module_node import ModuleNode
 from compare_backend.utils.tree_builder import TreeBuilder
+
+from profiler.prof_common.constant import Constant
 
 
 class ModuleDataPrepare:

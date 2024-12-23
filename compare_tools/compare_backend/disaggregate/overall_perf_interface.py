@@ -13,12 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-from common_func.path_manager import PathManager
+
 from compare_backend.profiling_parser.gpu_profiling_parser import GPUProfilingParser
 from compare_backend.profiling_parser.npu_profiling_parser import NPUProfilingParser
 from compare_backend.utils.args_manager import ArgsManager
 from compare_backend.utils.compare_args import Args
+
 from profiler.prof_common.constant import Constant
+from profiler.prof_common.path_manager import PathManager
 
 
 class OverallPerfInterface:

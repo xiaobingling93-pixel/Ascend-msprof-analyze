@@ -37,13 +37,12 @@ from compare_backend.compare_bean.kernel_compare_bean import KernelCompareBean
 from compare_backend.compare_bean.overall_metrics_bean import OverallMetricsBean
 from compare_backend.data_prepare.module_data_prepare import ModuleDataPrepare
 from compare_backend.data_prepare.operator_data_prepare import OperatorDataPrepare
-
-from profiler.compare_tools.compare_backend.comparator.kernel_type_comparator import KernelTypeComparator
-from profiler.compare_tools.compare_backend.compare_bean.kernel_type_compare_bean import KernelTypeCompareBean
-from profiler.prof_common.constant import Constant
+from compare_backend.comparator.kernel_type_comparator import KernelTypeComparator
+from compare_backend.compare_bean.kernel_type_compare_bean import KernelTypeCompareBean
 from compare_backend.view.excel_view import ExcelView
-
 from compare_backend.data_prepare.sequence_pre_matching import SequencePreMatching
+
+from profiler.prof_common.constant import Constant
 
 
 class DetailPerformanceGenerator:
