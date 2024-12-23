@@ -4,7 +4,7 @@ from unittest import TestCase
 import pandas as pd
 
 from profiler.prof_common.path_manager import PathManager
-from .utils import execute_cmd, check_result_file
+from profiler.test.st.utils import execute_cmd, check_result_file
 
 
 class TestCompareToolsCmdPytorchNpuVsNpuEnableApiCompare(TestCase):

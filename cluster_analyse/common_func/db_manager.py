@@ -132,11 +132,11 @@ class DBManager:
         conn, curs = cls.create_connect_db(db_path)
         if not (conn and curs):
             return 0
-        sql = "SELECT COUNT(*) FROM pragma_table_info('{}')".format(table)
+        sql = f"PRAGMA table_info({table})"
         res = 0
         try:
             curs.execute(sql)
-            res = curs.fetchone()[0]
+            res = len(curs.fetchall())
         except sqlite3.Error as err:
             print("[ERROR] {}".format(err))
         finally:
