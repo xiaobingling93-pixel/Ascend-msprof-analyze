@@ -24,6 +24,7 @@ class NPUProfilingParser(BaseProfilingParser):
 
     def __init__(self, args: any, path_dict: dict, step_id: int = Constant.VOID_STEP):
         super().__init__(args, path_dict, step_id)
+        self._path_level = self._get_path_level(path_dict)
         self._operator_memory_path = os.path.join(path_dict.get(Constant.ASCEND_OUTPUT_PATH, ""), "operator_memory.csv")
         self._memory_record_path = os.path.join(path_dict.get(Constant.ASCEND_OUTPUT_PATH, ""), "memory_record.csv")
         self._kernel_detail_path = os.path.join(path_dict.get(Constant.ASCEND_OUTPUT_PATH, ""), "kernel_details.csv")
@@ -45,6 +46,14 @@ class NPUProfilingParser(BaseProfilingParser):
         if any((self._enable_profiling_compare, self._enable_operator_compare, self._enable_memory_compare,
                 self._enable_api_compare, self._enable_communication_compare)):
             self._filter_meta_id()
+
+    @staticmethod
+    def _get_path_level(path_dict):
+        if path_dict.get(Constant.PROFILING_PATH, "") == path_dict.get(Constant.TRACE_PATH, ""):
+            return Constant.TRACE_PATH
+        if path_dict.get(Constant.PROFILING_PATH, "") == path_dict.get(Constant.ASCEND_OUTPUT_PATH, ""):
+            return Constant.ASCEND_OUTPUT_PATH
+        return Constant.PROFILING_PATH
 
     @staticmethod
     def __calculate_overlap_time_with_uncovered_communication(uncovered_communication_events: list, events: list):
@@ -208,7 +217,8 @@ class NPUProfilingParser(BaseProfilingParser):
         self._result_data.overall_metrics.set_SDMA_bandwidth(sdma_bandwidth)
 
     def _update_overall_metrics(self):
-        self.__parse_info_json()
+        if self._path_level==Constant.PROFILING_PATH:
+            self.__parse_info_json()
         self.__parse_mem_csv()
         self.__parse_kernel_csv()
         self.__add_lccl_time()
