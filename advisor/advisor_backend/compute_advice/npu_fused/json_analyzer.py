@@ -13,8 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pandas as pd
 import logging
+
+import pandas as pd
 
 from common_func_advisor.trace_view_json import TraceViewJson
 
