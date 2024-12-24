@@ -40,7 +40,7 @@ class TraceObj:
     id: int = 0
     ts: str = ""
     dur: float = 0.0
-    args: dict = field(default_factory=dict)
+    args: dict = field(default='unknown')
 
     @abstractmethod
     def hash(self):

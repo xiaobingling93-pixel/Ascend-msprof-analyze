@@ -50,15 +50,15 @@ class ComparisonChecker:
     def get_valid_step(step):
         none_step = None
         if step is None:
-            return ""
+            return none_step
         if isinstance(step, (int, float)):
             if step < 0:
                 # 当没有step时，analyzer controller返回step=-1
-                return ""
+                return none_step
             else:
                 return str(convert_to_int(step))
         else:
-            return ""
+            return none_step
 
     def compare(self, compare_mode):
         """
