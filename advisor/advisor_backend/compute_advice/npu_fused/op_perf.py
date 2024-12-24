@@ -162,6 +162,7 @@ class OpPerf:
                 Constant.BYTE_UNIT_TRANS / self.task_duration * Constant.UNIT_TRANS * Constant.UNIT_TRANS)
     
     def get_perf_color(self):
+        row = self.row
         return PerfColor.WHITE
 
     def update(self):

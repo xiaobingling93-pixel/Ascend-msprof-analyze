@@ -16,7 +16,7 @@ import logging
 
 from profiler.advisor.analyzer.base_analyzer import BaseAnalyzer
 from profiler.advisor.result.result import OptimizeResult
-from profiler.advisor.analyzer.cluster.Communication_retransmission_checker import CommunicationRetransmissionChecker
+from profiler.advisor.analyzer.cluster.communication_retransmission_checker import CommunicationRetransmissionChecker
 from profiler.advisor.display.html.render import HTMLRender
 from profiler.advisor.dataset.cluster.cluster_dataset import ClusterCommunicationDataset
 
