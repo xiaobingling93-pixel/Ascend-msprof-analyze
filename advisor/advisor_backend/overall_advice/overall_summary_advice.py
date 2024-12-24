@@ -59,7 +59,7 @@ class OverallSummaryAdvice(AdviceBase):
             try:
                 duration = float(split_data[0])
             except ValueError:
-                logger.warning("Invalid time value: {time_value}.")
+                logger.warning(f"Invalid time value: {time_value}.")
         return duration, num
 
     @staticmethod
@@ -80,7 +80,7 @@ class OverallSummaryAdvice(AdviceBase):
             if os.path.exists(self.base_collection_path):
                 self._has_base_collection = True
             else:
-                logger.warning("Invalid path which not exists: {self.base_collection_path}.")
+                logger.warning(f"Invalid path which not exists: {self.base_collection_path}.")
         return os.path.exists(self.collection_path)
 
     def process(self):
