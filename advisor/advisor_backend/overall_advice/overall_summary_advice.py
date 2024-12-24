@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
+import logging
 
 from compare_interface.comparison_interface import ComparisonInterface
 from advisor_backend.advice_base import AdviceBase
@@ -20,6 +21,8 @@ from advisor_backend.advice_base import AdviceBase
 from profiler.advisor.display.prompt.base_prompt import BasePrompt
 from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 from profiler.prof_common.constant import Constant
+
+logger = logging.getLogger()
 
 
 class OverallSummaryAdvice(AdviceBase):
@@ -54,7 +57,7 @@ class OverallSummaryAdvice(AdviceBase):
             try:
                 duration = float(split_data[0])
             except ValueError:
-                print(f"[WARNING] Invalid time value: {time_value}.")
+                logger.warning(f"Invalid time value: {time_value}.")
         return duration, num
 
     @staticmethod
@@ -75,7 +78,7 @@ class OverallSummaryAdvice(AdviceBase):
             if os.path.exists(self.base_collection_path):
                 self._has_base_collection = True
             else:
-                print(f"[WARNING] Invalid path which not exists: {self.base_collection_path}.")
+                logger.warning(f"Invalid path which not exists: {self.base_collection_path}.")
         return os.path.exists(self.collection_path)
 
     def process(self):

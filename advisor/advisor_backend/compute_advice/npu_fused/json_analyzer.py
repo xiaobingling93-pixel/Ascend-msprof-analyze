@@ -13,9 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
+
 import pandas as pd
 
 from common_func_advisor.trace_view_json import TraceViewJson
+
+logger = logging.getLogger()
 
 
 class JSONAnalyzer(object):
@@ -28,18 +32,18 @@ class JSONAnalyzer(object):
 
         for i, row in data.iterrows():
             if ts_col not in data.columns.tolist():
-                print("[ERROR] No {} col found in data columns.".format(ts_col))
+                logger.error("No {} col found in data columns.".format(ts_col))
                 return callstacks
             timestamp = row[ts_col]
             flow_event = trace_json.get_torch_2_npu_flow_event(timestamp)
             if not flow_event.valid():
-                print("[ERROR] Get flow event failed for pattern {}.".format(row['pattern']))
+                logger.error("Get flow event failed for pattern {}.".format(row['pattern']))
                 callstacks.loc[i] = ""
                 continue
             flow_event_s_key = flow_event.s_point_ts
             python_dur_events = trace_json.get_python_dur_events_contain_ts(flow_event_s_key)
             if not python_dur_events:
-                print("[ERROR] No python dur event found for pattern {}.".format(row['pattern']))
+                logger.error("No python dur event found for pattern {}.".format(row['pattern']))
                 callstacks.loc[i] = ""
                 continue
             # 保持新老版本callstack兼容性
