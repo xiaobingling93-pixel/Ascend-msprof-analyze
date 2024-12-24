@@ -115,19 +115,19 @@ msprof-analyze advisor命令行包含如下三个参数：
 - 总体性能瓶颈
 
   ```bash
-  msprof-analyze advisor all -d {profiling_path} [-bp benchmark_profiling_path] [-o output_path] [-cv cann_version] [-tv torch_version] [-pt profiling_type] [--force] [--debug] [-h]
+  msprof-analyze advisor all -d {profiling_path} [-bp benchmark_profiling_path] [-o output_path] [-cv cann_version] [-tv torch_version] [-pt profiling_type] [--force] [--language language] [--debug] [-h]
   ```
 
 - 计算瓶颈
 
   ```bash
-  msprof-analyze advisor computation -d {profiling_path} [-o output_path] [-cv cann_version] [-tv torch_version] [-pt profiling_type] [--force] [--debug] [-h]
+  msprof-analyze advisor computation -d {profiling_path} [-o output_path] [-cv cann_version] [-tv torch_version] [-pt profiling_type] [--force] [--language language] [--debug] [-h]
   ```
 
 - 调度瓶颈
 
   ```bash
-  msprof-analyze advisor schedule -d {profiling_path} [-o output_path] [-cv cann_version] [-tv torch_version] [--force] [--debug] [-h]
+  msprof-analyze advisor schedule -d {profiling_path} [-o output_path] [-cv cann_version] [-tv torch_version] [--force] [--language language] [--debug] [-h]
   ```
 
 #### 参数介绍
@@ -141,6 +141,7 @@ msprof-analyze advisor命令行包含如下三个参数：
 | -tv<br/>--torch_version            | 运行环境的torch版本，默认为1.11.0，支持torch1.11.0和torch2.1.0，当运行环境torch版本为其他版本如torch1.11.3时，可以忽略小版本号差异选择相近的torch版本如1.11.0。 | 否       |
 | -pt<br/>--profiling_type           | 配置性能数据采集使用的Profiling工具类型。可取值：<br>        ascend_pytorch_profiler：使用Ascend PyThon Profiler接口方式采集的性能数据时配置，默认值。<br/>        msprof：使用msprof命令行方式采集的性能数据时配置。功能完善中，暂不建议使用。<br/>        mslite：使用[Benchmark](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)工具采集的性能数据时配置。不建议使用。<br>**schedule不支持该参数。** | 否       |
 | --force                            | 强制执行advisor。配置后可强制跳过如下情况：<br/>        指定的目录、文件的用户属主不属于当前用户，忽略属主判断直接执行。<br/>        csv文件大于5G、json文件大于10G、db文件大于8G，忽略文件过大判断直接执行。<br/>配置该参数表示开启强制执行，默认未配置表示关闭。 | 否       |
+| -l<br/>--language                  | 设置分析结果输出的语言，可取值：<br/>        cn：输出中文，默认值。<br/>        en：输出英文。 | 否       |
 | --debug                            | 工具执行报错时可打开此开关，将会展示详细保存堆栈信息。配置该参数表示开启Debug，默认未配置表示关闭。 | 否       |
 | -h，-H<br/>--help                  | 在需要查询当前命令附属子命令或相关参数时，给出帮助建议。     | 否       |
 
