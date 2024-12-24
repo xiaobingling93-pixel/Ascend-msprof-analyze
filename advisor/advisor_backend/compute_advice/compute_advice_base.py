@@ -64,7 +64,7 @@ class ComputeAdviceBase(AdviceBase):
 
     def has_callstack(self):
         if self.call_stack is not None:
-            return self.call_stack
+            return True
         profiler_info_json_path = ""
         for file in os.listdir(self.collection_path):
             if file.startswith("profiler_info"):
@@ -72,22 +72,22 @@ class ComputeAdviceBase(AdviceBase):
                 break
         if not profiler_info_json_path:
             self.call_stack = False
-            return self.call_stack
+            return False
         self.trace_view_path = os.path.join(self.collection_path, self.ASCEND_PROFILER_OUTPUT, "trace_view.json")
         if not os.path.exists(profiler_info_json_path) or not os.path.exists(self.trace_view_path):
             self.call_stack = False
-            return self.call_stack
+            return False
         info = FileManager.read_json_file(profiler_info_json_path)
         if not info.get("config") or not info.get("config").get("common_config") \
                 or not info.get("config").get("common_config").get("with_stack"):
             self.call_stack = False
-            return self.call_stack
+            return False
         activities = info.get("config").get("common_config").get("activities")
         if not activities or "ProfilerActivity.CPU" not in activities:
             self.call_stack = False
-            return self.call_stack
+            return False
         self.call_stack = info.get("config").get("common_config").get("with_stack")
-        return self.call_stack
+        return True
 
     @abstractmethod
     def run(self):
