@@ -21,8 +21,8 @@ from profiler.advisor.display.prompt.base_prompt import BasePrompt
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.advisor.result.result import OptimizeResult
 from profiler.compare_tools.compare_interface.comparison_interface import ComparisonInterface
-from profiler.prof_common.constant import Constant
 from profiler.prof_common.additional_args_manager import AdditionalArgsManager
+from profiler.prof_common.constant import Constant
 
 
 class OverallSummaryAnalyzer(BaseAnalyzer):
@@ -232,7 +232,7 @@ class OverallSummaryAnalyzer(BaseAnalyzer):
                                          profiling_version=self.profiling_version,
                                          result=result_for_html)
 
-    def get_priority(self):
+    def get_priority(self, max_mem_op_dur=None):
         pass
 
 

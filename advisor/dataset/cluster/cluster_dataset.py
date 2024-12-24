@@ -155,7 +155,7 @@ class ClusterCommunicationDataset(ClusterDataset):
             return round(dividend / divisor, 4)
     
     def create_rank_bw_dict(self):
-        return{
+        return {
             self.RDMA_TIME_MS: 0,
             self.RDMA_SIZE_MB: 0,
             self.SDMA_TIME_MS: 0,

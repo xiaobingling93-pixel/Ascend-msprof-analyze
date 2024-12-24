@@ -42,5 +42,5 @@ class SyncBNAnalyzer(BaseAnalyzer):
         syncbn_checker.make_render(self.html_render, priority=self.get_priority(), rank=kwargs.get("rank"))
         return self.result
 
-    def get_priority(self):
+    def get_priority(self, max_mem_op_dur=None):
         return PriorityBackgroundColor.high

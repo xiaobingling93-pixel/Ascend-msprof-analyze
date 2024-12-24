@@ -43,5 +43,5 @@ class SynchronizeStreamAnalyzer(BaseAnalyzer):
                                                rank=kwargs.get("rank"))
         return self.result
 
-    def get_priority(self, synchronize_stream_checker):
-        return synchronize_stream_checker.priority
+    def get_priority(self,  max_mem_op_dur):
+        return  max_mem_op_dur.priority

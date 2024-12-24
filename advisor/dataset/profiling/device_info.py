@@ -23,19 +23,6 @@ class DeviceInfoParser:
     def __init__(self, path) -> None:
         self._path = path
 
-    def parse_data(self) -> bool:
-        """
-        parse profiling data
-        :return: true for success or false
-        """
-        file_list = get_file_path_from_directory(self._path, lambda x: x.startswith("info.json."))
-        if not file_list:
-            return False
-        for info in file_list:
-            if self._parse(info):
-                return True
-        return False
-
     @staticmethod
     def _parse(info_file: str) -> bool:
         if info_file.endswith("done"):
@@ -60,4 +47,17 @@ class DeviceInfoParser:
                 config.set_config("ai_core_num", device_info["ai_core_num"])
                 return True
         logger.error("No ai_core_num in json info file %s", info_file)
+        return False
+
+    def parse_data(self) -> bool:
+        """
+        parse profiling data
+        :return: true for success or false
+        """
+        file_list = get_file_path_from_directory(self._path, lambda x: x.startswith("info.json."))
+        if not file_list:
+            return False
+        for info in file_list:
+            if self._parse(info):
+                return True
         return False

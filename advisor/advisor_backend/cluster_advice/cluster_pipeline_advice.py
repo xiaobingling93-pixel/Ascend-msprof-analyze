@@ -13,29 +13,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import multiprocessing
 import os
 import time
-import multiprocessing
-from typing import Dict
-from typing import Optional
-from typing import Deque
-from typing import List
-from typing import Tuple
 from collections import defaultdict
 from collections import deque
-from decimal import Decimal
 from dataclasses import dataclass
+from decimal import Decimal
+from typing import Deque
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
 
+from cluster_advice.cluster_advice_base import ClusterAdviceBase
+from cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
 from common_func_advisor.constant import Constant
 from common_func_advisor.trace_view_preprocessor import FineTraceViewData
 from common_func_advisor.trace_view_preprocessor import TraceViewPreProcessor
-from cluster_advice.cluster_advice_base import ClusterAdviceBase
-from cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
+
 from profiler.advisor.advisor_backend.logger import Logger
 from profiler.prof_common.file_manager import FileManager
 
 logger = Logger()
-
 
 
 @dataclass
@@ -124,6 +124,7 @@ class PipelineTraceViewer:
 
         return data
 
+
 class ClusterPipelineAdvice(ClusterAdviceBase):
     BUBBLE = "Bubble"
     STAGE = "Stage"
@@ -138,22 +139,6 @@ class ClusterPipelineAdvice(ClusterAdviceBase):
         self.cur_data = []
         self.cur_bottleneck = {}
         self.cur_advices = ""
-
-
-    @staticmethod
-    def _align_trace_bound(results: List) -> None:
-        """
-        align all rank trace bound for better visualization
-        """
-        start_list, end_list = [], []
-        for res in results:
-            start_list.append(res[0].start)
-            end_list.append(res[-1].end)
-
-        # update all rank trace bound
-        for res in results:
-            res[0].start = min(start_list)
-            res[-1].end = max(end_list)
 
     @staticmethod
     def load_trace_view_data(json_path) -> Optional[FineTraceViewData]:
@@ -272,6 +257,21 @@ class ClusterPipelineAdvice(ClusterAdviceBase):
 
         return res
 
+    @staticmethod
+    def _align_trace_bound(results: List) -> None:
+        """
+        align all rank trace bound for better visualization
+        """
+        start_list, end_list = [], []
+        for res in results:
+            start_list.append(res[0].start)
+            end_list.append(res[-1].end)
+
+        # update all rank trace bound
+        for res in results:
+            res[0].start = min(start_list)
+            res[-1].end = max(end_list)
+
     def run(self) -> dict:
         """
         Unified entrance interface
@@ -292,7 +292,7 @@ class ClusterPipelineAdvice(ClusterAdviceBase):
         """
         start_time = time.time()
         logger.info("Start to process %s rank profiling data with %s workers."
-                    ,str(len(self.rank_prof_dirs)),str(self.worker_num))
+                    , str(len(self.rank_prof_dirs)), str(self.worker_num))
         with multiprocessing.Pool(self.worker_num) as pool:
             results = pool.map(self.work, self.rank_prof_dirs.items())
 
@@ -302,7 +302,7 @@ class ClusterPipelineAdvice(ClusterAdviceBase):
             else:
                 self.cur_data += PipelineTraceViewer().gen_stage_bubble_trace_data(rank_id, res)
         time_cost = time.time() - start_time
-        logger.info("Pipline view data process finished, cost %2f s.",time_cost)
+        logger.info("Pipline view data process finished, cost %2f s.", time_cost)
 
     def work(self, kv: Tuple[int, str]) -> Tuple[List[PipelineTimeSlice], bool]:
         """
@@ -310,29 +310,29 @@ class ClusterPipelineAdvice(ClusterAdviceBase):
         """
         show_fp_bp = False
         rank_id, rank_prof_dir = kv
-        logger.info("[Rank %s] Start to process rank profiling data.",rank_id)
+        logger.info("[Rank %s] Start to process rank profiling data.", rank_id)
         json_path = os.path.join(rank_prof_dir, Constant.ASCEND_PROFILER_OUTPUT, Constant.TRACE_VIEW_JSON)
         fine_data = self.load_trace_view_data(json_path)
         if not fine_data.hcom_ops or not fine_data.hcom_tids:
             logger.error("[Rank %s] No hcom send recv ops found, make sure the trace view data is "
-                         "pipeline parallel sense.",str(rank_id))
+                         "pipeline parallel sense.", str(rank_id))
             return [], show_fp_bp
 
         timeslice_list = self.get_pipeline_timeslice(fine_data.hcom_ops, fine_data.hcom_tids, fine_data.min_ts,
                                                      fine_data.max_ts)
         if not fine_data.fp_ops or not fine_data.bp_ops:
             logger.info("[Rank %s] No frameWork data in trace view, only show stage and bubble."
-                        ,str(rank_id))
+                        , str(rank_id))
         elif len(fine_data.hcom_tids) > 1:
             logger.warning("[Rank %s] More than one hcom tid found, only show stage and bubble."
-                           ,str(rank_id))
+                           , str(rank_id))
         else:
             logger.info("[Rank %s] Found frameWork data in trace view, show fp bp and bubble."
-                        ,rank_id)
+                        , rank_id)
             bp_ops = self.get_fp_bp_bound_ops(fine_data)
             self.update_stage_fp_bp(timeslice_list, bp_ops)
             show_fp_bp = True
-        logger.info("[Rank %s] Rank profiling data process finished.",str(rank_id))
+        logger.info("[Rank %s] Rank profiling data process finished.", str(rank_id))
 
         return timeslice_list, show_fp_bp
 
@@ -373,7 +373,7 @@ class ClusterPipelineAdvice(ClusterAdviceBase):
             if rank_id in data_map:
                 rank_prof_dirs[rank_id] = data_map[rank_id]
             else:
-                logger.warning('Rank %s not found in %s',str(self.collection_path))
+                logger.warning('Rank %s not found in %s', str(self.collection_path))
 
         return rank_prof_dirs
 

@@ -32,12 +32,6 @@ class ClickAliasedGroup(click.Group):
 
         return partial(self._decorator_warpper, decorator, alias)
 
-    def _decorator_warpper(self, decorator, alias, func=None):
-        cmd = decorator(func)
-        self._commands[cmd.name] = alias
-        self._alias_dict[alias] = cmd.name
-        return cmd
-
     def resolve_alias(self, cmd_name):
         if cmd_name in self._alias_dict.keys():
             return self._alias_dict[cmd_name]
@@ -74,3 +68,9 @@ class ClickAliasedGroup(click.Group):
         if rows:
             with formatter.section('Commands'):
                 formatter.write_dl(rows)
+
+    def _decorator_warpper(self, decorator, alias, func=None):
+        cmd = decorator(func)
+        self._commands[cmd.name] = alias
+        self._alias_dict[alias] = cmd.name
+        return cmd

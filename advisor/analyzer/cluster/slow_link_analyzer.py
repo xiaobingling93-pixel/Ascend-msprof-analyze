@@ -201,5 +201,5 @@ class SlowLinkAnalyzer(BaseAnalyzer):
 
         return global_step_rank
 
-    def get_priority(self):
+    def get_priority(self, max_mem_op_dur=None):
         pass

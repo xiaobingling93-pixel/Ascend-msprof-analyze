@@ -45,7 +45,7 @@ class Dataset:
             data[key].append(self)
 
     @staticmethod
-    def _parse():
+    def _parse(self):
         return None
 
     @classmethod
