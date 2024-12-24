@@ -24,7 +24,7 @@ from compare_interface.comparison_interface import ComparisonInterface
 
 from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 
-logger=logging.getLogger()
+logger = logging.getLogger()
 
 
 class OverallSummaryAdvice(AdviceBase):

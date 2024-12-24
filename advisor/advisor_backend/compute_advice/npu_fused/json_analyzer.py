@@ -19,7 +19,7 @@ import pandas as pd
 
 from common_func_advisor.trace_view_json import TraceViewJson
 
-logger=logging.getLogger()
+logger = logging.getLogger()
 
 
 class JSONAnalyzer(object):

@@ -20,7 +20,7 @@ from common_func_advisor.constant import Constant
 from common_func_advisor.constant import CoreType
 from common_func_advisor.constant import PerfColor
 
-logger=logging.getLogger()
+logger = logging.getLogger()
 
 
 class OpPerfFactory:

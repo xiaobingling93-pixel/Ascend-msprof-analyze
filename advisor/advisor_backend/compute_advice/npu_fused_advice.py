@@ -23,7 +23,7 @@ from compute_advice.compute_advice_base import ComputeAdviceBase
 from compute_advice.npu_fused.csv_analyzer import CSVAnalyzer
 from compute_advice.npu_fused.json_analyzer import JSONAnalyzer
 
-logger=logging.getLogger()
+logger = logging.getLogger()
 
 
 class NpuFusedAdvice(ComputeAdviceBase, ABC):
