@@ -20,13 +20,13 @@ class BaseOpCollector(metaclass=ABCMeta):
         self.require_filter_by_step = True
 
     @abstractmethod
-    def add_op(self):
+    def add_op(self, event):
         """ add timeline event into self.op_list, and then will filter event in self.op_list by specific step
         """
         pass
 
     @abstractmethod
-    def post_process(self):
+    def post_process(self, target_op_list, **kwargs):
         """ convert self.op_list to required format like dict, set and so on and then record the final object into
             self.attribute_to_dataset which used to set property of timeline event dataset
         """

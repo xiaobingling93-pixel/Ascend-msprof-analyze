@@ -49,6 +49,6 @@ class PacketAnalyzer(BaseCommunicationAnalyzer):
         self.html = packet_checker.make_render(self.html_render, add_render_list, priority=self.get_priority())
         return self.result
 
-    def get_priority(self):
+    def get_priority(self, max_mem_op_dur=None):
         # 提升1% ~ 3%
         return PriorityBackgroundColor.low

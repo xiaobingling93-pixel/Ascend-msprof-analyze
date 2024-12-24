@@ -13,17 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
+import os
+import json
 from abc import abstractmethod
 from collections import defaultdict
-import json
-import os
-import logging
 
 from advice_base import AdviceBase
+
 from profiler.prof_common.file_manager import FileManager
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+
 
 class TimelineAdviceBase(AdviceBase):
     class PreParseType:
@@ -53,21 +55,21 @@ class TimelineAdviceBase(AdviceBase):
         check whether input path is valid
         """
         if not os.path.exists(self.collection_path):
-            logger.error("Path: %s is not exist.",str(self.collection_path))
+            logger.error("Path: %s is not exist.", str(self.collection_path))
             return False
         if os.path.isdir(self.collection_path) and \
-            (self.collection_path.endswith("ascend_pt") or self.collection_path.endswith("ascend_ms")):
+                (self.collection_path.endswith("ascend_pt") or self.collection_path.endswith("ascend_ms")):
             self.trace_view_path = os.path.join(self.collection_path, "ASCEND_PROFILER_OUTPUT", "trace_view.json")
             if not os.path.exists(self.trace_view_path):
-                logger.error("trace_view.json is not exist in the Path: %s."\
-                             ,str(os.path.join(self.collection_path, "ASCEND_PROFILER_OUTPUT")))
+                logger.error("trace_view.json is not exist in the Path: %s." \
+                             , str(os.path.join(self.collection_path, "ASCEND_PROFILER_OUTPUT")))
                 return False
         elif os.path.isfile(self.collection_path) and os.path.basename(self.collection_path) == "trace_view.json":
             self.trace_view_path = self.collection_path
         else:
             logger.error("Please input ascend_pt or trace_view.json.")
             return False
-        logger.info("Start to analyse the target file: %s",str(self.trace_view_path))
+        logger.info("Start to analyse the target file: %s", str(self.trace_view_path))
         return True
 
     @abstractmethod

@@ -27,23 +27,6 @@ class CSVAnalyzer:
     def __init__(self, path) -> None:
         self._path = path
 
-    def process(self):
-        PathManager.check_path_readable(self._path)
-        df = pd.read_csv(self._path, dtype={"Start Time(us)": str})
-        # 分析是否存在可融合的算子
-        op_type_list = df["Type"].tolist()
-        duration_list = df["Duration(us)"].tolist()
-        start_times = df["Start Time(us)"].tolist()
-        # 去除末尾的\t分隔符
-        start_times = [start_time[:-1] for start_time in start_times]
-        result_list = []
-        for pattern in Constant.PATTERN_DICT.keys():
-            result_list.extend(self.find_all_sub_lists(op_type_list, duration_list, start_times, pattern))
-        data_frame = pd.DataFrame(result_list)
-        data_frame.columns = ["pattern_name", "pattern", "len", "count", "duration sum(us)", "op durations(us)",
-                              "index", "first_timestamp"]
-        return data_frame
-
     @staticmethod
     def find_all_sub_lists(op_type_list, duration_list, start_times, expect_sub_list):
         # 创建一个空字典，用来存储子列表和它们的出现次数和起始位置
@@ -81,3 +64,20 @@ class CSVAnalyzer:
             repeated_sublists.append([pattern_name, expect_sub_list, 0, 0, 0, 0, 0, 0])
         # 返回所有重复的子列表
         return repeated_sublists
+
+    def process(self):
+        PathManager.check_path_readable(self._path)
+        df = pd.read_csv(self._path, dtype={"Start Time(us)": str})
+        # 分析是否存在可融合的算子
+        op_type_list = df["Type"].tolist()
+        duration_list = df["Duration(us)"].tolist()
+        start_times = df["Start Time(us)"].tolist()
+        # 去除末尾的\t分隔符
+        start_times = [start_time[:-1] for start_time in start_times]
+        result_list = []
+        for pattern in Constant.PATTERN_DICT.keys():
+            result_list.extend(self.find_all_sub_lists(op_type_list, duration_list, start_times, pattern))
+        data_frame = pd.DataFrame(result_list)
+        data_frame.columns = ["pattern_name", "pattern", "len", "count", "duration sum(us)", "op durations(us)",
+                              "index", "first_timestamp"]
+        return data_frame

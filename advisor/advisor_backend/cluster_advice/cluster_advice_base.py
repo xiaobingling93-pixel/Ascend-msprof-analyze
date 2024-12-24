@@ -14,14 +14,16 @@
 # limitations under the License.
 
 import os
-
 from abc import abstractmethod
+
 from advice_base import AdviceBase
 from cluster_analysis import Interface
+
 from profiler.advisor.advisor_backend.logger import Logger
 from profiler.prof_common.constant import Constant
 
 logger = Logger()
+
 
 class ClusterAdviceBase(AdviceBase):
     def __init__(self, collection_path: str):

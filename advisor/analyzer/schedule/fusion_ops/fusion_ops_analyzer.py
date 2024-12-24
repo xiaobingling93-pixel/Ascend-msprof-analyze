@@ -46,7 +46,7 @@ class TimelineFusionOpsAnalyzer(BaseAnalyzer):
         key = ScheduleAnalysisDataset.get_key()
         self.timeline_event_dataset = self.get_first_data_by_key(self.dataset_list, key)
 
-    def get_priority(self):
+    def get_priority(self, max_mem_op_dur=None):
         return PriorityBackgroundColor.low
 
     def optimize(self, **kwargs):

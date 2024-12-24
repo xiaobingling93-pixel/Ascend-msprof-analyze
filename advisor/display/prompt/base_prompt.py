@@ -16,6 +16,7 @@ import importlib
 
 from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 
+
 def split_camel_case(word):
     result = []
     current_word = []

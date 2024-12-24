@@ -114,12 +114,12 @@ class BaseAnalyzer(VersionControl, metaclass=ABCMeta):
         else:
             for _, dirs, __ in os.walk(self.collection_path):
                 is_found_type = False
-                for dir in dirs:
-                    if dir.endswith(ASCEND_MS):
+                for direction in dirs:
+                    if direction.endswith(ASCEND_MS):
                         profiling_type = [elem for elem in profiling_type_list if Constant.MINDSPORE in elem][0]
                         is_found_type = True
                         break
-                    elif dir.endswith(ASCEND_PT):
+                    elif direction.endswith(ASCEND_PT):
                         profiling_type = [elem for elem in profiling_type_list if Constant.PYTORCH in elem][0]
                         is_found_type = True
                         break
@@ -142,9 +142,9 @@ class BaseAnalyzer(VersionControl, metaclass=ABCMeta):
                 ascend_dirs.append(self.collection_path)
             else:
                 for root, dirs, _ in os.walk(self.collection_path):
-                    for dir in dirs:
-                        if dir.endswith(ASCEND_MS):
-                            ascend_dirs.append(os.path.join(root, dir))
+                    for direction in dirs:
+                        if direction.endswith(ASCEND_MS):
+                            ascend_dirs.append(os.path.join(root, direction))
             if ascend_dirs:
                 ascend_dir = ascend_dirs[0]
                 for file_name in os.listdir(ascend_dir):

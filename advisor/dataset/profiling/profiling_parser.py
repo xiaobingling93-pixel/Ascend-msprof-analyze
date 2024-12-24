@@ -60,6 +60,14 @@ class ProfilingParser:
             return 0.0
 
     @staticmethod
+    def parse_from_file(file):
+        """
+        parse from file as a static method
+        """
+        # 实现解析文件的逻辑，这里可以根据需要进行扩展
+        return False
+
+    @staticmethod
     def _check_csv_file_format(csv_file_name: str, csv_content: List[List[str]]):
         if not csv_content:
             logger.error("%s is empty", csv_file_name)
@@ -80,14 +88,6 @@ class ProfilingParser:
             else:
                 title_dict[idx] = title.replace(" ", "_")
         return title_dict
-
-    @staticmethod
-    def parse_from_file(file):
-        """
-        parse from file as a static method
-        """
-        # 实现解析文件的逻辑，这里可以根据需要进行扩展
-        return False
 
     def parse_data(self) -> bool:
         """

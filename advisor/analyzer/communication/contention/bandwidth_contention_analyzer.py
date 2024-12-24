@@ -51,6 +51,6 @@ class BandwidthContentionAnalyzer(BaseCommunicationAnalyzer):
                                                              priority=self.get_priority())
         return self.result
 
-    def get_priority(self):
+    def get_priority(self, max_mem_op_dur=None):
         # 提升1% ~ 3%
         return PriorityBackgroundColor.low

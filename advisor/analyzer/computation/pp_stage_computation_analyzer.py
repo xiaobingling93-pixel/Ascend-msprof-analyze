@@ -68,7 +68,7 @@ class PPStageComputationAnalyzer(BaseAnalyzer):
                                      stages_rendered_html=list(self._stages_rendered_html),
                                      priority_background_color=PriorityBackgroundColor.high)
 
-    def get_priority(self):
+    def get_priority(self, max_mem_op_dur=None):
         pass
 
     def _optimize(self, profiling_path, **kwargs):

@@ -53,5 +53,5 @@ class AICoreFreqAnalyzer(BaseAnalyzer):
                                                      rank=kwargs.get("rank"))
         return self.result
 
-    def get_priority(self):
+    def get_priority(self, max_mem_op_dur=None):
         return PriorityBackgroundColor.high

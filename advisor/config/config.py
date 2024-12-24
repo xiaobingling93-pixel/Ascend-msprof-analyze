@@ -14,10 +14,8 @@
 # limitations under the License.
 
 
-
-import os
 import logging
-
+import os
 
 from profiler.advisor.utils.utils import Timer
 from profiler.advisor.utils.utils import singleton
@@ -75,7 +73,6 @@ class Config:
         :return: root path
         """
         return self._root_path
-
 
     @property
     def analysis_result_file(self) -> str:
@@ -149,11 +146,6 @@ class Config:
         except Exception:
             return ""
 
-    def _normalize_path(self, file) -> str:
-        if not file.startswith("/"):
-            file = os.path.join(self._work_path, file)
-        return os.path.abspath(file)
-
     def set_config(self, key, value) -> None:
         """
         set config value
@@ -176,11 +168,14 @@ class Config:
     def set_log_path(self, result_file: str, log_path: str = None):
         self.log_path = log_path if log_path is not None else os.path.join(self._work_path, "log")
         os.makedirs(self.log_path, exist_ok=True)
-        self.config.set("ANALYSE","analysis_result_file",os.path.join(self.log_path, result_file))
+        self.config.set("ANALYSE", "analysis_result_file", os.path.join(self.log_path, result_file))
         self._analysis_result_file = os.path.join(self.log_path, result_file)
 
     def remove_log(self):
         if self.log_path and os.path.isdir(self.log_path) and not os.listdir(self.log_path):
             os.rmdir(self.log_path)
 
-
+    def _normalize_path(self, file) -> str:
+        if not file.startswith("/"):
+            file = os.path.join(self._work_path, file)
+        return os.path.abspath(file)

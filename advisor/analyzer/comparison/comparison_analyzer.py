@@ -15,9 +15,9 @@
 import logging
 
 from profiler.advisor.analyzer.base_analyzer import BaseAnalyzer
-from profiler.advisor.result.result import OptimizeResult
-from profiler.advisor.display.html.render import HTMLRender
 from profiler.advisor.analyzer.comparison.comparison_checker import ComparisonChecker
+from profiler.advisor.display.html.render import HTMLRender
+from profiler.advisor.result.result import OptimizeResult
 
 logger = logging.getLogger()
 
@@ -34,7 +34,7 @@ class ComparisonAnalyzer(BaseAnalyzer):
             self._optimize(**compare_profiling_path)
         return self.result
 
-    def get_priority(self):
+    def get_priority(self, max_mem_op_dur=None):
         pass
 
     def _optimize(self, profiling_path, benchmark_profiling_path, **kwargs):

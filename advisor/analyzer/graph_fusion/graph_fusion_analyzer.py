@@ -45,7 +45,7 @@ class FusionOPAnalyzer(BaseAnalyzer):
                     kwargs.get("add_render_list"))
         return self.result
 
-    def get_priority(self):
+    def get_priority(self, max_mem_op_dur=None):
         pass
 
     def _check(self, graph_data: List[GraphDataset], profiling_data: List[ProfilingDataset] = None,

@@ -117,7 +117,7 @@ class OpDispatchAnalyzer(BaseAnalyzer):
                                     priority_background_color=self.get_priority(),
                                     rank=kwargs.get("rank"))
 
-    def get_priority(self):
+    def get_priority(self, max_mem_op_dur=None):
         step_duration = getattr(self.dataset, "step_duration", None)
         op_compile_total_dur = getattr(self._op_compile, "total_time", None)
         if step_duration is None or op_compile_total_dur is None:

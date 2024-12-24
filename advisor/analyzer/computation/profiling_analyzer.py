@@ -78,7 +78,7 @@ class ProfilingAnalyzer(BaseAnalyzer, ABC):
 
         return self.result
 
-    def get_priority(self,max_mem_op_dur):
+    def get_priority(self, max_mem_op_dur):
         if "aicpu" not in max_mem_op_dur.__class__.__name__.lower():
             return PriorityBackgroundColor.low
 

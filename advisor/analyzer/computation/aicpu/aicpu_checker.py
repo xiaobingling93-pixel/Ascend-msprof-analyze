@@ -26,6 +26,7 @@ from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 from profiler.prof_common.file_manager import FileManager
 from profiler.prof_common.constant import Constant
 
+
 class AicpuChecker(OperatorChecker):
     _CHECKER = "aicpu operator"
     _MIN_TASK_DURATION = 20

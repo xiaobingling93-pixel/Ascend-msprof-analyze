@@ -273,5 +273,5 @@ class SlowRankAnalyzer(BaseAnalyzer):
         free_time = safe_index(safe_index(self.format_datas.get("data"), row_index, []), free_col_index, 0)
         return convert_to_float(compute_time) + convert_to_float(communicate_time) + convert_to_float(free_time)
 
-    def get_priority(self):
+    def get_priority(self, max_mem_op_dur=None):
         pass

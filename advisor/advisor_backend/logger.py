@@ -15,6 +15,7 @@
 
 import logging
 
+
 class Logger:
     def __init__(self):
         if not hasattr(self, 'logger'):
@@ -35,4 +36,3 @@ class Logger:
 
     def critical(self, message):
         self.logger.critical(message)
-

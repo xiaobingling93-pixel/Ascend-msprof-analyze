@@ -134,23 +134,6 @@ class OperatorChecker(VersionControl):
         )
         return OptimizeRecord(optimization_item, statistics_item)
 
-    def _get_description(self, description, op_type_list=None):
-        if not op_type_list:
-            return description
-
-        desc_suffix = []
-        for i, _ in enumerate(op_type_list):
-            if i % 3 == 0 and i != 0:
-                desc_suffix.append("\n")
-
-            desc_suffix.append(f"{op_type_list[i]}")
-
-            if i < len(op_type_list) - 1:
-                desc_suffix.append(", ")
-
-        description += "".join(desc_suffix)
-        return description
-
     def pre_check(self, profiling_data) -> bool:
         return True
 
@@ -335,3 +318,20 @@ class OperatorChecker(VersionControl):
             logger.warning(self.SKIP_CHECK_MSG, self._CHECKER, "op summary")
             return False
         return True
+
+    def _get_description(self, description, op_type_list=None):
+        if not op_type_list:
+            return description
+
+        desc_suffix = []
+        for i, _ in enumerate(op_type_list):
+            if i % 3 == 0 and i != 0:
+                desc_suffix.append("\n")
+
+            desc_suffix.append(f"{op_type_list[i]}")
+
+            if i < len(op_type_list) - 1:
+                desc_suffix.append(", ")
+
+        description += "".join(desc_suffix)
+        return description
