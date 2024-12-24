@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import os
+import logging
 from abc import ABC
 
 import pandas as pd
@@ -21,6 +22,8 @@ import pandas as pd
 from compute_advice.compute_advice_base import ComputeAdviceBase
 from compute_advice.npu_fused.csv_analyzer import CSVAnalyzer
 from compute_advice.npu_fused.json_analyzer import JSONAnalyzer
+
+logger=logging.getLogger()
 
 
 class NpuFusedAdvice(ComputeAdviceBase, ABC):
@@ -46,7 +49,7 @@ class NpuFusedAdvice(ComputeAdviceBase, ABC):
         all_pattern_data = all_pattern_data.sort_values(by='duration sum(us)', ascending=False)
         filter_data = all_pattern_data.get(all_pattern_data.get("duration sum(us)", 0) > 0)
         if not self.has_callstack():
-            print("[Warning] No call stack info found, advice will be incomplete")
+            logger.warning("No call stack info found, advice will be incomplete")
             self.cur_data = filter_data
         else:
             json_analyzer = JSONAnalyzer(self.trace_view_path)

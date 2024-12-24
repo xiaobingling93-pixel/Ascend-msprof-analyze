@@ -16,9 +16,12 @@
 from abc import abstractmethod
 from collections import defaultdict
 import os
+import logging
 
 from advice_base import AdviceBase
 from profiler.prof_common.file_manager import FileManager
+
+logger=logging.getLogger()
 
 
 class ComputeAdviceBase(AdviceBase):
@@ -40,22 +43,22 @@ class ComputeAdviceBase(AdviceBase):
         check whether input path is valid
         """
         if not os.path.exists(self.collection_path):
-            print("[ERROR] Path: {} is not exist.".format(self.collection_path))
+            logger.error("Path: {} is not exist.".format(self.collection_path))
             return False
         if os.path.isdir(self.collection_path) and \
             (self.collection_path.endswith("ascend_pt") or self.collection_path.endswith("ascend_ms")):
             self.kernel_details_path = os.path.join(self.collection_path, "ASCEND_PROFILER_OUTPUT",
                                                     "kernel_details.csv")
             if not os.path.exists(self.kernel_details_path):
-                print("[ERROR] kernel_details.csv is not exist in the Path: {}.".format(
+                logger.error("kernel_details.csv is not exist in the Path: {}.".format(
                     os.path.join(self.collection_path, "ASCEND_PROFILER_OUTPUT")))
                 return False
         elif os.path.isfile(self.collection_path) and os.path.basename(self.collection_path) == "kernel_details.csv":
             self.kernel_details_path = self.collection_path
         else:
-            print("[ERROR] Please input ascend_pt or kernel_details.csv")
+            logger.error("Please input ascend_pt or kernel_details.csv")
             return False
-        print("[INFO] Start to analyse the target file: {}".format(self.kernel_details_path))
+        logger.info("Start to analyse the target file: {}".format(self.kernel_details_path))
         self.preparse()
         return True
 
