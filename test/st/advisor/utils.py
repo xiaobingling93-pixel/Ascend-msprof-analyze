@@ -5,11 +5,16 @@ import subprocess
 
 RE_EXCEL_MATCH_EXP = r"^mstt_advisor_\d{1,20}\.xlsx"
 RE_HTML_MATCH_EXP = r"^mstt_advisor_\d{1,20}\.html"
+COMMAND_SUCCESS = 0
+
 
 def execute_cmd(cmd):
     logging.info('Execute command:%s', " ".join(cmd))
-    completed_process = subprocess.run(cmd, capture_output=True, shell=False, check=True)
+    completed_process = subprocess.run(cmd, shell=False, stderr=subprocess.PIPE)
+    if completed_process.returncode != COMMAND_SUCCESS:
+        logging.error(completed_process.stderr.decode())
     return completed_process.returncode
+
 
 def get_files(out_path):
     dirs = os.listdir(out_path)
