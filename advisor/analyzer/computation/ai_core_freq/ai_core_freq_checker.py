@@ -20,6 +20,7 @@ from profiler.advisor.display.prompt.base_prompt import BasePrompt
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.utils.utils import convert_to_float
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 
 logger = logging.getLogger()
 

@@ -80,10 +80,10 @@ class BaseTimelineEventDataset:
         kwargs = {}
         if func_name == FrequencyCollector.__name__:
             ops_with_task_type = getattr(self, "ops_with_task_type", {}).values()
-            kwargs["ai_core_ops"] = [
-                op for op in ops_with_task_type if
-                op.get(Constant.TASK_TYPE) in [Constant.AI_CORE, Constant.MIX_AIC]
-            ]
+            kwargs["ai_core_ops"] = [op
+                                     for op in ops_with_task_type if
+                                     op.get(Constant.TASK_TYPE) in [Constant.AI_CORE, Constant.MIX_AIC]
+                                     ]
         return kwargs
 
     def add_event(self, index, event):

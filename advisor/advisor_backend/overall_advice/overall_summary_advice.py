@@ -14,14 +14,12 @@
 # limitations under the License.
 import os
 
-from advisor_backend.advice_base import AdviceBase
-
 from profiler.advisor.display.prompt.base_prompt import BasePrompt
+from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 from profiler.prof_common.constant import Constant
 
 from compare_interface.comparison_interface import ComparisonInterface
-
-from profiler.prof_common.additional_args_manager import AdditionalArgsManager
+from advisor_backend.advice_base import AdviceBase
 
 
 class OverallSummaryAdvice(AdviceBase):
