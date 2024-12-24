@@ -20,7 +20,6 @@ from profiler.advisor.display.prompt.base_prompt import BasePrompt
 from profiler.advisor.result.item import OptimizeItem, OptimizeRecord
 from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.utils.utils import convert_to_float
-from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 
 logger = logging.getLogger()
 
@@ -75,9 +74,8 @@ class AICoreFreqChecker:
 
         if self.decrease_freq_ops:
             # 按算子总耗时和降频比率 降序排列
-            self.decrease_freq_ops.sort(key=
-                                        lambda x: (x[self.TOTAL_DURATION_INDEX], x[self.DECREASE_FREQ_RATIO_INDEX]),
-                                        reverse=True)
+            self.decrease_freq_ops.sort(
+                key=lambda x: (x[self.TOTAL_DURATION_INDEX], x[self.DECREASE_FREQ_RATIO_INDEX]), reverse=True)
         if not self.ai_core_freq_issues:
             return
 

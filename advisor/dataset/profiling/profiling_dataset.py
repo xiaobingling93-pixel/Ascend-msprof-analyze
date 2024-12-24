@@ -37,7 +37,8 @@ class ProfilingDataset(Dataset):
 
     def __init__(self, collection_path, data: dict, **kwargs) -> None:
         self.cann_version = kwargs.get(Constant.CANN_VERSION, EnumParamsParser().get_default(Constant.CANN_VERSION))
-        self.prof_type = kwargs.get(Constant.PROFILING_TYPE_UNDER_LINE, EnumParamsParser().get_default(Constant.PROFILING_TYPE_UNDER_LINE))
+        self.prof_type = kwargs.get(
+            Constant.PROFILING_TYPE_UNDER_LINE, EnumParamsParser().get_default(Constant.PROFILING_TYPE_UNDER_LINE))
         self.patterns = self.parse_pattern()
         self.current_version_pattern = self.get_current_version_pattern()
         self._info = None

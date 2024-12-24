@@ -61,8 +61,8 @@ class TimelineAdviceBase(AdviceBase):
                 (self.collection_path.endswith("ascend_pt") or self.collection_path.endswith("ascend_ms")):
             self.trace_view_path = os.path.join(self.collection_path, "ASCEND_PROFILER_OUTPUT", "trace_view.json")
             if not os.path.exists(self.trace_view_path):
-                logger.error("trace_view.json is not exist in the Path: %s." \
-                             , str(os.path.join(self.collection_path, "ASCEND_PROFILER_OUTPUT")))
+                logger.error("trace_view.json is not exist in the Path: %s.",
+                             str(os.path.join(self.collection_path, "ASCEND_PROFILER_OUTPUT")))
                 return False
         elif os.path.isfile(self.collection_path) and os.path.basename(self.collection_path) == "trace_view.json":
             self.trace_view_path = self.collection_path

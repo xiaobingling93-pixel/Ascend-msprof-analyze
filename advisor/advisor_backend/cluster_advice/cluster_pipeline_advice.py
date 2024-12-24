@@ -291,8 +291,8 @@ class ClusterPipelineAdvice(ClusterAdviceBase):
         process all rank profiling data by using multi-process
         """
         start_time = time.time()
-        logger.info("Start to process %s rank profiling data with %s workers."
-                    , str(len(self.rank_prof_dirs)), str(self.worker_num))
+        logger.info("Start to process %s rank profiling data with %s workers.",
+                    str(len(self.rank_prof_dirs)), str(self.worker_num))
         with multiprocessing.Pool(self.worker_num) as pool:
             results = pool.map(self.work, self.rank_prof_dirs.items())
 
@@ -321,14 +321,14 @@ class ClusterPipelineAdvice(ClusterAdviceBase):
         timeslice_list = self.get_pipeline_timeslice(fine_data.hcom_ops, fine_data.hcom_tids, fine_data.min_ts,
                                                      fine_data.max_ts)
         if not fine_data.fp_ops or not fine_data.bp_ops:
-            logger.info("[Rank %s] No frameWork data in trace view, only show stage and bubble."
-                        , str(rank_id))
+            logger.info("[Rank %s] No frameWork data in trace view, only show stage and bubble.",
+                        str(rank_id))
         elif len(fine_data.hcom_tids) > 1:
-            logger.warning("[Rank %s] More than one hcom tid found, only show stage and bubble."
-                           , str(rank_id))
+            logger.warning("[Rank %s] More than one hcom tid found, only show stage and bubble.",
+                           str(rank_id))
         else:
-            logger.info("[Rank %s] Found frameWork data in trace view, show fp bp and bubble."
-                        , rank_id)
+            logger.info("[Rank %s] Found frameWork data in trace view, show fp bp and bubble.",
+                        rank_id)
             bp_ops = self.get_fp_bp_bound_ops(fine_data)
             self.update_stage_fp_bp(timeslice_list, bp_ops)
             show_fp_bp = True

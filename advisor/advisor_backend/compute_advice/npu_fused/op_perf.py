@@ -151,11 +151,12 @@ class OpPerf:
         return (intput_size + output_size) / (Constant.BYTE_UNIT_TRANS * Constant.BYTE_UNIT_TRANS)
     
     def get_throughput(self):
-        # throughput(GB/s)
+        # throughput bytes (GB/s)
         if not self.task_duration or abs(self.task_duration) < 1e-6:
             print("[ERROR] There is no task_duration, do not assess vector op performance.")
             return 0
-        return self.row[Constant.TITLE.SIZE] / Constant.BYTE_UNIT_TRANS / self.task_duration * Constant.UNIT_TRANS * Constant.UNIT_TRANS
+        return (self.row[Constant.TITLE.SIZE] /
+                Constant.BYTE_UNIT_TRANS / self.task_duration * Constant.UNIT_TRANS * Constant.UNIT_TRANS)
     
     def get_perf_color(self):
         return PerfColor.WHITE

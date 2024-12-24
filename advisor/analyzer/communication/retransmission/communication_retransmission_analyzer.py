@@ -47,6 +47,6 @@ class RDMARetransmissionAnalyzer(BaseCommunicationAnalyzer):
         self.html = rdma_checker.make_render(self.html_render, add_render_list, priority=self.get_priority())
         return self.result
 
-    def get_priority(self, max_mem_op_dur):
+    def get_priority(self, max_mem_op_dur=None):
         # 单次重传最少4s，高优先级
         return PriorityBackgroundColor.high

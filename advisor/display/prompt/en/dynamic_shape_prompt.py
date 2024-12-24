@@ -17,8 +17,9 @@ class DynamicShapePrompt(object):
     RANK_ID = "RANK {} "
     PROBLEM = "Dynamic Shape Operator"
     DESCRIPTION = "Found all operators are dynamic shape"
-    ENABLE_COMPILED_SUGGESTION = "1. Please try to set environment by execute `export HOST_CACHE_CAPACITY=20`.\n." \
-                                 "2. Please place the following code at the entrance of the python script to disable jit compile.\n " \
-                                 "Code: `torch_npu.npu.set_compile_mode(jit_compile=False) \n " \
-                                 "torch_npu.npu.config.allow_internal_format = False`.\n"
+    ENABLE_COMPILED_SUGGESTION = \
+        "1. Please try to set environment by execute `export HOST_CACHE_CAPACITY=20`.\n." \
+        "2. Please place the following code at the entrance of the python script to disable jit compile.\n " \
+        "Code: `torch_npu.npu.set_compile_mode(jit_compile=False) \n " \
+        "torch_npu.npu.config.allow_internal_format = False`.\n"
     RELEASE_SUGGESTION = "for details please refer to link : <a href={} target='_blank'>LINK</a>"

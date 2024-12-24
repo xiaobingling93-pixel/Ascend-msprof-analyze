@@ -15,10 +15,10 @@
 import logging
 
 from profiler.advisor.analyzer.base_analyzer import BaseAnalyzer
-from profiler.advisor.result.result import OptimizeResult
 from profiler.advisor.analyzer.schedule.synchronize_stream.synchronize_stream_checker import SynchronizeStreamChecker
-from profiler.advisor.display.html.render import HTMLRender
 from profiler.advisor.dataset.timeline_event_dataset import ScheduleAnalysisDataset
+from profiler.advisor.display.html.render import HTMLRender
+from profiler.advisor.result.result import OptimizeResult
 
 logger = logging.getLogger()
 
@@ -43,5 +43,5 @@ class SynchronizeStreamAnalyzer(BaseAnalyzer):
                                                rank=kwargs.get("rank"))
         return self.result
 
-    def get_priority(self,  max_mem_op_dur):
-        return  max_mem_op_dur.priority
+    def get_priority(self, max_mem_op_dur):
+        return max_mem_op_dur.priority
