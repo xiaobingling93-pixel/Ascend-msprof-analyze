@@ -1,4 +1,4 @@
-# Copyright (c) 2023, Huawei Technologies Co., Ltd
+# Copyright (c) 2024, Huawei Technologies Co., Ltd
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0  (the "License");
@@ -13,10 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from profiler.prof_common.constant import Constant
 from communication_group.communication_db_group import CommunicationDBGroup
 from communication_group.communication_db_group import CommunicationDBGroupOptimized
 from communication_group.communication_json_group import CommunicationJsonGroup
+from profiler.prof_common.constant import Constant
 
 
 SIMPLIFIED = "SIMPLIFIED"

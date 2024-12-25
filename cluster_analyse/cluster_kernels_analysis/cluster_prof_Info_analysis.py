@@ -1,4 +1,4 @@
-# Copyright (c) 2023, Huawei Technologies Co., Ltd.
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0  (the "License");
@@ -186,7 +186,7 @@ class OpSummaryAnalyzerBase:
     def get_columns_to_view(self):
         return self.columns_to_view
 
-    def calculateViewData(self, summary_data):
+    def calculate_view_data(self, summary_data):
         # 存储所有合并后的数据
         calculate_dict = {self.columns_to_view[i]: self.calculate_fun for i in range(len(self.columns_to_view))}
         view_data = summary_data.groupby(self.attrs_to_group).agg(calculate_dict).reset_index()
@@ -198,7 +198,7 @@ class TimeToCsvAnalyzer(OpSummaryAnalyzerBase):
         super().__init__(chip_type, "TimeToCsvAnalyzer", dir_path)
 
     def generate_deliverable(self, summary_data, rank_num):
-        view_data = self.calculateViewData(summary_data)
+        view_data = self.calculate_view_data(summary_data)
         # 规范化列名
         view_data.columns = [''.join(col) if col[1] == "" else '_'.join(col) for col in view_data.columns]
         try:
@@ -221,7 +221,7 @@ class StatisticalInfoToHtmlAnalyzer(OpSummaryAnalyzerBase):
         # top_n 如果不符合要求，报警告
 
     def generate_deliverable(self, summary_data, rank_num):
-        view_data = self.calculateViewData(summary_data)
+        view_data = self.calculate_view_data(summary_data)
         # 规范化列名 op_name/ --> op_name   time/var 这种不变
         view_data.columns = [''.join(col) if col[1] == "" else col for col in view_data.columns]
 

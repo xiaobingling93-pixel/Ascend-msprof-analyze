@@ -1,4 +1,4 @@
-# Copyright (c) 2023, Huawei Technologies Co., Ltd.
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0  (the "License");
@@ -15,11 +15,14 @@
 
 import os
 import sqlite3
+import logging
+
+from common_func.empty_class import EmptyClass
+from common_func.tables_config import TablesConfig
 
 from profiler.prof_common.constant import Constant
-from common_func.empty_class import EmptyClass
 from profiler.prof_common.file_manager import check_db_path_valid
-from common_func.tables_config import TablesConfig
+from profiler.prof_common.utils import PrintUtils
 
 class DBManager:
     """
@@ -38,7 +41,7 @@ class DBManager:
             try:
                 conn = sqlite3.connect(db_path)
             except sqlite3.Error as err:
-                print(f"[ERROR] {err}")
+                PrintUtils.print_error(f"{err}")
                 return EmptyClass("empty conn"), EmptyClass("empty curs")
             try:
                 if isinstance(conn, sqlite3.Connection):
@@ -46,7 +49,7 @@ class DBManager:
                     os.chmod(db_path, Constant.FILE_AUTHORITY)
                     return conn, curs
             except sqlite3.Error as err:
-                print(f"[ERROR] {err}")
+                PrintUtils.print_error(f"{err}")
                 return EmptyClass("empty conn"), EmptyClass("empty curs")
         return EmptyClass("empty conn"), EmptyClass("empty curs")
 
@@ -59,12 +62,12 @@ class DBManager:
             if isinstance(curs, sqlite3.Cursor):
                 curs.close()
         except sqlite3.Error as err:
-            print(f"[ERROR] {err}")
+            PrintUtils.print_error(f"{err}")
         try:
             if isinstance(conn, sqlite3.Connection):
                 conn.close()
         except sqlite3.Error as err:
-            print(f"[ERROR] {err}")
+            PrintUtils.print_error(f"{err}")
 
     @staticmethod
     def judge_table_exists(curs: any, table_name: str) -> any:
@@ -77,7 +80,7 @@ class DBManager:
             curs.execute("select count(*) from sqlite_master where type='table' and name=?", (table_name,))
             return curs.fetchone()[0]
         except sqlite3.Error as err:
-            print("[ERROR] {}".format(err))
+            PrintUtils.print_error(f"{err}")
             return False
 
     @staticmethod
@@ -138,7 +141,7 @@ class DBManager:
             curs.execute(sql)
             res = len(curs.fetchall())
         except sqlite3.Error as err:
-            print("[ERROR] {}".format(err))
+            PrintUtils.print_error(f"{err}")
         finally:
             cls.destroy_db_connect(conn, curs)
         return res
@@ -157,9 +160,9 @@ class DBManager:
                 conn.commit()
                 return True
         except sqlite3.Error as err:
-            print(f"[ERROR] {err}")
+            PrintUtils.print_error(f"{err}")
             return False
-        print("[ERROR] conn is invalid param")
+        PrintUtils.print_error("conn is invalid param")
         return False
 
     @staticmethod
@@ -173,9 +176,9 @@ class DBManager:
                 conn.commit()
                 return True
         except sqlite3.Error as err:
-            print(f"[ERROR] {err}")
+            PrintUtils.print_error(f"{err}")
             return False
-        print("[ERROR] conn is invalid param")
+        PrintUtils.print_error("conn is invalid param")
         return False
 
     @classmethod
@@ -192,7 +195,7 @@ class DBManager:
             else:
                 res = curs.execute(sql)
         except sqlite3.Error as err:
-            print(f"[ERROR] {err}")
+            PrintUtils.print_error(f"{err}")
             curs.row_factory = None
             return []
         try:
@@ -204,12 +207,12 @@ class DBManager:
                 else:
                     data += res
                 if len(data) > cls.MAX_ROW_COUNT:
-                    print("[WARRING] The records count in the table exceeds the limit!")
+                    PrintUtils.print_warning("The records count in the table exceeds the limit!")
                 if len(res) < cls.FETCH_SIZE:
                     break
             return data
         except sqlite3.Error as err:
-            print(f"[ERROR] {err}")
+            PrintUtils.print_error(f"{err}")
             return []
         finally:
             curs.row_factory = None

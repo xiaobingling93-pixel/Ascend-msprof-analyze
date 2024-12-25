@@ -1,4 +1,4 @@
-# Copyright (c) 2023, Huawei Technologies Co., Ltd.
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0  (the "License");
@@ -22,6 +22,7 @@ import yaml
 from profiler.prof_common.constant import Constant
 from profiler.prof_common.path_manager import PathManager
 from profiler.prof_common.additional_args_manager import AdditionalArgsManager
+from profiler.prof_common.utils import PrintUtils
 
 logger = logging.getLogger()
 
@@ -59,7 +60,7 @@ class FileManager:
             check_msg = input(
                 f"The file({file_path}) size exceeds the preset max value. Continue reading the file? [y/n]")
             if check_msg.lower() != "y":
-                print(f"[WARNING] The user choose not to read the file: {file_path}")
+                PrintUtils.print_warning(f"The user choose not to read the file: {file_path}")
                 return []
         result_data = []
         try:
