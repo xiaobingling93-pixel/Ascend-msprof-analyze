@@ -162,7 +162,7 @@ class NPUProfilingParser(BaseProfilingParser):
 
     def _update_memory_list(self):
         memory_data=[]
-        if self._path_level != Constant.TRACE_PATH:
+        if self._profiling_path != self._json_path:
             memory_data = self._read_csv_data(self._operator_memory_path, OperatorMemoryBean)
         if memory_data:
             self._dequeue_data.sort(key=lambda x: x.start_time)
