@@ -161,7 +161,9 @@ class NPUProfilingParser(BaseProfilingParser):
         self._result_data.update_kernel_details(kernels_dict)
 
     def _update_memory_list(self):
-        memory_data = self._read_csv_data(self._operator_memory_path, OperatorMemoryBean)
+        memory_data=[]
+        if self._path_level != Constant.TRACE_PATH:
+            memory_data = self._read_csv_data(self._operator_memory_path, OperatorMemoryBean)
         if memory_data:
             self._dequeue_data.sort(key=lambda x: x.start_time)
         for data in memory_data:
@@ -206,6 +208,8 @@ class NPUProfilingParser(BaseProfilingParser):
                                                    self._dequeue_data[left].end_time else Constant.INVALID_VALUE
 
     def _update_bandwidth(self):
+        if self._path_level == Constant.TRACE_PATH:
+            return
         try:
             communication_json = FileManager.read_json_file(self._communication_path)
         except FileNotFoundError:
@@ -410,6 +414,8 @@ class NPUProfilingParser(BaseProfilingParser):
                 self._result_data.overall_metrics.update_lccl_info(event.dur)
 
     def __parse_kernel_csv(self):
+        if self._path_level == Constant.TRACE_PATH:
+            return
         try:
             kernel_details = self._read_csv_data(self._kernel_detail_path, KernelDetailsBean)
         except Exception:
