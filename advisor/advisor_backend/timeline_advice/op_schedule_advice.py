@@ -66,8 +66,9 @@ class OpScheduleAdvice(TimelineAdviceBase):
         self.cur_bottleneck = f"NPU Utilication: {round(free_ratio * 100, 2)}%, " \
                               f"NPU Free Utilization: {round(cpt_ratio * 100, 2)}%."
         if len(self.preparse_data[self.PreParseType.SYNCHRONIZE]) > 1:
-            self.cur_advice = f"Device synchronize {len(self.preparse_data[self.PreParseType.SYNCHRONIZE])} times, " \
-                              "try to reduce synchronization statements to alleviate the bottleneck of operator delivery.\n"
+            self.cur_advice = \
+                f"Device synchronize {len(self.preparse_data[self.PreParseType.SYNCHRONIZE])} times, " \
+                "try to reduce synchronization statements to alleviate the bottleneck of operator delivery.\n"
         small_op_num = self.small_op_block(op_free, op_dur)
         small_op_ratio = small_op_num / len(op_dur) if op_dur else 0.0
         if small_op_ratio > Constant.SMALL_OP_NUM_RATIO:

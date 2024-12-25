@@ -119,10 +119,10 @@ def singleton(cls):
         members = inspect.getmembers(base_class)
 
         # 过滤出函数对象
-        function_objs = [
-            member[1] for member in members 
-            if inspect.isfunction(member[1]) or inspect.ismethod(member[1])
-        ]
+        function_objs = [member[1]
+                         for member in members
+                         if inspect.isfunction(member[1]) or inspect.ismethod(member[1])
+                         ]
         for function_obj in function_objs:
             if inspect.isfunction(function_obj) and not is_static_func(function_obj):
                 continue

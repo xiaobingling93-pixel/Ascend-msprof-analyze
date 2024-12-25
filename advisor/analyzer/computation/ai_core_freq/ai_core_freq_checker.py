@@ -75,9 +75,8 @@ class AICoreFreqChecker:
 
         if self.decrease_freq_ops:
             # 按算子总耗时和降频比率 降序排列
-            self.decrease_freq_ops.sort(key=
-                                        lambda x: (x[self.TOTAL_DURATION_INDEX], x[self.DECREASE_FREQ_RATIO_INDEX]),
-                                        reverse=True)
+            self.decrease_freq_ops.sort(
+                key=lambda x: (x[self.TOTAL_DURATION_INDEX], x[self.DECREASE_FREQ_RATIO_INDEX]), reverse=True)
         if not self.ai_core_freq_issues:
             return
 

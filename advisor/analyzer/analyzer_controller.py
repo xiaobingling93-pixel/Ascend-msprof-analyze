@@ -313,7 +313,9 @@ class AnalyzerController:
             >>> analyzer_controller = AnalyzerController()
             >>> analysis_kwargs = dict(advisor_analyze_processes=2, disable_profiling_comparison=True)
             >>>
-            >>> async_analysis_process = analyzer_controller.async_do_analysis(Interface.all_dimension, **analysis_kwargs)
+            >>> async_analysis_process = analyzer_controller.async_do_analysis(
+            >>>                     Interface.all_dimension, **analysis_kwargs)
+            >>>
             >>>
             >>> # query the job status every second
             >>> while True:

@@ -14,10 +14,13 @@
 # limitations under the License.
 import functools
 from typing import Dict
+import logging
 
 from common_func_advisor.constant import Constant
 from common_func_advisor.constant import CoreType
 from common_func_advisor.constant import PerfColor
+
+logger = logging.getLogger()
 
 
 class OpPerfFactory:
@@ -129,7 +132,7 @@ class OpPerf:
         shapes = self.shape_to_tuple(shapes_str)
         dtypes = self.dtype_to_tuple(dtypes_str)
         if len(shapes) > len(dtypes):
-            print(f"[ERROR] The size of shape is greater than that of dtypes.")
+            logger.error("The size of shape is greater than that of dtypes.")
             return 0
         if len(shapes) < len(dtypes):
             shapes = list(shapes)
@@ -144,20 +147,22 @@ class OpPerf:
     def get_calc_size(self):
         # input and output bytes (MB)
         if not self.input_shapes or not self.output_shapes:
-            print("[ERROR] There is no tensor data, do not assess vector op performance.")
+            logger.error("There is no tensor data, do not assess vector op performance.")
             return 0
         intput_size = self.get_size(self.input_shapes, self.input_data_types)
         output_size = self.get_size(self.output_shapes, self.output_data_types)
         return (intput_size + output_size) / (Constant.BYTE_UNIT_TRANS * Constant.BYTE_UNIT_TRANS)
     
     def get_throughput(self):
-        # throughput(GB/s)
+        # throughput bytes (GB/s)
         if not self.task_duration or abs(self.task_duration) < 1e-6:
-            print("[ERROR] There is no task_duration, do not assess vector op performance.")
+            logger.error("There is no task_duration, do not assess vector op performance.")
             return 0
-        return self.row[Constant.TITLE.SIZE] / Constant.BYTE_UNIT_TRANS / self.task_duration * Constant.UNIT_TRANS * Constant.UNIT_TRANS
+        return (self.row[Constant.TITLE.SIZE] /
+                Constant.BYTE_UNIT_TRANS / self.task_duration * Constant.UNIT_TRANS * Constant.UNIT_TRANS)
     
     def get_perf_color(self):
+        row = self.row
         return PerfColor.WHITE
 
     def update(self):
@@ -186,7 +191,7 @@ class CubeOpPerf(OpPerf):
     def get_perf_color(self) -> PerfColor:
         aic_mac_ratio = self.get_mac_ratio()
         if not aic_mac_ratio:
-            print("[WARNING] There is no aic_mac_ratio, do not assess cube op performance.")
+            logger.warning("There is no aic_mac_ratio, do not assess cube op performance.")
             return PerfColor.WHITE
         elif aic_mac_ratio < 0.6:
             return PerfColor.RED

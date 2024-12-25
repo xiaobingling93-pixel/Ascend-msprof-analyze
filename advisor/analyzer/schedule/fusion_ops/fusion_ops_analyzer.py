@@ -210,7 +210,8 @@ class TimelineFusionOpsAnalyzer(BaseAnalyzer):
         # by the regex index and then calculate the real index for matched fusion operators in event dataset
         for left, right in zip(total_ops_split_points, total_ops_split_points[1:]):
             matched_op_flag = True if (left, right) in matched_pattern_index_tuple else False
-            matched_ops_list = total_op_name[left: right].strip(Constant.OP_SEP).split(Constant.OP_SEP + Constant.OP_SEP)
+            matched_ops_list = \
+                total_op_name[left: right].strip(Constant.OP_SEP).split(Constant.OP_SEP + Constant.OP_SEP)
             op_index.append([matched_op_flag, len(matched_ops_list)])
         for i, _ in enumerate(op_index):
             if i > 0:
