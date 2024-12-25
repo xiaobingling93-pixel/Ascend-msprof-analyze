@@ -104,6 +104,19 @@ class NPUProfilingParser(BaseProfilingParser):
             logger.error("Failed to read %s.", file_name)
         return data
 
+    def _read_csv(self, file_path, bean):
+        data = []
+        file_name = os.path.basename(file_path)
+        if self._path_level == Constant.TRACE_PATH:
+            return data
+        try:
+            data = FileManager.read_csv_file(file_path, bean)
+        except FileNotFoundError:
+            logger.warning("The file %s does not exist.", file_name)
+        except Exception:
+            logger.error("Failed to read %s.", file_name)
+        return data
+
     def _get_dispatch_func(self):
         func_list = set()
         if self._enable_memory_compare or self._enable_operator_compare or self._enable_profiling_compare:
@@ -128,17 +141,15 @@ class NPUProfilingParser(BaseProfilingParser):
         return list(func_list)
 
     def _update_kernel_details(self):
-        if self._path_level == Constant.TRACE_PATH:
-            return
         if self._args.use_kernel_type:
-            op_statistics = self._read_csv_data(self._op_statistic_path, OpStatisticBean)
+            op_statistics = self._read_csv(self._op_statistic_path, OpStatisticBean)
             if not op_statistics:
                 return
             self._result_data.update_kernel_details(
                 {f"{kernel.kernel_type}-{kernel.core_type}": kernel for kernel in op_statistics})
             return
 
-        kernel_details = self._read_csv_data(self._kernel_detail_path, KernelDetailsBean)
+        kernel_details = self._read_csv(self._kernel_detail_path, KernelDetailsBean)
         if not kernel_details:
             return
         kernels_dict = {}
@@ -161,9 +172,7 @@ class NPUProfilingParser(BaseProfilingParser):
         self._result_data.update_kernel_details(kernels_dict)
 
     def _update_memory_list(self):
-        memory_data=[]
-        if self._profiling_path != self._json_path:
-            memory_data = self._read_csv_data(self._operator_memory_path, OperatorMemoryBean)
+        memory_data = self._read_csv(self._operator_memory_path, OperatorMemoryBean)
         if memory_data:
             self._dequeue_data.sort(key=lambda x: x.start_time)
         for data in memory_data:
@@ -185,9 +194,7 @@ class NPUProfilingParser(BaseProfilingParser):
                                                       Constant.RELEASE_TIME: data.release_time})
 
     def _update_kernel_dict(self):
-        kernel_details = []
-        if self._path_level != Constant.TRACE_PATH:
-            kernel_details = self._read_csv_data(self._kernel_detail_path, KernelDetailsBean)
+        kernel_details = self._read_csv(self._kernel_detail_path, KernelDetailsBean)
         input_shape_dict = {kernel.start_time: kernel.input_shapes for kernel in kernel_details}
         for kernel in self._all_kernels.values():
             input_shape = input_shape_dict.get(kernel.start_time, "")
@@ -414,10 +421,8 @@ class NPUProfilingParser(BaseProfilingParser):
                 self._result_data.overall_metrics.update_lccl_info(event.dur)
 
     def __parse_kernel_csv(self):
-        if self._path_level == Constant.TRACE_PATH:
-            return
         try:
-            kernel_details = self._read_csv_data(self._kernel_detail_path, KernelDetailsBean)
+            kernel_details = self._read_csv(self._kernel_detail_path, KernelDetailsBean)
         except Exception:
             logger.error('Npu kernel details csv file is not available.')
             return
@@ -434,10 +439,8 @@ class NPUProfilingParser(BaseProfilingParser):
             self.categorize_computing_performance_data(event, flow_start_time)
 
     def __parse_mem_csv(self):
-        if self._path_level == Constant.TRACE_PATH:
-            return
         try:
-            memory_record = self._read_csv_data(self._memory_record_path, MemoryRecordBean)
+            memory_record = self._read_csv(self._memory_record_path, MemoryRecordBean)
         except FileNotFoundError:
             logger.warning('Npu memory record csv file is not available.')
             return
