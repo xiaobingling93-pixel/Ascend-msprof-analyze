@@ -339,6 +339,8 @@ class BaseProfilingParser(ABC):
                 task_index += 1
 
     def _check_result_data(self):
+        if self._json_path == self._profiling_path:
+            return
         if self._enable_operator_compare or self._enable_memory_compare or self._enable_api_compare:
             if not self._result_data.torch_op_data:
                 logger.warning("Can't find any torch op in the file: %s", self._profiling_path)

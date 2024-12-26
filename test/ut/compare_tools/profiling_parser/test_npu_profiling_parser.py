@@ -26,6 +26,7 @@ class TestNPUProfilingParser(unittest.TestCase):
                       return_value=None):
             res = NPUProfilingParser({}, {})
             res._operator_memory_path = ""
+            res._path_level=''
             res._update_memory_list()
 
     def test_update_memory_list_when_valid_data(self):
@@ -40,11 +41,13 @@ class TestNPUProfilingParser(unittest.TestCase):
                       return_value=None), \
                 patch("profiler.prof_common.file_manager.FileManager.read_csv_file", return_value=memory_data):
             res = NPUProfilingParser({}, {})
+            res._path_level=''
             res._operator_memory_path = ""
             res._enqueue_dict = {}
             res._dequeue_data = [TraceEventBean(event) for event in self.dequeue_events]
             res._result_data = ProfilingResult("NPU")
             res._update_memory_list()
+
             self.assertEqual(len(res._result_data.memory_list), 3)
             self.assertEqual(res._result_data.memory_list[0].duration, 2)
 

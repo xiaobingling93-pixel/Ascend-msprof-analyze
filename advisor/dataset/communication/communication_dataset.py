@@ -27,6 +27,7 @@ logger = logging.getLogger()
 @singleton
 class CommunicationDataset:
     RANK = "rank"
+    hccl_dict = defaultdict(list)
 
     def __init__(self, collection_path, data: dict, **kwargs) -> None:
         self.timeline_dir = collection_path
