@@ -183,6 +183,7 @@ class Constant(object):
     MEMORY_COMPARE = "MemoryCompare"
     API_COMPARE = "ApiCompare"
     KERNEL_COMPARE = "KernelCompare"
+    KERNEL_TYPE_COMPARE = "KernelTypeCompare"
 
     # sheet name
     OPERATOR_SHEET = "OperatorCompare"

@@ -68,12 +68,17 @@ class ComparisonChecker:
             return
         self.compare_mode = compare_mode
         if ("Api" in compare_mode) and self.benchmark_profiling_path.endswith("ascend_ms"):
-            logger.info("The current compare mode %s does not support Mindspore.", compare_mode)
+            logger.warning("The current compare mode %s does not support Mindspore.", compare_mode)
             return
         compare_interface = ComparisonInterface(self.profiling_path, self.benchmark_profiling_path, self.step,
-                                                self.benchmark_step)
+                                                self.benchmark_step,
+                                                use_kernel_type=self.compare_mode == Constant.KERNEL_COMPARE)
         result = compare_interface.compare(self.compare_mode)
-        data = result.get(self.compare_mode, {})
+        if self.compare_mode == Constant.KERNEL_COMPARE:
+            data = result.get(Constant.KERNEL_TYPE_COMPARE, {})
+        else:
+            data = result.get(self.compare_mode, {})
+
         headers = data.get("headers", {})
         rows = data.get("rows", [])
         format_headers = []

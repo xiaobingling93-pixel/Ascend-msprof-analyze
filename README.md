@@ -184,7 +184,7 @@ Successfully installed msprof-analyze-{version}
 
    ```bash
    cd mstt/profiler
-   python3 setup.py bdist_wheel
+   pip3 install -r requirements.txt && python3 setup.py bdist_wheel
    ```
 
    以上命令执行完成后在mstt/profiler/dist目录下生成性能工具whl安装包`msprof_analyze-{version}-py3-none-any.whl`。
