@@ -98,5 +98,5 @@ class HTMLRender:
                          "but got %s.", os.path.basename(save_path))
             return
 
-        safe_write(self.html, save_path)
+        safe_write(self.html, save_path, encoding="UTF-8")
         logger.info("Save suggestion to %s.", save_path)
