@@ -1,4 +1,4 @@
-# Copyright (c) 2023, Huawei Technologies Co., Ltd.
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0  (the "License");
@@ -18,10 +18,11 @@ import logging
 
 from common_func.db_manager import DBManager
 from common_func.utils import increase_shared_value
+from cluster_utils.parallel_strategy_calculator import ParallelStrategyCalculator
+from prof_bean.step_trace_time_bean import StepTraceTimeBean
+
 from profiler.prof_common.constant import Constant
 from profiler.prof_common.file_manager import FileManager
-from prof_bean.step_trace_time_bean import StepTraceTimeBean
-from cluster_utils.parallel_strategy_calculator import ParallelStrategyCalculator
 
 logger = logging.getLogger("cluster")
 
@@ -77,18 +78,19 @@ class StepTraceTimeAnalysis:
 
         if len(parallelism_map) > len(self.step_time_dict):
             missing_rank_ids = [
-                rank_id for rank_id in range(len(parallelism_map))
+                rank_id
+                for rank_id in range(len(parallelism_map))
                 if rank_id not in self.step_time_dict
             ]
             logger.warning("Step trace data length should equal to real rank numbers, but get step data length ="
                            "%s, real rank numbers = %s, maybe lost some rank ids = %s, please check your profiling "
-                           "data.",str(len(self.step_time_dict)),str(len(parallelism_map)),str(missing_rank_ids))
+                           "data.", str(len(self.step_time_dict)), str(len(parallelism_map)), str(missing_rank_ids))
 
         if len(parallelism_map) < len(self.step_time_dict):
             logger.error("Step trace data length should equal to real rank numbers, but get step data length = %s,"
                          " real rank numbers = %s, maybe parallel params in profiler_metadata.json is error, "
                          "please check your metadata data.",
-                         str(len(self.step_time_dict)),str(len(parallelism_map)))
+                         str(len(self.step_time_dict)), str(len(parallelism_map)))
             self.distributed_args = None
             return
 
@@ -146,8 +148,8 @@ class StepTraceTimeAnalysis:
                     self.step_time_dict[rank_id] = data
                     DBManager.destroy_db_connect(conn, cursor)
             if not self.step_time_dict.get(rank_id):
-                logger.warning("Rank %s does not have a valid step_trace_time data in %s file."
-                               ,str(rank_id),str(self.data_type))
+                logger.warning("Rank %s does not have a valid step_trace_time data in %s file.",
+                               str(rank_id), str(self.data_type))
 
     def analyze_step_time(self):
         for rank_id, data_bean_list in self.step_time_dict.items():

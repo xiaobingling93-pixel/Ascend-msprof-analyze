@@ -1,4 +1,4 @@
-# Copyright (c) 2023, Huawei Technologies Co., Ltd
+# Copyright (c) 2024, Huawei Technologies Co., Ltd
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0  (the "License");
@@ -20,8 +20,8 @@ from copy import deepcopy
 from multiprocessing import Pool
 import logging
 
-from profiler.prof_common.constant import Constant
 from cluster_utils.data_transfer_adapter import DataTransferAdapter
+from profiler.prof_common.constant import Constant
 
 
 logger = logging.getLogger()

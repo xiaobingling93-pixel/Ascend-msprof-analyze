@@ -1,4 +1,4 @@
-# Copyright (c) 2023, Huawei Technologies Co., Ltd.
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0  (the "License");
@@ -19,10 +19,10 @@ import logging
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+from analysis.analysis_facade import AnalysisFacade
 from cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
 from cluster_data_preprocess.mindspore_data_preprocessor import MindsporeDataPreprocessor
 from communication_group.communication_group_generator import CommunicationGroupGenerator
-from analysis.analysis_facade import AnalysisFacade
 from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 from profiler.prof_common.constant import Constant
 from profiler.prof_common.file_manager import FileManager

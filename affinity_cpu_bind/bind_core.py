@@ -1,3 +1,18 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import subprocess
 import argparse
 import os
@@ -6,6 +21,7 @@ import logging
 from datetime import datetime
 from datetime import timezone
 
+from profiler.prof_common.utils import PrintUtils
 
 class PathManager:
     DATA_FILE_AUTHORITY = 0o640
@@ -48,7 +64,7 @@ class BindCoreManager():
         self.args_parse()
 
         if not bind_core_manager.get_npu_info():
-            print('[ERROR] Failed to get current npus info')
+            PrintUtils.print_error('Failed to get current npus info')
             exit()
         if not bind_core_manager.get_running_pid_on_npu():
             exit()
@@ -56,7 +72,7 @@ class BindCoreManager():
         bind_core_manager.run_bind_core()
 
     def get_running_pid_on_npu(self) -> bool:
-        no_running_pids_on_npu_msg = '[INFO] Now there is no running process on all NPUs, stop bind cores'
+        no_running_pids_on_npu_msg = 'Now there is no running process on all NPUs, stop bind cores'
         logging.info('Begin to find running process on all NPUs')
         # get running process on NPUs
         for _ in range(self.find_running_pid_times):
@@ -102,7 +118,7 @@ class BindCoreManager():
                 logging.info('Succeed to find running process %s on NPU %d', pids, npu_id)
                 if_running_process = True
         if not if_running_process:
-            print(no_running_pids_on_npu_msg)
+            PrintUtils.print_info(no_running_pids_on_npu_msg)
         return if_running_process
 
     def get_npu_info(self) -> bool:
@@ -129,14 +145,17 @@ class BindCoreManager():
                     p = subprocess.run(set_affinity_cpu_cmd.split(), shell=False, capture_output=True)
                     logging.info(p.stdout.decode('utf-8'))
                 except subprocess.CalledProcessError:
-                    print('[ERROR] Failed to bind process {} on NPU {} with cpu cores list {}'.format(pid, npu, affinity_cpu))
+                    PrintUtils.print_error('Failed to bind process {} on NPU {} with cpu cores list {}'.format(pid, npu,
+                                                                                                               affinity_cpu))
 
                 logging.info('Succeed to bind process %s on NPU %d with cpu cores list %s', pid, npu, affinity_cpu)
 
     def args_parse(self):
         parser = argparse.ArgumentParser(description='This is a affinity cpu core bind script.')
-        parser.add_argument('-t', '--time', type=int, metavar='', help='Wait time before bind cores that you want to set. The unit is \'s\'.')
-        parser.add_argument('-app', '--application', metavar='', nargs='+', help='Training or inference command that you want to run.')
+        parser.add_argument('-t', '--time', type=int, metavar='',
+                            help='Wait time before bind cores that you want to set. The unit is \'s\'.')
+        parser.add_argument('-app', '--application', metavar='', nargs='+',
+                            help='Training or inference command that you want to run.')
         args = parser.parse_args()
         if args.application:
             application_cmd = ' '.join(args.application)
@@ -148,7 +167,7 @@ class BindCoreManager():
                 args.time = 0
                 msg = f"Invalid parameter. The value of --time is not within the range " \
                       f"[0, {BindCoreManager.MAX_WAIT_TIME_BEFORE_BIND_CORE}]. --time has been set to 0 to continue."
-                print(f'[WARNING] {msg}')
+                PrintUtils.print_warning(msg)
             time.sleep(args.time)
 
     def _init_log_file(self):
@@ -175,7 +194,8 @@ class BindCoreManager():
         get_npu_info_cmd = 'npu-smi info -l'
         get_npu_info_process = subprocess.run(get_npu_info_cmd.split(), shell=False, capture_output=True)
         get_npu_id_cmd = 'grep ID'
-        get_npu_id_process = subprocess.run(get_npu_id_cmd.split(), shell=False, input=get_npu_info_process.stdout, capture_output=True)
+        get_npu_id_process = subprocess.run(get_npu_id_cmd.split(), shell=False, input=get_npu_info_process.stdout, 
+                                            capture_output=True)
         res = get_npu_id_process.stdout.decode('utf-8').split()
         for i in res:
             if i.isdigit():
@@ -189,7 +209,8 @@ class BindCoreManager():
         p = subprocess.run(get_npu_topo_cmd.split(), shell=False, capture_output=True)
         res = p.stdout.decode('utf-8').split()
         if not res:
-            print('[ERROR] Failed to run get npu affinity info, please check if driver version support cmd npu-smi info -t topo')
+            PrintUtils.print_error('Failed to run get npu affinity info, '
+                                 'please check if driver version support cmd npu-smi info -t topo')
             return False
 
         index = 0
@@ -205,10 +226,12 @@ class BindCoreManager():
                         cpus[1] = str(int(cpus[1]) + cpu_num_for_each_npu)
                     affinity_cpus.append(cpus[0] + '-' + cpus[1])
                 if index < len(self.npu_id_list):
-                    self.npu_affinity_cpu_dict[self.npu_id_list[index]] = ','.join(affinity_cpu for affinity_cpu in affinity_cpus)
+                    self.npu_affinity_cpu_dict[self.npu_id_list[index]] = ','.join(
+                        affinity_cpu for affinity_cpu in affinity_cpus)
                     index += 1
                 else:
-                    print('[ERROR] Get affinity_cpu_list for {} npus, more than real npu num: {}'.format(index + 1, len(self.npu_id_list)))
+                    PrintUtils.print_error('Get affinity_cpu_list for {} npus, '
+                                         'more than real npu num: {}'.format(index + 1, len(self.npu_id_list)))
                     return False
 
         for k in self.npu_affinity_cpu_dict.keys():
@@ -217,12 +240,12 @@ class BindCoreManager():
 
 
 if __name__ == '__main__':
-    print('[INFO] Begin to run bind-cores script...')
+    PrintUtils.print_info('Begin to run bind-cores script...')
 
     bind_core_manager = BindCoreManager()
     try:
         bind_core_manager.run()
     except Exception as exception:
-        print(f'[ERROR] {exception}')
+        PrintUtils.print_error(f"{exception}")
 
-    print('[INFO] End to run bind-cores script, the log is saved in {}'.format(bind_core_manager.log_file))
+    PrintUtils.print_info('End to run bind-cores script, the log is saved in {}'.format(bind_core_manager.log_file))

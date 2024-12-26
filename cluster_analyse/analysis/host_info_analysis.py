@@ -17,9 +17,11 @@ import os
 import logging
 
 from analysis.base_analysis import BaseAnalysis
-from profiler.prof_common.constant import Constant
 from common_func.db_manager import DBManager
 from common_func.utils import increase_shared_value
+
+from profiler.prof_common.constant import Constant
+from profiler.prof_common.utils import PrintUtils
 
 logger = logging.getLogger("cluster")
 
@@ -88,7 +90,7 @@ class HostInfoAnalysis(BaseAnalysis):
                 DBManager.destroy_db_connect(conn, curs)
             if not (host_info and host_info[0]):
                 if not print_empty_host_info:
-                    print_empty_host_info = f"[WARNING] No {self.TABLE_HOST_INFO} data in {self.data_type} file."
+                    print_empty_host_info = f"No {self.TABLE_HOST_INFO} data in {self.data_type} file."
                 continue
             if (os.path.exists(db_path) and DBManager.check_tables_in_db(db_path, self.TABLE_RANK_DEVICE_MAP)):
                 conn, curs = DBManager.create_connect_db(db_path)
@@ -101,4 +103,4 @@ class HostInfoAnalysis(BaseAnalysis):
             self.all_rank_host_info[host_uid] = host_name
             self.all_rank_device_info.extend(rank_device_info)
         if print_empty_host_info:
-            print(print_empty_host_info)
+            PrintUtils.print_warning(print_empty_host_info)

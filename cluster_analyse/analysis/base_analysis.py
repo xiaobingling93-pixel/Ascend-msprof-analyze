@@ -22,6 +22,7 @@ from cluster_utils.data_transfer_adapter import DataTransferAdapter
 
 logger = logging.getLogger()
 
+
 class BaseAnalysis:
     MAX_RANKS = 1000
 
