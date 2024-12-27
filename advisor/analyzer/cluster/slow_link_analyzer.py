@@ -41,6 +41,7 @@ class SlowLinkAnalyzer(BaseAnalyzer):
     SDMA = "SDMA"
     RDMA = "RDMA"
     SLOW_LINK_ANALYSIS = "slow link"
+    SLOW_LINK_ANALYSIS_CN = "慢链路分析"
     RATIO_THRESHOLD = 0.05
     dataset_cls_list = [ClusterCommunicationDataset]
 
@@ -128,8 +129,11 @@ class SlowLinkAnalyzer(BaseAnalyzer):
         """
         make record for what and how to optimize
         """
+        title = self.SLOW_LINK_ANALYSIS_CN
+        if AdditionalArgsManager().language == "en":
+            title = self.SLOW_LINK_ANALYSIS
         optimization_item = OptimizeItem(
-            SlowLinkAnalyzer.SLOW_LINK_ANALYSIS,
+            title,
             self.bottelneck,
             self.suggestion
         )
@@ -138,7 +142,7 @@ class SlowLinkAnalyzer(BaseAnalyzer):
         data_list = self.format_datas.get("data", [])
         headers = self.format_datas.get("headers", [])
         for data in data_list:
-            self.result.add_detail(SlowLinkAnalyzer.SLOW_LINK_ANALYSIS, headers, data)
+            self.result.add_detail(title, headers, data)
 
     def make_render(self, template_key="cluster"):
         result_for_html = {
