@@ -17,8 +17,7 @@ class DynamicShapePrompt(object):
     RANK_ID = "{}号卡"
     PROBLEM = "动态shape算子"
     DESCRIPTION = f"找到所有是动态shape的算子"
-    ENABLE_COMPILED_SUGGESTION = "1. 尝试设置环境变量'export HOST_CACHE_CAPACITY=20'。\n" \
-                                 "2. 在python脚本入口加入以下代码关闭在线编译：\n" \
+    ENABLE_COMPILED_SUGGESTION = "在python脚本入口加入以下代码关闭在线编译：\n" \
                                  "'torch_npu.npu.set_compile_mode(jit_compile=False) \n " \
                                  "torch_npu.npu.config.allow_internal_format = False' \n"
     RELEASE_SUGGESTION = "详细信息请参考：<a href={} target='_blank'>链接</a>"

@@ -47,7 +47,7 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
 
         # True presents the attr is nan
         description_len = [1, 1, 3, 2, 1, 1, 1]
-        suggestion_len = [True, 1, 1, 2, 5, 1, 1]
+        suggestion_len = [True, 1, 1, 2, 4, 1, 1]
         problem_count = [True, True, True, 2.0, 1.0, True, True]
         total_time = [True, True, True, 57674709.54, True, True, True]
         time_ratio = [True, True, True, 0.0, True, True, True]

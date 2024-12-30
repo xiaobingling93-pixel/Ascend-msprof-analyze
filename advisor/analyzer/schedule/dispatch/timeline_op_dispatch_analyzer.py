@@ -53,7 +53,7 @@ class OpDispatchAnalyzer(BaseAnalyzer):
         :return: result
         """
         if "mindspore" in self.profiling_type:
-            logger.warning("The analyzer %s does not support MindSpore.", self.__class__.__name__)
+            logger.info("The analyzer %s does not support MindSpore.", self.__class__.__name__)
             return self.result
         self.get_op_compile_info(self.dataset)
         self.make_record(self.result)

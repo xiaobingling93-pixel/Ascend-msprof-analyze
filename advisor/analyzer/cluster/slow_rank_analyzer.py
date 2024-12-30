@@ -28,6 +28,7 @@ logger = logging.getLogger()
 
 class SlowRankAnalyzer(BaseAnalyzer):
     SLOW_RANK_ANALYSIS = "slow rank"
+    SLOW_RANK_ANALYSIS_CN = "慢卡分析"
     RANK = "rank"
     RATIO_THRESHOLD = 0.05
     BOTTLENECK_LIST = ['Computing', 'Communication', "Free"]
@@ -107,9 +108,11 @@ class SlowRankAnalyzer(BaseAnalyzer):
         """
         make record for what and how to optimize
         """
-
+        title = self.SLOW_RANK_ANALYSIS_CN
+        if AdditionalArgsManager().language == "en":
+            title = self.SLOW_RANK_ANALYSIS
         optimization_item = OptimizeItem(
-            SlowRankAnalyzer.SLOW_RANK_ANALYSIS,
+            title,
             self.bottelneck,
             self.suggestion
         )
@@ -118,7 +121,7 @@ class SlowRankAnalyzer(BaseAnalyzer):
         data_list = self.format_datas.get("data", [])
         headers = self.format_datas.get("headers", [])
         for data in data_list:
-            self.result.add_detail(SlowRankAnalyzer.SLOW_RANK_ANALYSIS, headers, data)
+            self.result.add_detail(title, headers, data)
 
     def format_details(self):
         details_dict = {}

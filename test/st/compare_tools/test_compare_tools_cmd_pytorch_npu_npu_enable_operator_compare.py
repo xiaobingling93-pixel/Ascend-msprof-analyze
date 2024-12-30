@@ -46,7 +46,8 @@ class TestCompareToolsCmdPytorchNpuVsNpuEnableOperatorCompare(TestCase):
 
         # 2. use_input_shape compare
         is_cmd = ["msprof-analyze", "compare", "-d", self.COMPARISON_PROFILING_PATH, "-bp", self.BASE_PROFILING_PATH,
-                  "--enable_operator_compare", "--disable_details", "--use_input_shape", "-o", self.IS_OUTPUT_PATH]
+                  "--enable_operator_compare", "--disable_details", "--use_input_shape", "-o", self.IS_OUTPUT_PATH,
+                  "--force"]
         if execute_cmd(is_cmd) != self.COMMAND_SUCCESS or not os.path.exists(self.IS_OUTPUT_PATH):
             self.assertEqual(False, True, msg="enable use input shape operator compare comparison task failed.")
         if not check_result_file(self.IS_OUTPUT_PATH):
@@ -56,7 +57,8 @@ class TestCompareToolsCmdPytorchNpuVsNpuEnableOperatorCompare(TestCase):
 
         # 3. max_kernel_num compare
         mkn_cmd = ["msprof-analyze", "compare", "-d", self.COMPARISON_PROFILING_PATH, "-bp", self.BASE_PROFILING_PATH,
-                   "--enable_operator_compare", "--disable_details", "--max_kernel_num=10", "-o", self.MKN_OUTPUT_PATH]
+                   "--enable_operator_compare", "--disable_details", "--max_kernel_num=10", "-o", self.MKN_OUTPUT_PATH,
+                   "--force"]
         if execute_cmd(mkn_cmd) != self.COMMAND_SUCCESS or not os.path.exists(self.MKN_OUTPUT_PATH):
             self.assertEqual(False, True, msg="enable max kernel num operator compare comparison task failed.")
         if not check_result_file(self.MKN_OUTPUT_PATH):
@@ -67,7 +69,7 @@ class TestCompareToolsCmdPytorchNpuVsNpuEnableOperatorCompare(TestCase):
         # 4. op_name_map compare
         onm_cmd = ["msprof-analyze", "compare", "-d", self.COMPARISON_PROFILING_PATH, "-bp", self.BASE_PROFILING_PATH,
                    "--enable_operator_compare", "--disable_details", "--op_name_map={'aten':'to','aten':'item'}", "-o",
-                   self.ONM_OUTPUT_PATH]
+                   self.ONM_OUTPUT_PATH, "--force"]
         if execute_cmd(onm_cmd) != self.COMMAND_SUCCESS or not os.path.exists(self.ONM_OUTPUT_PATH):
             self.assertEqual(False, True, msg="enable op name map operator compare comparison task failed.")
         if not check_result_file(self.ONM_OUTPUT_PATH):
