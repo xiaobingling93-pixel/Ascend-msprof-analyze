@@ -22,7 +22,9 @@ import pandas as pd
 from profiler.test.st.utils import execute_cmd, select_count, select_by_query
 from profiler.prof_common.file_manager import FileManager
 from profiler.prof_common.path_manager import PathManager
-from .cluster_communication_matrixDb import ClusterCommunicationMatrixDb
+from .cluster_communication_analyzer_bandwidth_db import ClusterCommunicationAnalyzerBandwidthDb
+from .cluster_communication_analyzer_matrix_db import ClusterCommunicationAnalyzerMatrixDb
+from .cluster_communication_analyzer_time_db import ClusterCommunicationAnalyzerTime
 from .cluster_step_trace_time_db import ClusterStepTraceTimeDb
 
 
@@ -33,24 +35,27 @@ class TestClusterAnalysePytorchDb(TestCase):
     ST_DATA_PATH = os.getenv("MSTT_PROFILER_ST_DATA_PATH",
                              "/home/dcs-50/smoke_project_for_msprof_analyze/mstt_profiler/st_data/")
     CLUSTER_PATH = os.path.join(ST_DATA_PATH, "cluster_data_2_db")
-    DB_PATH = ""
+    db_path = ""
     STEP_TRACE_TIME_PATH = os.path.join(ST_DATA_PATH, "cluster_data_2_db", "cluster_analysis_output_text",
                                         "cluster_analysis_output", "cluster_step_trace_time.csv")
     COMMUNICATION_MATRIX_PATH = os.path.join(ST_DATA_PATH, "cluster_data_2_db", "cluster_analysis_output_text",
                                              "cluster_analysis_output", "cluster_communication_matrix.json")
+    COMMUNICATION_PATH = os.path.join(ST_DATA_PATH, "cluster_data_2_db", "cluster_analysis_output_text",
+                                      "cluster_analysis_output", "cluster_communication.json")
     COMMAND_SUCCESS = 0
 
     def setup_class(self):
         # generate db data
         PathManager.make_dir_safety(self.ST_DATA_PATH)
         cmd = ["msprof-analyze", "cluster", "-d", self.CLUSTER_PATH, "-m", "all",
-               "--output_path", self.ST_DATA_PATH, "--data_simplification", "--force"]
+               "--output_path", self.ST_DATA_PATH, "--force"]
         if execute_cmd(cmd) != self.COMMAND_SUCCESS or not os.path.exists(self.ST_DATA_PATH):
             self.fail("pytorch db cluster analyse task failed.")
-        self.DB_PATH = os.path.join(self.ST_DATA_PATH, "cluster_analysis_output", "cluster_analysis.db")
+        self.db_path = os.path.join(self.ST_DATA_PATH, "cluster_analysis_output", "cluster_analysis.db")
 
     def teardown_class(self):
-        pass
+        # Delete db Data
+        PathManager.remove_path_safety(os.path.join(self.ST_DATA_PATH, "cluster_analysis_output"))
 
     def test_msprof_analyze_text_db_trace_time_compare(self):
         """
@@ -58,10 +63,10 @@ class TestClusterAnalysePytorchDb(TestCase):
         """
         df = pd.read_csv(self.STEP_TRACE_TIME_PATH)
         query_count = "SELECT count(*) FROM ClusterStepTraceTime"
-        self.assertEqual(len(df), select_count(self.DB_PATH, query_count),
+        self.assertEqual(len(df), select_count(self.db_path, query_count),
                          "Cluster step trace time count wrong.")
         query = "SELECT * FROM ClusterStepTraceTime where type= 'rank' and [index] = 7"
-        db_cluster_step_trace_time = select_by_query(self.DB_PATH, query, ClusterStepTraceTimeDb)
+        db_cluster_step_trace_time = select_by_query(self.db_path, query, ClusterStepTraceTimeDb)
         text_cluster_step_trace_time = ClusterStepTraceTimeDb(*df.iloc[0])
         self.assertEqual(text_cluster_step_trace_time.type, db_cluster_step_trace_time.type,
                          "Cluster step trace time db vs text 'type' property wrong.")
@@ -88,31 +93,109 @@ class TestClusterAnalysePytorchDb(TestCase):
                          "Cluster step trace time db vs text 'communication_not_overlapped_and_exclude_receive' "
                          "property wrong.")
 
-    def test_msprof_analyze_text_db_communication_matrix_compare(self):
+    def test_msprof_analyze_text_db_communication_analyzer_matrix_compare(self):
         """
         Test case to compare the cluster communication matrix from text file and database.
         """
-        query = ("SELECT * FROM ClusterCommunicationMatrix WHERE hccl_op_name = 'Total Op Info' and src_rank = 7 "
-                 "and group_name = '15244899533746605158' and dst_rank = 4 and step = 'step'")
-        db_cluster_communication_matrix = select_by_query(self.DB_PATH, query, ClusterCommunicationMatrixDb)
-        query_count = ("SELECT count(*) FROM ClusterCommunicationMatrix WHERE hccl_op_name = 'Total Op Info' and "
+        query = ("SELECT * FROM ClusterCommAnalyzerMatrix WHERE hccl_op_name = 'Total Op Info' and src_rank = 7 "
+                 "and group_name = '15244899533746605158' and dst_rank = 4 and step = 'step' and "
+                 "rank_set = '(4, 5, 6, 7)'")
+        db_cluster_communication_analyzer_matrix = select_by_query(self.db_path, query,
+                                                                   ClusterCommunicationAnalyzerMatrixDb)
+        query_count = ("SELECT count(*) FROM ClusterCommAnalyzerMatrix WHERE hccl_op_name = 'Total Op Info' and "
                        "group_name = '15244899533746605158'")
         communication_matrix_json = FileManager.read_json_file(self.COMMUNICATION_MATRIX_PATH)
-        self.assertEqual(select_count(self.DB_PATH, query_count),
+        self.assertEqual(select_count(self.db_path, query_count),
                          len(communication_matrix_json.get('(4, 5, 6, 7)')
                              .get('step').get('Total Op Info')),
                          "Cluster communication matrix db vs text count wrong.")
         text_cluster_communication_matrix = (communication_matrix_json.get('(4, 5, 6, 7)').get('step')
                                              .get('Total Op Info').get('7-4'))
         self.assertEqual(text_cluster_communication_matrix.get('Transport Type'),
-                         db_cluster_communication_matrix.transport_type,
+                         db_cluster_communication_analyzer_matrix.transport_type,
                          "Cluster communication matrix db vs text 'Transport Type' property wrong.")
         self.assertEqual(round(text_cluster_communication_matrix.get('Transit Time(ms)')),
-                         round(db_cluster_communication_matrix.transit_time),
+                         round(db_cluster_communication_analyzer_matrix.transit_time),
                          "Cluster communication matrix db vs text 'Transit Time' property wrong.")
         self.assertEqual(round(text_cluster_communication_matrix.get('Transit Size(MB)')),
-                         round(db_cluster_communication_matrix.transit_size),
+                         round(db_cluster_communication_analyzer_matrix.transit_size),
                          "Cluster communication matrix db vs text 'Transit Size' property wrong.")
         self.assertEqual(round(text_cluster_communication_matrix.get('Bandwidth(GB/s)')),
-                         round(db_cluster_communication_matrix.bandwidth),
+                         round(db_cluster_communication_analyzer_matrix.bandwidth),
                          "Cluster communication matrix db vs text 'Bandwidth' property wrong.")
+
+    def test_msprof_analyze_text_db_communication_analyzer_bandWidth_compare(self):
+        """
+        Test case to compare the cluster bandWidth from text file and database.
+        """
+        query = ("SELECT * FROM ClusterCommAnalyzerBandwidth WHERE hccl_op_name = 'Total Op Info' and rank_id = 7 "
+                 "and step = 'step' and band_type = 'HCCS' and package_size = '3.372891' and rank_set = '(4, 5, 6, 7)'")
+        db_cluster_communication_analyzer_band_width = select_by_query(self.db_path, query,
+                                                                       ClusterCommunicationAnalyzerBandwidthDb)
+        query_count = ("SELECT count(*) FROM ClusterCommAnalyzerBandwidth WHERE hccl_op_name = 'Total Op Info' and "
+                       "rank_set = '(4, 5, 6, 7)' and rank_id = 7 and band_type = 'HCCS'")
+        communication_json = FileManager.read_json_file(self.COMMUNICATION_PATH)
+        self.assertEqual(select_count(self.db_path, query_count),
+                         len(communication_json.get('(4, 5, 6, 7)')
+                             .get('step').get('Total Op Info').get('7').get('Communication Bandwidth Info')
+                             .get('HCCS').get('Size Distribution')),
+                         "Cluster communication bandWidth db vs text count wrong.")
+        text_cluster_communication_band_width = (communication_json.get('(4, 5, 6, 7)').get('step')
+                                                 .get('Total Op Info').get('7').get('Communication Bandwidth Info')
+                                                 .get('HCCS'))
+        self.assertEqual(round(text_cluster_communication_band_width.get('Transit Time(ms)')),
+                         round(db_cluster_communication_analyzer_band_width.transit_time),
+                         "Cluster communication bandWidth db vs text 'Transport Time' property wrong.")
+        self.assertEqual(round(text_cluster_communication_band_width.get('Transit Size(MB)')),
+                         round(db_cluster_communication_analyzer_band_width.transit_size),
+                         "Cluster communication bandWidth db vs text 'Transit Size(MB)' property wrong.")
+        self.assertEqual(round(text_cluster_communication_band_width.get('Bandwidth(GB/s)')),
+                         round(db_cluster_communication_analyzer_band_width.bandwidth),
+                         "Cluster communication bandWidth db vs text 'Bandwidth(GB/s)' property wrong.")
+        self.assertEqual(round(text_cluster_communication_band_width.get('Size Distribution').get('3.372891')[0]),
+                         round(db_cluster_communication_analyzer_band_width.count),
+                         "Cluster communication bandWidth db vs text 'count' property wrong.")
+        total_duration = text_cluster_communication_band_width.get('Size Distribution').get('3.372891')[1]
+        self.assertEqual(f"{round(total_duration, 2):.2f}",
+                         f"{db_cluster_communication_analyzer_band_width.total_duration:.2f}",
+                         "Cluster communication bandWidth db vs text 'total duration' property wrong.")
+
+    def test_msprof_analyze_text_db_communication_analyzer_time_compare(self):
+        """
+        Test case to compare the cluster time from text file and database.
+        """
+        query = ("SELECT * FROM ClusterCommAnalyzerTime WHERE hccl_op_name = 'Total Op Info' and rank_id = 0 "
+                 "and step = 'step' and rank_set = '(0, 1, 2, 3)'")
+        db_cluster_communication_analyzer_time = select_by_query(self.db_path, query,
+                                                                 ClusterCommunicationAnalyzerTime)
+        query_count = ("SELECT count(*) FROM ClusterCommAnalyzerTime WHERE hccl_op_name = 'Total Op Info' and "
+                       "rank_set = '(0, 1, 2, 3)'")
+        communication_json = FileManager.read_json_file(self.COMMUNICATION_PATH)
+        self.assertEqual(select_count(self.db_path, query_count),
+                         len(communication_json.get('(0, 1, 2, 3)')
+                             .get('step').get('Total Op Info')),
+                         "Cluster communication time db vs text count wrong.")
+        text_cluster_communication_analyzer_time = (communication_json.get('(0, 1, 2, 3)').get('step')
+                                                    .get('Total Op Info').get('0').get('Communication Time Info'))
+        self.assertEqual(round(text_cluster_communication_analyzer_time.get('Elapse Time(ms)')),
+                         round(db_cluster_communication_analyzer_time.elapsed_time),
+                         "Cluster communication time db vs text 'Elapse Time(ms)' property wrong.")
+        self.assertEqual(round(text_cluster_communication_analyzer_time.get('Transit Time(ms)')),
+                         round(db_cluster_communication_analyzer_time.transit_time),
+                         "Cluster communication time db vs text 'Transit Time(ms)' property wrong.")
+        self.assertEqual(round(text_cluster_communication_analyzer_time.get('Wait Time(ms)')),
+                         round(db_cluster_communication_analyzer_time.wait_time),
+                         "Cluster communication time db vs text 'Wait Time(ms)' property wrong.")
+        self.assertEqual(round(text_cluster_communication_analyzer_time.get('Synchronization Time(ms)')),
+                         round(db_cluster_communication_analyzer_time.synchronization_time),
+                         "Cluster communication time db vs text 'Synchronization Time(ms)' property wrong.")
+        self.assertEqual(round(text_cluster_communication_analyzer_time.get('Idle Time(ms)')),
+                         round(db_cluster_communication_analyzer_time.idle_time),
+                         "Cluster communication time db vs text 'Idle Time(ms)' property wrong.")
+        self.assertEqual(round(text_cluster_communication_analyzer_time.get('Wait Time Ratio')),
+                         round(db_cluster_communication_analyzer_time.wait_time_ratio),
+                         "Cluster communication time db vs text 'Wait Time Ratio' property wrong.")
+        self.assertEqual(round(text_cluster_communication_analyzer_time.get('Synchronization Time Ratio')),
+                         round(db_cluster_communication_analyzer_time.synchronization_time_ratio),
+                         "Cluster communication time db vs text 'Synchronization Time Ratio' property wrong.")
+

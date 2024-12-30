@@ -15,8 +15,9 @@
 """Cluster communication matrix db class """
 
 
-class ClusterCommunicationMatrixDb:
+class ClusterCommunicationAnalyzerMatrixDb:
     def __init__(self,
+                 rank_set=None,
                  step=None,
                  hccl_op_name=None,
                  group_name=None,
@@ -27,6 +28,7 @@ class ClusterCommunicationMatrixDb:
                  bandwidth=None,
                  transport_type=None,
                  op_name=None):
+        self._rank_set = rank_set
         self._step = step
         self._hccl_op_name = hccl_op_name
         self._group_name = group_name
@@ -37,6 +39,14 @@ class ClusterCommunicationMatrixDb:
         self._bandwidth = bandwidth
         self._transport_type = transport_type
         self._op_name = op_name
+
+    @property
+    def rank_set(self):
+        return self._rank_set
+
+    @rank_set.setter
+    def rank_set(self, value):
+        self._rank_set = value
 
     @property
     def step(self):
