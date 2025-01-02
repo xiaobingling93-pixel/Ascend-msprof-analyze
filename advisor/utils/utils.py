@@ -526,6 +526,6 @@ def convert_to_int(data: any) -> int:
 
 def convert_to_int_with_exception(data: any) -> int:
     if data == "":
-        logger.warning("convert_to_int_with_exception: a empty string was encountered.")
+        logger.warning("convert_to_int_with_exception: an empty string was encountered.")
         return 0
     return convert_to_int(data)
