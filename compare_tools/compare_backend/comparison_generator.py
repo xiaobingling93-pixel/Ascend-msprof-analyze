@@ -12,8 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import logging
-
 from compare_backend.generator.detail_performance_generator import DetailPerformanceGenerator
 from compare_backend.generator.overall_performance_generator import OverallPerformanceGenerator
 from compare_backend.interface.overall_interface import OverallInterface
@@ -23,6 +21,9 @@ from compare_backend.profiling_parser.npu_profiling_parser import NPUProfilingPa
 from compare_backend.utils.args_manager import ArgsManager
 from profiler.prof_common.constant import Constant
 from profiler.prof_common.additional_args_manager import AdditionalArgsManager
+from profiler.prof_common.loger import get_logger
+
+logger = get_logger()
 
 
 class ComparisonGenerator:
@@ -40,13 +41,13 @@ class ComparisonGenerator:
             self.load_data()
             self.generate_compare_result()
         except NotImplementedError as e:
-            logging.error("%s", e)
+            logger.error("%s", e)
         except RuntimeError as e:
-            logging.error("%s", e)
+            logger.error("%s", e)
         except FileNotFoundError as e:
-            logging.error("%s", e)
+            logger.error("%s", e)
         except Exception as e:
-            logging.error("%s", e)
+            logger.error("%s", e)
 
     def load_data(self):
         self._data_dict[Constant.BASE_DATA] = self.PARSER_DICT.get(self._args_manager.base_profiling_type)(
@@ -78,11 +79,11 @@ class ComparisonGenerator:
                 return interface(self._data_dict).run()
             return CompareInterface(self._data_dict, self._args_manager).run()
         except NotImplementedError as e:
-            logging.error("%s", e)
+            logger.error("%s", e)
         except RuntimeError as e:
-            logging.error("%s", e)
+            logger.error("%s", e)
         except FileNotFoundError as e:
-            logging.error("%s", e)
+            logger.error("%s", e)
         except Exception as e:
-            logging.error("%s", e)
+            logger.error("%s", e)
         return {}

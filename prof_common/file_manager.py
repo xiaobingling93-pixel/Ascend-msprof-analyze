@@ -16,15 +16,15 @@
 import os
 import csv
 import json
-import logging
 
 import yaml
 from profiler.prof_common.constant import Constant
+from profiler.prof_common.loger import get_logger
 from profiler.prof_common.path_manager import PathManager
 from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 from profiler.prof_common.utils import PrintUtils
 
-logger = logging.getLogger()
+logger = get_logger()
 
 
 class FileManager:

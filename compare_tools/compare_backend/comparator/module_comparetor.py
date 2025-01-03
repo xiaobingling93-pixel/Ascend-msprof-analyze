@@ -12,12 +12,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import logging
-
 from compare_backend.comparator.base_comparator import BaseComparator
 from compare_backend.utils.common_func import update_order_id
 
 from profiler.prof_common.constant import Constant
+from profiler.prof_common.loger import get_logger
+
+logger = get_logger()
 
 
 class ModuleComparator(BaseComparator):
@@ -50,4 +51,4 @@ class ModuleComparator(BaseComparator):
             index += 1
         update_order_id(self._rows)
         if not any(row[-1] != Constant.NA for row in self._rows):
-            logging.warning("If you want to see the operator's call stack, you must enable with_stack switch.")
+            logger.warning("If you want to see the operator's call stack, you must enable with_stack switch.")

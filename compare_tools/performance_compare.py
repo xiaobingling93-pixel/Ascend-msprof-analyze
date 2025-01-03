@@ -15,7 +15,6 @@
 import argparse
 import ast
 import datetime
-import logging
 import os.path
 import sys
 
@@ -25,6 +24,9 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 from compare_backend.comparison_generator import ComparisonGenerator
 from profiler.prof_common.analyze_dict import AnalyzeDict
+from profiler.prof_common.loger import get_logger
+
+logger = get_logger()
 
 
 def main():
@@ -68,4 +70,4 @@ if __name__ == "__main__":
     start_time = datetime.datetime.utcnow()
     main()
     end_time = datetime.datetime.utcnow()
-    logging.info(f'The comparison task has been completed in a total time of {end_time - start_time}')
+    logger.info(f'The comparison task has been completed in a total time of {end_time - start_time}')

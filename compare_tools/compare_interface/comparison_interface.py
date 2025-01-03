@@ -12,7 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import logging
 import sys
 import os
 
@@ -25,6 +24,9 @@ from compare_backend.disaggregate.overall_perf_interface import OverallPerfInter
 from compare_backend.utils.compare_args import Args
 from profiler.prof_common.constant import Constant
 from profiler.prof_common.analyze_dict import AnalyzeDict
+from profiler.prof_common.loger import get_logger
+
+logger = get_logger()
 
 
 class ComparisonInterface:
@@ -43,6 +45,6 @@ class ComparisonInterface:
 
     def disaggregate_perf(self, compare_type: str) -> dict:
         if compare_type != Constant.OVERALL_COMPARE:
-            logging.error(f'Invalid compare_type value: {compare_type} which not supported.')
+            logger.error(f'Invalid compare_type value: {compare_type} which not supported.')
             return {}
         return OverallPerfInterface(self.base_profiling_path).run()

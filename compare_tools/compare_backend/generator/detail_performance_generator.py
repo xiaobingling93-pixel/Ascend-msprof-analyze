@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
-import logging
 from collections import OrderedDict
 from datetime import datetime
 
@@ -43,6 +42,9 @@ from compare_backend.view.excel_view import ExcelView
 from compare_backend.data_prepare.sequence_pre_matching import SequencePreMatching
 
 from profiler.prof_common.constant import Constant
+from profiler.prof_common.loger import get_logger
+
+logger = get_logger()
 
 
 class DetailPerformanceGenerator:
@@ -67,7 +69,7 @@ class DetailPerformanceGenerator:
             self._args.enable_profiling_compare,
         ]
         if any(enable_compare):
-            logging.info("Start to compare performance detail data, please wait.")
+            logger.info("Start to compare performance detail data, please wait.")
             comparator_list = self._create_comparator()
         else:
             comparator_list = []
@@ -81,7 +83,7 @@ class DetailPerformanceGenerator:
         file_name = "performance_comparison_result_{}.xlsx".format(datetime.utcnow().strftime("%Y%m%d%H%M%S"))
         result_file_path = os.path.abspath(os.path.join(dir_path, file_name))
         ExcelView(self._result_data, result_file_path, self._args).generate_view()
-        logging.info("The comparison result file has been generated: %s", result_file_path)
+        logger.info("The comparison result file has been generated: %s", result_file_path)
 
     def _create_comparator(self):
         comparator_list = []

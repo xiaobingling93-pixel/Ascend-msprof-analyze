@@ -52,7 +52,7 @@ def init_logger(ctx, param, debug_mode) -> logging.Logger:
                                       datefmt='%Y-%m-%d,%H:%M:%S')
     else:
         formatter = logging.Formatter(fmt="[%(asctime)s][%(levelname)s] %(message)s",
-                                      datefmt='%Y-%m-%d,%H:%M:%S')
+                                      datefmt='%Y-%m-%d %H:%M:%S')
     console_handle.setFormatter(formatter)
 
     # add log level out

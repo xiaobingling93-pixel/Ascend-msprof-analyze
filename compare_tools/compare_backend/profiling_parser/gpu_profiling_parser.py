@@ -12,13 +12,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import logging
 import sys
 from collections import defaultdict, Counter
 
 from compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
 from compare_backend.profiling_parser.base_profiling_parser import BaseProfilingParser
 from profiler.prof_common.constant import Constant
+from profiler.prof_common.loger import get_logger
+
+logger = get_logger()
 
 
 class GPUProfilingParser(BaseProfilingParser):
@@ -145,7 +147,7 @@ class GPUProfilingParser(BaseProfilingParser):
 
     def __parse_memory_reserved(self):
         if not self._memory_events:
-            logging.info("Gpu profiling data doesn't contain memory info.")
+            logger.info("Gpu profiling data doesn't contain memory info.")
             return
         memory_used = max([event.total_reserved for event in self._memory_events]) / 1024 ** 3
         self._result_data.overall_metrics.set_memory_used(memory_used)

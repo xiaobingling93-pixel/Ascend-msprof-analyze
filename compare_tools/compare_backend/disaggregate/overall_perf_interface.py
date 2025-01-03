@@ -12,15 +12,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import logging
-
 from compare_backend.profiling_parser.gpu_profiling_parser import GPUProfilingParser
 from compare_backend.profiling_parser.npu_profiling_parser import NPUProfilingParser
 from compare_backend.utils.args_manager import ArgsManager
 from compare_backend.utils.compare_args import Args
 
 from profiler.prof_common.constant import Constant
+from profiler.prof_common.loger import get_logger
 from profiler.prof_common.path_manager import PathManager
+
+logger = get_logger()
 
 
 class OverallPerfInterface:
@@ -38,13 +39,13 @@ class OverallPerfInterface:
             self._load_data()
             self._generate_result()
         except NotImplementedError as e:
-            logging.error("%s", e)
+            logger.error("%s", e)
         except RuntimeError as e:
-            logging.error("%s", e)
+            logger.error("%s", e)
         except FileNotFoundError as e:
-            logging.error("%s", e)
+            logger.error("%s", e)
         except Exception as e:
-            logging.error("%s", e)
+            logger.error("%s", e)
         return self._result_data
 
     def _check_path(self):

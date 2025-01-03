@@ -14,7 +14,6 @@
 # limitations under the License.
 from abc import abstractmethod, ABC
 from decimal import Decimal
-import logging
 
 import ijson
 
@@ -24,9 +23,10 @@ from compare_backend.compare_bean.origin_data_bean.trace_event_bean import Trace
 from compare_backend.compare_bean.profiling_info import ProfilingInfo
 from profiler.prof_common.constant import Constant
 from profiler.prof_common.file_manager import FileManager
+from profiler.prof_common.loger import get_logger
 from profiler.prof_common.path_manager import PathManager
 
-logger = logging.getLogger()
+logger = get_logger()
 
 
 class ProfilingResult:

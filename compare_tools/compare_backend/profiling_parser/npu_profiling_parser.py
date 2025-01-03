@@ -14,7 +14,6 @@
 # limitations under the License.
 import os
 import sys
-import logging
 from math import ceil
 
 from compare_backend.compare_bean.origin_data_bean.kernel_details_bean import KernelDetailsBean
@@ -26,8 +25,9 @@ from compare_backend.profiling_parser.base_profiling_parser import BaseProfiling
 from profiler.compare_tools.compare_backend.compare_bean.origin_data_bean.op_stastic_bean import OpStatisticBean
 from profiler.prof_common.constant import Constant
 from profiler.prof_common.file_manager import FileManager
+from profiler.prof_common.loger import get_logger
 
-logger = logging.getLogger()
+logger = get_logger()
 
 
 class NPUProfilingParser(BaseProfilingParser):
@@ -185,7 +185,7 @@ class NPUProfilingParser(BaseProfilingParser):
                                                       Constant.RELEASE_TIME: data.release_time})
 
     def _update_kernel_dict(self):
-        kernel_details=[]
+        kernel_details = []
         if self._path_level != Constant.TRACE_PATH:
             kernel_details = self._read_csv_data(self._kernel_detail_path, KernelDetailsBean)
         input_shape_dict = {kernel.start_time: kernel.input_shapes for kernel in kernel_details}
@@ -241,7 +241,7 @@ class NPUProfilingParser(BaseProfilingParser):
         self._result_data.overall_metrics.set_sdma_bandwidth(sdma_bandwidth)
 
     def _update_overall_metrics(self):
-        if self._path_level==Constant.PROFILING_PATH:
+        if self._path_level == Constant.PROFILING_PATH:
             self.__parse_info_json()
         self.__parse_mem_csv()
         self.__parse_kernel_csv()

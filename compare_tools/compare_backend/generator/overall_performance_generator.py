@@ -12,12 +12,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import logging
-
 from compare_backend.comparator.overall_performance_comparator import OverallPerformanceComparator
 from compare_backend.compare_bean.profiling_info import ProfilingInfo
 from compare_backend.generator.base_generator import BaseGenerator
 from compare_backend.view.screen_view import ScreenView
+
+from profiler.prof_common.loger import get_logger
+
+logger = get_logger()
 
 
 class OverallPerformanceGenerator(BaseGenerator):
@@ -33,6 +35,6 @@ class OverallPerformanceGenerator(BaseGenerator):
         if not self._result_data:
             return
         ScreenView(self._result_data).generate_view()
-        logging.info("The OverallMetrics sheet page is more comprehensive for the disaggregate of performance data, "
+        logger.info("The OverallMetrics sheet page is more comprehensive for the disaggregate of performance data, "
                      "and it is recommended to view the overall performance comparison results from "
                      "the performance_comparison_result_*.xlsx.")

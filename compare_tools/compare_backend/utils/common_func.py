@@ -13,11 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from decimal import Decimal
-import logging
 
 import numpy as np
 
-logger = logging.getLogger()
+from profiler.prof_common.loger import get_logger
+
+logger = get_logger()
 
 
 def calculate_diff_ratio(base_value: float, comparison_value: float):
@@ -60,8 +61,8 @@ def longest_common_subsequence_matching(base_ops: list, comparison_ops: list, na
 
     comparison_len, base_len = len(comparison_ops), len(base_ops)
     if comparison_len * base_len > 50 * 10 ** 8:
-        logging.warning('The comparison time is expected to exceed 30 minutes, if you want to see the results quickly, '
-                        'you can restart comparison task and turn on the switch --disable_details.')
+        logger.warning('The comparison time is expected to exceed 30 minutes, if you want to see the results quickly, '
+                       'you can restart comparison task and turn on the switch --disable_details.')
 
     pre_list = np.zeros(base_len + 1, dtype=np.int32)
     cur_list = np.zeros(base_len + 1, dtype=np.int32)

@@ -12,12 +12,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import logging
-
 from compare_backend.profiling_parser.base_profiling_parser import ProfilingResult
 from compare_backend.utils.tree_builder import TreeBuilder
 
 from profiler.prof_common.constant import Constant
+from profiler.prof_common.loger import get_logger
+
+logger = get_logger()
 
 
 class OperatorDataPrepare:
@@ -46,7 +47,7 @@ class OperatorDataPrepare:
                 node_queue.extend(node.child_nodes)
         if not result_data:
             msg = f"There is no operator event data for step {self._specified_step_id}, " \
-                     "please check whether the data contains this step."
+                  "please check whether the data contains this step."
             raise RuntimeError(msg)
         return result_data
 
@@ -65,6 +66,6 @@ class OperatorDataPrepare:
             elif level1_node.is_step_profiler() and level1_node.get_step_id() == self._specified_step_id:
                 result_data.extend(level1_node.child_nodes)
         if not result_data and self._specified_step_id != Constant.VOID_STEP:
-            logging.warning("[WARNING] There is no operator infomation for step %s, "
-                            "please check whether the data contains this step.", self._specified_step_id)
+            logger.warning("[WARNING] There is no operator infomation for step %s, "
+                           "please check whether the data contains this step.", self._specified_step_id)
         return result_data

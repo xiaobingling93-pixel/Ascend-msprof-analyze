@@ -13,15 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import configparser
-import logging
 import os
 from email.utils import parseaddr
 from typing import Dict, List
 from urllib.parse import urlparse
 
+from .loger import get_logger
 from .path_manager import PathManager
 
-logger = logging.getLogger()
+logger = get_logger()
 
 
 class SafeConfigReader:
