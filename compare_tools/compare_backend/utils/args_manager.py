@@ -15,11 +15,13 @@
 import os.path
 import re
 
-from common_func.path_manager import PathManager
 from compare_backend.utils.singleton import Singleton
 from profiler.prof_common.constant import Constant
 from profiler.prof_common.file_manager import FileManager
+from profiler.prof_common.loger import get_logger
+from profiler.prof_common.path_manager import PathManager
 
+logger = get_logger()
 
 @Singleton
 class ArgsManager:
@@ -187,7 +189,9 @@ class ArgsManager:
             self._args.enable_communication_compare = True
             self._args.enable_api_compare = True
             self._args.enable_kernel_compare = True
-
+        if not self._args.enable_kernel_compare and self._args.use_kernel_type:
+            logger.warning("The use_kernel_type parameter is invalid because it only takes effect "
+                           "when enable_kernel_compare is enabled.")
         self.get_step_args_with_validating()
         self._base_path_dict = self.parse_profiling_path(PathManager.get_realpath(self._args.base_profiling_path))
         self.check_profiling_path(self._base_path_dict)
