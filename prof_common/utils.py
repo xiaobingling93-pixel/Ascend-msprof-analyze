@@ -18,7 +18,7 @@ from email.utils import parseaddr
 from typing import Dict, List
 from urllib.parse import urlparse
 
-from .loger import get_logger
+from .logger import get_logger
 from .path_manager import PathManager
 
 logger = get_logger()

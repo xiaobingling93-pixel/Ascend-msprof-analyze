@@ -16,7 +16,7 @@ from compare_backend.comparator.base_comparator import BaseComparator
 from compare_backend.utils.common_func import update_order_id
 
 from profiler.prof_common.constant import Constant
-from profiler.prof_common.loger import get_logger
+from profiler.prof_common.logger import get_logger
 
 logger = get_logger()
 

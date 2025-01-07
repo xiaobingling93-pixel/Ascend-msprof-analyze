@@ -30,6 +30,7 @@ def get_logger() -> logging.Logger:
         return logging.getLogger(logger_name)
 
     logger = logging.getLogger(logger_name)
+    logger.propagate = False
     logger.setLevel(get_log_level())
 
     handler = logging.StreamHandler()

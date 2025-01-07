@@ -18,7 +18,7 @@ import re
 from compare_backend.utils.singleton import Singleton
 from profiler.prof_common.constant import Constant
 from profiler.prof_common.file_manager import FileManager
-from profiler.prof_common.loger import get_logger
+from profiler.prof_common.logger import get_logger
 from profiler.prof_common.path_manager import PathManager
 
 logger = get_logger()

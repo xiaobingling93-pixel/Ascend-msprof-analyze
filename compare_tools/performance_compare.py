@@ -24,7 +24,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 from compare_backend.comparison_generator import ComparisonGenerator
 from profiler.prof_common.analyze_dict import AnalyzeDict
-from profiler.prof_common.loger import get_logger
+from profiler.prof_common.logger import get_logger
 
 logger = get_logger()
 

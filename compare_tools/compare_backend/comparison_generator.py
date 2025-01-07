@@ -21,7 +21,7 @@ from compare_backend.profiling_parser.npu_profiling_parser import NPUProfilingPa
 from compare_backend.utils.args_manager import ArgsManager
 from profiler.prof_common.constant import Constant
 from profiler.prof_common.additional_args_manager import AdditionalArgsManager
-from profiler.prof_common.loger import get_logger
+from profiler.prof_common.logger import get_logger
 
 logger = get_logger()
 

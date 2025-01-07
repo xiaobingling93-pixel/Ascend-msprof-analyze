@@ -24,7 +24,7 @@ from compare_backend.disaggregate.overall_perf_interface import OverallPerfInter
 from compare_backend.utils.compare_args import Args
 from profiler.prof_common.constant import Constant
 from profiler.prof_common.analyze_dict import AnalyzeDict
-from profiler.prof_common.loger import get_logger
+from profiler.prof_common.logger import get_logger
 
 logger = get_logger()
 

@@ -22,7 +22,6 @@ from profiler.prof_common.constant import Constant
 
 
 class OverallMetricsBean:
-    __slots__ = ['_base_data', '_comparison_data']
     TABLE_NAME = Constant.OVERALL_METRICS_TABLE
     HEADERS = ExcelConfig.HEADERS.get(TABLE_NAME)
     OVERHEAD = ExcelConfig.OVERHEAD.get(TABLE_NAME)

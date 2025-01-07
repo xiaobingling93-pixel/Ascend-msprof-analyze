@@ -42,7 +42,7 @@ from compare_backend.view.excel_view import ExcelView
 from compare_backend.data_prepare.sequence_pre_matching import SequencePreMatching
 
 from profiler.prof_common.constant import Constant
-from profiler.prof_common.loger import get_logger
+from profiler.prof_common.logger import get_logger
 
 logger = get_logger()
 

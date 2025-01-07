@@ -18,7 +18,7 @@ from compare_backend.utils.args_manager import ArgsManager
 from compare_backend.utils.compare_args import Args
 
 from profiler.prof_common.constant import Constant
-from profiler.prof_common.loger import get_logger
+from profiler.prof_common.logger import get_logger
 from profiler.prof_common.path_manager import PathManager
 
 logger = get_logger()

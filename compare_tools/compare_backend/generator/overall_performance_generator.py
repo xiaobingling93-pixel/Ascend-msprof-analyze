@@ -17,7 +17,7 @@ from compare_backend.compare_bean.profiling_info import ProfilingInfo
 from compare_backend.generator.base_generator import BaseGenerator
 from compare_backend.view.screen_view import ScreenView
 
-from profiler.prof_common.loger import get_logger
+from profiler.prof_common.logger import get_logger
 
 logger = get_logger()
 

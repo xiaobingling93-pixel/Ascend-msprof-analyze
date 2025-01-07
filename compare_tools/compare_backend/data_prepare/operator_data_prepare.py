@@ -16,7 +16,7 @@ from compare_backend.profiling_parser.base_profiling_parser import ProfilingResu
 from compare_backend.utils.tree_builder import TreeBuilder
 
 from profiler.prof_common.constant import Constant
-from profiler.prof_common.loger import get_logger
+from profiler.prof_common.logger import get_logger
 
 logger = get_logger()
 

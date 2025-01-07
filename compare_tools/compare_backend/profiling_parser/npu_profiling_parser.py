@@ -25,7 +25,7 @@ from compare_backend.profiling_parser.base_profiling_parser import BaseProfiling
 from profiler.compare_tools.compare_backend.compare_bean.origin_data_bean.op_stastic_bean import OpStatisticBean
 from profiler.prof_common.constant import Constant
 from profiler.prof_common.file_manager import FileManager
-from profiler.prof_common.loger import get_logger
+from profiler.prof_common.logger import get_logger
 
 logger = get_logger()
 

@@ -16,7 +16,7 @@ from decimal import Decimal
 
 import numpy as np
 
-from profiler.prof_common.loger import get_logger
+from profiler.prof_common.logger import get_logger
 
 logger = get_logger()
 
