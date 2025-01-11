@@ -21,6 +21,7 @@ import click
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), "compare_tools"))
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), "cluster_analyse"))
 
+from profiler.prof_common.path_manager import PathManager
 from profiler.advisor.analyzer.analyzer_controller import AnalyzerController
 from profiler.advisor.utils.tools import CONTEXT_SETTINGS, ClickAliasedGroup
 from profiler.prof_common.constant import Constant
@@ -42,10 +43,11 @@ def analyze_cli(**kwargs):
                      short_help='Analyze timeline fusion operators, operators and graph,\
                                  operators dispatching and cluster.')
 @click.option('--profiling_path', '-d', 'profiling_path', type=click.Path(), required=True,
-              help='Directory of profiling data')
+              callback=PathManager.expanduser_for_cli, help='Directory of profiling data')
 @click.option('--benchmark_profiling_path', '-bp', 'benchmark_profiling_path', type=click.Path(),
+              callback=PathManager.expanduser_for_cli,
               help='Directory of benchmark profiling data, used for compare performance')
-@click.option('--output_path', '-o', 'output_path', type=click.Path(),
+@click.option('--output_path', '-o', 'output_path', type=click.Path(), callback=PathManager.expanduser_for_cli,
               help='Path of analysis output')
 @click.option('--cann_version', '-cv', 'cann_version',
               type=click.Choice(EnumParamsParser().get_options(Constant.CANN_VERSION), case_sensitive=False),
@@ -79,8 +81,8 @@ def analyze_all(**kwargs) -> None:
                      name="schedule",
                      short_help='Analyze operators dispatching and timeline fusion operators.')
 @click.option('--profiling_path', '-d', 'profiling_path', type=click.Path(), required=True,
-              help='Directory of profiling data')
-@click.option('--output_path', '-o', 'output_path', type=click.Path(),
+              callback=PathManager.expanduser_for_cli, help='Directory of profiling data')
+@click.option('--output_path', '-o', 'output_path', type=click.Path(), callback=PathManager.expanduser_for_cli,
               help='Path of analysis output')
 @click.option('--cann_version', '-cv', 'cann_version',
               type=click.Choice(EnumParamsParser().get_options(Constant.CANN_VERSION), case_sensitive=False),
@@ -118,8 +120,8 @@ def analyze_schedule(**kwargs) -> None:
                      name="computation",
                      short_help='Analyze operators and graph.')
 @click.option('--profiling_path', '-d', 'profiling_path', type=click.Path(), required=True,
-              help='Directory of profiling data')
-@click.option('--output_path', '-o', 'output_path', type=click.Path(),
+              callback=PathManager.expanduser_for_cli, help='Directory of profiling data')
+@click.option('--output_path', '-o', 'output_path', type=click.Path(), callback=PathManager.expanduser_for_cli,
               help='Path of analysis output')
 @click.option('--cann_version', '-cv', 'cann_version',
               type=click.Choice(EnumParamsParser().get_options(Constant.CANN_VERSION), case_sensitive=False),
