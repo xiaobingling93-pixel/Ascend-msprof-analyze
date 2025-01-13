@@ -111,10 +111,12 @@ class Interface:
 
 def cluster_analysis_main(args=None):
     parser = argparse.ArgumentParser(description="cluster analysis module")
-    parser.add_argument('-d', '--profiling_path', type=str, required=True, help="profiling data path")
+    parser.add_argument('-d', '--profiling_path', type=PathManager.expanduser_for_argumentparser,
+                        required=True, help="profiling data path")
     parser.add_argument('-m', '--mode', choices=COMM_FEATURE_LIST,
                         default='all', help="different analysis mode")
-    parser.add_argument('-o', '--output_path', type=str, help='Path of cluster analysis output')
+    parser.add_argument('-o', '--output_path', type=PathManager.expanduser_for_argumentparser,
+                        help='Path of cluster analysis output')
     parser.add_argument(
         '--data_simplification', default=False, action='store_true', help='data simplification switch for db data'
     )

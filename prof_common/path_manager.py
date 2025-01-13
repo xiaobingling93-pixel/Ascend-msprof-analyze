@@ -215,3 +215,12 @@ class PathManager:
                 f"The file({file_path}) size exceeds the preset max value. Continue reading the file? [y/n]")
             if check_msg.lower() != "y":
                 raise RuntimeError(f"[WARNING] The user choose not to read the file: {file_path}")
+
+    @classmethod
+    def expanduser_for_cli(cls, ctx, parm, str_name: str):
+        return cls.expanduser_for_argumentparser(str_name)
+
+    @classmethod
+    def expanduser_for_argumentparser(cls, str_name: str):
+        # None 对应 参数未赋值的场景
+        return str_name if str_name is None else os.path.expanduser(str_name.lstrip('='))

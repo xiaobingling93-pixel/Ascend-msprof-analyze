@@ -122,7 +122,7 @@ MindSpore性能调试工具采集结果数据目录结构如下：
    ```
 
    - --profiling_path或-d（必选）：比对性能数据文件所在路径。可以指定以“ascend_pt”或“ascend_ms”结尾的目录、ASCEND_PROFILER_OUTPUT目录或trace_view.json文件，指定trace_view.json无法显示算子的内存占用。
-   - --benchmark_path或-bp（必选）：基准性能数据文件所在路径。基准性能数据文件若以GPU为基准，指定到以“.pt.trace”结尾的json文件；若以NPU不同版本为基准，指定文件与-d一致。
+   - --benchmark_profiling_path或-bp（必选）：基准性能数据文件所在路径。基准性能数据文件若以GPU为基准，指定到以“.pt.trace”结尾的json文件；若以NPU不同版本为基准，指定文件与-d一致。
    - --output_path或-o（可选）：性能比对结果存放的路径，默认保存在当前目录。
 
 #### 脚本方式
