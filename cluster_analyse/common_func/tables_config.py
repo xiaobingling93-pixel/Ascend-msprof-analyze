@@ -85,7 +85,8 @@ class TablesConfig:
         "RankDeviceMapMap": [
             ("rankId", "INTEGER, null"),
             ("deviceId", "INTEGER, null"),
-            ("hostUid", "TEXT, null")
+            ("hostUid", "TEXT, null"),
+            ("profilePath", "TEXT, null")
         ],
         "ClusterCommunicationTimeMap": [
             ("step", "TEXT, null"),
@@ -132,4 +133,7 @@ class TablesConfig:
             ("group_name", "TEXT, null"),
             ("rank_set", "TEXT, null")
         ],
+        "ClusterBaseInfoMap": [
+            ("distributed_args", "TEXT, null")
+        ]
     }

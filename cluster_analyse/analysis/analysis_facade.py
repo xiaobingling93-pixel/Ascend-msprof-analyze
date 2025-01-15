@@ -22,6 +22,7 @@ from analysis.comm_matrix_analysis import CommMatrixAnalysis
 from analysis.comm_matrix_analysis import CommMatrixAnalysisOptimized
 from analysis.step_trace_time_analysis import StepTraceTimeAnalysis
 from analysis.host_info_analysis import HostInfoAnalysis
+from analysis.cluster_base_info_analysis import ClusterBaseInfoAnalysis
 from common_func.context import Context
 
 from profiler.cluster_analyse.common_func.analysis_loader import get_class_from_name
@@ -32,9 +33,11 @@ logger = get_logger()
 
 
 class AnalysisFacade:
-    default_module = {CommunicationAnalysis, StepTraceTimeAnalysis, CommMatrixAnalysis, HostInfoAnalysis}
+    default_module = {CommunicationAnalysis, StepTraceTimeAnalysis, CommMatrixAnalysis, HostInfoAnalysis,
+                      ClusterBaseInfoAnalysis}
     simplified_module = {
-        CommunicationAnalysisOptimized, StepTraceTimeAnalysis, CommMatrixAnalysisOptimized, HostInfoAnalysis
+        CommunicationAnalysisOptimized, StepTraceTimeAnalysis, CommMatrixAnalysisOptimized, HostInfoAnalysis,
+        ClusterBaseInfoAnalysis
     }
 
     def __init__(self, params: dict):

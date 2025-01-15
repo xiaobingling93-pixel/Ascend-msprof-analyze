@@ -18,6 +18,7 @@ import os
 from analysis.base_analysis import BaseAnalysis
 from common_func.db_manager import DBManager
 from common_func.utils import increase_shared_value
+from common_func.path_manager import PathManager
 
 from profiler.prof_common.constant import Constant
 from profiler.prof_common.logger import get_logger
@@ -48,6 +49,7 @@ class HostInfoAnalysis(BaseAnalysis):
 
     def dump_db(self):
         output_path = os.path.join(self.cluster_analysis_output_path, Constant.CLUSTER_ANALYSIS_OUTPUT)
+        PathManager.make_dir_safety(output_path)
         result_db = os.path.join(output_path, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER)
         conn, curs = DBManager.create_connect_db(result_db)
         if not (conn and curs):
@@ -97,9 +99,13 @@ class HostInfoAnalysis(BaseAnalysis):
                 sql = "select * from {0}".format(self.TABLE_RANK_DEVICE_MAP)
                 rank_device_info = DBManager.fetch_all_data(curs, sql, is_dict=False)
                 DBManager.destroy_db_connect(conn, curs)
+            if not (rank_device_info and rank_device_info[0]):
+                if not print_empty_host_info:
+                    print_empty_host_info = f"No {self.TABLE_RANK_DEVICE_MAP} data in {self.data_type} file."
+                continue
             host_uid, host_name = str(host_info[0][0]), str(host_info[0][1])
             for idx, data in enumerate(rank_device_info):
-                rank_device_info[idx] = list(data) + [host_uid, ]
+                rank_device_info[idx] = list(data) + [host_uid, profiling_dir]
             self.all_rank_host_info[host_uid] = host_name
             self.all_rank_device_info.extend(rank_device_info)
         if print_empty_host_info:

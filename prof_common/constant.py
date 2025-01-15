@@ -125,6 +125,7 @@ class Constant(object):
     TABLE_STEP_TRACE = "StepTraceTime"
     TABLE_HOST_INFO = "HostInfo"
     TABLE_RANK_DEVICE_MAP = "RankDeviceMap"
+    TABLE_CLUSTER_BASE_INFO = "ClusterBaseInfo"
 
     # data config key
     CONFIG = "config"
