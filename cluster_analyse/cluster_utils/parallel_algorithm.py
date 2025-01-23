@@ -13,9 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from abc import ABC, abstractmethod
-import logging
 
-logger = logging.getLogger()
+from profiler.prof_common.logger import get_logger
+
+logger = get_logger()
 
 
 class ParallelAlgorithm(ABC):

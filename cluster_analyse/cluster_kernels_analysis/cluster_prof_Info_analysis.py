@@ -19,19 +19,22 @@ import re
 import os
 import stat
 import warnings
-import logging
 from pathlib import Path
 
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from plotly.offline import plot
+
+from profiler.prof_common.logger import get_logger
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from profiler.prof_common.path_manager import PathManager
 from profiler.prof_common.additional_args_manager import AdditionalArgsManager
 
+logger = get_logger()
 
 MAX_READ_FILE_BYTES = 64 * 1024 * 1024
 
@@ -73,21 +76,21 @@ class FormDataProcessor:
             try:
                 df = df[columns_to_keep]
             except KeyError:
-                logging.info("%s文件没有所需的列，请确认profiling数据的正确性:\n,"
+                logger.info("%s文件没有所需的列，请确认profiling数据的正确性:\n,"
                              "以下列可能不存在%s\n", f, columns_to_keep)
                 continue
             # 从文件名提取设备ID
             try:
                 df['device_id'] = self.get_device_id(f)
             except Exception:
-                logging.info("文件 \"%s\" 的路径或者是文件夹名没有按照要求，请确保存在[device_]这一级文件夹,"
+                logger.info("文件 \"%s\" 的路径或者是文件夹名没有按照要求，请确保存在[device_]这一级文件夹,"
                              "具体操作指导见readme\n", f)
                 continue
             # 添加新列 "device_id"
             try:
                 df['node_id'] = self.get_node_id(f)
             except Exception:
-                logging.info("文件 \"%s\" 的路径或者是文件夹名没有按照要求，请确保存在[node*]这一级文件夹,"
+                logger.info("文件 \"%s\" 的路径或者是文件夹名没有按照要求，请确保存在[node*]这一级文件夹,"
                              "具体操作指导见readme\n", f)
                 continue
             # 将数据添加到最终的数据框中
@@ -285,7 +288,7 @@ class DeliverableGenerator:
         summary_data = self.form_process.read_summary_data(self.columns_to_keep)
         # 判断summarydata 数据是否为空，如果是空， 说明所有csv读取数据都失败了
         if summary_data.empty:
-            logging.info("没有符合要求的csv表格数据，请排查您的PROFILING数据")
+            logger.info("没有符合要求的csv表格数据，请排查您的PROFILING数据")
             return
         rank_num = self.form_process.get_rank_num()
         for analyzer in self.analyzers:
@@ -295,7 +298,7 @@ class DeliverableGenerator:
         chip_type = self.form_process.get_chip_type()
         # 判断该路径是不是软链接，并修改为绝对路径
         if os.path.islink(params.get('dir')):
-            logging.info("The file: \"%s\" is link. Please check the path.", params.get('dir'))
+            logger.info("The file: \"%s\" is link. Please check the path.", params.get('dir'))
             return
         prof_path = os.path.abspath(params.get('dir'))
         PathManager.input_path_common_check(prof_path)

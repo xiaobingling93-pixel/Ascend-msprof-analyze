@@ -12,14 +12,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-
 from collections import defaultdict
 import os
-import logging
+
 from cluster_data_preprocess.data_preprocessor import DataPreprocessor
 from profiler.prof_common.constant import Constant
 from profiler.prof_common.file_manager import FileManager
+from profiler.prof_common.logger import get_logger
+
+logger = get_logger()
 
 
 class PytorchDataPreprocessor(DataPreprocessor):
@@ -33,14 +34,14 @@ class PytorchDataPreprocessor(DataPreprocessor):
         for dir_name in self.path_list:
             rank_id = self.get_rank_id(dir_name)
             if rank_id < 0:
-                logging.error("fail to get rankid or rankid invalid.")
+                logger.error("fail to get rankid or rankid invalid.")
                 continue
             for file_name in os.listdir(dir_name):
                 if file_name.startswith(self.PROFILER_INFO_HEAD) and file_name.endswith(self.PROFILER_INFO_EXTENSION):
                     file_path = os.path.join(dir_name, file_name)
                     config = FileManager.read_json_file(file_path)
                     self.data_type.add(config.get(Constant.CONFIG, {}).get(Constant.EXPER_CONFIG, {}).
-                                       get(Constant.EXPORT_TYPE, Constant.TEXT))
+                                       get(Constant.EXPER_EXPORT_TYPE, Constant.TEXT))
             rank_id_map[rank_id].append(dir_name)
 
         try:

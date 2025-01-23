@@ -14,20 +14,18 @@
 # limitations under the License.
 
 import os
-import logging
 
 from analysis.base_analysis import BaseAnalysis
 from common_func.db_manager import DBManager
 from common_func.utils import increase_shared_value
 
 from profiler.prof_common.constant import Constant
-from profiler.prof_common.utils import PrintUtils
+from profiler.prof_common.logger import get_logger
 
-logger = logging.getLogger("cluster")
+logger = get_logger()
 
 
 class HostInfoAnalysis(BaseAnalysis):
-
     TABLE_HOST_INFO = "HOST_INFO"
     TABLE_RANK_DEVICE_MAP = "RANK_DEVICE_MAP"
 
@@ -36,14 +34,16 @@ class HostInfoAnalysis(BaseAnalysis):
         self.all_rank_host_info = {}
         self.all_rank_device_info = []
 
-    def run(self, completed_processes, lock):
+    def run(self, completed_processes=None, lock=None):
         if self.data_type != Constant.DB:
-            increase_shared_value(completed_processes, lock)
+            if completed_processes and lock:
+                increase_shared_value(completed_processes, lock)
             logger.info("HostInfoAnalysis completed")
             return
         self.analyze_host_info()
         self.dump_db()
-        increase_shared_value(completed_processes, lock)
+        if completed_processes and lock:
+            increase_shared_value(completed_processes, lock)
         logger.info("HostInfoAnalysis completed")
 
     def dump_db(self):
@@ -103,4 +103,4 @@ class HostInfoAnalysis(BaseAnalysis):
             self.all_rank_host_info[host_uid] = host_name
             self.all_rank_device_info.extend(rank_device_info)
         if print_empty_host_info:
-            PrintUtils.print_warning(print_empty_host_info)
+            logger.warning(print_empty_host_info)

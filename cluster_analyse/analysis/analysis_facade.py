@@ -12,15 +12,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import threading
 from multiprocessing import Process, Value, Lock
 from tqdm import tqdm
+
 from analysis.communication_analysis import CommunicationAnalysis
 from analysis.communication_analysis import CommunicationAnalysisOptimized
 from analysis.comm_matrix_analysis import CommMatrixAnalysis
 from analysis.comm_matrix_analysis import CommMatrixAnalysisOptimized
 from analysis.step_trace_time_analysis import StepTraceTimeAnalysis
 from analysis.host_info_analysis import HostInfoAnalysis
+from common_func.context import Context
+
+from profiler.cluster_analyse.common_func.analysis_loader import get_class_from_name
 from profiler.prof_common.constant import Constant
+from profiler.prof_common.logger import get_logger
+
+logger = get_logger()
 
 
 class AnalysisFacade:
@@ -66,3 +74,19 @@ class AnalysisFacade:
         with lock:
             pbar.n = completed_processes.value
             pbar.refresh()
+
+    def do_recipe(self, recipe_class):
+        try:
+            logger.info(f"Recipe {recipe_class[0]} analysis is starting to launch.")
+            with Context.create_context(self.params.get(Constant.PARALLEL_MODE)) as context:
+                self.params[Constant.RECIPE_NAME] = recipe_class[0]
+                with recipe_class[1](self.params) as recipe:
+                    recipe.run(context)
+            logger.info(f"Recipe {recipe_class[0]} analysis launched successfully.")
+        except Exception as e:
+            logger.error(f"Recipe {recipe_class[0]} analysis launched failed, {e}.")
+
+    def recipe_analyze(self):
+        recipe_class = get_class_from_name(self.params.get(Constant.ANALYSIS_MODE))
+        if recipe_class:
+            self.do_recipe(recipe_class)

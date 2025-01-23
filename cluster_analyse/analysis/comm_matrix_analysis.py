@@ -14,7 +14,6 @@
 # limitations under the License.
 
 import os
-import logging
 from collections import defaultdict
 
 from analysis.base_analysis import BaseAnalysis
@@ -22,8 +21,9 @@ from common_func.db_manager import DBManager
 from common_func.utils import increase_shared_value
 
 from profiler.prof_common.constant import Constant
+from profiler.prof_common.logger import get_logger
 
-logger = logging.getLogger("cluster")
+logger = get_logger()
 
 
 class CommMatrixAnalysis(BaseAnalysis):
@@ -108,7 +108,7 @@ class CommMatrixAnalysis(BaseAnalysis):
             Constant.OP_NAME: ''
         }
         for op_name, op_dict in step_dict.items():
-            link_info = defaultdict(lambda:default_value.copy())
+            link_info = defaultdict(lambda: default_value.copy())
             for rank_id, rank_dict in op_dict.items():
                 process_link_key()
             step_dict[op_name] = convert_local_to_global_rank()
@@ -135,10 +135,10 @@ class CommMatrixAnalysis(BaseAnalysis):
 class CommMatrixAnalysisOptimized(CommMatrixAnalysis):
     SAVED_JSON = "cluster_communication_matrix.json"
     COMMUNICATION_MATRIX_TABLE = "ClusterCommunicationMatrix"
-    
+
     def __init__(self, param: dict):
         super().__init__(param)
-        
+
     def dump_db(self):
         res_comm_matrix = self.adapter.transfer_matrix_from_json_to_db(self.comm_ops_struct)
         output_path = os.path.join(self.cluster_analysis_output_path, Constant.CLUSTER_ANALYSIS_OUTPUT)

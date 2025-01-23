@@ -1,4 +1,4 @@
-# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# Copyright (c) 2023, Huawei Technologies Co., Ltd.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0  (the "License");
@@ -22,7 +22,6 @@ from profiler.prof_common.constant import Constant
 from profiler.prof_common.logger import get_logger
 from profiler.prof_common.path_manager import PathManager
 from profiler.prof_common.additional_args_manager import AdditionalArgsManager
-from profiler.prof_common.utils import PrintUtils
 
 logger = get_logger()
 
@@ -60,7 +59,7 @@ class FileManager:
             check_msg = input(
                 f"The file({file_path}) size exceeds the preset max value. Continue reading the file? [y/n]")
             if check_msg.lower() != "y":
-                PrintUtils.print_warning(f"The user choose not to read the file: {file_path}")
+                logger.warning(f"The user choose not to read the file: {file_path}")
                 return []
         result_data = []
         try:
@@ -156,9 +155,13 @@ class FileManager:
             raise RuntimeError(f"Can't create the file: {base_name}") from e
 
     @classmethod
-    def create_output_dir(cls, collection_path: str) -> None:
+    def create_output_dir(cls, collection_path: str, is_overwrite: bool = False) -> None:
         output_path = os.path.join(
             collection_path, Constant.CLUSTER_ANALYSIS_OUTPUT)
+        if is_overwrite:
+            if not os.path.exists(output_path):
+                PathManager.make_dir_safety(output_path)
+            return
         PathManager.remove_path_safety(output_path)
         PathManager.make_dir_safety(output_path)
 

@@ -18,13 +18,12 @@ from abc import abstractmethod
 from collections import defaultdict
 from copy import deepcopy
 from multiprocessing import Pool
-import logging
 
 from cluster_utils.data_transfer_adapter import DataTransferAdapter
 from profiler.prof_common.constant import Constant
+from profiler.prof_common.logger import get_logger
 
-
-logger = logging.getLogger()
+logger = get_logger()
 
 
 class BaseCommunicationGroup:

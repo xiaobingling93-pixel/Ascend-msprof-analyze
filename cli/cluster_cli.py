@@ -18,11 +18,9 @@ import click
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from profiler.prof_common.path_manager import PathManager
 from profiler.prof_common.constant import Constant
-from profiler.cluster_analyse.cluster_analysis import COMM_FEATURE_LIST
-from profiler.cluster_analyse.cluster_analysis import cluster_analysis_main
-
+from profiler.cluster_analyse.cluster_analysis import ALL_FEATURE_LIST, Interface
+from profiler.prof_common.path_manager import PathManager
 
 context_settings = dict(Constant.CONTEXT_SETTINGS)
 context_settings['ignore_unknown_options'] = True
@@ -32,13 +30,14 @@ context_settings['ignore_unknown_options'] = True
                short_help='Analyze cluster data to locate slow nodes and slow links.')
 @click.option('--profiling_path', '-d', type=click.Path(), required=True, callback=PathManager.expanduser_for_cli,
               help='path of the profiling data')
-@click.option('--mode', '-m', type=click.Choice(COMM_FEATURE_LIST), default='all')
-@click.option('--output_path', '-o', 'cluster_analysis_output_path', type=click.Path(), default='',
-              callback=PathManager.expanduser_for_cli, help='Path of cluster analysis output')
+@click.option('--mode', '-m', type=click.Choice(ALL_FEATURE_LIST), default='all')
+@click.option('--output_path', '-o', type=click.Path(), default='', callback=PathManager.expanduser_for_cli,
+              help='Path of cluster analysis output')
+@click.option('--data_simplification', is_flag=True, help='data simplification switch for db data')
 @click.option('--force', is_flag=True, help="Indicates whether to skip file size verification and owner verification")
+@click.option("--parallel_mode", type=str, help="context mode", default="concurrent")
+@click.option("--export_type", help="recipe export type", type=click.Choice(["db", "notebook"]), default="db")
+@click.option("--rank_list", type=str, help="Rank id list", default='all')
 @click.argument('args', nargs=-1)
-def cluster_cli(profiling_path, mode, cluster_analysis_output_path, force, args) -> None:
-    if force:
-        args = args + ('--force',)
-    required_args = ('-d', profiling_path, '-m', mode, '-o', cluster_analysis_output_path)
-    cluster_analysis_main(required_args + args)
+def cluster_cli(**kwargs) -> None:
+    Interface(kwargs).run()

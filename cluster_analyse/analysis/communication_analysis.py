@@ -14,7 +14,6 @@
 # limitations under the License.
 
 import os
-import logging
 from collections import defaultdict
 
 from analysis.base_analysis import BaseAnalysis
@@ -24,8 +23,9 @@ from common_func.utils import increase_shared_value
 from prof_bean.communication_bandwidth_bean import CommunicationBandwidthBean
 from prof_bean.communication_time_bean import CommunicationTimeBean
 from profiler.prof_common.constant import Constant
+from profiler.prof_common.logger import get_logger
 
-logger = logging.getLogger("cluster")
+logger = get_logger()
 
 
 class CommunicationAnalysis(BaseAnalysis):
@@ -142,20 +142,20 @@ class CommunicationAnalysisOptimized(BaseAnalysis):
         self._aggregate_bandwidth = {}
         self._output_time = []
         self._output_bandwidth = []
-        
+
     @staticmethod
     def _execute(conn, res_data, table_name):
         if res_data:
             sql = "insert into {} values ({value})".format(table_name, value="?," * (len(res_data[0]) - 1) + "?")
             DBManager.executemany_sql(conn, sql, res_data)
-            
+
     @staticmethod
     def _format_time_data(communication_data):
         data_dict = {}
         for single_op in communication_data:
             formatted_data = CommunicationTimeBean(single_op)
-            data_dict.setdefault(formatted_data.step_id, {}).\
-                setdefault(formatted_data.rank_id, {}).\
+            data_dict.setdefault(formatted_data.step_id, {}). \
+                setdefault(formatted_data.rank_id, {}). \
                 setdefault(formatted_data.group_name, []).extend([formatted_data])
         return data_dict
 
@@ -176,9 +176,9 @@ class CommunicationAnalysisOptimized(BaseAnalysis):
         for single_op in communication_data:
             formatted_data = CommunicationBandwidthBean(single_op)
             rank_set = str(self.collective_group_dict.get(formatted_data.group_name, formatted_data.group_name))
-            data_dict.setdefault(rank_set, {}).setdefault(formatted_data.step_id, {}).\
-                setdefault(formatted_data.rank_id, {}).\
-                setdefault(formatted_data.transport_type, {}).\
+            data_dict.setdefault(rank_set, {}).setdefault(formatted_data.step_id, {}). \
+                setdefault(formatted_data.rank_id, {}). \
+                setdefault(formatted_data.transport_type, {}). \
                 setdefault(formatted_data.package_size, []).extend([formatted_data])
         return data_dict
 
@@ -243,7 +243,7 @@ class CommunicationAnalysisOptimized(BaseAnalysis):
                     total_transit_size += bandwidth_package_info.transit_size
                     total_transit_time += bandwidth_package_info.transit_time
             return total_bw_info, total_transit_size, total_transit_time
-    
+
         for _, step_dict in self._aggregate_bandwidth.items():
             for step_id, rank_dict in step_dict.items():
                 for rank_id, communication_op_info in rank_dict.items():

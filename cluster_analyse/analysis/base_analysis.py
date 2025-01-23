@@ -12,15 +12,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-import logging
 from abc import abstractmethod
+
+from cluster_utils.data_transfer_adapter import DataTransferAdapter
 
 from profiler.prof_common.constant import Constant
 from profiler.prof_common.file_manager import FileManager
-from cluster_utils.data_transfer_adapter import DataTransferAdapter
+from profiler.prof_common.logger import get_logger
 
-logger = logging.getLogger()
+logger = get_logger()
 
 
 class BaseAnalysis:
@@ -94,7 +94,7 @@ class BaseAnalysis:
             step_id = single_op.get(Constant.STEP_ID, 'N/A')
             op_name = single_op.get(Constant.COMM_OP_NAME, 'N/A')
             op_info = single_op.get(Constant.COMM_OP_INFO)
-            self.comm_ops_struct.setdefault(rank_tup, {}).setdefault(step_id, {}).\
+            self.comm_ops_struct.setdefault(rank_tup, {}).setdefault(step_id, {}). \
                 setdefault(op_name, {}).setdefault(rank_id, op_info)
 
     def combine_ops_total_info(self):

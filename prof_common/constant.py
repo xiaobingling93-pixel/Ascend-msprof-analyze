@@ -12,8 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-
 import os
 import stat
 
@@ -21,16 +19,21 @@ import stat
 class Constant(object):
     COLLECTION_PATH = "collection_path"
     ANALYSIS_MODE = "analysis_mode"
+    MODE = "mode"
     CONTEXT_SETTINGS = dict(help_option_names=['-H', '-h', '--help'])
 
     MAX_FILE_SIZE_5_GB = 1024 * 1024 * 1024 * 5
 
     MODULE_EVENT = "module_event"
     CPU_OP_EVENT = "op_event"
+    STEP_EVENT = "step_event"
     TORCH_TO_NPU_FLOW = "torch_to_device"
     KERNEL_EVENT = "kernel_event"
+    HCCL_EVENT = "hccl_event"
+    OVERLAP_ANALYSIS_EVENT = "overlap_event"
     FWD_BWD_FLOW = "fwd_to_bwd"
     NPU_ROOT_ID = "NPU"
+    BACKWARD_MODULE = "nn.Module: BACKWARD"
 
     FWD_OR_OPT = 0
     BACKWARD = 1
@@ -126,7 +129,7 @@ class Constant(object):
     # data config key
     CONFIG = "config"
     EXPER_CONFIG = "experimental_config"
-    EXPORT_TYPE = "_export_type"
+    EXPER_EXPORT_TYPE = "_export_type"
 
     # metadata key
     DISTRIBUTED_ARGS = "distributed_args"
@@ -147,7 +150,6 @@ class Constant(object):
     NPU = "NPU"
     NA = 'N/A'
     LIMIT_KERNEL = 3
-    MAX_PATH_LENGTH = 4096
     MAX_FLOW_CAT_LEN = 20
     MAX_OP_NAME_LEN = 200
     MAX_FILE_SIZE = 1024 * 1024 * 1024 * 5
@@ -285,6 +287,10 @@ class Constant(object):
         TIMELINE_ACL_TO_NPU_NO_STACK_CODE: "Incoming flow is 'acl_to_npu', without call stacks in profiling."
     }
     AFFINITY_TRAINING_API = "Affinity training api"
+    TIMELINE_EMPTY_STACKS_PROMPT = "These APIs have no code stack. If parameter 'with_stack=False' while profiling, " \
+                                   "please refer to {timeline_profiling_doc_url} to set 'with_stack=True'. " \
+                                   "Otherwise, ignore following affinity APIs due to backward broadcast lack of stack."
+
     CLUSTER_ANALYSIS = "Cluster analysis"
     SLOW_RANK_TIME_RATIO_THRESHOLD = 0.05
 
@@ -345,7 +351,6 @@ class Constant(object):
 
     PT_PROF_SUFFIX = "ascend_pt"
     ASCEND_PROFILER_OUTPUT = "ASCEND_PROFILER_OUTPUT"
-    KERNEL_DETAILS_CSV = "kernel_details.csv"
     CLUSTER_STEP_TIME_CSV = "cluster_step_trace_time.csv"
     CLUSTER_COMM_JSON = "cluster_communication.json"
     COMMUNICATION_JSON = "communication.json"
@@ -369,7 +374,6 @@ class Constant(object):
 
     MAX_READ_LINE_BYTES = 8196 * 1024
     MAX_READ_FILE_BYTES = 64 * 1024 * 1024 * 1024
-    MAX_READ_DB_FILE_BYTES = 8 * 1024 * 1024 * 1024
 
     # Unit Conversion
     COMMUNICATION_B_TO_GB = 0.001 ** 3
@@ -386,7 +390,36 @@ class Constant(object):
     PYTORCH = "pytorch"
     MINDSPORE = "mindspore"
 
+    # node type
+    MODULE_TYPE = 0
+    OPERATOR_TYPE = 1
+    VIRTUAL_TYPE = 9
+
+    # trace bar
+    NPU_BAR = "Ascend Hardware"
+    HCCL_BAR = "HCCL"
+    OVERLAP_BAR = "Overlap Analysis"
+
+    # overlap_analysis event
+    COMPUTING_EVENT = "Computing"
+    FREE_EVENT = "Free"
+    UNCOVERED_COMMUNICATION_EVENT = "Communication(Not Overlapped)"
+
     MC2_TIME = "mc2"
     MC2_COMPUTING = "mc2_p"
     MC2_COMMUNICATION = "mc2_m"
     MC2_NUMBER = "mc2_num"
+
+    # recipe config
+    ANALYSIS = "analysis"
+    RECIPE_NAME = "recipe_name"
+    RECIPE_CLASS = "recipe_class"
+    PARALLEL_MODE = "parallel_mode"
+    MSPROF_ANALYZE_PATH = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+    RECIPES_PATH = os.path.join(MSPROF_ANALYZE_PATH, 'cluster_analyse', 'recipes')
+
+    CONCURRENT_MODE = "concurrent"
+    PROFILER_DB_PATH = "profiler_db_path"
+    RANK_LIST = "rank_list"
+    EXPORT_TYPE = "export_type"
+    EXTRA_ARGS = "args"

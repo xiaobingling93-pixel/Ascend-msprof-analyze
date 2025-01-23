@@ -12,15 +12,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import os
-import logging
 
 from common_func.db_manager import DBManager
 from communication_group.base_communication_group import BaseCommunicationGroup
 from profiler.prof_common.constant import Constant
+from profiler.prof_common.logger import get_logger
 
-logger = logging.getLogger()
+logger = get_logger()
 
 
 def get_communication_data(rank_id: str, db_path: str, analysis_mode: str):
@@ -35,7 +34,7 @@ def get_communication_data(rank_id: str, db_path: str, analysis_mode: str):
     bandwidth_info_sql = "select * from {0}".format(Constant.TABLE_COMM_ANALYZER_BANDWIDTH)
     matrix_info_sql = "select * from {0}".format(Constant.TABLE_COMM_ANALYZER_MATRIX)
     if (DBManager.check_tables_in_db(db_path, Constant.TABLE_COMM_ANALYZER_TIME,
-                                        Constant.TABLE_COMM_ANALYZER_BANDWIDTH)
+                                     Constant.TABLE_COMM_ANALYZER_BANDWIDTH)
             and analysis_mode in [Constant.ALL, Constant.COMMUNICATION_TIME]):
         time_data = DBManager.fetch_all_data(cursor, time_info_sql)
         bandwidth_data = DBManager.fetch_all_data(cursor, bandwidth_info_sql)
@@ -53,7 +52,7 @@ def dump_group_db(dump_data: list, group_table: str, cluster_analysis_output_pat
         DBManager.create_tables(result_db, group_table)
         conn, cursor = DBManager.create_connect_db(result_db)
         sql = "insert into {} values ({value})".format(group_table,
-                                                        value="?," * (len(dump_data[0]) - 1) + "?")
+                                                       value="?," * (len(dump_data[0]) - 1) + "?")
         DBManager.executemany_sql(conn, sql, dump_data)
         DBManager.destroy_db_connect(conn, cursor)
     else:
@@ -88,12 +87,12 @@ class CommunicationDBGroup(BaseCommunicationGroup):
 
 class CommunicationDBGroupOptimized(BaseCommunicationGroup):
     COMMUNICATION_GROUP_MAPPING_TABLE = "CommunicationGroupMapping"
-    
+
     def __init__(self, params: dict):
         super().__init__(params)
         self.bandwidth_data = []
         self.matrix_ops = []
-    
+
     def read_communication_func(self, params: tuple):
         if len(params) < 3:
             return -1, {}, {}
@@ -103,7 +102,7 @@ class CommunicationDBGroupOptimized(BaseCommunicationGroup):
         comm_matrix_data = self.adapter.transfer_matrix_from_db_to_json(matrix_data)
         comm_time_data = (time_data, bandwidth_data)
         return rank_id, comm_time_data, comm_matrix_data
-    
+
     def set_collective_group(self, rank_id: int, time_data: list):
         for single_time_data in time_data:
             if single_time_data.get('type') == Constant.P2P:
@@ -132,13 +131,13 @@ class CommunicationDBGroupOptimized(BaseCommunicationGroup):
                         continue
                     self.set_p2p_link(rank_id, step_id, comm_matrix_data)
                     self.get_collective_ops_name(rank_id, step_id_dict.get(Constant.COLLECTIVE))
-    
+
     def generate_collective_communication_group(self):
         collective_group = []
         for group_name, group in self.collective_group_dict.items():
             collective_group.append((group_name, list(group)))
         self.communication_group[Constant.COLLECTIVE] = collective_group
-    
+
     def collect_comm_data(self):
         comm_data_dict = {
             Constant.COLLECTIVE_GROUP: self.collective_group_dict,
@@ -147,7 +146,7 @@ class CommunicationDBGroupOptimized(BaseCommunicationGroup):
             Constant.COMMUNICATION_GROUP: self.communication_group
         }
         return comm_data_dict
-    
+
     def dump_data(self):
         res = []
         for data_type, data_list in self.communication_group.items():

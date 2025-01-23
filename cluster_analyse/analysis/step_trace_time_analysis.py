@@ -12,9 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import logging
 import os
-import logging
 
 from common_func.db_manager import DBManager
 from common_func.utils import increase_shared_value
@@ -23,8 +21,9 @@ from prof_bean.step_trace_time_bean import StepTraceTimeBean
 
 from profiler.prof_common.constant import Constant
 from profiler.prof_common.file_manager import FileManager
+from profiler.prof_common.logger import get_logger
 
-logger = logging.getLogger("cluster")
+logger = get_logger()
 
 
 class StepTraceTimeAnalysis:
@@ -72,7 +71,7 @@ class StepTraceTimeAnalysis:
             calculator = ParallelStrategyCalculator(**self.distributed_args)
             parallelism_map = calculator.run()
         except Exception as err:
-            logging.error(err)
+            logger.error(err)
             self.distributed_args = None
             return
 

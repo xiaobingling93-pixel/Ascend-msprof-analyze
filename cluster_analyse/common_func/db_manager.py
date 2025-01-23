@@ -15,14 +15,17 @@
 
 import os
 import sqlite3
-import logging
 
 from common_func.empty_class import EmptyClass
 from common_func.tables_config import TablesConfig
+from common_func.sql_extention_func import SqlExtentionAggregateFunc
 
 from profiler.prof_common.constant import Constant
 from profiler.prof_common.file_manager import check_db_path_valid
-from profiler.prof_common.utils import PrintUtils
+from profiler.prof_common.logger import get_logger
+
+logger = get_logger()
+
 
 class DBManager:
     """
@@ -41,15 +44,21 @@ class DBManager:
             try:
                 conn = sqlite3.connect(db_path)
             except sqlite3.Error as err:
-                PrintUtils.print_error(f"{err}")
+                logger.error(err)
                 return EmptyClass("empty conn"), EmptyClass("empty curs")
             try:
+                if mode == Constant.ANALYSIS:
+                    try:
+                        for func_name, params_count, class_name in SqlExtentionAggregateFunc:
+                            conn.create_aggregate(func_name, params_count, class_name)
+                    except sqlite3.Error as err:
+                        logger.error(err)
                 if isinstance(conn, sqlite3.Connection):
                     curs = conn.cursor()
                     os.chmod(db_path, Constant.FILE_AUTHORITY)
                     return conn, curs
             except sqlite3.Error as err:
-                PrintUtils.print_error(f"{err}")
+                logger.error(err)
                 return EmptyClass("empty conn"), EmptyClass("empty curs")
         return EmptyClass("empty conn"), EmptyClass("empty curs")
 
@@ -62,12 +71,12 @@ class DBManager:
             if isinstance(curs, sqlite3.Cursor):
                 curs.close()
         except sqlite3.Error as err:
-            PrintUtils.print_error(f"{err}")
+            logger.error(err)
         try:
             if isinstance(conn, sqlite3.Connection):
                 conn.close()
         except sqlite3.Error as err:
-            PrintUtils.print_error(f"{err}")
+            logger.error(err)
 
     @staticmethod
     def judge_table_exists(curs: any, table_name: str) -> any:
@@ -80,7 +89,7 @@ class DBManager:
             curs.execute("select count(*) from sqlite_master where type='table' and name=?", (table_name,))
             return curs.fetchone()[0]
         except sqlite3.Error as err:
-            PrintUtils.print_error(f"{err}")
+            logger.error(err)
             return False
 
     @staticmethod
@@ -141,7 +150,7 @@ class DBManager:
             curs.execute(sql)
             res = len(curs.fetchall())
         except sqlite3.Error as err:
-            PrintUtils.print_error(f"{err}")
+            logger.error(err)
         finally:
             cls.destroy_db_connect(conn, curs)
         return res
@@ -160,9 +169,9 @@ class DBManager:
                 conn.commit()
                 return True
         except sqlite3.Error as err:
-            PrintUtils.print_error(f"{err}")
+            logger.error(err)
             return False
-        PrintUtils.print_error("conn is invalid param")
+        logger.error("conn is invalid param")
         return False
 
     @staticmethod
@@ -176,9 +185,9 @@ class DBManager:
                 conn.commit()
                 return True
         except sqlite3.Error as err:
-            PrintUtils.print_error(f"{err}")
+            logger.error(err)
             return False
-        PrintUtils.print_error("conn is invalid param")
+        logger.error("conn is invalid param")
         return False
 
     @classmethod
@@ -195,7 +204,7 @@ class DBManager:
             else:
                 res = curs.execute(sql)
         except sqlite3.Error as err:
-            PrintUtils.print_error(f"{err}")
+            logger.error(err)
             curs.row_factory = None
             return []
         try:
@@ -207,15 +216,39 @@ class DBManager:
                 else:
                     data += res
                 if len(data) > cls.MAX_ROW_COUNT:
-                    PrintUtils.print_warning("The records count in the table exceeds the limit!")
+                    logger.warning("The records count in the table exceeds the limit!")
                 if len(res) < cls.FETCH_SIZE:
                     break
             return data
         except sqlite3.Error as err:
-            PrintUtils.print_error(f"{err}")
+            logger.error(err)
             return []
         finally:
             curs.row_factory = None
+
+    @classmethod
+    def insert_data_into_table(cls, conn: sqlite3.Connection, table_name: str, data: list) -> None:
+        """
+        insert data into certain table
+        """
+        index = 0
+        if not data:
+            return
+        sql = "insert into {table_name} values ({value_form})".format(
+            table_name=table_name, value_form="?, " * (len(data[0]) - 1) + "?")
+        while index < len(data):
+            if not cls.executemany_sql(conn, sql, data[index:index + cls.INSERT_SIZE]):
+                raise RuntimeError("Failed to insert data into profiler db file.")
+            index += cls.INSERT_SIZE
+
+    @classmethod
+    def insert_data_into_db(cls, db_path: str, table_name: str, data: list):
+        conn, curs = cls.create_connect_db(db_path)
+        if not (conn and curs):
+            logger.warning(f"Failed to connect to db file: {db_path}")
+            return
+        cls.insert_data_into_table(conn, table_name, data)
+        cls.destroy_db_connect(conn, curs)
 
 
 class CustomizedDictFactory:

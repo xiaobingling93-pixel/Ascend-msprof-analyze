@@ -12,11 +12,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-import logging
 from collections import defaultdict
 
 from cluster_data_preprocess.data_preprocessor import DataPreprocessor
+
+from profiler.prof_common.logger import get_logger
+
+logger = get_logger()
 
 
 class MindsporeDataPreprocessor(DataPreprocessor):
@@ -29,7 +31,7 @@ class MindsporeDataPreprocessor(DataPreprocessor):
         for dir_name in self.path_list:
             rank_id = self.get_rank_id(dir_name)
             if rank_id < 0:
-                logging.error("fail to get rankid or rankid invalid.")
+                logger.error("fail to get rankid or rankid invalid.")
                 continue
             rank_id_map[rank_id].append(dir_name)
 

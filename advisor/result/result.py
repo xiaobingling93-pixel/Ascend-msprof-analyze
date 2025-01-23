@@ -79,7 +79,7 @@ class ResultWriter:
     def _init_header_format(self):
         self.header_format = self.workbook.add_format({
             "bold": True,
-            "color": "#FFFFFF",
+            "font_color": "#FFFFFF",
             "bg_color": "#187498",
             "align": "center",
             "border": 1,
