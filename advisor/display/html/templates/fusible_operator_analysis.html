@@ -1,0 +1,65 @@
+<div class="collapsible">
+  <h2 class="collapsible-header" style="background-color: {{ priority_background_color }};">Fusible Operator Analysis</h2>
+  <div class="collapsible-content">
+      <a style="font-weight: bold" id="communication_analysis_description">{{ desc }}</a>
+
+         <table>
+            <tr>
+                <th>Suggestions</th>
+            </tr>
+
+            {% for item in solutions %}
+                {% set rowloop = loop %}
+                {% for key, value in item.items() %}
+
+                <tr>
+                    <td>{{  rowloop.index }}. {{ value.desc }}</td>
+                </tr>
+                {% endfor %}
+            {% endfor %}
+         </table>
+         <br><br>
+         {% for sub_desc in table_desc %}
+            <a>{{ sub_desc }}</a><br>
+         {% endfor %}
+         <br>
+         {% if host_data %}
+         <a style="font-weight: bold" id="host details:">{{ host_desc }}</a>
+         <table>
+              <tr>
+              {% for header in headers %}
+                  <th> {{ header }} </th>
+              {% endfor %}
+              </tr>
+
+              {% for row in host_data %}
+              <tr>
+                  {% for element in row %}
+                  <td>{{ element|safe }}</td>
+                  {% endfor %}
+              </tr>
+              {% endfor %}
+         </table>
+         {% endif %}
+      {% if mte_data %}
+      <br><br>
+      <a style="font-weight: bold" id="mte details:">{{ mte_desc }}</a>
+         <table>
+              <tr>
+              {% for header in headers %}
+                  <th> {{ header }} </th>
+              {% endfor %}
+              </tr>
+
+              {% for row in mte_data %}
+              <tr>
+                  {% for element in row %}
+                  <td>{{ element|safe }}</td>
+                  {% endfor %}
+              </tr>
+              {% endfor %}
+         </table>
+      {% endif %}
+
+  </div>
+</div>
