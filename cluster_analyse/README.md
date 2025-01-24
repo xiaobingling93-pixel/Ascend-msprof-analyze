@@ -61,6 +61,11 @@ experimental_config = torch_npu.profiler._ExperimentalConfig(
    | --mode或-m            | 数据解析模式，取值详见“**--mode参数说明**”表。               | 否       |
    | --data_simplification | 数据精简模式。对于数据量过大的性能数据db文件，可以通过配置该参数将数据精简，并提高工具分析效率。配置该参数表示开启数据精简，默认未配置表示关闭。 | 否       |
    | --force               | 强制执行cluster。配置后可强制跳过如下情况：<br/>        指定的目录、文件的用户属主不属于当前用户，忽略属主判断直接执行。<br/>        csv文件大于5G、json文件大于10G、db文件大于8G，忽略文件过大判断直接执行。<br/>配置该参数表示开启强制执行，默认未配置表示关闭。 | 否       |
+   | --parallel_mode       | 设置收集多卡、多节点db数据时的并发方式。取值为concurrent（使用concurrent.feature进程池实现并发）。<br/>**只有-m配置cann_api_sum、compute_op_sum、hccl_sum、mstx_sum时可配置此参数。** | 否       |
+   | --export_type         | 设置导出的数据形式。取值为db（.db格式文件）和notebook（Jupyter Notebook文件），默认值为db。<br/>**只有-m配置cann_api_sum、compute_op_sum、hccl_sum、mstx_sum时可配置此参数。** | 否       |
+   | --rank_list           | 对特定Rank上的数据进行统计，默认值为all（表示对所有Rank进行统计），须根据实际卡的Rank ID配置。应配置为大于等于0的整数，若所配置的值大于实际训练所运行的卡的Rank ID，则仅解析合法的RankID的数据，比如当前环境Rank ID为0到7，实际训练运行0到3卡，此时若配置Rank ID为0, 3, 4或不存在的10等其他值，则仅解析0和3。配置示例：--rank_list 0, 1, 2。<br/>**只有-m配置cann_api_sum、compute_op_sum、hccl_sum、mstx_sum时可配置此参数。** | 否       |
+   | --top_num             | 设置TopN耗时的通信算子的数量，默认值为15，配置示例：--top_num 20。<br/>**只有-m配置hccl_sum时可配置此参数。** | 否       |
+   | --exclude_op_name    | 控制compute_op_name结果是否包含op_name,示例：--exclude_op_name,后面不需要跟参数。<br/>**只有-m配置compute_op_sum时可配置此参数。** | 否       |
    
    --mode参数说明：
    
@@ -69,7 +74,22 @@ experimental_config = torch_npu.profiler._ExperimentalConfig(
    | communication_matrix | 解析通信矩阵数据。                                           | 否       |
    | communication_time   | 解析通信耗时数据。                                           | 否       |
    | all                  | 同时解析通信矩阵communication_matrix和通信耗时数据communication_time，--mode参数默认值为all。 | 否       |
+   | cann_api_sum         | 集群API性能数据汇总分析，输入性能数据需要基于ascend_pytorch_profiler_{rank_id}.db文件。--export_type为db时，输出交付件cluster_analysis.db；--export_type为notebook时，在cluster_analysis_output/CannApiSum目录下输出交付件stats.ipynb。 | 否       |
+   | compute_op_sum       | 集群场景性能数据的device运行算子信息汇总分析，输入性能数据需要基于ascend_pytorch_profiler_{rank_id}.db文件。--export_type为db时，输出交付件cluster_analysis.db；--export_type为notebook时，在cluster_analysis_output/ComputeOpSum目录下输出交付件stats.ipynb；可根据实际情况决定是否是否打开--exclude_op_name。| 否       |
+   | hccl_sum             | 集合通信算子耗时分析，输入性能数据需要基于ascend_pytorch_profiler_{rank_id}.db文件。--export_type为db时，输出交付件cluster_analysis.db；--export_type为notebook时，在cluster_analysis_output/HcclSum目录下输出交付件stats.ipynb。 | 否       |
+   | mstx_sum             | 集群场景mstx打点信息汇总分析，输入性能数据需要基于ascend_pytorch_profiler_{rank_id}.db文件。--export_type为db时，输出交付件cluster_analysis.db；--export_type为notebook时，在cluster_analysis_output/MstxSum目录下输出交付件stats.ipynb。 | 否       |
    
+   --parallel_mode参数示例如下：
+   
+   ```bash
+   msprof-analyze cluster -d {cluster profiling data path} -m cann_api_sum --parallel_mode concurrent
+   ```
+   
+   或
+   
+   ```bash
+   python3 cluster_analysis.py -d {cluster profiling data path} -m cann_api_sum --parallel_mode concurrent
+   ```
    
 
 ### 交付件
@@ -155,3 +175,24 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 #### communication_group.json
 
 记录通信域信息，解析analysis.db生成的交付件，collective表示集合通信域，P2P表示点对点通信，用户无须关注该文件。
+
+#### stats.ipynb
+
+- 数据解析模式为cann_api_sum时生成，保存在cluster_analysis_output/CannApiSum目录下。
+
+  可使用jupyter notebook工具或MindStudio Insight工具打开，主要展示集群API耗时信息。
+
+- 数据解析模式为compute_op_sum时生成，保存在cluster_analysis_output/ComputeOpSum目录下。
+
+  可使用jupyter notebook工具或MindStudio Insight工具打开，主要展示集群计算算子耗时分析（将集群所有计算算子进行汇总并以图表展示），集群Rank计算算子耗时分析（将每个Rank的计算算子进行各自汇总）。
+  
+- 数据解析模式为hccl_sum时生成，保存在cluster_analysis_output/HcclSum目录下。
+
+  可使用jupyter notebook工具或MindStudio Insight工具打开，主要展示集群通信算子耗时分析（将集群所有通信算子进行汇总并以图表展示），集群Rank通信算子耗时分析（将每个Rank的通信算子进行各自汇总）、Top通信算子信息展示。
+  
+- 数据解析模式为mstx_sum时生成，保存在cluster_analysis_output/MstxSum目录下。
+
+  可使用jupyter notebook工具或MindStudio Insight工具打开，主要展示集群场景mstx打点信息，分为框架侧、CANN侧和Device侧三部分的打点信息。
+
+
+

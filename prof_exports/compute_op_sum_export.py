@@ -40,9 +40,37 @@ LEFT JOIN
     ON INPUTSHAPES_IDS.id == COMPUTE_TASK_INFO.inputShapes
     """
 
+QUERY_EXCLUDE_OPNAME = """
+SELECT
+    OPTYPE_IDS.value AS "OpType",
+    TASKTYPE_IDS.value AS "TaskType",
+    INPUTSHAPES_IDS.value AS "InputShapes",
+    round(TASK.endNs - TASK.startNs) AS "Duration"
+FROM
+    COMPUTE_TASK_INFO
+LEFT JOIN TASK
+    ON TASK.globalTaskId == COMPUTE_TASK_INFO.globalTaskId
+LEFT JOIN
+    STRING_IDS AS OPTYPE_IDS
+    ON OPTYPE_IDS.id == COMPUTE_TASK_INFO.opType
+LEFT JOIN
+    STRING_IDS AS TASKTYPE_IDS
+    ON TASKTYPE_IDS.id == COMPUTE_TASK_INFO.taskType
+LEFT JOIN
+    STRING_IDS AS INPUTSHAPES_IDS
+    ON INPUTSHAPES_IDS.id == COMPUTE_TASK_INFO.inputShapes
+"""
+
 
 class ComputeOpSumExport(BaseStatsExport):
 
     def __init__(self, db_path, recipe_name):
         super().__init__(db_path, recipe_name)
         self._query = QUERY
+
+
+class ComputeOpSumExportExcludeOpName(BaseStatsExport):
+
+    def __init__(self, db_path, recipe_name):
+        super().__init__(db_path, recipe_name)
+        self._query = QUERY_EXCLUDE_OPNAME
