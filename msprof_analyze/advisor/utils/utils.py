@@ -501,13 +501,6 @@ def convert_to_float(num):
         logger.error(f"Can not convert %s to float", num)
     return 0
 
-def convert_to_float_with_warning(num):
-    try:
-        return float(num)
-    except (ValueError, FloatingPointError):
-        logger.warning(f"Can not convert %s to float", num)
-    return 0
-
 
 def safe_index_value(array, value, return_index_if_error=None):
     if value in array:

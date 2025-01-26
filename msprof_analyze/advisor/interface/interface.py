@@ -22,32 +22,31 @@ sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))),
                              "compare_tools"))
 
-from profiler.advisor.utils.utils import Timer
-from profiler.advisor.result.result import OptimizeResult
-from profiler.advisor.analyzer.computation.profiling_analyzer import AicpuAnalyzer, BlockDimAnalyzer, \
+from msprof_analyze.advisor.utils.utils import Timer
+from msprof_analyze.advisor.result.result import OptimizeResult
+from msprof_analyze.advisor.analyzer.computation.profiling_analyzer import AicpuAnalyzer, BlockDimAnalyzer, \
     DynamicShapeAnalyzer, OperatorBoundAnalyzer
-from profiler.advisor.analyzer.schedule.fusion_ops.fusion_ops_analyzer import TimelineFusionOpsAnalyzer
-from profiler.advisor.analyzer.graph_fusion.graph_fusion_analyzer import FusionOPAnalyzer
-from profiler.advisor.common.analyzer_scopes import SupportedScopes
-from profiler.advisor.analyzer.cluster.slow_rank_analyzer import SlowRankAnalyzer
-from profiler.advisor.analyzer.cluster.slow_link_analyzer import SlowLinkAnalyzer
-from profiler.advisor.analyzer.communication.retransmission.communication_retransmission_analyzer import \
+from msprof_analyze.advisor.analyzer.schedule.fusion_ops.fusion_ops_analyzer import TimelineFusionOpsAnalyzer
+from msprof_analyze.advisor.analyzer.graph_fusion.graph_fusion_analyzer import FusionOPAnalyzer
+from msprof_analyze.advisor.common.analyzer_scopes import SupportedScopes
+from msprof_analyze.advisor.analyzer.cluster.slow_rank_analyzer import SlowRankAnalyzer
+from msprof_analyze.advisor.analyzer.cluster.slow_link_analyzer import SlowLinkAnalyzer
+from msprof_analyze.advisor.analyzer.communication.retransmission.communication_retransmission_analyzer import \
     RDMARetransmissionAnalyzer
-from profiler.advisor.analyzer.overall.overall_summary_analyzer import OverallSummaryAnalyzer
-from profiler.advisor.analyzer.overall.environment_variable_analyzer import EnvironmentVariableAnalyzer
-from profiler.advisor.analyzer.schedule.dispatch.timeline_op_dispatch_analyzer import OpDispatchAnalyzer
-from profiler.advisor.analyzer.schedule.syncbn.syncbn_analyzer import SyncBNAnalyzer
-from profiler.advisor.analyzer.schedule.synchronize_stream.synchronize_stream_analyzer import SynchronizeStreamAnalyzer
-from profiler.advisor.analyzer.dataloader.dataloader_analyzer import DataloaderAnalyzer
-from profiler.advisor.analyzer.computation.ai_core_freq.ai_core_freq_analyzer import AICoreFreqAnalyzer
-from profiler.advisor.analyzer.memory.memory_analyzer import MemoryAnalyzer
-from profiler.advisor.analyzer.communication.packet.packet_analyzer import PacketAnalyzer
-from profiler.advisor.analyzer.communication.contention.bandwidth_contention_analyzer import BandwidthContentionAnalyzer
-from profiler.advisor.analyzer.communication.alignment.byte_alignment_analyzer import ByteAlignmentAnalyzer
-from profiler.advisor.analyzer.schedule.gc.gc_analyzer import GcAnalyzer
-from profiler.advisor.analyzer.schedule.conjectured_gc.conjectured_gc_analyzer import ConjecturedGcAnalyzer
-from profiler.advisor.analyzer.schedule.fusible_ops.fusible_operator_analyzer import FusibleOperatorAnalyzer
-from profiler.advisor.analyzer.comparison.comparison_analyzer import ComparisonAnalyzer
+from msprof_analyze.advisor.analyzer.overall.overall_summary_analyzer import OverallSummaryAnalyzer
+from msprof_analyze.advisor.analyzer.overall.environment_variable_analyzer import EnvironmentVariableAnalyzer
+from msprof_analyze.advisor.analyzer.schedule.dispatch.timeline_op_dispatch_analyzer import OpDispatchAnalyzer
+from msprof_analyze.advisor.analyzer.schedule.syncbn.syncbn_analyzer import SyncBNAnalyzer
+from msprof_analyze.advisor.analyzer.schedule.synchronize_stream.synchronize_stream_analyzer import SynchronizeStreamAnalyzer
+from msprof_analyze.advisor.analyzer.dataloader.dataloader_analyzer import DataloaderAnalyzer
+from msprof_analyze.advisor.analyzer.computation.ai_core_freq.ai_core_freq_analyzer import AICoreFreqAnalyzer
+from msprof_analyze.advisor.analyzer.memory.memory_analyzer import MemoryAnalyzer
+from msprof_analyze.advisor.analyzer.communication.packet.packet_analyzer import PacketAnalyzer
+from msprof_analyze.advisor.analyzer.communication.contention.bandwidth_contention_analyzer import BandwidthContentionAnalyzer
+from msprof_analyze.advisor.analyzer.communication.alignment.byte_alignment_analyzer import ByteAlignmentAnalyzer
+from msprof_analyze.advisor.analyzer.schedule.gc.gc_analyzer import GcAnalyzer
+from msprof_analyze.advisor.analyzer.schedule.conjectured_gc.conjectured_gc_analyzer import ConjecturedGcAnalyzer
+from msprof_analyze.advisor.analyzer.comparison.comparison_analyzer import ComparisonAnalyzer
 
 logger = logging.getLogger()
 
@@ -69,8 +68,7 @@ class Interface:
             SupportedScopes.TIMELINE_FUSION_OPS: TimelineFusionOpsAnalyzer,
             SupportedScopes.DATALOADER: DataloaderAnalyzer,
             SupportedScopes.CONJECTURED_GC_ANALYSIS: ConjecturedGcAnalyzer,
-            SupportedScopes.GC_ANALYSIS: GcAnalyzer,
-            SupportedScopes.FUSIBLE_OPERATOR_ANALYSIS: FusibleOperatorAnalyzer
+            SupportedScopes.GC_ANALYSIS: GcAnalyzer
         }),
         COMPUTATION: OrderedDict({
             SupportedScopes.DYNAMIC_SHAPE_ANALYSIS: DynamicShapeAnalyzer,
