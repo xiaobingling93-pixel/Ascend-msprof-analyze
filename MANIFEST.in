@@ -1,7 +1,0 @@
-recursive-include profiler/advisor/ *
-recursive-include profiler/cli/ *
-recursive-include profiler/prof_common/ *
-recursive-include profiler/compare_tools/ *
-recursive-include profiler/cluster_analyse/ *
-global-exclude */__pycache__/*
-global-exclude *.pyc
