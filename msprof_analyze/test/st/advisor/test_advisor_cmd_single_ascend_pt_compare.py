@@ -41,18 +41,19 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
             "Bandwidth Contention Analysis",
             "AICPU operator",
             "Dynamic Shape Operator",
+            "FUSIBLE OPERATOR ANALYSIS",
             "Affinity Apis",
             "Operator Dispatch"
         ]
 
         # True presents the attr is nan
-        description_len = [1, 1, 3, 2, 1, 1, 1]
-        suggestion_len = [True, 1, 1, 2, 4, 1, 1]
-        problem_count = [True, True, True, 2.0, 1.0, True, True]
-        total_time = [True, True, True, 57674709.54, True, True, True]
-        time_ratio = [True, True, True, 0.0, True, True, True]
-        income = [True, True, True, True, True, True, True]
-        income_ratio = [True, True, True, True, True, True, True]
+        description_len = [1, 1, 3, 2, 1, 1, 1, 1]
+        suggestion_len = [True, 1, 1, 2, 4, 2, 1, 1]
+        problem_count = [True, True, True, 2.0, 1.0, True, True, True]
+        total_time = [True, True, True, 57674709.54, True, True, True, True]
+        time_ratio = [True, True, True, 0.0, True, True, True, True]
+        income = [True, True, True, True, True, True, True, True]
+        income_ratio = [True, True, True, True, True, True, True, True]
         try:
             df = pd.read_excel(self.RESULT_EXCEL.get("all", None), sheet_name='problems', header=0)
         except FileNotFoundError:

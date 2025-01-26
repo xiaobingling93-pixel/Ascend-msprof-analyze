@@ -47,6 +47,7 @@ from msprof_analyze.advisor.analyzer.communication.alignment.byte_alignment_anal
 from msprof_analyze.advisor.analyzer.schedule.gc.gc_analyzer import GcAnalyzer
 from msprof_analyze.advisor.analyzer.schedule.conjectured_gc.conjectured_gc_analyzer import ConjecturedGcAnalyzer
 from msprof_analyze.advisor.analyzer.comparison.comparison_analyzer import ComparisonAnalyzer
+from msprof_analyze.advisor.analyzer.schedule.fusible_ops.fusible_operator_analyzer import FusibleOperatorAnalyzer
 
 logger = logging.getLogger()
 
@@ -68,7 +69,8 @@ class Interface:
             SupportedScopes.TIMELINE_FUSION_OPS: TimelineFusionOpsAnalyzer,
             SupportedScopes.DATALOADER: DataloaderAnalyzer,
             SupportedScopes.CONJECTURED_GC_ANALYSIS: ConjecturedGcAnalyzer,
-            SupportedScopes.GC_ANALYSIS: GcAnalyzer
+            SupportedScopes.GC_ANALYSIS: GcAnalyzer,
+            SupportedScopes.FUSIBLE_OPERATOR_ANALYSIS: FusibleOperatorAnalyzer
         }),
         COMPUTATION: OrderedDict({
             SupportedScopes.DYNAMIC_SHAPE_ANALYSIS: DynamicShapeAnalyzer,
