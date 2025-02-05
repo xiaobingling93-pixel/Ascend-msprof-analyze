@@ -99,5 +99,5 @@ class CannApiSum(BaseRecipeAnalysis):
         df = CannApiSumExport(profiler_db_path, analysis_class).read_export_db()
         if df is None or df.empty:
             logger.warning(f"There is no stats data in {profiler_db_path}.")
-            return None
+            return None, None
         return rank_id, df
