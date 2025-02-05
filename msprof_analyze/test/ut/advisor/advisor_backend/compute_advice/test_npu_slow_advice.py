@@ -215,7 +215,6 @@ class TestNpuSlowAdvice(unittest.TestCase):
         call_stack = NpuSlowAdvice(self.ASCEND_PT_DIR).get_call_stack(data, index_id=0, ts_col="Start Time(us)")
         self.assertEqual(9, len(data))
         self.assertEqual(2, len(slow_op_data))
-        print(call_stack)
         call_stack_res = "/root/torch/module.py\n" \
                          "/root/test/slice.py(116)"
         self.assertEqual(call_stack_res, call_stack)
@@ -231,7 +230,6 @@ class TestNpuSlowAdvice(unittest.TestCase):
         call_stack = NpuSlowAdvice(self.ASCEND_PT_DIR).get_call_stack(data, index_id=0, ts_col="Start Time(us)")
         self.assertEqual(9, len(data))
         self.assertEqual(2, len(slow_op_data))
-        print(call_stack)
         call_stack_res = "/root/test/slice.py(116)\n\r\n" \
                          "/root/torch/module.py"
         self.assertEqual(call_stack_res, call_stack)

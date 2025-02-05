@@ -48,7 +48,7 @@ class ComparisonChecker:
 
     @staticmethod
     def get_valid_step(step):
-        none_step = None
+        none_step = ""
         if step is None:
             return none_step
         if isinstance(step, (int, float)):
@@ -148,13 +148,13 @@ class ComparisonChecker:
         sheet_name = ""
         if self.rank is not None:
             sheet_name += f"Rank{self.rank}"
-        if self.step is not None:
+        if self.step:
             sheet_name += f" Step{self.step}"
         if sheet_name:
             sheet_name += " and "
         if self.benchmark_rank is not None:
             sheet_name += f"Rank{self.benchmark_rank}"
-        if self.benchmark_step is not None:
+        if self.benchmark_step:
             sheet_name += f" Step{self.benchmark_step}"
         if not sheet_name:
             sheet_name = "Target and Benchmark"
