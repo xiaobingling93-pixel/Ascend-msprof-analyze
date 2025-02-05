@@ -138,9 +138,9 @@ def display_duration_boxplots(figs, stats_df: pd.DataFrame, orientation="v", tit
     q1_ds = stats_df.get("Q1(Us)", None)
     median_ds = stats_df.get('Median(Us)', None)
     q3_ds = stats_df.get('Q3(Us)', None)
-    return display_boxplot(figs, stats_df.index, min_ds, q1_ds, median_ds, q3_ds, max_ds, mean_ds,
-                           orientation=orientation, title=title, x_title=x_title, y_title=y_title,
-                           legend_title=legend_title)
+    display_boxplot(figs, stats_df.index, min_ds, q1_ds, median_ds, q3_ds, max_ds, mean_ds,
+                    orientation=orientation, title=title, x_title=x_title, y_title=y_title,
+                    legend_title=legend_title)
 
 
 def display_boxplot(figs, x_axis, min_ds, q1_ds, median_ds, q3_ds, max_ds, mean_ds, orientation="v",
@@ -165,7 +165,6 @@ def display_boxplot(figs, x_axis, min_ds, q1_ds, median_ds, q3_ds, max_ds, mean_
     fig.show()
     if isinstance(figs, list):
         figs.append(fig)
-    return fig
 
 
 def display_graph(figs, x_axis, y_axes, title=None,
@@ -179,7 +178,7 @@ def display_graph(figs, x_axis, y_axes, title=None,
     elif isinstance(y_axes, np.ndarray):
         data = pd.DataFrame({"": pd.Series(y_axes)}, index=x_axis)
     else:
-        return None
+        return
 
     fig = data.plot.line()
     fig.update_layout(
@@ -188,7 +187,6 @@ def display_graph(figs, x_axis, y_axes, title=None,
     fig.show()
     if isinstance(figs, list):
         figs.append(fig)
-    return fig
 
 
 def display_stats_per_rank_groups_combobox(rank_stats_gdf):

@@ -64,7 +64,7 @@ class ComputeAdviceBase(AdviceBase):
 
     def has_callstack(self):
         if self.call_stack is not None:
-            return self.call_stack
+            return True
         profiler_info_json_path = ""
         for file in os.listdir(self.collection_path):
             if file.startswith("profiler_info"):
