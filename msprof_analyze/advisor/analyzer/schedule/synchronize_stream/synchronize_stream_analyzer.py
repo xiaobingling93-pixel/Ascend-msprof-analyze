@@ -15,7 +15,8 @@
 import logging
 
 from msprof_analyze.advisor.analyzer.base_analyzer import BaseAnalyzer
-from msprof_analyze.advisor.analyzer.schedule.synchronize_stream.synchronize_stream_checker import SynchronizeStreamChecker
+from msprof_analyze.advisor.analyzer.schedule.synchronize_stream.synchronize_stream_checker import \
+    SynchronizeStreamChecker
 from msprof_analyze.advisor.dataset.timeline_event_dataset import ScheduleAnalysisDataset
 from msprof_analyze.advisor.display.html.render import HTMLRender
 from msprof_analyze.advisor.result.result import OptimizeResult

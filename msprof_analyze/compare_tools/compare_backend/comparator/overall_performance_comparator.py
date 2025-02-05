@@ -79,14 +79,14 @@ class OverallPerformanceComparator(BaseComparator):
         else:
             comp_col.extend(
                 [f'{comp_profiling_info.communication_not_overlapped: .3f}s({comp_profiling_info.wait_time:.3f}s)'])
-        if base_profiling_info.RDMA_bandwidth or comp_profiling_info.RDMA_bandwidth:
+        if base_profiling_info.rdma_bandwidth or comp_profiling_info.rdma_bandwidth:
             self._headers.extend(['RDMA Bandwidth'])
-            base_col.append(f'{base_profiling_info.RDMA_bandwidth:.3f}GB/s')
-            comp_col.append(f'{comp_profiling_info.RDMA_bandwidth:.3f}GB/s')
-        if base_profiling_info.SDMA_bandwidth or comp_profiling_info.SDMA_bandwidth:
+            base_col.append(f'{base_profiling_info.rdma_bandwidth:.3f}GB/s')
+            comp_col.append(f'{comp_profiling_info.rdma_bandwidth:.3f}GB/s')
+        if base_profiling_info.sdma_bandwidth or comp_profiling_info.sdma_bandwidth:
             self._headers.extend(['SDMA Bandwidth'])
-            base_col.append(f'{base_profiling_info.SDMA_bandwidth:.3f}GB/s')
-            comp_col.append(f'{comp_profiling_info.SDMA_bandwidth:.3f}GB/s')
+            base_col.append(f'{base_profiling_info.sdma_bandwidth:.3f}GB/s')
+            comp_col.append(f'{comp_profiling_info.sdma_bandwidth:.3f}GB/s')
         if base_profiling_info.sdma_time or comp_profiling_info.sdma_time:
             self._headers.append('SDMA Time(Num)')
             base_col.append(f'{base_profiling_info.sdma_time:.3f}s({base_profiling_info.sdma_num})')

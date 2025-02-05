@@ -28,6 +28,7 @@ from msprof_analyze.prof_common.file_manager import FileManager
 
 logger = get_logger()
 
+
 class ClusterBaseInfoAnalysis(BaseAnalysis):
     KEY_DISTRIBUTED_ARGS = "distributed_args"
 

@@ -501,6 +501,7 @@ def convert_to_float(num):
         logger.error(f"Can not convert %s to float", num)
     return 0
 
+
 def convert_to_float_with_warning(num):
     try:
         return float(num)

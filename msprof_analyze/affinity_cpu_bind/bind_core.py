@@ -23,6 +23,7 @@ from datetime import timezone
 
 from msprof_analyze.prof_common.utils import PrintUtils
 
+
 class PathManager:
     DATA_FILE_AUTHORITY = 0o640
 
@@ -145,8 +146,8 @@ class BindCoreManager():
                     p = subprocess.run(set_affinity_cpu_cmd.split(), shell=False, capture_output=True)
                     logging.info(p.stdout.decode('utf-8'))
                 except subprocess.CalledProcessError:
-                    PrintUtils.print_error('Failed to bind process {} on NPU {} with cpu cores list {}'.format(pid, npu,
-                                                                                                               affinity_cpu))
+                    PrintUtils.print_error('Failed to bind process {} on NPU {} with cpu cores list {}'.format(pid,
+                        npu, affinity_cpu))
 
                 logging.info('Succeed to bind process %s on NPU %d with cpu cores list %s', pid, npu, affinity_cpu)
 

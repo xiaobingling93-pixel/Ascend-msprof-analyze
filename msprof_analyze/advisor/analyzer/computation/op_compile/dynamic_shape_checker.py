@@ -36,10 +36,10 @@ class DynamicShapeChecker(OperatorChecker):
     def __init__(self, cann_version) -> None:
         super().__init__(cann_version=cann_version)
         self.prompt_class = BasePrompt.get_prompt_class(self.__class__.__name__)
-        self._PROBLEM = self.prompt_class.PROBLEM
+        self._problem = self.prompt_class.PROBLEM
         self._description = self.prompt_class.DESCRIPTION
         self.enable_compiled_suggestion = self.prompt_class.ENABLE_COMPILED_SUGGESTION
-        self._SUGGESTION = [self.prompt_class.ENABLE_COMPILED_SUGGESTION]
+        self._suggestion = [self.prompt_class.ENABLE_COMPILED_SUGGESTION]
         self.release_suggestion = self.prompt_class.RELEASE_SUGGESTION
 
     def check(self, profiling_data) -> bool:
@@ -50,11 +50,11 @@ class DynamicShapeChecker(OperatorChecker):
         make record for what and how to optimize
         """
         if rank is not None:
-            self._PROBLEM = self.prompt_class.RANK_ID.format(rank) + self._PROBLEM.lower()
+            self._problem = self.prompt_class.RANK_ID.format(rank) + self._problem.lower()
         optimization_item = OptimizeItem(
-            self._PROBLEM,
+            self._problem,
             self._description,
-            self._SUGGESTION
+            self._suggestion
         )
         statistics_item = StatisticsItem("", "", 1)
         return OptimizeRecord(optimization_item, statistics_item)

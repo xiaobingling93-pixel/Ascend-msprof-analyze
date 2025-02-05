@@ -65,15 +65,11 @@ class CannApiSum(BaseRecipeAnalysis):
         res["stdev"] = grouped.apply(lambda x: stdev(x, res))
         min_value = grouped["minNs"].min()
         res["minRank"] = grouped.apply(
-            lambda x: ", ".join(
-                x.loc[x["minNs"] == min_value.loc[x.name], "rank"].astype(str)
-            )
+            lambda x: ", ".join(x.loc[x["minNs"] == min_value.loc[x.name], "rank"].astype(str))
         )
         max_value = grouped["maxNs"].max()
         res["maxRank"] = grouped.apply(
-            lambda x: ", ".join(
-                x.loc[x["maxNs"] == max_value.loc[x.name], "rank"].astype(str)
-            )
+            lambda x: ", ".join(x.loc[x["maxNs"] == max_value.loc[x.name], "rank"].astype(str))
         )
         res = pd.concat(res.values(), axis=1, keys=res.keys()).round(1)
         res.sort_values(by="totalTimeNs", ascending=False, inplace=True)

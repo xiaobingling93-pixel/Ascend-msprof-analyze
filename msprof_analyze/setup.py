@@ -19,7 +19,7 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from setuptools import find_packages, setup  # type: ignore
 
@@ -48,10 +48,10 @@ tests_requires.extend(set(requires))
 
 version = FileManager.read_common_file('version.txt').strip()
 
-config_file_path = "config/config.ini"
-PathManager.check_input_file_path(config_file_path)
-PathManager.check_file_size(config_file_path)
-reader = SafeConfigReader(config_file_path)
+CONFIG_FILE_PATH = "config/config.ini"
+PathManager.check_input_file_path(CONFIG_FILE_PATH)
+PathManager.check_file_size(CONFIG_FILE_PATH)
+reader = SafeConfigReader(CONFIG_FILE_PATH)
 reader.validate(sections)
 config = reader.get_config()
 try:

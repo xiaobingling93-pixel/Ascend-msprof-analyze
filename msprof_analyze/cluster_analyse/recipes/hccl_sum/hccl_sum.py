@@ -26,17 +26,14 @@ from msprof_analyze.prof_exports.hccl_sum_export import HcclSumExport
 logger = get_logger()
 
 
-def DoubleHash(data):
-    UINT32_BITS = 32
-    UINT32_MASK = 0xffffffff
+def double_hash(data):
     prime = [29, 131]
     hash_num = [0, 0]
-
     for d in data:
-        hash_num[0] = (((hash_num[0] * prime[0]) & UINT32_MASK) + ord(d)) & UINT32_MASK
-        hash_num[1] = (((hash_num[1] * prime[1]) & UINT32_MASK) + ord(d)) & UINT32_MASK
+        hash_num[0] = (((hash_num[0] * prime[0]) & Constant.UINT32_MASK) + ord(d)) & Constant.UINT32_MASK
+        hash_num[1] = (((hash_num[1] * prime[1]) & Constant.UINT32_MASK) + ord(d)) & Constant.UINT32_MASK
 
-    return str((hash_num[0] << UINT32_BITS) | hash_num[1])
+    return str((hash_num[0] << Constant.UINT32_BITS) | hash_num[1])
 
 
 class HcclSum(BaseRecipeAnalysis):
@@ -105,7 +102,7 @@ class HcclSum(BaseRecipeAnalysis):
             lambda x: ';'.join(map(str, x['Rank'].drop_duplicates().sort_index()))).sort_index()
         self.group_name_map = pd.DataFrame(
             data={
-                "GroupId": [key[-3:] for key in map(DoubleHash, group_name_rank_map.keys())],
+                "GroupId": [key[-3:] for key in map(double_hash, group_name_rank_map.keys())],
                 "Ranks": group_name_rank_map.values
             },
             index=sorted(grouped_group_name_stats.groups.keys())

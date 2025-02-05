@@ -38,11 +38,11 @@ class OperatorChecker(VersionControl):
     _MIN_TASK_DURATION_RATIO = 1.0
     _MIN_TOTAL_DURATION_RATIO = 1.0
     _CHECKER = str()
-    _PROBLEM = str()
+    _problem = str()
     _description = str()
     STACK_INFO_ITEMS = ""
     _ITEMS: List[str] = []
-    _SUGGESTION: List[str] = []
+    _suggestion: List[str] = []
     SKIP_CHECK_MSG = "Skip %s checker because of not containing %s"
     _tune_op_info_list: List[OpInfo] = []
 
@@ -71,7 +71,7 @@ class OperatorChecker(VersionControl):
         get name of checker
         :return: checker name
         """
-        return self._PROBLEM
+        return self._problem
 
     def check(self, profiling_data: ProfilingDataset) -> bool:
         """
@@ -118,7 +118,7 @@ class OperatorChecker(VersionControl):
         """
 
         if rank is not None:
-            self._PROBLEM = self.prompt_class.RANK_ID.format(rank) + self._PROBLEM.lower()
+            self._problem = self.prompt_class.RANK_ID.format(rank) + self._problem.lower()
 
         task_duration_list = [float(op_info.get_attr("task_duration"))
                               for op_info in self._op_list
@@ -128,9 +128,9 @@ class OperatorChecker(VersionControl):
         count = len(task_duration_list)
         statistics_item = StatisticsItem(total_task_duration, total_cost_time, count, self.get_incomes())
         optimization_item = OptimizeItem(
-            self._PROBLEM,
+            self._problem,
             self._get_description(self._description, self.get_op_type_list(self._op_list)[:self._MAX_TUNE_OP_NUM]),
-            self._SUGGESTION
+            self._suggestion
         )
         return OptimizeRecord(optimization_item, statistics_item)
 
@@ -300,9 +300,9 @@ class OperatorChecker(VersionControl):
 
     def format_suggestion_content(self, profiling_data: ProfilingDataset) -> None:
         if profiling_data.prof_type == EnumParamsParser().profiling_type.ascend_pytorch_profiler:
-            self._SUGGESTION.append(self.pytorch_op_tune_suggestion)
+            self._suggestion.append(self.pytorch_op_tune_suggestion)
         elif profiling_data.prof_type == EnumParamsParser.profiling_type.mslite:
-            self._SUGGESTION.append(self.mslite_op_tune_suggestion)
+            self._suggestion.append(self.mslite_op_tune_suggestion)
 
     def _check_data(self, profiling_data):
         return True

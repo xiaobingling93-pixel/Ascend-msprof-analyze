@@ -20,7 +20,8 @@ from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.advisor.result.result import OptimizeResult
 from msprof_analyze.advisor.result.item import OptimizeItem, OptimizeRecord
 from msprof_analyze.advisor.dataset.cluster.cluster_dataset import ClusterStepTraceTimeDataset
-from msprof_analyze.advisor.utils.utils import safe_index_value, safe_division, convert_to_int, safe_index, convert_to_float
+from msprof_analyze.advisor.utils.utils import safe_index_value, safe_division, convert_to_int, safe_index, \
+    convert_to_float
 from msprof_analyze.prof_common.additional_args_manager import AdditionalArgsManager
 
 logger = logging.getLogger()
