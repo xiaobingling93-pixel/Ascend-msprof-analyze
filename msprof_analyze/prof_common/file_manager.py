@@ -32,14 +32,15 @@ class FileManager:
         PathManager.check_path_readable(file_path)
         base_name = os.path.basename(file_path)
         file_size = os.path.getsize(file_path)
+        result_data = {}
         if file_size <= 0:
-            return {}
+            return result_data
         if not AdditionalArgsManager().force and file_size > Constant.MAX_FILE_SIZE:
             check_msg = input(
                 f"The file({file_path}) size exceeds the preset max value. Continue reading the file? [y/n]")
             if check_msg.lower() != "y":
                 logger.warning("The user choose not to read the file: %s", file_path)
-                return []
+                return result_data
         try:
             with open(file_path, "r") as json_file:
                 result_data = json.loads(json_file.read())

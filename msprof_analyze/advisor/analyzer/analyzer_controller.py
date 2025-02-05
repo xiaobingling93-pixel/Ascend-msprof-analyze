@@ -290,8 +290,8 @@ class AnalyzerController:
     def async_do_analysis(self, dimensions, **kwargs):
         """ Deploy a online service to start async analysis job, wrap this api by flask or tornado and so on,
             then could query the analysis status by restful api.
-            You can view file 'profiler/msprof_analyze/advisor/config/enum_parameters.yaml' to obtain detailed information for
-            all the args listed below.
+            You can view file 'profiler/msprof_analyze/advisor/config/enum_parameters.yaml' to obtain detailed
+            information for all the args listed below.
 
         Args:
             dimensions: analysis dimension, normally set as Interface.all_dimension, support specific dimension analysis

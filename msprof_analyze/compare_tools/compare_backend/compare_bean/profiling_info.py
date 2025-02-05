@@ -26,8 +26,8 @@ class ProfilingInfo:
                  'matmul_time_cube', 'matmul_num_cube', 'matmul_time_vector', 'matmul_num_vector',
                  'page_attention_time', 'page_attention_num', 'vector_time_trans', 'vector_num_trans',
                  'vector_time_notrans', 'vector_num_notrans', 'sdma_time_tensor_move', 'sdma_num_tensor_move',
-                 'sdma_time_stream', 'sdma_num_stream', 'other_cube_time', 'other_cube_num', 'RDMA_bandwidth',
-                 'SDMA_bandwidth', 'communication_group_time', 'mc2_time_dict']
+                 'sdma_time_stream', 'sdma_num_stream', 'other_cube_time', 'other_cube_num', 'rdma_bandwidth',
+                 'sdma_bandwidth', 'communication_group_time', 'mc2_time_dict']
     TABLE_NAME = Constant.PERFORMANCE_TABLE
     HEADERS = []
     OVERHEAD = []
@@ -86,8 +86,8 @@ class ProfilingInfo:
 
         self.other_cube_time = 0.0
         self.other_cube_num = 0
-        self.RDMA_bandwidth = 0.0
-        self.SDMA_bandwidth = 0.0
+        self.rdma_bandwidth = 0.0
+        self.sdma_bandwidth = 0.0
 
         self.mc2_time_dict = {}
 
@@ -341,10 +341,10 @@ class ProfilingInfo:
         return self.profiling_type == Constant.NPU and not self.minimal_profiling
 
     def set_rdma_bandwidth(self, bandwidth: float):
-        self.RDMA_bandwidth = bandwidth
+        self.rdma_bandwidth = bandwidth
 
     def set_sdma_bandwidth(self, bandwidth: float):
-        self.SDMA_bandwidth = bandwidth
+        self.sdma_bandwidth = bandwidth
 
     def update_mc2_info(self, kernel_name, mc2_time, computing_time, communication_time):
         default_dict = {Constant.MC2_TIME: 0, Constant.MC2_COMPUTING: 0, Constant.MC2_COMMUNICATION: 0,

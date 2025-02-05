@@ -41,7 +41,9 @@ class MstxState:
 
     def add_module_dict(self, module):
         self.module_dict[module] = [
-            sub_module for _, sub_module in module.named_modules() if sub_module != module
+            sub_module
+            for _, sub_module in module.named_modules()
+            if sub_module != module
         ]
 
     def is_child_module(self, module):

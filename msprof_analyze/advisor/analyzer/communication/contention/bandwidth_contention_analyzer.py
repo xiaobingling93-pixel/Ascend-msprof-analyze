@@ -15,7 +15,8 @@
 import logging
 
 from msprof_analyze.advisor.analyzer.communication.base_communication_analyzer import BaseCommunicationAnalyzer
-from msprof_analyze.advisor.analyzer.communication.contention.bandwidth_contention_checker import BandwidthContentionChecker
+from msprof_analyze.advisor.analyzer.communication.contention.bandwidth_contention_checker import \
+    BandwidthContentionChecker
 from msprof_analyze.advisor.display.html.priority_background_color import PriorityBackgroundColor
 from msprof_analyze.advisor.display.html.render import HTMLRender
 from msprof_analyze.advisor.dataset.communication.communication_dataset import CommunicationDataset

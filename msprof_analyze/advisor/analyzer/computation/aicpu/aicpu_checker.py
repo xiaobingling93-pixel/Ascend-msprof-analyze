@@ -59,9 +59,9 @@ class AicpuChecker(OperatorChecker):
             logger.warning("Skip analyze aicpu issues, because %s does not exist.", rule_path)
 
         self.aicpu_rules = FileManager.read_yaml_file(rule_path)
-        self._PROBLEM = self.aicpu_rules.get("problem")
+        self._problem = self.aicpu_rules.get("problem")
         self._description = self.aicpu_rules.get("description").format(self._MIN_TASK_DURATION)
-        self._SUGGESTION = [self.aicpu_rules.get("suggestion")]
+        self._suggestion = [self.aicpu_rules.get("suggestion")]
         self.double_suggestion = self.aicpu_rules.get("double_suggestion")
         self.filter_aicpu_rules(self.aicpu_rules)
         for checker_name, check_rule in self.aicpu_rules.items():
@@ -160,7 +160,7 @@ class AicpuChecker(OperatorChecker):
                     and op.op_name not in double_type_ai_cpu_operator):
                 double_type_ai_cpu_operator.append(op.op_name)
         if bool(double_type_ai_cpu_operator):
-            self._SUGGESTION.append(self.double_suggestion.format(",".join(double_type_ai_cpu_operator)))
+            self._suggestion.append(self.double_suggestion.format(",".join(double_type_ai_cpu_operator)))
         return True
 
     def make_render(self, html_render, record, add_render_list=True, **kwargs):

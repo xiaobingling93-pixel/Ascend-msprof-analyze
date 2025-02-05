@@ -60,8 +60,9 @@ class ComputeOpSum(BaseRecipeAnalysis):
             return
         # get per rank stats by optype
         self.per_rank_stats_by_optype = pd.concat(
-            describe_duration(df.groupby(["OpType", "TaskType"])["Duration"]).assign(Rank=df["Rank"][0]) for df in
-            mapper_res)
+            describe_duration(df.groupby(["OpType", "TaskType"])["Duration"]).assign(Rank=df["Rank"][0])
+            for df in mapper_res
+        )
         self.per_rank_stats_by_optype.sort_values(by=["SumNs"], inplace=True, ascending=False)
 
         # get all rank stats by optype

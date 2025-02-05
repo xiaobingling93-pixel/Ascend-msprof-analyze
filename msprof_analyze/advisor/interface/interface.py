@@ -37,12 +37,14 @@ from msprof_analyze.advisor.analyzer.overall.overall_summary_analyzer import Ove
 from msprof_analyze.advisor.analyzer.overall.environment_variable_analyzer import EnvironmentVariableAnalyzer
 from msprof_analyze.advisor.analyzer.schedule.dispatch.timeline_op_dispatch_analyzer import OpDispatchAnalyzer
 from msprof_analyze.advisor.analyzer.schedule.syncbn.syncbn_analyzer import SyncBNAnalyzer
-from msprof_analyze.advisor.analyzer.schedule.synchronize_stream.synchronize_stream_analyzer import SynchronizeStreamAnalyzer
+from msprof_analyze.advisor.analyzer.schedule.synchronize_stream.synchronize_stream_analyzer import \
+    SynchronizeStreamAnalyzer
 from msprof_analyze.advisor.analyzer.dataloader.dataloader_analyzer import DataloaderAnalyzer
 from msprof_analyze.advisor.analyzer.computation.ai_core_freq.ai_core_freq_analyzer import AICoreFreqAnalyzer
 from msprof_analyze.advisor.analyzer.memory.memory_analyzer import MemoryAnalyzer
 from msprof_analyze.advisor.analyzer.communication.packet.packet_analyzer import PacketAnalyzer
-from msprof_analyze.advisor.analyzer.communication.contention.bandwidth_contention_analyzer import BandwidthContentionAnalyzer
+from msprof_analyze.advisor.analyzer.communication.contention.bandwidth_contention_analyzer import \
+    BandwidthContentionAnalyzer
 from msprof_analyze.advisor.analyzer.communication.alignment.byte_alignment_analyzer import ByteAlignmentAnalyzer
 from msprof_analyze.advisor.analyzer.schedule.gc.gc_analyzer import GcAnalyzer
 from msprof_analyze.advisor.analyzer.schedule.conjectured_gc.conjectured_gc_analyzer import ConjecturedGcAnalyzer

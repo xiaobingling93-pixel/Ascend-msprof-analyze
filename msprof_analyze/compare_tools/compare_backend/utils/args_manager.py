@@ -23,6 +23,7 @@ from msprof_analyze.prof_common.path_manager import PathManager
 
 logger = get_logger()
 
+
 @Singleton
 class ArgsManager:
     __slots__ = ['_args', '_base_path_dict', '_comparison_path_dict', '_base_step', '_comparison_step']

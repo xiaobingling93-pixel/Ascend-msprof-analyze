@@ -39,7 +39,7 @@ class OperatorBoundChecker(OperatorChecker):
     def __init__(self, cann_version) -> None:
         super().__init__(cann_version=cann_version)
         self.prompt_class = BasePrompt.get_prompt_class(self.__class__.__name__)
-        self._PROBLEM = self.prompt_class.PROBLEM
+        self._problem = self.prompt_class.PROBLEM
         self._description = self.prompt_class.DESCRIPTION.format(to_percent(Config().operator_bound_ratio))
 
     def pre_check(self, profiling_data) -> bool:

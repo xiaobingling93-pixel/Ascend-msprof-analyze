@@ -30,7 +30,7 @@ class OverallMetricsBean:
         self._base_data = OverallMetricsInfo(base_info).overall_metrics
         self._comparison_data = OverallMetricsInfo(comparison_info).overall_metrics
         if not any((base_info.is_not_minimal_profiling(), comparison_info.is_not_minimal_profiling())):
-            self.TABLE_NAME += ' (Minimal Prof)'
+            OverallMetricsBean.TABLE_NAME += ' (Minimal Prof)'
 
     @property
     def rows(self):

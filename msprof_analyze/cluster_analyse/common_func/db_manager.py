@@ -143,6 +143,7 @@ class DBManager:
             return False
         PrintUtils.print_error("conn is invalid param")
         return False
+
     @staticmethod
     def execute_sql(conn: any, sql: str, params: any = None) -> bool:
         """

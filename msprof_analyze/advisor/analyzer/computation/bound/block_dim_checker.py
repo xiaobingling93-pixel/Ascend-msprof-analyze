@@ -39,7 +39,7 @@ class BlockDimChecker(OperatorChecker):
         super(BlockDimChecker, self).__init__(cann_version=cann_version)
         self.prompt_class = BasePrompt.get_prompt_class(self.__class__.__name__)
 
-        self._PROBLEM = self.prompt_class.PROBLEM
+        self._problem = self.prompt_class.PROBLEM
         self._description = self.prompt_class.DESCRIPTION
         self.aiv_num_desc = self.prompt_class.AIV_NUM_DESCRIPTION
         self.top_duration_op_desc = self.prompt_class.TOP_DURATION_OP_DESCRIPTION
