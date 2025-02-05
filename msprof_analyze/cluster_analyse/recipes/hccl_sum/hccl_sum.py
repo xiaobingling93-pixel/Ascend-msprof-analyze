@@ -59,19 +59,6 @@ class HcclSum(BaseRecipeAnalysis):
     def base_dir(self):
         return os.path.basename(os.path.dirname(__file__))
 
-    @staticmethod
-    def _mapper_func(data_map, analysis_class):
-        profiler_db_path = data_map.get(Constant.PROFILER_DB_PATH)
-        rank_id = data_map.get(Constant.RANK_ID)
-        df = HcclSumExport(profiler_db_path, analysis_class).read_export_db()
-
-        if df is None or df.empty:
-            logger.warning(f"There is no stats data in {profiler_db_path}.")
-            return None
-
-        df["Rank"] = rank_id
-        return df
-
     @classmethod
     def add_parser_argument(cls, parser):
         parser.add_argument("--top_num", type=str, help="Duration cost top count", default=cls.DEFAULT_TOP_NUM)
@@ -138,3 +125,13 @@ class HcclSum(BaseRecipeAnalysis):
         self.dump_data(self.per_rank_stats, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER, self.TABLE_PER_RANK_STATS)
         self.dump_data(self.top_op_stats, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER, self.TABLE_TOP_OP_STATS)
         self.dump_data(self.group_name_map, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER, self.TABLE_GROUP_NAME_MAP)
+
+    def _mapper_func(self, data_map, analysis_class):
+        profiler_db_path = data_map.get(Constant.PROFILER_DB_PATH)
+        rank_id = data_map.get(Constant.RANK_ID)
+        df = HcclSumExport(profiler_db_path, analysis_class).read_export_db()
+        if df is None or df.empty:
+            logger.warning(f"There is no stats data in {profiler_db_path}.")
+            return None
+        df["Rank"] = rank_id
+        return df

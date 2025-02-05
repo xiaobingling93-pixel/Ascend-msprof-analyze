@@ -101,52 +101,6 @@ class MstxSum(BaseRecipeAnalysis):
     def base_dir(self):
         return os.path.basename(os.path.dirname(__file__))
 
-    @staticmethod
-    def _mapper_func(data_map, analysis_class):
-        profiler_db_path = data_map.get(Constant.PROFILER_DB_PATH)
-        rank_id = data_map.get(Constant.RANK_ID)
-        step_df = MstxStepExport(profiler_db_path, analysis_class).read_export_db()
-        if step_df is None or step_df.empty:
-            step_df = pd.DataFrame({"start_ns": [0], "end_ns": [float("inf")], "step_id": [0]})
-        mark_df = MstxMarkExport(profiler_db_path, analysis_class).read_export_db()
-        if mark_df is None or mark_df.empty:
-            logger.warning(f"There is no mark data in {profiler_db_path}.")
-            return None
-        mark_df["framework_ts"] = mark_df["framework_ts"].astype("int64")
-
-        mark_info = {}
-        mark_res = []
-        mismatch_msg = []
-        for idx, row in enumerate(mark_df.itertuples(index=False)):
-            if row.msg.endswith(MstxSum.START_SUFFIX):
-                msg = row.msg[:-len(MstxSum.START_SUFFIX)]
-                mark_info.setdefault(row.tid, {}).setdefault(msg, []).append(idx)
-            elif row.msg.endswith(MstxSum.STOP_SUFFIX):
-                msg = row.msg[:-len(MstxSum.STOP_SUFFIX)]
-                idx_list = mark_info.get(row.tid, {}).get(msg, [])
-                if not idx_list:
-                    mismatch_msg.append((row.msg, idx))
-                    continue
-                start_idx = idx_list.pop()
-                mark_res.append(format_mark_info(mark_df, start_idx, idx, msg))
-
-        # 统计未匹配上的mark信息
-        for msg_info in mark_info.values():
-            for msg, idx_list in msg_info.items():
-                if not idx_list:
-                    continue
-                mismatch_msg.extend((msg + MstxSum.START_SUFFIX, idx) for idx in idx_list)
-        if mismatch_msg:
-            mismatch_msg.sort(key=lambda msg: msg[1])
-            logger.warning(f"The following mark messages do not match anyone in "
-                           f"rank {rank_id}: {','.join(msg[0] for msg in mismatch_msg)}.")
-
-        mark_stats_df = pd.DataFrame(mark_res).assign(Rank=rank_id)
-        mark_stats_df["step_id"] = mark_stats_df.apply(compute_step_id, axis=1, step_stats_df=step_df)
-        rename_mark_msg_name(mark_stats_df)
-        mark_stats_df = format_columns(mark_stats_df).set_index("Name", drop=True)
-        return mark_stats_df
-
     def reducer_func(self, mapper_res):
         mapper_res = list(filter(lambda df: df is not None, mapper_res))
         if not mapper_res:
@@ -196,3 +150,48 @@ class MstxSum(BaseRecipeAnalysis):
         self.dump_data(self.all_fwk_stats, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER, self.TABLE_FRAMEWORK_STATS)
         self.dump_data(self.all_cann_stats, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER, self.TABLE_CANN_STATS)
         self.dump_data(self.all_device_stats, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER, self.TABLE_DEVICE_STATS)
+
+    def _mapper_func(self, data_map, analysis_class):
+        profiler_db_path = data_map.get(Constant.PROFILER_DB_PATH)
+        rank_id = data_map.get(Constant.RANK_ID)
+        step_df = MstxStepExport(profiler_db_path, analysis_class).read_export_db()
+        if step_df is None or step_df.empty:
+            step_df = pd.DataFrame({"start_ns": [0], "end_ns": [float("inf")], "step_id": [0]})
+        mark_df = MstxMarkExport(profiler_db_path, analysis_class).read_export_db()
+        if mark_df is None or mark_df.empty:
+            logger.warning(f"There is no mark data in {profiler_db_path}.")
+            return None
+        mark_df["framework_ts"] = mark_df["framework_ts"].astype("int64")
+
+        mark_info = {}
+        mark_res = []
+        mismatch_msg = []
+        for idx, row in enumerate(mark_df.itertuples(index=False)):
+            if row.msg.endswith(MstxSum.START_SUFFIX):
+                msg = row.msg[:-len(MstxSum.START_SUFFIX)]
+                mark_info.setdefault(row.tid, {}).setdefault(msg, []).append(idx)
+            elif row.msg.endswith(MstxSum.STOP_SUFFIX):
+                msg = row.msg[:-len(MstxSum.STOP_SUFFIX)]
+                idx_list = mark_info.get(row.tid, {}).get(msg, [])
+                if not idx_list:
+                    mismatch_msg.append((row.msg, idx))
+                    continue
+                start_idx = idx_list.pop()
+                mark_res.append(format_mark_info(mark_df, start_idx, idx, msg))
+
+        # 统计未匹配上的mark信息
+        for msg_info in mark_info.values():
+            for msg, idx_list in msg_info.items():
+                if not idx_list:
+                    continue
+                mismatch_msg.extend((msg + MstxSum.START_SUFFIX, idx) for idx in idx_list)
+        if mismatch_msg:
+            mismatch_msg.sort(key=lambda msg: msg[1])
+            logger.warning(f"The following mark messages do not match anyone in "
+                           f"rank {rank_id}: {','.join(msg[0] for msg in mismatch_msg)}.")
+
+        mark_stats_df = pd.DataFrame(mark_res).assign(Rank=rank_id)
+        mark_stats_df["step_id"] = mark_stats_df.apply(compute_step_id, axis=1, step_stats_df=step_df)
+        rename_mark_msg_name(mark_stats_df)
+        mark_stats_df = format_columns(mark_stats_df).set_index("Name", drop=True)
+        return mark_stats_df

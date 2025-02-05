@@ -38,17 +38,6 @@ class CannApiSum(BaseRecipeAnalysis):
         return os.path.basename(os.path.dirname(__file__))
 
     @staticmethod
-    def _mapper_func(data_map, analysis_class):
-        profiler_db_path = data_map.get(Constant.PROFILER_DB_PATH)
-        rank_id = data_map.get(Constant.RANK_ID)
-        df = CannApiSumExport(profiler_db_path, analysis_class).read_export_db()
-
-        if df is None or df.empty:
-            logger.warning(f"There is no stats data in {profiler_db_path}.")
-            return None
-        return rank_id, df
-
-    @staticmethod
     def _aggregate_stats(stats_res):
         grouped = stats_res.groupby("name")
         res = {}
@@ -103,3 +92,12 @@ class CannApiSum(BaseRecipeAnalysis):
     def save_db(self):
         self.dump_data(self._stats_rank_data, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER, "CannApiSumRank")
         self.dump_data(self._stats_data, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER, "CannApiSum")
+
+    def _mapper_func(self, data_map, analysis_class):
+        profiler_db_path = data_map.get(Constant.PROFILER_DB_PATH)
+        rank_id = data_map.get(Constant.RANK_ID)
+        df = CannApiSumExport(profiler_db_path, analysis_class).read_export_db()
+        if df is None or df.empty:
+            logger.warning(f"There is no stats data in {profiler_db_path}.")
+            return None
+        return rank_id, df

@@ -130,6 +130,14 @@ class CommunicationAnalysis(BaseAnalysis):
                                    bandwidth_dict.get(Constant.TRANSIT_TIME_MS, 0))
 
 
+class CommunicationBandwidthParams:
+    def __init__(self, rank_id, step_id, transport_type, package_size):
+        self.rank_id = rank_id
+        self.step_id = step_id
+        self.transport_type = transport_type
+        self.package_size = package_size
+
+
 class CommunicationAnalysisOptimized(BaseAnalysis):
     COMMUNICATION_BANDWIDTH_TABLE = "ClusterCommunicationBandwidth"
     COMMUNICATION_TIME_TABLE = "ClusterCommunicationTime"
@@ -219,31 +227,32 @@ class CommunicationAnalysisOptimized(BaseAnalysis):
                     total_time_info.compute_ratio()
                     self._output_time.append(total_time_info.convert_output())
 
-    def _compute_bandwidth_info(self):
-        def process_package_info(package_info, total_transit_size, total_transit_time, op_group_set):
-            total_bw_info = CommunicationBandwidthBean({
-                TableConstant.RANK_ID: rank_id,
-                TableConstant.STEP: step_id,
-                TableConstant.GROUP_NAME: '',
-                TableConstant.HCCL_OP_NAME: Constant.TOTAL_OP_INFO,
-                TableConstant.TRANSPORT_TYPE: transport_type,
-                TableConstant.TRANSIT_SIZE: 0.0,
-                TableConstant.TRANSIT_TIME: 0.0,
-                TableConstant.BANDWIDTH: 0.0,
-                TableConstant.PACKAGE_SIZE: package_size
-            })
-            for bandwidth_package_info in package_info:
-                total_bw_info += bandwidth_package_info
-                if not total_bw_info.group_name:
-                    total_bw_info.set_group_name(bandwidth_package_info.group_name)
-                self._output_bandwidth.append(bandwidth_package_info.convert_output())
-                op_group = bandwidth_package_info.hccl_op_name + "@" + bandwidth_package_info.group_name
-                if op_group not in op_group_set:
-                    op_group_set.add(op_group)
-                    total_transit_size += bandwidth_package_info.transit_size
-                    total_transit_time += bandwidth_package_info.transit_time
-            return total_bw_info, total_transit_size, total_transit_time
+    def _process_package_info(self, package_info, total_transit_size, total_transit_time, op_group_set,
+                             communication_bandwidth_params):
+        total_bw_info = CommunicationBandwidthBean({
+            TableConstant.RANK_ID: communication_bandwidth_params.rank_id,
+            TableConstant.STEP: communication_bandwidth_params.step_id,
+            TableConstant.GROUP_NAME: '',
+            TableConstant.HCCL_OP_NAME: Constant.TOTAL_OP_INFO,
+            TableConstant.TRANSPORT_TYPE: communication_bandwidth_params.transport_type,
+            TableConstant.TRANSIT_SIZE: 0.0,
+            TableConstant.TRANSIT_TIME: 0.0,
+            TableConstant.BANDWIDTH: 0.0,
+            TableConstant.PACKAGE_SIZE: communication_bandwidth_params.package_size
+        })
+        for bandwidth_package_info in package_info:
+            total_bw_info += bandwidth_package_info
+            if not total_bw_info.group_name:
+                total_bw_info.set_group_name(bandwidth_package_info.group_name)
+            self._output_bandwidth.append(bandwidth_package_info.convert_output())
+            op_group = bandwidth_package_info.hccl_op_name + "@" + bandwidth_package_info.group_name
+            if op_group not in op_group_set:
+                op_group_set.add(op_group)
+                total_transit_size += bandwidth_package_info.transit_size
+                total_transit_time += bandwidth_package_info.transit_time
+        return total_bw_info, total_transit_size, total_transit_time
 
+    def _compute_bandwidth_info(self):
         for _, step_dict in self._aggregate_bandwidth.items():
             for step_id, rank_dict in step_dict.items():
                 for rank_id, communication_op_info in rank_dict.items():
@@ -253,8 +262,9 @@ class CommunicationAnalysisOptimized(BaseAnalysis):
                         total_info = []
                         op_group_set = set()
                         for package_size, package_info in bandwidth_info.items():
-                            total_bandwidth_info, total_transit_size, total_transit_time = process_package_info(
-                                package_info, total_transit_size, total_transit_time, op_group_set
+                            total_bandwidth_info, total_transit_size, total_transit_time = self._process_package_info(
+                                package_info, total_transit_size, total_transit_time, op_group_set,
+                                CommunicationBandwidthParams(rank_id, step_id, transport_type, package_size)
                             )
                             total_info.append(total_bandwidth_info)
                         total_bandwidth = total_transit_size / total_transit_time if total_transit_time else 0.0
