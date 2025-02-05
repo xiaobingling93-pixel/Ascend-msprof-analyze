@@ -15,12 +15,10 @@
 
 import logging
 import os
-import json
 from abc import abstractmethod
 from collections import defaultdict
 
-from advice_base import AdviceBase
-
+from msprof_analyze.advisor.advisor_backend.advice_base import AdviceBase
 from msprof_analyze.prof_common.file_manager import FileManager
 
 logger = logging.getLogger()

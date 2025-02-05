@@ -13,14 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import multiprocessing
-
 import pandas as pd
-import numpy as np
 
-from common_func.path_manager import PathManager
-from common_func_advisor.constant import Constant
-from .op_perf import OpPerfFactory
+from msprof_analyze.cluster_analyse.common_func.path_manager import PathManager
+from msprof_analyze.advisor.advisor_backend.common_func_advisor.constant import Constant
 
 
 class CSVAnalyzer:

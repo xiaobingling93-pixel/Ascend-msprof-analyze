@@ -15,7 +15,8 @@
 
 import unittest
 import pandas as pd
-from recipes.compute_op_sum.compute_op_sum import ComputeOpSum
+
+from msprof_analyze.cluster_analyse.recipes.compute_op_sum.compute_op_sum import ComputeOpSum
 from msprof_analyze.prof_common.constant import Constant
 
 

@@ -14,11 +14,10 @@
 # limitations under the License.
 from collections import deque
 
-from compare_backend.utils.name_function import NameFunction
-from compare_backend.utils.common_func import longest_common_subsequence_matching
-from compare_backend.utils.torch_op_node import TorchOpNode
-from compare_backend.utils.module_node import ModuleNode
-
+from msprof_analyze.compare_tools.compare_backend.utils.name_function import NameFunction
+from msprof_analyze.compare_tools.compare_backend.utils.common_func import longest_common_subsequence_matching
+from msprof_analyze.compare_tools.compare_backend.utils.torch_op_node import TorchOpNode
+from msprof_analyze.compare_tools.compare_backend.utils.module_node import ModuleNode
 from msprof_analyze.prof_common.constant import Constant
 
 

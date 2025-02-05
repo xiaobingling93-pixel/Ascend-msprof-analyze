@@ -2,9 +2,9 @@ import unittest
 from collections import defaultdict
 from unittest.mock import patch
 
-from compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
-from compare_backend.profiling_parser.base_profiling_parser import ProfilingResult
-from compare_backend.profiling_parser.gpu_profiling_parser import GPUProfilingParser
+from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
+from msprof_analyze.compare_tools.compare_backend.profiling_parser.base_profiling_parser import ProfilingResult
+from msprof_analyze.compare_tools.compare_backend.profiling_parser.gpu_profiling_parser import GPUProfilingParser
 
 
 class TestGpuProfilingParser(unittest.TestCase):
@@ -52,8 +52,10 @@ class TestGpuProfilingParser(unittest.TestCase):
     other_event = {"ph": "X", "name": "other", "pid": 1, "tid": 1, "ts": 6, "dur": 1}
 
     def test_update_memory_list_when_valid_input(self):
-        with patch("compare_backend.profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"), \
-                patch("compare_backend.profiling_parser.gpu_profiling_parser.GPUProfilingParser.__init__",
+        with patch("msprof_analyze.compare_tools.compare_backend.profiling_parser."
+                   "base_profiling_parser.BaseProfilingParser.__init__"), \
+                patch("msprof_analyze.compare_tools.compare_backend.profiling_parser."
+                      "gpu_profiling_parser.GPUProfilingParser.__init__",
                       return_value=None):
             res = GPUProfilingParser({}, {})
             res._enable_memory_compare = True
@@ -64,8 +66,10 @@ class TestGpuProfilingParser(unittest.TestCase):
             self.assertEqual(res._result_data.memory_list[0].memory_details, ", (1, 2), [duration: 1.0], [size: 0.5]\n")
 
     def test_calculate_performance_time_when_valid_input(self):
-        with patch("compare_backend.profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"), \
-                patch("compare_backend.profiling_parser.gpu_profiling_parser.GPUProfilingParser.__init__",
+        with patch("msprof_analyze.compare_tools.compare_backend.profiling_parser."
+                   "base_profiling_parser.BaseProfilingParser.__init__"), \
+                patch("msprof_analyze.compare_tools.compare_backend.profiling_parser."
+                      "gpu_profiling_parser.GPUProfilingParser.__init__",
                       return_value=None):
             res = GPUProfilingParser({}, {})
             res._profiling_type = "GPU"
@@ -90,8 +94,10 @@ class TestGpuProfilingParser(unittest.TestCase):
             self.assertEqual(res._result_data.overall_metrics.compute_time, 7)
 
     def test_picking_memory_event_when_valid_input(self):
-        with patch("compare_backend.profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"), \
-                patch("compare_backend.profiling_parser.gpu_profiling_parser.GPUProfilingParser.__init__",
+        with patch("msprof_analyze.compare_tools.compare_backend.profiling_parser."
+                   "base_profiling_parser.BaseProfilingParser.__init__"), \
+                patch("msprof_analyze.compare_tools.compare_backend.profiling_parser."
+                      "gpu_profiling_parser.GPUProfilingParser.__init__",
                       return_value=None):
             res = GPUProfilingParser({}, {})
             res._memory_events = []
@@ -102,8 +108,10 @@ class TestGpuProfilingParser(unittest.TestCase):
 
     def test_is_torch_op_event_when_valid_input(self):
         event_list = [{"cat": "cpu_op"}, {"cat": "user_annotation"}, {"cat": "cuda_runtime"}, {"cat": "operator"}]
-        with patch("compare_backend.profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"), \
-                patch("compare_backend.profiling_parser.gpu_profiling_parser.GPUProfilingParser.__init__",
+        with patch("msprof_analyze.compare_tools.compare_backend.profiling_parser."
+                   "base_profiling_parser.BaseProfilingParser.__init__"), \
+                patch("msprof_analyze.compare_tools.compare_backend.profiling_parser."
+                      "gpu_profiling_parser.GPUProfilingParser.__init__",
                       return_value=None):
             res = GPUProfilingParser({}, {})
             for event in event_list:
@@ -115,8 +123,10 @@ class TestGpuProfilingParser(unittest.TestCase):
     def test_is_kernel_event_when_valid_input(self):
         event_list1 = [{"cat": "kernel", "name": "matmul"}, {"cat": "kernel", "name": "nccl_reduce"}]
         event_list2 = [{"cat": "async", "name": "nccl_reduce"}, {"cat": "cpu_op", "name": "aten::to"}]
-        with patch("compare_backend.profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"), \
-                patch("compare_backend.profiling_parser.gpu_profiling_parser.GPUProfilingParser.__init__",
+        with patch("msprof_analyze.compare_tools.compare_backend.profiling_parser."
+                   "base_profiling_parser.BaseProfilingParser.__init__"), \
+                patch("msprof_analyze.compare_tools.compare_backend.profiling_parser."
+                      "gpu_profiling_parser.GPUProfilingParser.__init__",
                       return_value=None):
             res = GPUProfilingParser({}, {})
             for event in event_list1:
@@ -127,8 +137,10 @@ class TestGpuProfilingParser(unittest.TestCase):
                 self.assertFalse(result)
 
     def test_is_flow_event_when_valid_input(self):
-        with patch("compare_backend.profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"), \
-                patch("compare_backend.profiling_parser.gpu_profiling_parser.GPUProfilingParser.__init__",
+        with patch("msprof_analyze.compare_tools.compare_backend.profiling_parser."
+                   "base_profiling_parser.BaseProfilingParser.__init__"), \
+                patch("msprof_analyze.compare_tools.compare_backend.profiling_parser."
+                      "gpu_profiling_parser.GPUProfilingParser.__init__",
                       return_value=None):
             res = GPUProfilingParser({}, {})
             res._flow_cat = ("async_gpu",)

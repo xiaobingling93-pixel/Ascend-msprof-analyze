@@ -19,7 +19,7 @@ from collections import defaultdict
 from copy import deepcopy
 from multiprocessing import Pool
 
-from cluster_utils.data_transfer_adapter import DataTransferAdapter
+from msprof_analyze.cluster_analyse.cluster_utils.data_transfer_adapter import DataTransferAdapter
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.logger import get_logger
 

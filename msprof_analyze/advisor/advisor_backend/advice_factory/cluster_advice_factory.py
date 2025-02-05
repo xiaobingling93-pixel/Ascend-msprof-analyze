@@ -12,12 +12,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from advice_factory.advice_factory import AdviceFactory
-from cluster_advice.slow_link_advice import SlowLinkAdvice
-from cluster_advice.slow_rank_advice import SlowRankAdvice
-from cluster_advice.cluster_pipeline_advice import ClusterPipelineAdvice
-from cluster_advice.kernel_cluster_advice import KernelClusterAdvice
-from common_func_advisor.constant import Constant
+from msprof_analyze.advisor.advisor_backend.advice_factory.advice_factory import AdviceFactory
+from msprof_analyze.advisor.advisor_backend.cluster_advice.slow_link_advice import SlowLinkAdvice
+from msprof_analyze.advisor.advisor_backend.cluster_advice.slow_rank_advice import SlowRankAdvice
+from msprof_analyze.advisor.advisor_backend.cluster_advice.cluster_pipeline_advice import ClusterPipelineAdvice
+from msprof_analyze.advisor.advisor_backend.cluster_advice.kernel_cluster_advice import KernelClusterAdvice
+from msprof_analyze.advisor.advisor_backend.common_func_advisor.constant import Constant
 
 
 class ClusterAdviceFactory(AdviceFactory):

@@ -19,7 +19,7 @@ import sys
 from typing import Optional
 from dataclasses import dataclass
 
-from common_func_advisor.constant import Constant
+from msprof_analyze.advisor.advisor_backend.common_func_advisor.constant import Constant
 from msprof_analyze.advisor.advisor_backend.logger import Logger
 
 logger = Logger()

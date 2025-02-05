@@ -22,10 +22,13 @@ import pandas as pd
 from msprof_analyze.test.st.utils import execute_cmd, select_count, select_by_query
 from msprof_analyze.prof_common.file_manager import FileManager
 from msprof_analyze.prof_common.path_manager import PathManager
-from .cluster_communication_analyzer_bandwidth_db import ClusterCommunicationAnalyzerBandwidthDb
-from .cluster_communication_analyzer_matrix_db import ClusterCommunicationAnalyzerMatrixDb
-from .cluster_communication_analyzer_time_db import ClusterCommunicationAnalyzerTime
-from .cluster_step_trace_time_db import ClusterStepTraceTimeDb
+from msprof_analyze.test.st.cluster_analyse.cluster_communication_analyzer_bandwidth_db \
+    import ClusterCommunicationAnalyzerBandwidthDb
+from msprof_analyze.test.st.cluster_analyse.cluster_communication_analyzer_matrix_db \
+    import ClusterCommunicationAnalyzerMatrixDb
+from msprof_analyze.test.st.cluster_analyse.cluster_communication_analyzer_time_db \
+    import ClusterCommunicationAnalyzerTime
+from msprof_analyze.test.st.cluster_analyse.cluster_step_trace_time_db import ClusterStepTraceTimeDb
 
 
 class TestClusterAnalysePytorchDb(TestCase):

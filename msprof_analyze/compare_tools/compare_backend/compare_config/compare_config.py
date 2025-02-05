@@ -14,8 +14,7 @@
 # limitations under the License.
 import os
 
-from compare_backend.utils.singleton import Singleton
-
+from msprof_analyze.compare_tools.compare_backend.utils.singleton import Singleton
 from msprof_analyze.prof_common.utils import SafeConfigReader
 
 

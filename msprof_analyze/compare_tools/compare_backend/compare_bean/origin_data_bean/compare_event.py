@@ -14,8 +14,7 @@
 # limitations under the License.
 from decimal import Decimal
 
-from compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
-
+from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
 from msprof_analyze.prof_common.constant import Constant
 
 

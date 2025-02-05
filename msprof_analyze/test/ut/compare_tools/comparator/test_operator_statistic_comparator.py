@@ -1,7 +1,8 @@
 import unittest
 from unittest.mock import patch
 
-from compare_backend.comparator.operator_statistic_comparator import OperatorStatisticComparator
+from msprof_analyze.compare_tools.compare_backend.comparator.operator_statistic_comparator \
+    import OperatorStatisticComparator
 
 
 class MockBean:
@@ -24,7 +25,8 @@ class TestOperatorStatisticComparator(unittest.TestCase):
         base_dict = {"add": [1], "matmul": [1]}
         comparison_dict = {"add": [1], "reduce": [1]}
         with patch(
-                "compare_backend.comparator.operator_statistic_comparator.OperatorStatisticComparator._group_by_op_name",
+                "msprof_analyze.compare_tools.compare_backend.comparator.operator_statistic_comparator."
+                "OperatorStatisticComparator._group_by_op_name",
                 return_value=(base_dict, comparison_dict)):
             comparator = OperatorStatisticComparator({1: 2}, MockBean)
             comparator._compare()

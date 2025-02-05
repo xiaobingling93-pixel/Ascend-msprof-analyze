@@ -16,10 +16,9 @@
 import os
 from collections import defaultdict
 
-from analysis.base_analysis import BaseAnalysis
-from common_func.db_manager import DBManager
-from common_func.utils import increase_shared_value
-
+from msprof_analyze.cluster_analyse.analysis.base_analysis import BaseAnalysis
+from msprof_analyze.cluster_analyse.common_func.db_manager import DBManager
+from msprof_analyze.cluster_analyse.common_func.utils import increase_shared_value
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.logger import get_logger
 

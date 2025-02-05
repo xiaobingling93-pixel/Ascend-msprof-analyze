@@ -19,12 +19,11 @@ import logging
 
 import pandas as pd
 
-from common_func.path_manager import PathManager
-from compute_advice.compute_advice_base import ComputeAdviceBase
-from compute_advice.npu_fused.op_perf import OpPerfFactory
-from common_func_advisor.constant import Constant
-from common_func_advisor.constant import PerfColor
-from advisor_backend.common_func_advisor.trace_view_json import TraceViewJson
+from msprof_analyze.cluster_analyse.common_func.path_manager import PathManager
+from msprof_analyze.advisor.advisor_backend.compute_advice.compute_advice_base import ComputeAdviceBase
+from msprof_analyze.advisor.advisor_backend.compute_advice.npu_fused.op_perf import OpPerfFactory
+from msprof_analyze.advisor.advisor_backend.common_func_advisor.constant import Constant, PerfColor
+from msprof_analyze.advisor.advisor_backend.common_func_advisor.trace_view_json import TraceViewJson
 
 
 class NpuSlowAdvice(ComputeAdviceBase, ABC):

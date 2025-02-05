@@ -17,10 +17,14 @@ from decimal import Decimal
 
 import ijson
 
-from compare_backend.compare_bean.origin_data_bean.compare_event import KernelEvent, MemoryEvent
-from compare_backend.compare_bean.origin_data_bean.kernel_details_bean import KernelDetailsBean
-from compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
-from compare_backend.compare_bean.profiling_info import ProfilingInfo
+from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.compare_event import (
+    KernelEvent, 
+    MemoryEvent
+)
+from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.kernel_details_bean \
+    import KernelDetailsBean
+from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
+from msprof_analyze.compare_tools.compare_backend.compare_bean.profiling_info import ProfilingInfo
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.file_manager import FileManager
 from msprof_analyze.prof_common.logger import get_logger

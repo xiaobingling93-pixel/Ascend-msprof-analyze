@@ -22,7 +22,7 @@ import pandas as pd
 from bs4 import BeautifulSoup
 
 from msprof_analyze.prof_common.path_manager import PathManager
-from .utils import get_files, execute_cmd
+from msprof_analyze.test.st.advisor.utils import get_files, execute_cmd
 
 
 class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):

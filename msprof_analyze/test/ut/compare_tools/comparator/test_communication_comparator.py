@@ -1,7 +1,7 @@
 import unittest
 
-from compare_backend.comparator.communication_comparator import CommunicationComparator
-from compare_backend.compare_bean.communication_bean import CommunicationBean
+from msprof_analyze.compare_tools.compare_backend.comparator.communication_comparator import CommunicationComparator
+from msprof_analyze.compare_tools.compare_backend.compare_bean.communication_bean import CommunicationBean
 
 
 class TestCommunicationComparator(unittest.TestCase):

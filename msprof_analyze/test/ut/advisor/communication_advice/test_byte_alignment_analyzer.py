@@ -17,6 +17,7 @@ import shutil
 import stat
 import json
 import unittest
+
 from msprof_analyze.advisor.interface.interface import Interface
 from msprof_analyze.advisor.common.analyzer_scopes import SupportedScopes
 

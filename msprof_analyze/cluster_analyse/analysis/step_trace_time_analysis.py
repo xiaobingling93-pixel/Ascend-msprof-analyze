@@ -14,11 +14,10 @@
 # limitations under the License.
 import os
 
-from common_func.db_manager import DBManager
-from common_func.utils import increase_shared_value
-from cluster_utils.parallel_strategy_calculator import ParallelStrategyCalculator
-from prof_bean.step_trace_time_bean import StepTraceTimeBean
-
+from msprof_analyze.cluster_analyse.common_func.db_manager import DBManager
+from msprof_analyze.cluster_analyse.common_func.utils import increase_shared_value
+from msprof_analyze.cluster_analyse.cluster_utils.parallel_strategy_calculator import ParallelStrategyCalculator
+from msprof_analyze.cluster_analyse.prof_bean.step_trace_time_bean import StepTraceTimeBean
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.file_manager import FileManager
 from msprof_analyze.prof_common.logger import get_logger

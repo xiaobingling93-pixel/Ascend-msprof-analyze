@@ -14,13 +14,7 @@
 # limitations under the License.
 import os
 from collections import OrderedDict
-import sys
 import logging
-
-sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))),
-                             "cluster_analyse"))
-sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))),
-                             "compare_tools"))
 
 from msprof_analyze.advisor.utils.utils import Timer
 from msprof_analyze.advisor.result.result import OptimizeResult

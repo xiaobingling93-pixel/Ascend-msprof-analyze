@@ -17,7 +17,7 @@ import logging
 
 import pandas as pd
 
-from common_func_advisor.trace_view_json import TraceViewJson
+from msprof_analyze.advisor.advisor_backend.common_func_advisor.trace_view_json import TraceViewJson
 
 logger = logging.getLogger()
 

@@ -15,8 +15,8 @@
 import re
 from math import ceil
 
-from compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
-from compare_backend.utils.torch_op_node import TorchOpNode
+from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
+from msprof_analyze.compare_tools.compare_backend.utils.torch_op_node import TorchOpNode
 
 
 class ModuleNode:

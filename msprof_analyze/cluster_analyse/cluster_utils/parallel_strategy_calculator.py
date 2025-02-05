@@ -15,7 +15,7 @@
 from enum import Enum
 from dataclasses import dataclass
 
-from .parallel_algorithm import MegatronAlgorithm
+from msprof_analyze.cluster_analyse.cluster_utils.parallel_algorithm import MegatronAlgorithm
 
 
 class ParallelAlgorithmType(Enum):

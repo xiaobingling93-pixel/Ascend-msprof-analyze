@@ -14,7 +14,7 @@
 # limitations under the License.
 from prettytable import PrettyTable
 
-from compare_backend.view.base_view import BaseView
+from msprof_analyze.compare_tools.compare_backend.view.base_view import BaseView
 
 
 class ScreenView(BaseView):

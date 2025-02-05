@@ -17,9 +17,8 @@ import shutil
 import stat
 import json
 import unittest
-import pytest
 
-from advisor_backend.interface import Interface
+from msprof_analyze.advisor.advisor_backend.interface import Interface
 
 
 class TestOptimizerAdvice(unittest.TestCase):

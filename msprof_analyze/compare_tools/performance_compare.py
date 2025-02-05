@@ -18,11 +18,9 @@ import datetime
 import os.path
 import sys
 
-sys.path.append(
-    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "cluster_analyse"))
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from compare_backend.comparison_generator import ComparisonGenerator
+from msprof_analyze.compare_tools.compare_backend.comparison_generator import ComparisonGenerator
 from msprof_analyze.prof_common.analyze_dict import AnalyzeDict
 from msprof_analyze.prof_common.logger import get_logger
 from msprof_analyze.prof_common.path_manager import PathManager

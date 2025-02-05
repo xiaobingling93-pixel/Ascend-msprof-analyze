@@ -19,7 +19,7 @@ import shutil
 import unittest
 from unittest import mock
 
-from cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
+from msprof_analyze.cluster_analyse.cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
 
 
 class TestPytorchDataPreprocessor(unittest.TestCase):
@@ -59,7 +59,8 @@ class TestPytorchDataPreprocessor(unittest.TestCase):
 
     def test_get_data_map_given_cluster_files_expect_rank_12(self):
         check = PytorchDataPreprocessor(self.dirs)
-        with mock.patch("msprof_analyze.prof_common.file_manager.FileManager.read_json_file", return_value={}):
+        with mock.patch("msprof_analyze.prof_common.file_manager.FileManager.read_json_file",
+                        return_value={}):
             ret = check.get_data_map()
             self.assertIn(1, ret.keys())
             self.assertIn(2, ret.keys())

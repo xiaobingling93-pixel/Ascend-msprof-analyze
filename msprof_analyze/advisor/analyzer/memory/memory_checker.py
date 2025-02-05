@@ -12,10 +12,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import os
 import re
 import logging
-import yaml
 
 from msprof_analyze.advisor.dataset.timeline_event_dataset import ScheduleAnalysisDataset, MemCollector
 from msprof_analyze.advisor.result.result import OptimizeResult

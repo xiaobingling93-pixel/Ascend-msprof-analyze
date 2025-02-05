@@ -15,11 +15,9 @@
 import os
 import logging
 
-from compare_interface.comparison_interface import ComparisonInterface
-from advisor_backend.advice_base import AdviceBase
-
+from msprof_analyze.compare_tools.compare_interface.comparison_interface import ComparisonInterface
+from msprof_analyze.advisor.advisor_backend.advice_base import AdviceBase
 from msprof_analyze.advisor.display.prompt.base_prompt import BasePrompt
-from msprof_analyze.prof_common.additional_args_manager import AdditionalArgsManager
 from msprof_analyze.prof_common.constant import Constant
 
 logger = logging.getLogger()

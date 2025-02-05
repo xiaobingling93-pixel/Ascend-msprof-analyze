@@ -27,10 +27,6 @@ from plotly.subplots import make_subplots
 from plotly.offline import plot
 
 from msprof_analyze.prof_common.logger import get_logger
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from msprof_analyze.prof_common.path_manager import PathManager
 from msprof_analyze.prof_common.additional_args_manager import AdditionalArgsManager
 

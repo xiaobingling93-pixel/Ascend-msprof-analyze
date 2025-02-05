@@ -16,9 +16,9 @@
 import os
 import sqlite3
 
-from common_func.empty_class import EmptyClass
-from common_func.tables_config import TablesConfig
-from common_func.sql_extention_func import SqlExtentionAggregateFunc
+from msprof_analyze.cluster_analyse.common_func.empty_class import EmptyClass
+from msprof_analyze.cluster_analyse.common_func.tables_config import TablesConfig
+from msprof_analyze.cluster_analyse.common_func.sql_extention_func import SqlExtentionAggregateFunc
 
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.file_manager import check_db_path_valid

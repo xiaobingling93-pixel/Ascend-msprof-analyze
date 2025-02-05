@@ -1,10 +1,11 @@
 import unittest
 from unittest.mock import patch
 
-from compare_backend.compare_bean.origin_data_bean.operator_memory_bean import OperatorMemoryBean
-from compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
-from compare_backend.profiling_parser.base_profiling_parser import ProfilingResult
-from compare_backend.profiling_parser.npu_profiling_parser import NPUProfilingParser
+from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.operator_memory_bean \
+    import OperatorMemoryBean
+from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
+from msprof_analyze.compare_tools.compare_backend.profiling_parser.base_profiling_parser import ProfilingResult
+from msprof_analyze.compare_tools.compare_backend.profiling_parser.npu_profiling_parser import NPUProfilingParser
 
 
 class TestNPUProfilingParser(unittest.TestCase):
@@ -21,8 +22,10 @@ class TestNPUProfilingParser(unittest.TestCase):
                    {"ph": "M", "name": "thread_sort_index", "pid": 7, "tid": 3, "args": {"sort_index": 0}}]
 
     def test_update_memory_list_when_invalid_path(self):
-        with patch("compare_backend.profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"), \
-                patch("compare_backend.profiling_parser.npu_profiling_parser.NPUProfilingParser.__init__",
+        with patch("msprof_analyze.compare_tools.compare_backend.profiling_parser."
+                   "base_profiling_parser.BaseProfilingParser.__init__"), \
+                patch("msprof_analyze.compare_tools.compare_backend.profiling_parser."
+                      "npu_profiling_parser.NPUProfilingParser.__init__",
                       return_value=None):
             res = NPUProfilingParser({}, {})
             res._operator_memory_path = ""
@@ -36,10 +39,13 @@ class TestNPUProfilingParser(unittest.TestCase):
             OperatorMemoryBean({"Name": "cann::add", "Size(KB)": 512, "Allocation Time(us)": 2, "Release Time(us)": 4}),
             OperatorMemoryBean(
                 {"Name": "aten::add", "Size(KB)": 512, "Allocation Time(us)": 7, "Release Time(us)": 10})]
-        with patch("compare_backend.profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"), \
-                patch("compare_backend.profiling_parser.npu_profiling_parser.NPUProfilingParser.__init__",
+        with patch("msprof_analyze.compare_tools.compare_backend.profiling_parser."
+                   "base_profiling_parser.BaseProfilingParser.__init__"), \
+                patch("msprof_analyze.compare_tools.compare_backend.profiling_parser."
+                      "npu_profiling_parser.NPUProfilingParser.__init__",
                       return_value=None), \
-                patch("msprof_analyze.prof_common.file_manager.FileManager.read_csv_file", return_value=memory_data):
+                patch("msprof_analyze.prof_common.file_manager.FileManager.read_csv_file",
+                      return_value=memory_data):
             res = NPUProfilingParser({}, {})
             res._path_level=''
             res._operator_memory_path = ""
@@ -52,8 +58,10 @@ class TestNPUProfilingParser(unittest.TestCase):
             self.assertEqual(res._result_data.memory_list[0].duration, 2)
 
     def test_picking_hccl_event(self):
-        with patch("compare_backend.profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"), \
-                patch("compare_backend.profiling_parser.npu_profiling_parser.NPUProfilingParser.__init__",
+        with patch("msprof_analyze.compare_tools.compare_backend.profiling_parser."
+                   "base_profiling_parser.BaseProfilingParser.__init__"), \
+                patch("msprof_analyze.compare_tools.compare_backend.profiling_parser."
+                      "npu_profiling_parser.NPUProfilingParser.__init__",
                       return_value=None):
             res = NPUProfilingParser({}, {})
             res._hccl_pid = 7
@@ -67,8 +75,10 @@ class TestNPUProfilingParser(unittest.TestCase):
             self.assertEqual(len(res._comm_list), 1)
 
     def test_picking_task_queue_data(self):
-        with patch("compare_backend.profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"), \
-                patch("compare_backend.profiling_parser.npu_profiling_parser.NPUProfilingParser.__init__",
+        with patch("msprof_analyze.compare_tools.compare_backend.profiling_parser."
+                   "base_profiling_parser.BaseProfilingParser.__init__"), \
+                patch("msprof_analyze.compare_tools.compare_backend.profiling_parser."
+                      "npu_profiling_parser.NPUProfilingParser.__init__",
                       return_value=None):
             res = NPUProfilingParser({}, {})
             res._enqueue_dict = {}
@@ -83,8 +93,10 @@ class TestNPUProfilingParser(unittest.TestCase):
             self.assertEqual(len(res._dequeue_data), 1)
 
     def test_picking_overlap_analysis_data(self):
-        with patch("compare_backend.profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"), \
-                patch("compare_backend.profiling_parser.npu_profiling_parser.NPUProfilingParser.__init__",
+        with patch("msprof_analyze.compare_tools.compare_backend.profiling_parser."
+                   "base_profiling_parser.BaseProfilingParser.__init__"), \
+                patch("msprof_analyze.compare_tools.compare_backend.profiling_parser."
+                      "npu_profiling_parser.NPUProfilingParser.__init__",
                       return_value=None):
             res = NPUProfilingParser({}, {})
             res._overlap_analysis = []
@@ -97,8 +109,10 @@ class TestNPUProfilingParser(unittest.TestCase):
                 self.assertFalse(result)
 
     def test_is_kernel_event(self):
-        with patch("compare_backend.profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"), \
-                patch("compare_backend.profiling_parser.npu_profiling_parser.NPUProfilingParser.__init__",
+        with patch("msprof_analyze.compare_tools.compare_backend.profiling_parser."
+                   "base_profiling_parser.BaseProfilingParser.__init__"), \
+                patch("msprof_analyze.compare_tools.compare_backend.profiling_parser."
+                      "npu_profiling_parser.NPUProfilingParser.__init__",
                       return_value=None):
             res = NPUProfilingParser({}, {})
             res._kernel_pid = 5
@@ -107,27 +121,34 @@ class TestNPUProfilingParser(unittest.TestCase):
             self.assertFalse(res._is_kernel_event(TraceEventBean({"pid": 1, "ph": "x"})))
 
     def test_is_flow_event(self):
-        with patch("compare_backend.profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"), \
-                patch("compare_backend.profiling_parser.npu_profiling_parser.NPUProfilingParser.__init__",
+        with patch("msprof_analyze.compare_tools.compare_backend.profiling_parser."
+                   "base_profiling_parser.BaseProfilingParser.__init__"), \
+                patch("msprof_analyze.compare_tools.compare_backend.profiling_parser."
+                      "npu_profiling_parser.NPUProfilingParser.__init__",
                       return_value=None):
             res = NPUProfilingParser({}, {})
             self.assertTrue(res._is_flow_event(TraceEventBean({"cat": "async_npu"})))
             self.assertFalse(res._is_flow_event(TraceEventBean({"cat": "async"})))
 
     def test_is_torch_op_event(self):
-        with patch("compare_backend.profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"), \
-                patch("compare_backend.profiling_parser.npu_profiling_parser.NPUProfilingParser.__init__",
+        with patch("msprof_analyze.compare_tools.compare_backend.profiling_parser."
+                   "base_profiling_parser.BaseProfilingParser.__init__"), \
+                patch("msprof_analyze.compare_tools.compare_backend.profiling_parser."
+                      "npu_profiling_parser.NPUProfilingParser.__init__",
                       return_value=None):
             res = NPUProfilingParser({}, {})
             self.assertTrue(res._is_torch_op_event(TraceEventBean({"cat": "cpu_op"})))
             self.assertFalse(res._is_torch_op_event(TraceEventBean({"cat": "async"})))
 
     def test_filter_meta_id(self):
-        with patch("compare_backend.profiling_parser.base_profiling_parser.BaseProfilingParser.__init__"), \
-                patch("compare_backend.profiling_parser.npu_profiling_parser.NPUProfilingParser.__init__",
+        with patch("msprof_analyze.compare_tools.compare_backend.profiling_parser."
+                   "base_profiling_parser.BaseProfilingParser.__init__"), \
+                patch("msprof_analyze.compare_tools.compare_backend.profiling_parser."
+                      "npu_profiling_parser.NPUProfilingParser.__init__",
                       return_value=None), \
                 patch(
-                    "compare_backend.profiling_parser.npu_profiling_parser.BaseProfilingParser._trace_event_generator",
+                    "compare_backend.profiling_parser.npu_profiling_parser.BaseProfilingParser."
+                    "_trace_event_generator",
                     return_value=(TraceEventBean(event) for event in self.meta_events)):
             res = NPUProfilingParser({}, {})
             res._hccl_op_tid_list = []

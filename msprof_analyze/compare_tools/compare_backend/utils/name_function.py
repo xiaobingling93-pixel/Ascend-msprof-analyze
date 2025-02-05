@@ -12,8 +12,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from compare_backend.utils.module_node import ModuleNode
-from compare_backend.utils.torch_op_node import TorchOpNode
+from msprof_analyze.compare_tools.compare_backend.utils.module_node import ModuleNode
+from msprof_analyze.compare_tools.compare_backend.utils.torch_op_node import TorchOpNode
 
 
 class NameFunction:

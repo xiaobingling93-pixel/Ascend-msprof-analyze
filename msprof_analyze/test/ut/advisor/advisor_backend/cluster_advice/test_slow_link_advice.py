@@ -14,7 +14,7 @@
 # limitations under the License.
 import unittest
 
-from advisor_backend.cluster_advice.slow_link_advice import SlowLinkAdvice
+from msprof_analyze.advisor.advisor_backend.cluster_advice.slow_link_advice import SlowLinkAdvice
 
 
 class TestSlowLinkAdvice(unittest.TestCase):

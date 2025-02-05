@@ -20,7 +20,7 @@ from unittest import mock
 from unittest.mock import MagicMock
 
 from msprof_analyze.prof_common.constant import Constant
-from advisor_backend.cluster_advice.kernel_cluster_advice import KernelClusterAdvice
+from msprof_analyze.advisor.advisor_backend.cluster_advice.kernel_cluster_advice import KernelClusterAdvice
 
 
 class TestClusterAdviceBase(unittest.TestCase):

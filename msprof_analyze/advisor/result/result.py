@@ -15,7 +15,6 @@
 
 import json
 import os
-import stat
 from collections import OrderedDict
 
 import click
@@ -26,7 +25,7 @@ from msprof_analyze.prof_common.additional_args_manager import AdditionalArgsMan
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.advisor.utils.utils import singleton, logger
 from msprof_analyze.advisor.config.config import Config
-from msprof_analyze.advisor.utils.file import FdOpen, check_dir_writable
+from msprof_analyze.advisor.utils.file import check_dir_writable
 from msprof_analyze.prof_common.file_manager import FileManager
 
 

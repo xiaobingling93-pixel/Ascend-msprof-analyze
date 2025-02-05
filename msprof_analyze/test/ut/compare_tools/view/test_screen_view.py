@@ -1,6 +1,6 @@
 import unittest
 
-from compare_backend.view.screen_view import ScreenView
+from msprof_analyze.compare_tools.compare_backend.view.screen_view import ScreenView
 
 
 class TestScreenView(unittest.TestCase):

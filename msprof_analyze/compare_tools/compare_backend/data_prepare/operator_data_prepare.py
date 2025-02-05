@@ -12,9 +12,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from compare_backend.profiling_parser.base_profiling_parser import ProfilingResult
-from compare_backend.utils.tree_builder import TreeBuilder
-
+from msprof_analyze.compare_tools.compare_backend.profiling_parser.base_profiling_parser import ProfilingResult
+from msprof_analyze.compare_tools.compare_backend.utils.tree_builder import TreeBuilder
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.logger import get_logger
 

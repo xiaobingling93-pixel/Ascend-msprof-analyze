@@ -16,9 +16,9 @@ import functools
 from typing import Dict
 import logging
 
-from common_func_advisor.constant import Constant
-from common_func_advisor.constant import CoreType
-from common_func_advisor.constant import PerfColor
+from msprof_analyze.advisor.advisor_backend.common_func_advisor.constant import Constant
+from msprof_analyze.advisor.advisor_backend.common_func_advisor.constant import CoreType
+from msprof_analyze.advisor.advisor_backend.common_func_advisor.constant import PerfColor
 
 logger = logging.getLogger()
 

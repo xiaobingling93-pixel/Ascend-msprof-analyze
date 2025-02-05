@@ -12,11 +12,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from compare_backend.profiling_parser.gpu_profiling_parser import GPUProfilingParser
-from compare_backend.profiling_parser.npu_profiling_parser import NPUProfilingParser
-from compare_backend.utils.args_manager import ArgsManager
-from compare_backend.utils.compare_args import Args
-
+from msprof_analyze.compare_tools.compare_backend.profiling_parser.gpu_profiling_parser import GPUProfilingParser
+from msprof_analyze.compare_tools.compare_backend.profiling_parser.npu_profiling_parser import NPUProfilingParser
+from msprof_analyze.compare_tools.compare_backend.utils.args_manager import ArgsManager
+from msprof_analyze.compare_tools.compare_backend.utils.compare_args import Args
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.logger import get_logger
 from msprof_analyze.prof_common.path_manager import PathManager

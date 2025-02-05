@@ -15,8 +15,8 @@
 
 import os
 from collections import defaultdict
-from common_func_advisor.constant import Constant
-from cluster_advice.cluster_advice_base import ClusterAdviceBase
+from msprof_analyze.advisor.advisor_backend.common_func_advisor.constant import Constant
+from msprof_analyze.advisor.advisor_backend.cluster_advice.cluster_advice_base import ClusterAdviceBase
 from msprof_analyze.prof_common.file_manager import FileManager
 
 

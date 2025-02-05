@@ -14,7 +14,6 @@
 # limitations under the License.
 import unittest
 import os
-import sys
 import yaml
 
 from msprof_analyze.advisor.analyzer.memory.memory_checker import MemoryOpsChecker

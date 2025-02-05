@@ -15,8 +15,8 @@
 
 import os
 import pandas as pd
-from common_func_advisor.constant import Constant as AdvisorConstant
-from cluster_advice.cluster_advice_base import ClusterAdviceBase
+from msprof_analyze.advisor.advisor_backend.common_func_advisor.constant import Constant as AdvisorConstant
+from msprof_analyze.advisor.advisor_backend.cluster_advice.cluster_advice_base import ClusterAdviceBase
 from cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
 from msprof_analyze.prof_common.file_manager import FileManager
 from msprof_analyze.prof_common.constant import Constant

@@ -12,11 +12,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from compare_backend.comparator.overall_performance_comparator import OverallPerformanceComparator
-from compare_backend.compare_bean.profiling_info import ProfilingInfo
-from compare_backend.generator.base_generator import BaseGenerator
-from compare_backend.view.screen_view import ScreenView
-
+from msprof_analyze.compare_tools.compare_backend.comparator.overall_performance_comparator \
+    import OverallPerformanceComparator
+from msprof_analyze.compare_tools.compare_backend.compare_bean.profiling_info import ProfilingInfo
+from msprof_analyze.compare_tools.compare_backend.generator.base_generator import BaseGenerator
+from msprof_analyze.compare_tools.compare_backend.view.screen_view import ScreenView
 from msprof_analyze.prof_common.logger import get_logger
 
 logger = get_logger()

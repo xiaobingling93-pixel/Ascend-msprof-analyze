@@ -14,8 +14,8 @@
 # limitations under the License.
 from collections import OrderedDict
 
-from compare_backend.comparator.base_comparator import BaseComparator
-from compare_backend.utils.common_func import update_order_id
+from msprof_analyze.compare_tools.compare_backend.comparator.base_comparator import BaseComparator
+from msprof_analyze.compare_tools.compare_backend.utils.common_func import update_order_id
 
 
 class ModuleStatisticComparator(BaseComparator):

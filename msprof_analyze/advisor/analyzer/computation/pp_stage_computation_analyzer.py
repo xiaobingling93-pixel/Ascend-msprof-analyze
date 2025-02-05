@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-import os
 from multiprocessing import Manager
 
 from msprof_analyze.advisor.analyzer.base_analyzer import BaseAnalyzer

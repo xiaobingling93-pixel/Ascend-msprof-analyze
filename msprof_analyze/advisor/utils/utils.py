@@ -29,12 +29,9 @@ from functools import wraps
 from typing import Any, Set
 import ijson
 import click
-import requests
-from requests.adapters import HTTPAdapter
 from tqdm import tqdm
 
 from msprof_analyze.prof_common.constant import Constant
-from msprof_analyze.advisor.common.version_control import VersionControl
 from msprof_analyze.advisor.utils.log import init_logger, get_log_level
 
 logger = logging.getLogger()

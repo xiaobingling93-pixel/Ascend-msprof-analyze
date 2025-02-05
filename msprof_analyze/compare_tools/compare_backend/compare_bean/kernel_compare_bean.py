@@ -12,9 +12,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from compare_backend.utils.common_func import calculate_diff_ratio, convert_to_float
-from compare_backend.utils.excel_config import ExcelConfig
-
+from msprof_analyze.compare_tools.compare_backend.utils.common_func import calculate_diff_ratio, convert_to_float
+from msprof_analyze.compare_tools.compare_backend.utils.excel_config import ExcelConfig
 from msprof_analyze.prof_common.constant import Constant
 
 

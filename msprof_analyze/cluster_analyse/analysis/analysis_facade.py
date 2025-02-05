@@ -12,18 +12,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import threading
 from multiprocessing import Process, Value, Lock
 from tqdm import tqdm
 
-from analysis.communication_analysis import CommunicationAnalysis
-from analysis.communication_analysis import CommunicationAnalysisOptimized
-from analysis.comm_matrix_analysis import CommMatrixAnalysis
-from analysis.comm_matrix_analysis import CommMatrixAnalysisOptimized
-from analysis.step_trace_time_analysis import StepTraceTimeAnalysis
-from analysis.host_info_analysis import HostInfoAnalysis
-from analysis.cluster_base_info_analysis import ClusterBaseInfoAnalysis
-from common_func.context import Context
+from msprof_analyze.cluster_analyse.analysis.communication_analysis import CommunicationAnalysis
+from msprof_analyze.cluster_analyse.analysis.communication_analysis import CommunicationAnalysisOptimized
+from msprof_analyze.cluster_analyse.analysis.comm_matrix_analysis import CommMatrixAnalysis
+from msprof_analyze.cluster_analyse.analysis.comm_matrix_analysis import CommMatrixAnalysisOptimized
+from msprof_analyze.cluster_analyse.analysis.step_trace_time_analysis import StepTraceTimeAnalysis
+from msprof_analyze.cluster_analyse.analysis.host_info_analysis import HostInfoAnalysis
+from msprof_analyze.cluster_analyse.analysis.cluster_base_info_analysis import ClusterBaseInfoAnalysis
+from msprof_analyze.cluster_analyse.common_func.context import Context
 
 from msprof_analyze.cluster_analyse.common_func.analysis_loader import get_class_from_name
 from msprof_analyze.prof_common.constant import Constant

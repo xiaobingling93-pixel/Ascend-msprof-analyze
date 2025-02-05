@@ -12,13 +12,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from compare_backend.generator.detail_performance_generator import DetailPerformanceGenerator
-from compare_backend.generator.overall_performance_generator import OverallPerformanceGenerator
-from compare_backend.interface.overall_interface import OverallInterface
-from compare_backend.interface.compare_interface import CompareInterface
-from compare_backend.profiling_parser.gpu_profiling_parser import GPUProfilingParser
-from compare_backend.profiling_parser.npu_profiling_parser import NPUProfilingParser
-from compare_backend.utils.args_manager import ArgsManager
+from msprof_analyze.compare_tools.compare_backend.generator.detail_performance_generator \
+    import DetailPerformanceGenerator
+from msprof_analyze.compare_tools.compare_backend.generator.overall_performance_generator \
+    import OverallPerformanceGenerator
+from msprof_analyze.compare_tools.compare_backend.interface.overall_interface import OverallInterface
+from msprof_analyze.compare_tools.compare_backend.interface.compare_interface import CompareInterface
+from msprof_analyze.compare_tools.compare_backend.profiling_parser.gpu_profiling_parser import GPUProfilingParser
+from msprof_analyze.compare_tools.compare_backend.profiling_parser.npu_profiling_parser import NPUProfilingParser
+from msprof_analyze.compare_tools.compare_backend.utils.args_manager import ArgsManager
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.additional_args_manager import AdditionalArgsManager
 from msprof_analyze.prof_common.logger import get_logger

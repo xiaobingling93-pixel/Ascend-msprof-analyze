@@ -15,8 +15,8 @@
 import logging
 from decimal import Decimal
 
-from common_func_advisor.constant import Constant
-from timeline_advice.timeline_advice_base import TimelineAdviceBase
+from msprof_analyze.advisor.advisor_backend.common_func_advisor.constant import Constant
+from msprof_analyze.advisor.advisor_backend.timeline_advice.timeline_advice_base import TimelineAdviceBase
 
 logger = logging.getLogger()
 

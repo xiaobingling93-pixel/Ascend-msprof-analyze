@@ -1,8 +1,8 @@
 import unittest
 
-from compare_backend.compare_bean.origin_data_bean.compare_event import MemoryEvent
-from compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
-from compare_backend.utils.tree_builder import TreeBuilder
+from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.compare_event import MemoryEvent
+from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
+from msprof_analyze.compare_tools.compare_backend.utils.tree_builder import TreeBuilder
 
 
 class TestUtils(unittest.TestCase):

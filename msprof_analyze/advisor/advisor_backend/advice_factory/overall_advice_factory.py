@@ -12,9 +12,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from advice_factory.advice_factory import AdviceFactory
-from common_func_advisor.constant import Constant
-from overall_advice.overall_summary_advice import OverallSummaryAdvice
+from msprof_analyze.advisor.advisor_backend.advice_factory.advice_factory import AdviceFactory
+from msprof_analyze.advisor.advisor_backend.common_func_advisor.constant import Constant
+from msprof_analyze.advisor.advisor_backend.overall_advice.overall_summary_advice import OverallSummaryAdvice
 
 
 class OverallAdviceFactory(AdviceFactory):
