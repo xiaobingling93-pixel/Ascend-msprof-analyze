@@ -17,9 +17,8 @@ from decimal import Decimal
 
 import pandas as pd
 
-from compare_backend.utils.common_func import convert_to_float, convert_to_decimal
-from compare_backend.compare_config.compare_config import CompareConfig
-
+from msprof_analyze.compare_tools.compare_backend.utils.common_func import convert_to_float, convert_to_decimal
+from msprof_analyze.compare_tools.compare_backend.compare_config.compare_config import CompareConfig
 from msprof_analyze.prof_common.constant import Constant
 
 

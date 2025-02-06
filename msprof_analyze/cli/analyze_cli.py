@@ -13,13 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-import os
 import logging
 import click
-
-sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), "compare_tools"))
-sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), "cluster_analyse"))
 
 from msprof_analyze.prof_common.path_manager import PathManager
 from msprof_analyze.advisor.analyzer.analyzer_controller import AnalyzerController

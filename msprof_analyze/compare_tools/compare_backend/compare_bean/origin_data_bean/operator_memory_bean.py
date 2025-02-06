@@ -14,7 +14,7 @@
 # limitations under the License.
 from decimal import Decimal
 
-from compare_backend.utils.common_func import convert_to_float, convert_to_decimal
+from msprof_analyze.compare_tools.compare_backend.utils.common_func import convert_to_float, convert_to_decimal
 
 
 class OperatorMemoryBean:

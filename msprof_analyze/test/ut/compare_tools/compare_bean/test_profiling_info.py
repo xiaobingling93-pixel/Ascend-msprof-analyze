@@ -1,6 +1,6 @@
 import unittest
 
-from compare_backend.compare_bean.profiling_info import ProfilingInfo
+from msprof_analyze.compare_tools.compare_backend.compare_bean.profiling_info import ProfilingInfo
 
 
 class TestProfilingInfo(unittest.TestCase):

@@ -13,9 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import unittest
-import os
-import sys
-import yaml
 
 from msprof_analyze.advisor.dataset.timeline_op_collector.timeline_op_collector import (
     OpCompileCollector,

@@ -16,11 +16,6 @@
 import json
 import logging
 import math
-import os
-import traceback
-
-import ijson
-from tqdm import tqdm
 
 from msprof_analyze.advisor.common.timeline.event import TimelineEvent
 from msprof_analyze.advisor.utils.utils import get_file_path_from_directory

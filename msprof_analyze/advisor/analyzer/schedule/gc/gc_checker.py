@@ -21,7 +21,6 @@ from msprof_analyze.advisor.result.result import OptimizeResult
 from msprof_analyze.advisor.result.item import OptimizeItem, OptimizeRecord
 from msprof_analyze.advisor.utils.utils import convert_to_float, convert_to_int
 from msprof_analyze.prof_common.additional_args_manager import AdditionalArgsManager
-from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.file_manager import FileManager
 
 logger = logging.getLogger()

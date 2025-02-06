@@ -13,19 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
-import sys
 
-sys.path.append(
-    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "advisor_backend"))
-sys.path.append(
-    os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "compare_tools"))
-sys.path.append(
-    os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "cluster_analyse"))
-from common_func_advisor.constant import Constant
-from advisor_backend.advice_factory.cluster_advice_factory import ClusterAdviceFactory
-from advisor_backend.advice_factory.compute_advice_factory import ComputeAdviceFactory
-from advisor_backend.advice_factory.timeline_advice_factory import TimelineAdviceFactory
-from advisor_backend.advice_factory.overall_advice_factory import OverallAdviceFactory
+from msprof_analyze.advisor.advisor_backend.common_func_advisor.constant import Constant
+from msprof_analyze.advisor.advisor_backend.advice_factory.cluster_advice_factory import ClusterAdviceFactory
+from msprof_analyze.advisor.advisor_backend.advice_factory.compute_advice_factory import ComputeAdviceFactory
+from msprof_analyze.advisor.advisor_backend.advice_factory.timeline_advice_factory import TimelineAdviceFactory
+from msprof_analyze.advisor.advisor_backend.advice_factory.overall_advice_factory import OverallAdviceFactory
 
 
 class Interface:

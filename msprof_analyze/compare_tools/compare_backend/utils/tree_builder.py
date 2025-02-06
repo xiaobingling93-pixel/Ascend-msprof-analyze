@@ -15,9 +15,9 @@
 
 from queue import Queue
 
-from compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
-from compare_backend.utils.module_node import ModuleNode
-from compare_backend.utils.torch_op_node import TorchOpNode
+from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
+from msprof_analyze.compare_tools.compare_backend.utils.module_node import ModuleNode
+from msprof_analyze.compare_tools.compare_backend.utils.torch_op_node import TorchOpNode
 
 
 class TreeBuilder:

@@ -24,7 +24,6 @@ from msprof_analyze.advisor.common.graph.graph import Graph
 from msprof_analyze.advisor.common.graph.graph_parser import QueryGraphParser
 from msprof_analyze.advisor.dataset.graph_dataset import GraphDataset
 from msprof_analyze.advisor.common.graph.graph_match import find_isomorphisms
-from msprof_analyze.prof_common.additional_args_manager import AdditionalArgsManager
 
 logger = logging.getLogger()
 

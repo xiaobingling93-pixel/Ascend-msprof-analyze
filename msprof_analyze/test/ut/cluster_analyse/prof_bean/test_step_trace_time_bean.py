@@ -14,7 +14,7 @@
 # limitations under the License.
 import unittest
 
-from prof_bean.step_trace_time_bean import StepTraceTimeBean
+from msprof_analyze.cluster_analyse.prof_bean.step_trace_time_bean import StepTraceTimeBean
 
 
 class TestStepTraceTimeBean(unittest.TestCase):

@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from timeline_advice.timeline_advice_base import TimelineAdviceBase
+from msprof_analyze.advisor.advisor_backend.timeline_advice.timeline_advice_base import TimelineAdviceBase
 
 
 class OptimizerAdvice(TimelineAdviceBase):

@@ -15,7 +15,7 @@
 from collections import defaultdict
 import os
 
-from cluster_data_preprocess.data_preprocessor import DataPreprocessor
+from msprof_analyze.cluster_analyse.cluster_data_preprocess.data_preprocessor import DataPreprocessor
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.file_manager import FileManager
 from msprof_analyze.prof_common.logger import get_logger

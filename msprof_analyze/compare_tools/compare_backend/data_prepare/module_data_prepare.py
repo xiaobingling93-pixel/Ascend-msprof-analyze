@@ -15,11 +15,10 @@
 import copy
 from queue import Queue
 
-from compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
-from compare_backend.profiling_parser.base_profiling_parser import ProfilingResult
-from compare_backend.utils.module_node import ModuleNode
-from compare_backend.utils.tree_builder import TreeBuilder
-
+from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
+from msprof_analyze.compare_tools.compare_backend.profiling_parser.base_profiling_parser import ProfilingResult
+from msprof_analyze.compare_tools.compare_backend.utils.module_node import ModuleNode
+from msprof_analyze.compare_tools.compare_backend.utils.tree_builder import TreeBuilder
 from msprof_analyze.prof_common.constant import Constant
 
 

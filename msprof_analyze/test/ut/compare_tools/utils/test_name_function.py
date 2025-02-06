@@ -1,8 +1,8 @@
 import unittest
 
-from compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
-from compare_backend.utils.name_function import NameFunction
-from compare_backend.utils.torch_op_node import TorchOpNode
+from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
+from msprof_analyze.compare_tools.compare_backend.utils.name_function import NameFunction
+from msprof_analyze.compare_tools.compare_backend.utils.torch_op_node import TorchOpNode
 
 
 class Args:

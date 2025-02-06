@@ -14,7 +14,7 @@
 # limitations under the License.
 import unittest
 
-from advisor_backend.cluster_advice.slow_rank_advice import SlowRankAdvice
+from msprof_analyze.advisor.advisor_backend.cluster_advice.slow_rank_advice import SlowRankAdvice
 
 
 class TestSlowRankAdvice(unittest.TestCase):

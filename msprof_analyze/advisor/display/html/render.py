@@ -20,7 +20,6 @@ from collections import defaultdict, OrderedDict
 
 from jinja2 import Environment, FileSystemLoader
 from msprof_analyze.prof_common.constant import Constant
-
 from msprof_analyze.advisor.config.config import Config
 from msprof_analyze.advisor.utils.utils import singleton, safe_write
 

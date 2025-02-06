@@ -1,6 +1,7 @@
 import unittest
 
-from compare_backend.compare_bean.origin_data_bean.operator_memory_bean import OperatorMemoryBean
+from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.operator_memory_bean \
+    import OperatorMemoryBean
 
 
 class TestOperatorMemoryBean(unittest.TestCase):

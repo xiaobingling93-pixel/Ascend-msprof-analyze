@@ -19,8 +19,8 @@ import stat
 import csv
 import unittest
 
-from advisor_backend.interface import Interface
-from advisor_backend.compute_advice.npu_slow_advice import NpuSlowAdvice
+from msprof_analyze.advisor.advisor_backend.interface import Interface
+from msprof_analyze.advisor.advisor_backend.compute_advice.npu_slow_advice import NpuSlowAdvice
 
 
 class TestNpuSlowAdvice(unittest.TestCase):

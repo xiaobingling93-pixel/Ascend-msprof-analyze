@@ -15,7 +15,7 @@
 import os.path
 import re
 
-from compare_backend.utils.singleton import Singleton
+from msprof_analyze.compare_tools.compare_backend.utils.singleton import Singleton
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.file_manager import FileManager
 from msprof_analyze.prof_common.logger import get_logger

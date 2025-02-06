@@ -12,11 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import os
-import sys
 import click
-
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.cluster_analyse.cluster_analysis import ALL_FEATURE_LIST, Interface

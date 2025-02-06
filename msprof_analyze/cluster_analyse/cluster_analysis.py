@@ -18,10 +18,10 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from analysis.analysis_facade import AnalysisFacade
-from cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
-from cluster_data_preprocess.mindspore_data_preprocessor import MindsporeDataPreprocessor
-from communication_group.communication_group_generator import CommunicationGroupGenerator
+from msprof_analyze.cluster_analyse.analysis.analysis_facade import AnalysisFacade
+from msprof_analyze.cluster_analyse.cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
+from msprof_analyze.cluster_analyse.cluster_data_preprocess.mindspore_data_preprocessor import MindsporeDataPreprocessor
+from msprof_analyze.cluster_analyse.communication_group.communication_group_generator import CommunicationGroupGenerator
 from msprof_analyze.prof_common.additional_args_manager import AdditionalArgsManager
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.file_manager import FileManager

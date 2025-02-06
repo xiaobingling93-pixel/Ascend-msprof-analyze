@@ -12,9 +12,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from compare_backend.compare_bean.origin_data_bean.compare_event import MemoryEvent
-from compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
-
+from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.compare_event import MemoryEvent
+from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
 from msprof_analyze.prof_common.constant import Constant
 
 

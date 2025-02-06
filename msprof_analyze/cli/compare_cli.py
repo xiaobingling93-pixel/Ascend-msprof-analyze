@@ -13,11 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import ast
-import os
-import sys
 import click
-
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from msprof_analyze.prof_common.path_manager import PathManager
 from msprof_analyze.prof_common.constant import Constant

@@ -18,7 +18,7 @@ import unittest
 from unittest import mock
 from unittest.mock import MagicMock
 
-from advisor_backend.cluster_advice.cluster_advice_base import ClusterAdviceBase
+from msprof_analyze.advisor.advisor_backend.cluster_advice.cluster_advice_base import ClusterAdviceBase
 
 
 class MockChildClusterAdvice(ClusterAdviceBase):
@@ -70,7 +70,8 @@ class TestClusterAdviceBase(unittest.TestCase):
 
     def test_cluster_analyze_normal(self):
         mock_inst = MockChildClusterAdvice(self.tmp_dir)
-        with mock.patch("advisor_backend.cluster_advice.cluster_advice_base.Interface") as mock_if:
+        with mock.patch("msprof_analyze.advisor.advisor_backend.cluster_advice."
+                        "cluster_advice_base.Interface") as mock_if:
             mock_if_inst = mock_if.return_value
             mock_if_inst.run = MagicMock(name="run")
             mock_inst.cluster_analyze()
@@ -79,7 +80,8 @@ class TestClusterAdviceBase(unittest.TestCase):
     def test_cluster_analyze_abnormal(self):
         mock_inst = MockChildClusterAdvice(self.tmp_dir)
         with self.assertRaises(ValueError):
-            with mock.patch("advisor_backend.cluster_advice.cluster_advice_base.Interface") as mock_if:
+            with mock.patch("msprof_analyze.advisor.advisor_backend.cluster_advice."
+                            "cluster_advice_base.Interface") as mock_if:
                 mock_if_inst = mock_if.return_value
                 mock_if_inst.run = mock.Mock(name="run", side_effect=Exception('Error!'))
                 mock_inst.cluster_analyze()

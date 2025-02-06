@@ -12,10 +12,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from common_func_advisor.constant import Constant
-from advice_factory.advice_factory import AdviceFactory
-from compute_advice.npu_fused_advice import NpuFusedAdvice
-from compute_advice.npu_slow_advice import NpuSlowAdvice
+from msprof_analyze.advisor.advisor_backend.common_func_advisor.constant import Constant
+from msprof_analyze.advisor.advisor_backend.advice_factory.advice_factory import AdviceFactory
+from msprof_analyze.advisor.advisor_backend.compute_advice.npu_fused_advice import NpuFusedAdvice
+from msprof_analyze.advisor.advisor_backend.compute_advice.npu_slow_advice import NpuSlowAdvice
 
 
 class ComputeAdviceFactory(AdviceFactory):

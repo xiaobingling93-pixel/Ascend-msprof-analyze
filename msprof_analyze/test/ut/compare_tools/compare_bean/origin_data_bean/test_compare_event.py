@@ -1,7 +1,10 @@
 import unittest
 
-from compare_backend.compare_bean.origin_data_bean.compare_event import KernelEvent, MemoryEvent
-from compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
+from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.compare_event import (
+    KernelEvent, 
+    MemoryEvent
+)
+from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
 
 
 class TestKernelEvent(unittest.TestCase):

@@ -22,7 +22,6 @@ from tqdm import tqdm
 from msprof_analyze.advisor.analyzer.base_analyzer import BaseAnalyzer
 from msprof_analyze.advisor.display.prompt.base_prompt import BasePrompt
 from msprof_analyze.prof_common.constant import Constant
-from msprof_analyze.advisor.common.analyzer_scopes import SupportedScopes
 from msprof_analyze.advisor.common.timeline.event import TimelineEvent
 from msprof_analyze.advisor.config.config import Config
 from msprof_analyze.advisor.dataset.timeline_event_dataset import ScheduleAnalysisDataset
@@ -30,7 +29,6 @@ from msprof_analyze.advisor.result.item import OptimizeItem, OptimizeRecord
 from msprof_analyze.advisor.utils.utils import format_timeline_result
 from msprof_analyze.advisor.common.timeline.fusion_ops_db import init_timeline_ops_db
 from msprof_analyze.advisor.display.html.priority_background_color import PriorityBackgroundColor
-from msprof_analyze.prof_common.additional_args_manager import AdditionalArgsManager
 
 logger = logging.getLogger()
 

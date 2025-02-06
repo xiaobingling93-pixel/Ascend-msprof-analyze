@@ -16,8 +16,8 @@ import os
 
 from xlsxwriter import Workbook
 
-from compare_backend.view.base_view import BaseView
-from compare_backend.view.work_sheet_creator import WorkSheetCreator
+from msprof_analyze.compare_tools.compare_backend.view.base_view import BaseView
+from msprof_analyze.compare_tools.compare_backend.view.work_sheet_creator import WorkSheetCreator
 from msprof_analyze.prof_common.constant import Constant
 
 

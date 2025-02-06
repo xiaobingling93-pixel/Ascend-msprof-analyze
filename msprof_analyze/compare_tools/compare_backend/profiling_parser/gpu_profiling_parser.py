@@ -15,8 +15,8 @@
 import sys
 from collections import defaultdict, Counter
 
-from compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
-from compare_backend.profiling_parser.base_profiling_parser import BaseProfilingParser
+from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
+from msprof_analyze.compare_tools.compare_backend.profiling_parser.base_profiling_parser import BaseProfilingParser
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.logger import get_logger
 

@@ -13,8 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-
 from abc import abstractmethod
 from dataclasses import dataclass
 from dataclasses import field

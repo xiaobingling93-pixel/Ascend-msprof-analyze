@@ -14,7 +14,7 @@
 # limitations under the License.
 from collections import defaultdict
 
-from cluster_data_preprocess.data_preprocessor import DataPreprocessor
+from msprof_analyze.cluster_analyse.cluster_data_preprocess.data_preprocessor import DataPreprocessor
 
 from msprof_analyze.prof_common.logger import get_logger
 

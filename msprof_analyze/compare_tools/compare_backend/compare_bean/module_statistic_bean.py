@@ -14,9 +14,8 @@
 # limitations under the License.
 import re
 
-from compare_backend.utils.common_func import calculate_diff_ratio
-from compare_backend.utils.excel_config import ExcelConfig
-
+from msprof_analyze.compare_tools.compare_backend.utils.common_func import calculate_diff_ratio
+from msprof_analyze.compare_tools.compare_backend.utils.excel_config import ExcelConfig
 from msprof_analyze.prof_common.constant import Constant
 
 

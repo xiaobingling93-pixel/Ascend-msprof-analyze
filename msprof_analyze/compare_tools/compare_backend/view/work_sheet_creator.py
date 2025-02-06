@@ -14,7 +14,7 @@
 # limitations under the License.
 from xlsxwriter import Workbook
 
-from compare_backend.utils.excel_config import ExcelConfig, CellFormatType
+from msprof_analyze.compare_tools.compare_backend.utils.excel_config import ExcelConfig, CellFormatType
 
 
 class WorkSheetCreator:

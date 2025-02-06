@@ -13,12 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-import os
 import unittest
 from unittest import mock
 
-from communication_group.communication_group_generator import CommunicationGroupGenerator
+from msprof_analyze.cluster_analyse.communication_group.communication_group_generator import CommunicationGroupGenerator
 from msprof_analyze.prof_common.constant import Constant
 
 
@@ -34,7 +32,8 @@ class TestCommunicationGroupGenerator(unittest.TestCase):
         check.collective_group_dict = {
             'group1': {0}
         }
-        with mock.patch("msprof_analyze.prof_common.file_manager.FileManager.read_json_file", return_value=True):
+        with mock.patch("msprof_analyze.prof_common.file_manager.FileManager.read_json_file",
+                        return_value=True):
             check.generate_p2p_communication_group()
             ret = {0}
             self.assertEqual(ret, set(check.communication_group[Constant.P2P][0]))
@@ -45,7 +44,8 @@ class TestCommunicationGroupGenerator(unittest.TestCase):
             'group1': {1, 2, 3, 4},
             'group2': {5, 6, 7, 8},
         }
-        with mock.patch("msprof_analyze.prof_common.file_manager.FileManager.read_json_file", return_value=True):
+        with mock.patch("msprof_analyze.prof_common.file_manager.FileManager.read_json_file",
+                        return_value=True):
             check.generate_p2p_communication_group()
             ret_a = {1, 2, 3, 4}
             ret_b = {5, 6, 7, 8}
@@ -72,7 +72,8 @@ class TestCommunicationGroupGenerator(unittest.TestCase):
             'group15': {15, 13},
             'group16': {15, 14}
         }
-        with mock.patch("msprof_analyze.prof_common.file_manager.FileManager.read_json_file", return_value=True):
+        with mock.patch("msprof_analyze.prof_common.file_manager.FileManager.read_json_file",
+                        return_value=True):
             check.generate_p2p_communication_group()
             ret_a = {0, 1, 2, 3}
             ret_b = {4, 5, 6, 7}
@@ -103,7 +104,8 @@ class TestCommunicationGroupGenerator(unittest.TestCase):
             'group15': {12, 13, 14, 15},
             'group16': {12, 13, 14, 15}
         }
-        with mock.patch("msprof_analyze.prof_common.file_manager.FileManager.read_json_file", return_value=True):
+        with mock.patch("msprof_analyze.prof_common.file_manager.FileManager.read_json_file",
+                        return_value=True):
             check.generate_p2p_communication_group()
             ret_a = {0, 1, 2, 3, 4, 5, 6, 7}
             ret_b = {8, 9, 10, 11, 12, 13, 14, 15}

@@ -12,14 +12,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import configparser
 import os
 from email.utils import parseaddr
 from typing import Dict, List
 from urllib.parse import urlparse
 
-from .logger import get_logger
-from .path_manager import PathManager
+from msprof_analyze.prof_common.logger import get_logger
+from msprof_analyze.prof_common.path_manager import PathManager
 
 logger = get_logger()
 

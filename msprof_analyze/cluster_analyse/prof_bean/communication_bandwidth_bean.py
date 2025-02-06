@@ -14,7 +14,7 @@
 # limitations under the License.
 
 
-from common_func.table_constant import TableConstant
+from msprof_analyze.cluster_analyse.common_func.table_constant import TableConstant
 
 
 class CommunicationBandwidthBean:

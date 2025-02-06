@@ -16,10 +16,9 @@ import os
 import stat
 import shutil
 import unittest
-from unittest import mock
-from unittest.mock import MagicMock
 
-from advisor_backend.prof_bean_advisor.cluster_step_trace_time_bean import ClusterStepTraceTimeBean
+from msprof_analyze.advisor.advisor_backend.prof_bean_advisor.cluster_step_trace_time_bean \
+    import ClusterStepTraceTimeBean
 
 
 class TestClusterStepTraceTimeBean(unittest.TestCase):

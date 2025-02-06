@@ -26,13 +26,12 @@ from typing import List
 from typing import Optional
 from typing import Tuple
 
-from cluster_advice.cluster_advice_base import ClusterAdviceBase
-from cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
-from common_func_advisor.constant import Constant
-from common_func_advisor.trace_view_preprocessor import FineTraceViewData
-from common_func_advisor.trace_view_preprocessor import TraceViewPreProcessor
-
+from msprof_analyze.advisor.advisor_backend.cluster_advice.cluster_advice_base import ClusterAdviceBase
+from msprof_analyze.advisor.advisor_backend.common_func_advisor.constant import Constant
+from msprof_analyze.advisor.advisor_backend.common_func_advisor.trace_view_preprocessor import FineTraceViewData
+from msprof_analyze.advisor.advisor_backend.common_func_advisor.trace_view_preprocessor import TraceViewPreProcessor
 from msprof_analyze.advisor.advisor_backend.logger import Logger
+from msprof_analyze.cluster_analyse.cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
 from msprof_analyze.prof_common.file_manager import FileManager
 
 logger = Logger()

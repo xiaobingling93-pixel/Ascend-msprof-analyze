@@ -14,7 +14,7 @@
 # limitations under the License.
 import unittest
 
-from cluster_utils.parallel_strategy_calculator import ParallelStrategyCalculator
+from msprof_analyze.cluster_analyse.cluster_utils.parallel_strategy_calculator import ParallelStrategyCalculator
 
 
 class TestParallelStrategyCalculator(unittest.TestCase):

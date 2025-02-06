@@ -13,9 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from communication_group.communication_db_group import CommunicationDBGroup
-from communication_group.communication_db_group import CommunicationDBGroupOptimized
-from communication_group.communication_json_group import CommunicationJsonGroup
+from msprof_analyze.cluster_analyse.communication_group.communication_db_group import CommunicationDBGroup
+from msprof_analyze.cluster_analyse.communication_group.communication_db_group import CommunicationDBGroupOptimized
+from msprof_analyze.cluster_analyse.communication_group.communication_json_group import CommunicationJsonGroup
 from msprof_analyze.prof_common.constant import Constant
 
 

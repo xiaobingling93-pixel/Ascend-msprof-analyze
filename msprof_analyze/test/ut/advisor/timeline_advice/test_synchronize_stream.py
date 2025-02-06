@@ -14,7 +14,6 @@
 # limitations under the License.
 import unittest
 import os
-import sys
 import yaml
 
 from msprof_analyze.advisor.analyzer.schedule.synchronize_stream.synchronize_stream_checker import SynchronizeStreamChecker

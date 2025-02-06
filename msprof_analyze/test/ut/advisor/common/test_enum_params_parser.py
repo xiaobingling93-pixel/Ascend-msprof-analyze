@@ -13,12 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import unittest
-import sys
-import os
-
-profiler_root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
-sys.path.append(os.path.join(profiler_root_dir, "compare_tools"))
-sys.path.append(os.path.join(profiler_root_dir, "cluster_analyse"))
 
 from msprof_analyze.advisor.common.enum_params_parser import EnumParamsParser
 from msprof_analyze.test.ut.advisor.advisor_backend.tools.tool import recover_env

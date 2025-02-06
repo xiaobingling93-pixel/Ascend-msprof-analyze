@@ -14,8 +14,8 @@
 # limitations under the License.
 from math import isclose
 
-from compare_backend.comparator.base_comparator import BaseComparator
-from compare_backend.utils.excel_config import ExcelConfig
+from msprof_analyze.compare_tools.compare_backend.comparator.base_comparator import BaseComparator
+from msprof_analyze.compare_tools.compare_backend.utils.excel_config import ExcelConfig
 
 from msprof_analyze.prof_common.constant import Constant
 

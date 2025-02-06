@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import copy
-from common_func.table_constant import TableConstant
+from msprof_analyze.cluster_analyse.common_func.table_constant import TableConstant
 from msprof_analyze.prof_common.constant import Constant
 
 

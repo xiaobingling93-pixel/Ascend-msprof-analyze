@@ -1,6 +1,6 @@
 import unittest
 
-from compare_backend.comparator.operator_comparator import OperatorComparator
+from msprof_analyze.compare_tools.compare_backend.comparator.operator_comparator import OperatorComparator
 
 
 class MockBean:

@@ -21,7 +21,7 @@ import logging
 from datetime import datetime
 from datetime import timezone
 
-from msprof_analyze.prof_common.utils import PrintUtils
+logger = logging.getLogger("affinity_cpu_bind")
 
 
 class PathManager:
@@ -65,7 +65,7 @@ class BindCoreManager():
         self.args_parse()
 
         if not bind_core_manager.get_npu_info():
-            PrintUtils.print_error('Failed to get current npus info')
+            logger.error('Failed to get current npus info')
             exit()
         if not bind_core_manager.get_running_pid_on_npu():
             exit()
@@ -119,7 +119,7 @@ class BindCoreManager():
                 logging.info('Succeed to find running process %s on NPU %d', pids, npu_id)
                 if_running_process = True
         if not if_running_process:
-            PrintUtils.print_info(no_running_pids_on_npu_msg)
+            logger.info(no_running_pids_on_npu_msg)
         return if_running_process
 
     def get_npu_info(self) -> bool:
@@ -146,8 +146,7 @@ class BindCoreManager():
                     p = subprocess.run(set_affinity_cpu_cmd.split(), shell=False, capture_output=True)
                     logging.info(p.stdout.decode('utf-8'))
                 except subprocess.CalledProcessError:
-                    PrintUtils.print_error('Failed to bind process {} on NPU {} with cpu cores list {}'.format(pid,
-                        npu, affinity_cpu))
+                    logger.error(f'Failed to bind process {pid} on NPU {npu} with cpu cores list {affinity_cpu}')
 
                 logging.info('Succeed to bind process %s on NPU %d with cpu cores list %s', pid, npu, affinity_cpu)
 
@@ -168,7 +167,7 @@ class BindCoreManager():
                 args.time = 0
                 msg = f"Invalid parameter. The value of --time is not within the range " \
                       f"[0, {BindCoreManager.MAX_WAIT_TIME_BEFORE_BIND_CORE}]. --time has been set to 0 to continue."
-                PrintUtils.print_warning(msg)
+                logger.warning(msg)
             time.sleep(args.time)
 
     def _init_log_file(self):
@@ -210,8 +209,8 @@ class BindCoreManager():
         p = subprocess.run(get_npu_topo_cmd.split(), shell=False, capture_output=True)
         res = p.stdout.decode('utf-8').split()
         if not res:
-            PrintUtils.print_error('Failed to run get npu affinity info, '
-                                 'please check if driver version support cmd npu-smi info -t topo')
+            logger.error('Failed to run get npu affinity info, '
+                         'please check if driver version support cmd npu-smi info -t topo')
             return False
 
         index = 0
@@ -231,8 +230,8 @@ class BindCoreManager():
                         affinity_cpu for affinity_cpu in affinity_cpus)
                     index += 1
                 else:
-                    PrintUtils.print_error('Get affinity_cpu_list for {} npus, '
-                                         'more than real npu num: {}'.format(index + 1, len(self.npu_id_list)))
+                    logger.error(f'Get affinity_cpu_list for {index + 1} npus, '
+                                 f'more than real npu num: {len(self.npu_id_list)}')
                     return False
 
         for k in self.npu_affinity_cpu_dict.keys():
@@ -241,12 +240,12 @@ class BindCoreManager():
 
 
 if __name__ == '__main__':
-    PrintUtils.print_info('Begin to run bind-cores script...')
+    logger.info('Begin to run bind-cores script...')
 
     bind_core_manager = BindCoreManager()
     try:
         bind_core_manager.run()
     except Exception as exception:
-        PrintUtils.print_error(f"{exception}")
+        logger.error(f"{exception}")
 
-    PrintUtils.print_info('End to run bind-cores script, the log is saved in {}'.format(bind_core_manager.log_file))
+    logger.info(f'End to run bind-cores script, the log is saved in {bind_core_manager.log_file}')

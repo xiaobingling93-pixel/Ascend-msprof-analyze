@@ -16,12 +16,14 @@ import os
 import sys
 from math import ceil
 
-from compare_backend.compare_bean.origin_data_bean.kernel_details_bean import KernelDetailsBean
-from compare_backend.compare_bean.origin_data_bean.memory_record_bean import MemoryRecordBean
-from compare_backend.compare_bean.origin_data_bean.operator_memory_bean import OperatorMemoryBean
-from compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
-from compare_backend.profiling_parser.base_profiling_parser import BaseProfilingParser
-
+from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.kernel_details_bean \
+    import KernelDetailsBean
+from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.memory_record_bean \
+    import MemoryRecordBean
+from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.operator_memory_bean \
+    import OperatorMemoryBean
+from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
+from msprof_analyze.compare_tools.compare_backend.profiling_parser.base_profiling_parser import BaseProfilingParser
 from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.op_stastic_bean import OpStatisticBean
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.file_manager import FileManager
