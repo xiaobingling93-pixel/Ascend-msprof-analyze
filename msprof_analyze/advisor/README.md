@@ -103,6 +103,7 @@ msprof-analyze advisor命令行包含如下三个参数：
 | | SyncBatchNorm Issues | BatchNorm同步检测 | PyTorch、MindSpore |
 | | Synchronize Stream Issues | 流同步检测 | PyTorch、MindSpore |
 | | GC Analysis | 识别异常垃圾回收事件。需要Ascend PyTorch Profiler采集时开启experimental_config下的gc_delect_threshold功能 | PyTorch |
+| | Fusible Operator Analysis | 检测具有Host瓶颈或者MTE瓶颈的算子序列，可用于代码优化或开发可融合算子 | PyTorch、MindSpore |
 | dataloader | Slow Dataloader Issues | 异常dataloader检测 | PyTorch、MindSpore |
 | memory | Memory Operator Issues | 识别异常的内存申请释放操作 | PyTorch、MindSpore |
 | comparison | Kernel compare of Rank\* Step\* and Rank\* Step\* | 识别标杆和待比对性能数据的Kernel数据（无标杆场景是集群内部快慢卡的性能数据对比，有标杆场景是两个集群之间存在明显耗时差异的相同卡之间的性能数据对比） | PyTorch、MindSpore |
@@ -253,7 +254,22 @@ dataloader模块包含Slow Dataloader Issues，主要检测异常高耗时的dat
 
 上图中的`pin_memory`（内存锁定）和`num_workers`（数据加载是子流程数量）参数为[数据加载优化](https://www.hiascend.com/document/detail/zh/Pytorch/60RC2/ptmoddevg/trainingmigrguide/performance_tuning_0019.html)使用。
 
-schedule模块包GC Analysis、含亲和API、aclOpCompile、SyncBatchNorm、SynchronizeStream等多项检测。
+schedule模块包GC Analysis、含亲和API、aclOpCompile、SyncBatchNorm、SynchronizeStream和Fusible Operator Analysis等多项检测。
+
+其中Fusible Operator Analysis解析结果仅打屏展示和保存在`mstt_advisor_{timestamp}.xlsx`文件中，包含“基于host瓶颈的算子序列分析”和“基于mte瓶颈的算子序列分析”页签，如下图：
+
+![Fusible Operator Analysis](/img/Fusible Operator Analysis.png)
+
+| 字段               | 说明                                                         |
+| ------------------ | ------------------------------------------------------------ |
+| start index        | 序列起始算子在kernel details.csv或op_summary.csv中索引位置（不包含表头，起始索引为0）。 |
+| end index          | 序列末尾算子在kernel details.csv或op_summary.csv中索引位置。 |
+| total time(us)     | 算子序列总耗时（包含算子间隙），单位us。                     |
+| execution time(us) | 序列中算子执行总耗时，单位us。                               |
+| mte time(us)       | 序列中算子搬运总耗时，单位us。                               |
+| occurrences        | 序列出现次数。                                               |
+| mte bound          | 是否为MTE瓶颈。                                              |
+| host bound         | 是否为Host瓶颈。                                             |
 
 如下图示例，GC Analysis提示存在异常垃圾回收事件，用户可以通过有效的Python内存管理、使用`gc.set_threshold()`调整垃圾回收阈值、使用gc.disable()禁用gc等方法处理GC问题。
 
