@@ -14,7 +14,7 @@
 # limitations under the License.
 import os
 
-from common_func.path_manager import PathManager
+from msprof_analyze.prof_common.path_manager import PathManager
 
 
 class AdviceFactory:

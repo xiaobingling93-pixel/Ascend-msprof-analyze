@@ -91,17 +91,3 @@ def convert_to_int(num):
     except (ValueError, NameError):
         logger.error(f"Can not convert %s to int", num)
     return 0
-
-
-class PrintUtils:
-    @staticmethod
-    def print_warning(msg):
-        print("[WARNING] " + msg)
-
-    @staticmethod
-    def print_info(msg):
-        print("[INFO] " + msg)
-
-    @staticmethod
-    def print_error(msg):
-        print("[ERROR] " + msg)

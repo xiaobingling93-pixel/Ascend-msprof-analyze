@@ -14,7 +14,7 @@
 # limitations under the License.
 import os
 
-from msprof_analyze.cluster_analyse.common_func.db_manager import DBManager
+from msprof_analyze.prof_common.db_manager import DBManager
 from msprof_analyze.cluster_analyse.communication_group.base_communication_group import BaseCommunicationGroup
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.logger import get_logger

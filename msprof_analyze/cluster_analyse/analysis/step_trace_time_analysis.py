@@ -14,7 +14,7 @@
 # limitations under the License.
 import os
 
-from msprof_analyze.cluster_analyse.common_func.db_manager import DBManager
+from msprof_analyze.prof_common.db_manager import DBManager
 from msprof_analyze.cluster_analyse.common_func.utils import increase_shared_value
 from msprof_analyze.cluster_analyse.cluster_utils.parallel_strategy_calculator import ParallelStrategyCalculator
 from msprof_analyze.cluster_analyse.prof_bean.step_trace_time_bean import StepTraceTimeBean

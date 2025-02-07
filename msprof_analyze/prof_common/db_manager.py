@@ -18,8 +18,7 @@ import sqlite3
 
 from msprof_analyze.cluster_analyse.common_func.empty_class import EmptyClass
 from msprof_analyze.cluster_analyse.common_func.tables_config import TablesConfig
-from msprof_analyze.cluster_analyse.common_func.sql_extention_func import SqlExtentionAggregateFunc
-
+from msprof_analyze.prof_common.sql_extention_func import SqlExtentionAggregateFunc
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.file_manager import check_db_path_valid
 from msprof_analyze.prof_common.logger import get_logger
@@ -123,9 +122,9 @@ class DBManager:
                 conn.commit()
                 return True
         except sqlite3.Error as err:
-            PrintUtils.print_error(f"{err}")
+            logger.error(err)
             return False
-        PrintUtils.print_error("conn is invalid param")
+        logger.error("conn is invalid param")
         return False
 
     @staticmethod
@@ -139,9 +138,9 @@ class DBManager:
                 conn.commit()
                 return True
         except sqlite3.Error as err:
-            PrintUtils.print_error(f"{err}")
+            logger.error(err)
             return False
-        PrintUtils.print_error("conn is invalid param")
+        logger.error("conn is invalid param")
         return False
 
     @staticmethod

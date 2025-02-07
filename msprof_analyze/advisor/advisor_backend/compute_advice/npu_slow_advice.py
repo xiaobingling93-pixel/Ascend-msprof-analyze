@@ -19,7 +19,7 @@ import logging
 
 import pandas as pd
 
-from msprof_analyze.cluster_analyse.common_func.path_manager import PathManager
+from msprof_analyze.prof_common.path_manager import PathManager
 from msprof_analyze.advisor.advisor_backend.compute_advice.compute_advice_base import ComputeAdviceBase
 from msprof_analyze.advisor.advisor_backend.compute_advice.npu_fused.op_perf import OpPerfFactory
 from msprof_analyze.advisor.advisor_backend.common_func_advisor.constant import Constant, PerfColor

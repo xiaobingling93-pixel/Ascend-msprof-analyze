@@ -18,7 +18,7 @@ from collections import defaultdict
 
 from msprof_analyze.cluster_analyse.analysis.base_analysis import BaseAnalysis
 from msprof_analyze.cluster_analyse.common_func.table_constant import TableConstant
-from msprof_analyze.cluster_analyse.common_func.db_manager import DBManager
+from msprof_analyze.prof_common.db_manager import DBManager
 from msprof_analyze.cluster_analyse.common_func.utils import increase_shared_value
 from msprof_analyze.cluster_analyse.prof_bean.communication_bandwidth_bean import CommunicationBandwidthBean
 from msprof_analyze.cluster_analyse.prof_bean.communication_time_bean import CommunicationTimeBean
