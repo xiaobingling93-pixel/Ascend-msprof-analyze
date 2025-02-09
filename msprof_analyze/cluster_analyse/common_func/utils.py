@@ -79,3 +79,16 @@ def convert_unit(df: pd.DataFrame, src_unit, dst_unit):
 def increase_shared_value(shared_value: Value, lock: Lock):
     with lock:
         shared_value.value += 1
+
+
+def double_hash(data):
+    uint32_bits = 32
+    uint32_max = 0xFFFFFFFF  # 32 位无符号整数的最大值
+    prime = [29, 131]
+    hash_values = [0, 0]
+
+    for d in data:
+        hash_values[0] = (hash_values[0] * prime[0] + ord(d)) & uint32_max
+        hash_values[1] = (hash_values[1] * prime[1] + ord(d)) & uint32_max
+
+    return ((hash_values[0] << uint32_bits) | hash_values[1])

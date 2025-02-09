@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import os
+from copy import deepcopy
  
 from msprof_analyze.cluster_analyse.communication_group.base_communication_group import BaseCommunicationGroup
 from msprof_analyze.prof_common.file_manager import FileManager
@@ -26,8 +27,10 @@ class CommunicationJsonGroup(BaseCommunicationGroup):
         super().__init__(params)
 
     def dump_data(self):
+        res = deepcopy(self.communication_group)
+        res[self.KEY_PARALLEL_GROUP_INFO] = self.comm_group_parallel_info_df.to_dict(orient="records")
         FileManager.create_json_file(
-            self.cluster_analysis_output_path, self.communication_group, self.COMMUNICATION_GROUP_JSON
+            self.cluster_analysis_output_path, res, self.COMMUNICATION_GROUP_JSON
         )
 
     def read_communication_func(self: any, params: tuple):

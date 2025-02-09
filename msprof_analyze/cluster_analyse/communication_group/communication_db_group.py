@@ -76,12 +76,9 @@ class CommunicationDBGroup(BaseCommunicationGroup):
         return rank_id, comm_data, comm_matrix_data
 
     def dump_data(self):
-        res = []
-        for data_type, data_list in self.communication_group.items():
-            for data in data_list:
-                rank_set = "(" + ",".join(str(i) for i in data) + ")"
-                data = [data_type, rank_set]
-                res.append(data)
+        self.comm_group_parallel_info_df["rank_set"] = (self.comm_group_parallel_info_df["rank_set"].
+                                                        apply(lambda x:  "(" + ",".join(str(i) for i in x) + ")"))
+        res = self.comm_group_parallel_info_df.values.tolist()
         dump_group_db(res, self.COMMUNICATION_GROUP_TABLE, self.cluster_analysis_output_path)
 
 
@@ -148,16 +145,9 @@ class CommunicationDBGroupOptimized(BaseCommunicationGroup):
         return comm_data_dict
 
     def dump_data(self):
-        res = []
-        for data_type, data_list in self.communication_group.items():
-            if data_type == Constant.P2P:
-                for data in data_list:
-                    rank_set = "(" + ",".join(str(i) for i in data) + ")"
-                    res.append([data_type, "", rank_set])
-                continue
-            for group_name, data in data_list:
-                rank_set = "(" + ",".join(str(i) for i in data) + ")"
-                res.append([data_type, group_name, rank_set])
+        self.comm_group_parallel_info_df["rank_set"] = (self.comm_group_parallel_info_df["rank_set"].
+                                                        apply(lambda x:  "(" + ",".join(str(i) for i in x) + ")"))
+        res = self.comm_group_parallel_info_df.values.tolist()
         dump_group_db(res, self.COMMUNICATION_GROUP_MAPPING_TABLE, self.cluster_analysis_output_path)
 
     def _merge_data_with_rank(self, rank_id: int, data_list: list):

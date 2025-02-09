@@ -18,15 +18,21 @@ from abc import abstractmethod
 from collections import defaultdict
 from copy import deepcopy
 from multiprocessing import Pool
+import pandas as pd
 
 from msprof_analyze.cluster_analyse.cluster_utils.data_transfer_adapter import DataTransferAdapter
+from msprof_analyze.cluster_analyse.common_func.utils import double_hash
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.logger import get_logger
+from msprof_analyze.prof_common.file_manager import FileManager
 
 logger = get_logger()
 
 
 class BaseCommunicationGroup:
+    KEY_PARALLEL_GROUP_INFO = "parallel_group_info"
+    KEY_COMM_GROUP_PARALLEL_INFO = "comm_group_parallel_info"
+
     def __init__(self, params: dict):
         self.collection_path = params.get(Constant.COLLECTION_PATH)
         self.cluster_analysis_output_path = params.get(Constant.CLUSTER_ANALYSIS_OUTPUT_PATH)
@@ -38,9 +44,11 @@ class BaseCommunicationGroup:
         self.collective_group_dict = defaultdict(set)
         self.p2p_comm_group = []
         self.communication_group = {}
+        self.parallel_group_info = {}
         self.communication_ops = []
         self.matrix_ops = []
         self.adapter = DataTransferAdapter()
+        self.comm_group_parallel_info_df = None
 
     def load_communication_data(self):
         comm_op_dirs = []
@@ -112,6 +120,18 @@ class BaseCommunicationGroup:
     def read_communication_func(self, params: tuple):
         pass
 
+    def read_parallel_group_info(self):
+        for _, profiling_dir_path in self.data_map.items():
+            meta_file = os.path.join(profiling_dir_path, Constant.PROFILER_METADATA)
+            if not os.path.exists(meta_file):
+                continue
+            meta_data = FileManager.read_json_file(meta_file)
+            if self.KEY_PARALLEL_GROUP_INFO not in meta_data:
+                continue
+            for group_id, group_info in meta_data[self.KEY_PARALLEL_GROUP_INFO].items():
+                if group_id not in self.parallel_group_info:
+                    self.parallel_group_info[group_id] = group_info
+
     def analyze_communication_data(self):
         for rank_id, rank_id_comm_dict, rank_id_matrix_dict in self.rank_comm_dir_dict:
             for step_id, step_id_dict in rank_id_comm_dict.items():
@@ -145,9 +165,11 @@ class BaseCommunicationGroup:
     def generate(self):
         self.load_communication_data()
         self.analyze_communication_data()
+        self.read_parallel_group_info()
         self.set_p2p_groups()
         self.generate_collective_communication_group()
         self.generate_p2p_communication_group()
+        self.analyze_parallel_group_info()
         self.dump_data()
         return self.collect_comm_data()
 
@@ -214,6 +236,32 @@ class BaseCommunicationGroup:
                     Constant.GROUP_NAME: group_name,
                     Constant.COMM_OP_INFO: op_link_info
                 })
+
+    def analyze_parallel_group_info(self):
+        # create comm group dataframe
+        comm_group_cols = ["type", "rank_set", "group_name"]
+        comm_group_df = pd.DataFrame(columns=comm_group_cols)
+        for group_name, rank_set in self.collective_group_dict.items():
+            comm_group_df.loc[comm_group_df.shape[0]] = [Constant.COLLECTIVE, list(rank_set), group_name]
+
+        # create parallel group dataframe
+        parallel_group_cols = ["group_name", "group_id", "pg_name"]
+        parallel_group_df = pd.DataFrame(columns=parallel_group_cols)
+        for group_id, parallel_info in self.parallel_group_info.items():
+            group_name = str(double_hash(group_id))  # group_name is hashed group_id
+            pg_name = parallel_info.get("group_name", "")
+            if not pg_name:
+                continue
+            parallel_group_df.loc[parallel_group_df.shape[0]] = [group_name, group_id, pg_name]
+
+        # merge by group_name
+        df = pd.merge(comm_group_df, parallel_group_df, on='group_name', how='left')
+        # add p2p group
+        for rank_set in self.communication_group[Constant.P2P]:
+            df.loc[df.shape[0]] = [Constant.P2P, list(rank_set), None, None, None]
+        df.fillna("", inplace=True)
+
+        self.comm_group_parallel_info_df = df
 
 
 class UnionFind(object):
