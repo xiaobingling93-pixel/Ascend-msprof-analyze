@@ -50,8 +50,8 @@ class ClusterDataset(Dataset):
         if self.is_cluster_analysis_output_exist():
             return
         parameter = {
-            Constant.COLLECTION_PATH: self.collection_path,
-            Constant.ANALYSIS_MODE: "all",
+            Constant.PROFILING_PATH: self.collection_path,
+            Constant.MODE: "all",
             Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: self.output_path
         }
         logger.info("cluster analysis is in the process, please wait...")
