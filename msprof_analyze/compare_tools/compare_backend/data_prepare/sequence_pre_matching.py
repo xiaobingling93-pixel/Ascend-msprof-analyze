@@ -91,7 +91,7 @@ class SequencePreMatching:
             base_index += 1
             comparison_index += 1
         while comparison_index < comparison_data_len:
-            result_data.extend(self._match_torch_op([], comparison_data[0].get(Constant.OPS, [])))
+            result_data.extend(self._match_torch_op([], comparison_data[comparison_index].get(Constant.OPS, [])))
             comparison_index += 1
         return result_data
 
