@@ -49,6 +49,7 @@ class BaseRecipeAnalysis(ABC):
         rank_list = params.get(Constant.RANK_LIST, 'all')
         self._rank_list = rank_list if rank_list == "all" else [int(rank) for rank in rank_list.split(",") if
                                                                 rank.isdigit()]
+        self._step_id = params.get(Constant.STEP_ID, Constant.VOID_STEP)
         self._extra_args = self.get_extra_argument(params.get(Constant.EXTRA_ARGS))
         PathManager.make_dir_safety(self._output_path)
 
@@ -159,19 +160,53 @@ class BaseRecipeAnalysis(ABC):
             rank_path = self._data_map[rank_id]
             db_path = os.path.join(rank_path, Constant.SINGLE_OUTPUT, f"ascend_pytorch_profiler_{rank_id}.db")
             if os.path.exists(db_path):
-                db_paths.append({Constant.RANK_ID: rank_id, Constant.PROFILER_DB_PATH: db_path})
+                db_paths.append({Constant.RANK_ID: rank_id, Constant.PROFILER_DB_PATH: db_path,
+                                 Constant.STEP_RANGE: self._get_step_range(db_path)})
             else:
                 logger.warning(f"DB file not found, rank id: {rank_id}, db path: {db_path}.")
         if invalid_rank_id:
-            logger.warning(f"Invalid Rank id : [{','.join(invalid_rank_id)}].")
+            logger.warning(f"Invalid Rank id: [{','.join(invalid_rank_id)}].")
         return db_paths
+
+    def _get_step_range(self, db_path):
+        step_range = {}
+        if self._step_id == Constant.VOID_STEP:
+            return step_range
+        conn, cursor = DBManager.create_connect_db(db_path)
+        if not DBManager.judge_table_exists(cursor, "STEP_TIME"):
+            logger.error(f"The STEP_TIME table does not exist in the database: {db_path}, "
+                         f"the parameter step_id will not take effect.")
+            DBManager.destroy_db_connect(conn, cursor)
+            return step_range
+
+        step_time = []
+        sql = f"select id, startNs, endNs from STEP_TIME"
+        try:
+            step_time = DBManager.fetch_all_data(cursor, sql)
+        except Exception as err:
+            logger.error(err)
+        finally:
+            DBManager.destroy_db_connect(conn, cursor)
+
+        for step_data in step_time:
+            if step_data.get("id") == self._step_id:
+                step_range = step_data
+                break
+        if not step_range:
+            step_list = ", ".join([str(step.get("id", "")) for step in step_time])
+            logger.error(f"Invalid step_id {self._step_id} in the database: {db_path}, "
+                         f"step_id must be an element of the set ({step_list}), "
+                         f"the parameter step_id will not take effect.")
+        return step_range
 
     def _mapper_func(self, data_map, analysis_class):
         """
         Extract the profiling data required for cluster analysis from each device, and then aggregate the
         results from each device to be processed by a reduce function.
         Params:
-            data_map: eg. {"RANK_ID": 1, "profiler_db_path": "xxxx/ascend_pytorch_profiler_1.db"}
+            data_map: eg. {"RANK_ID": 1,
+                           "profiler_db_path": "xxxx/ascend_pytorch_profiler_1.db",
+                           "step_range": {"id": 2, "startNs": 12345, "endNs": 12443]}
             analysis_class: hccl_sum, compute_op_sum, cann_api_sum, mstx_sum……
         """
         pass

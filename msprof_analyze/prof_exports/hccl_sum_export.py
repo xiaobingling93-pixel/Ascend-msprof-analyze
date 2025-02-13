@@ -14,6 +14,7 @@
 # limitations under the License.
 
 from msprof_analyze.prof_exports.base_stats_export import BaseStatsExport
+from msprof_analyze.prof_common.constant import Constant
 
 QUERY = """
 SELECT
@@ -32,11 +33,20 @@ LEFT JOIN
 LEFT JOIN
     STRING_IDS AS GROUP_NAME_IDS
     ON GROUP_NAME_IDS.id == COMMUNICATION_OP.groupName
+{}
     """
 
 
 class HcclSumExport(BaseStatsExport):
 
-    def __init__(self, db_path, recipe_name):
-        super().__init__(db_path, recipe_name)
-        self._query = QUERY
+    def __init__(self, db_path, recipe_name, step_range):
+        super().__init__(db_path, recipe_name, step_range)
+        self._query = self.get_query_statement()
+
+    def get_query_statement(self):
+        if self._step_range:
+            filter_statement = f"WHERE COMMUNICATION_OP.startNs >= {self._step_range.get(Constant.START_NS)} " \
+                               f"and COMMUNICATION_OP.startNs <= {self._step_range.get(Constant.END_NS)}"
+        else:
+            filter_statement = ""
+        return QUERY.format(filter_statement)

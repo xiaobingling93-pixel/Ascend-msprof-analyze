@@ -14,6 +14,7 @@
 # limitations under the License.
 
 from msprof_analyze.prof_exports.base_stats_export import BaseStatsExport
+from msprof_analyze.prof_common.constant import Constant
 
 QUERY = """
 WITH
@@ -31,6 +32,7 @@ WITH
             upper_quartile(endNs - startNs) AS upper_quartile_duration
         FROM
             CANN_API
+        {}
         GROUP BY name
     ),
     totals AS (
@@ -60,6 +62,14 @@ ORDER BY 2 DESC;
 
 class CannApiSumExport(BaseStatsExport):
 
-    def __init__(self, db_path, recipe_name):
-        super().__init__(db_path, recipe_name)
-        self._query = QUERY
+    def __init__(self, db_path, recipe_name, step_range):
+        super().__init__(db_path, recipe_name, step_range)
+        self._query = self.get_query_statement()
+
+    def get_query_statement(self):
+        if self._step_range:
+            filter_statement = f"WHERE CANN_API.startNs >= {self._step_range.get(Constant.START_NS)} " \
+                               f"and CANN_API.startNs <= {self._step_range.get(Constant.END_NS)}"
+        else:
+            filter_statement = ""
+        return QUERY.format(filter_statement)

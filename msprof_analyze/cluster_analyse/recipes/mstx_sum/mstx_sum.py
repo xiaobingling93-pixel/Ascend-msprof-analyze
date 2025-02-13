@@ -154,10 +154,11 @@ class MstxSum(BaseRecipeAnalysis):
     def _mapper_func(self, data_map, analysis_class):
         profiler_db_path = data_map.get(Constant.PROFILER_DB_PATH)
         rank_id = data_map.get(Constant.RANK_ID)
-        step_df = MstxStepExport(profiler_db_path, analysis_class).read_export_db()
+        step_range = data_map.get(Constant.STEP_RANGE)
+        step_df = MstxStepExport(profiler_db_path, analysis_class, step_range).read_export_db()
         if step_df is None or step_df.empty:
             step_df = pd.DataFrame({"start_ns": [0], "end_ns": [float("inf")], "step_id": [0]})
-        mark_df = MstxMarkExport(profiler_db_path, analysis_class).read_export_db()
+        mark_df = MstxMarkExport(profiler_db_path, analysis_class, step_range).read_export_db()
         if mark_df is None or mark_df.empty:
             logger.warning(f"There is no mark data in {profiler_db_path}.")
             return None

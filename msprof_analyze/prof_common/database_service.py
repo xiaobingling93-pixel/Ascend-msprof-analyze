@@ -16,13 +16,37 @@ import pandas as pd
 
 from msprof_analyze.prof_common.db_manager import DBManager
 from msprof_analyze.prof_common.logger import get_logger
+from msprof_analyze.prof_common.constant import Constant
 
 logger = get_logger()
 
 
 class DatabaseService:
-    def __init__(self, db_path):
+    TABLE_TS_DICT = {
+        "TASK": "startNs",
+        "COMMUNICATION_OP": "startNs",
+        "CANN_API": "startNs",
+        "PYTORCH_API": "startNs",
+        "MSTX_EVENTS": "startNs",
+        "GC_RECORD": "startNs",
+        "ACC_PMU": "timestampNs",
+        "NIC": "timestampNs",
+        "RoCE": "timestampNs",
+        "LLC": "timestampNs",
+        "SAMPLE_PMU_TIMELINE": "timestampNs",
+        "NPU_MEM": "timestampNs",
+        "NPU_MODULE_MEM": "timestampNs",
+        "NPU_OP_MEM": "timestampNs",
+        "HBM": "timestampNs",
+        "DDR": "timestampNs",
+        "HCCS": "timestampNs",
+        "PCIE": "timestampNs",
+        "AICORE_FREQ": "timestampNs"
+    }
+
+    def __init__(self, db_path, step_range):
         self._db_path = db_path
+        self._step_range = step_range
         self._table_info = {}
 
     def add_table_for_query(self, table_name: str, columns=None):
@@ -48,7 +72,12 @@ class DatabaseService:
                 logger.warning(f"This table {table_name} does not exist in this database {self._db_path}.")
                 continue
             columns_str = "*" if not columns else ",".join(columns)
-            query_sql = f"select {columns_str} from {table_name}"
+            if table_name in self.TABLE_TS_DICT and self._step_range:
+                where_str = f"where {self.TABLE_TS_DICT.get(table_name)} >= {self._step_range.get(Constant.START_NS)}" \
+                            f" and {self.TABLE_TS_DICT.get(table_name)} <= {self._step_range.get(Constant.END_NS)}"
+            else:
+                where_str = ""
+            query_sql = f"select {columns_str} from {table_name} {where_str}"
             try:
                 data = pd.read_sql(query_sql, conn)
                 result_data[table_name] = data

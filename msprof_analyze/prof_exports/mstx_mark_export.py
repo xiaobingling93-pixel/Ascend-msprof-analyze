@@ -14,6 +14,7 @@
 # limitations under the License.
 
 from msprof_analyze.prof_exports.base_stats_export import BaseStatsExport
+from msprof_analyze.prof_common.constant import Constant
 
 QUERY = """
 WITH
@@ -26,6 +27,7 @@ WITH
         LEFT JOIN
             CONNECTION_IDS
             ON PYTORCH_API.connectionId == CONNECTION_IDS.id
+        {}
     )
 SELECT
     MSG_IDS.value AS "msg",
@@ -44,6 +46,7 @@ LEFT JOIN
 LEFT JOIN
     STRING_IDS AS MSG_IDS
     ON MSTX_EVENTS.message == MSG_IDS.id
+{}
 ORDER BY
     MSTX_EVENTS.startNs
     """
@@ -51,6 +54,16 @@ ORDER BY
 
 class MstxMarkExport(BaseStatsExport):
 
-    def __init__(self, db_path, recipe_name):
-        super().__init__(db_path, recipe_name)
-        self._query = QUERY
+    def __init__(self, db_path, recipe_name, step_range):
+        super().__init__(db_path, recipe_name, step_range)
+        self._query = self.get_query_statement()
+
+    def get_query_statement(self):
+        if self._step_range:
+            filter_statement_1 = f"WHERE PYTORCH_API.startNs >= {self._step_range.get(Constant.START_NS)} " \
+                                 f"and PYTORCH_API.startNs <= {self._step_range.get(Constant.END_NS)}"
+            filter_statement_2 = f"WHERE MSTX_EVENTS.startNs >= {self._step_range.get(Constant.START_NS)} " \
+                                 f"and MSTX_EVENTS.startNs <= {self._step_range.get(Constant.END_NS)}"
+        else:
+            filter_statement_1, filter_statement_2 = "", ""
+        return QUERY.format(filter_statement_1, filter_statement_2)

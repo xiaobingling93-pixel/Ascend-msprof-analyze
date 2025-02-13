@@ -96,7 +96,8 @@ class CannApiSum(BaseRecipeAnalysis):
     def _mapper_func(self, data_map, analysis_class):
         profiler_db_path = data_map.get(Constant.PROFILER_DB_PATH)
         rank_id = data_map.get(Constant.RANK_ID)
-        df = CannApiSumExport(profiler_db_path, analysis_class).read_export_db()
+        step_range = data_map.get(Constant.STEP_RANGE)
+        df = CannApiSumExport(profiler_db_path, analysis_class, step_range).read_export_db()
         if df is None or df.empty:
             logger.warning(f"There is no stats data in {profiler_db_path}.")
             return None, None
