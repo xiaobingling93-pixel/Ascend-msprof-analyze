@@ -1,5 +1,4 @@
-# Copyright (c) 2024, Huawei Technologies Co., Ltd.
-# All rights reserved.
+# Copyright (c) Huawei Technologies Co., Ltd. 2024-2025. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0  (the "License");
 # you may not use this file except in compliance with the License.
@@ -44,6 +43,8 @@ from msprof_analyze.advisor.analyzer.schedule.gc.gc_analyzer import GcAnalyzer
 from msprof_analyze.advisor.analyzer.schedule.conjectured_gc.conjectured_gc_analyzer import ConjecturedGcAnalyzer
 from msprof_analyze.advisor.analyzer.comparison.comparison_analyzer import ComparisonAnalyzer
 from msprof_analyze.advisor.analyzer.schedule.fusible_ops.fusible_operator_analyzer import FusibleOperatorAnalyzer
+from msprof_analyze.advisor.analyzer.computation.ai_core_performance.ai_core_performance_analyzer import \
+    AICorePerformanceAnalyzer
 
 logger = logging.getLogger()
 
@@ -74,7 +75,8 @@ class Interface:
             SupportedScopes.OPERATOR_NO_BOUND_ANALYSIS: OperatorBoundAnalyzer,
             SupportedScopes.BLOCK_DIM_ANALYSIS: BlockDimAnalyzer,
             SupportedScopes.GRAPH: FusionOPAnalyzer,
-            SupportedScopes.FREQ_ANALYSIS: AICoreFreqAnalyzer
+            SupportedScopes.FREQ_ANALYSIS: AICoreFreqAnalyzer,
+            SupportedScopes.AICORE_PERFORMANCE_ANALYSIS: AICorePerformanceAnalyzer
         }),
         COMMUNICATION: OrderedDict({SupportedScopes.PACKET: PacketAnalyzer,
                                     SupportedScopes.COMMUNICATION_RETRANSMISSION_DETECTION: RDMARetransmissionAnalyzer,
