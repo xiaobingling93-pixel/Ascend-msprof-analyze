@@ -61,9 +61,10 @@ experimental_config = torch_npu.profiler._ExperimentalConfig(
    | --mode或-m            | 数据解析模式，取值详见“**--mode参数说明**”表。               | 否       |
    | --data_simplification | 数据精简模式。对于数据量过大的性能数据db文件，可以通过配置该参数将数据精简，并提高工具分析效率。配置该参数表示开启数据精简，默认未配置表示关闭。 | 否       |
    | --force               | 强制执行cluster。配置后可强制跳过如下情况：<br/>        指定的目录、文件的用户属主不属于当前用户，忽略属主判断直接执行。<br/>        csv文件大于5G、json文件大于10G、db文件大于8G，忽略文件过大判断直接执行。<br/>配置该参数表示开启强制执行，默认未配置表示关闭。 | 否       |
-   | --parallel_mode       | 设置收集多卡、多节点db数据时的并发方式。取值为concurrent（使用concurrent.feature进程池实现并发）。<br/>**只有-m配置cann_api_sum、compute_op_sum、hccl_sum、mstx_sum时可配置此参数。** | 否       |
-   | --export_type         | 设置导出的数据形式。取值为db（.db格式文件）和notebook（Jupyter Notebook文件），默认值为db。<br/>**只有-m配置cann_api_sum、compute_op_sum、hccl_sum、mstx_sum时可配置此参数。** | 否       |
-   | --rank_list           | 对特定Rank上的数据进行统计，默认值为all（表示对所有Rank进行统计），须根据实际卡的Rank ID配置。应配置为大于等于0的整数，若所配置的值大于实际训练所运行的卡的Rank ID，则仅解析合法的RankID的数据，比如当前环境Rank ID为0到7，实际训练运行0到3卡，此时若配置Rank ID为0, 3, 4或不存在的10等其他值，则仅解析0和3。配置示例：--rank_list 0, 1, 2。<br/>**只有-m配置cann_api_sum、compute_op_sum、hccl_sum、mstx_sum时可配置此参数。** | 否       |
+   | --parallel_mode       | 设置收集多卡、多节点db数据时的并发方式。取值为concurrent（使用concurrent.feature进程池实现并发）。<br/>**只有-m配置cann_api_sum、compute_op_sum、hccl_sum、mstx_sum和自定义分析参数时可配置此参数。** | 否       |
+   | --export_type         | 设置导出的数据形式。取值为db（.db格式文件）和notebook（Jupyter Notebook文件），默认值为db。<br/>**只有-m配置cann_api_sum、compute_op_sum、hccl_sum、mstx_sum和自定义分析参数时可配置此参数。** | 否       |
+   | --rank_list           | 对特定Rank上的数据进行统计，默认值为all（表示对所有Rank进行统计），须根据实际卡的Rank ID配置。应配置为大于等于0的整数，若所配置的值大于实际训练所运行的卡的Rank ID，则仅解析合法的RankID的数据，比如当前环境Rank ID为0到7，实际训练运行0到3卡，此时若配置Rank ID为0, 3, 4或不存在的10等其他值，则仅解析0和3。配置示例：--rank_list 0, 1, 2。<br/>**只有-m配置cann_api_sum、compute_op_sum、hccl_sum、mstx_sum和自定义分析参数时可配置此参数。** | 否       |
+   | --step_id | 性能数据Step ID，配置后对该Step的性能数据进行分析。需配置性能数据中实际存在的Step ID，默认未配置，表示全量分析。配置示例：--step_id=1。<br/>**只有-m配置cann_api_sum、compute_op_sum、hccl_sum、mstx_sum和自定义分析参数时可配置此参数。** | 否 |
    | --top_num             | 设置TopN耗时的通信算子的数量，默认值为15，配置示例：--top_num 20。<br/>**只有-m配置hccl_sum时可配置此参数。** | 否       |
    | --exclude_op_name    | 控制compute_op_name结果是否包含op_name,示例：--exclude_op_name,后面不需要跟参数。<br/>**只有-m配置compute_op_sum时可配置此参数。** | 否       |
    
