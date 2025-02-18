@@ -396,9 +396,9 @@ class Constant(object):
     OPERATOR_TYPE = 1
     VIRTUAL_TYPE = 9
 
-    # trace bar
+    # json trace bar
     NPU_BAR = "Ascend Hardware"
-    HCCL_BAR = "HCCL"
+    COMM_BAR = "Communication"
     OVERLAP_BAR = "Overlap Analysis"
 
     # overlap_analysis event

@@ -214,7 +214,7 @@ class CoreType:
     AICPU = "AI_CPU"
     MIX_AIV = "MIX_AIV"
     MIX_AIC = "MIX_AIC"
-    HCCL = "HCCL"
+    HCCL = "COMMUNICATION"
 
 
 class PerfColor(Enum):

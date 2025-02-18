@@ -88,7 +88,7 @@ class FusibleOperatorChecker:
 
     @staticmethod
     def check_hccl(task: OpInfo):
-        return (task.task_type == "HCCL" or
+        return (task.task_type in ["COMMUNICATION", "HCCL"] or
                 any(task.op_name.lower().startswith(item) for item in ["hcom", "lccl", "lcoc"]))
 
     @staticmethod
