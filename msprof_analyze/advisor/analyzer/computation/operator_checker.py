@@ -301,7 +301,7 @@ class OperatorChecker(VersionControl):
     def format_suggestion_content(self, profiling_data: ProfilingDataset) -> None:
         if profiling_data.prof_type == EnumParamsParser().profiling_type.ascend_pytorch_profiler:
             self._suggestion.append(self.pytorch_op_tune_suggestion)
-        elif profiling_data.prof_type == EnumParamsParser.profiling_type.mslite:
+        elif profiling_data.prof_type == EnumParamsParser().profiling_type.mslite:
             self._suggestion.append(self.mslite_op_tune_suggestion)
 
     def _check_data(self, profiling_data):
