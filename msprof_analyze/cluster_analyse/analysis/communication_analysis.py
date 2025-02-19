@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import copy
 import os
 from collections import defaultdict
 
@@ -78,7 +79,7 @@ class CommunicationAnalysis(BaseAnalysis):
             Constant.COMMUNICATION_TIME_INFO: defaultdict(float),
             Constant.COMMUNICATION_BANDWIDTH_INFO: {}
         }
-        total_rank_dict = defaultdict(lambda: default_value.copy())
+        total_rank_dict = defaultdict(lambda: copy.deepcopy(default_value))
         for _, rank_dict in comm_ops.items():
             for rank_id, communication_op_info in rank_dict.items():
                 for com_info, com_info_dict in communication_op_info.items():

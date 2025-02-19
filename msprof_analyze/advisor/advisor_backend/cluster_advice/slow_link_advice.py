@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import copy
 import os
 from collections import defaultdict
 from msprof_analyze.advisor.advisor_backend.common_func_advisor.constant import Constant
@@ -41,7 +42,7 @@ class SlowLinkAdvice(ClusterAdviceBase):
             self.SDMA_TIME_MS: 0,
             self.SDMA_SIZE_MB: 0,
         }
-        self.rank_bw_dict = defaultdict(lambda: default_value.copy())
+        self.rank_bw_dict = defaultdict(lambda: copy.deepcopy(default_value))
 
     @staticmethod
     def compute_ratio(dividend: float, divisor: float):
