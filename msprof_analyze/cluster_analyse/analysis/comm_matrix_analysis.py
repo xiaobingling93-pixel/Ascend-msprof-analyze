@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import copy
 import os
 from collections import defaultdict
 
@@ -107,7 +108,7 @@ class CommMatrixAnalysis(BaseAnalysis):
             Constant.OP_NAME: ''
         }
         for op_name, op_dict in step_dict.items():
-            link_info = defaultdict(lambda: default_value.copy())
+            link_info = defaultdict(lambda: copy.deepcopy(default_value))
             for rank_id, rank_dict in op_dict.items():
                 process_link_key(rank_id, rank_dict)
             step_dict[op_name] = convert_local_to_global_rank()
@@ -119,7 +120,7 @@ class CommMatrixAnalysis(BaseAnalysis):
             Constant.TRANSIT_SIZE_MB: 0,
             Constant.OP_NAME: ''
         }
-        total_op_info = defaultdict(lambda: default_value.copy())
+        total_op_info = defaultdict(lambda: copy.deepcopy(default_value))
         for op_name, op_dict in step_dict.items():
             if self.check_add_op(op_name):
                 for link_key, link_dict in op_dict.items():
