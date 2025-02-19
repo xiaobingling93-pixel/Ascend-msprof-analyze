@@ -39,7 +39,8 @@ class HcclDetailDataset:
     @staticmethod
     def _get_hccl_pid(tasks: List[TaskInfo]):
         for task in tasks:
-            if task.name == "process_name" and hasattr(task, "args") and task.args.get("name", None) == "HCCL":
+            if task.name == "process_name" and hasattr(task, "args") \
+                    and task.args.get("name", None) in ["Communication", "HCCL"]:
                 return task.pid
         return -1
 

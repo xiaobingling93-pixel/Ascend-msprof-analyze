@@ -193,7 +193,7 @@ class TraceEventBean:
         return self._args.get("name", "").find("Communication") != -1
 
     def is_hccl_process_name(self) -> bool:
-        return self.process_name == "HCCL"
+        return self.process_name in ["Communication", "HCCL"]
 
     def is_overlap_process_name(self) -> bool:
         return self.process_name == "Overlap Analysis"
