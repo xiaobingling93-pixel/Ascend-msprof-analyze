@@ -143,41 +143,6 @@ class DBManager:
         logger.error("conn is invalid param")
         return False
 
-    @staticmethod
-    def execute_sql(conn: any, sql: str, params: any = None) -> bool:
-        """
-        execute sql
-        """
-        try:
-            if isinstance(conn, sqlite3.Connection):
-                if params:
-                    conn.cursor().execute(sql, params)
-                else:
-                    conn.cursor().execute(sql)
-                conn.commit()
-                return True
-        except sqlite3.Error as err:
-            logger.error(err)
-            return False
-        logger.error("conn is invalid param")
-        return False
-
-    @staticmethod
-    def executemany_sql(conn: any, sql: str, params: any) -> bool:
-        """
-        execute many sql once
-        """
-        try:
-            if isinstance(conn, sqlite3.Connection):
-                conn.cursor().executemany(sql, params)
-                conn.commit()
-                return True
-        except sqlite3.Error as err:
-            logger.error(err)
-            return False
-        logger.error("conn is invalid param")
-        return False
-
     @classmethod
     def check_tables_in_db(cls, db_path: any, *tables: any) -> bool:
         if check_db_path_valid(db_path):

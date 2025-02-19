@@ -24,9 +24,10 @@ logger = get_logger()
 
 class BaseStatsExport:
 
-    def __init__(self, db_path, analysis_class):
+    def __init__(self, db_path, analysis_class, step_range):
         self._db_path = db_path
         self._analysis_class = analysis_class
+        self._step_range = step_range
         self._query = None
 
     def get_query(self):

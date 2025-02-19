@@ -424,6 +424,9 @@ class Constant(object):
     RANK_LIST = "rank_list"
     EXPORT_TYPE = "export_type"
     EXTRA_ARGS = "args"
+    STEP_RANGE = "step_range"
+    START_NS = "startNs"
+    END_NS = "endNs"
 
     # hccl_sum
     UINT32_BITS = 32

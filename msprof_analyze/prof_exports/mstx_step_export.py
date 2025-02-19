@@ -29,6 +29,6 @@ ORDER BY
 
 class MstxStepExport(BaseStatsExport):
 
-    def __init__(self, db_path, recipe_name):
-        super().__init__(db_path, recipe_name)
+    def __init__(self, db_path, recipe_name, step_range):
+        super().__init__(db_path, recipe_name, step_range)
         self._query = QUERY
