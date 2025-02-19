@@ -67,3 +67,22 @@
         torch_npu.npu_group_norm_silu: [ "group_norm-silu" ]
         torch.addmm: [ "mul-mul-add" ]
         torch_npu.npu_add_layer_norm: [ "add-layer_norm" ]
+
+- cann_version: 8.0.RC3
+  torch_version: [1.11.0, 2.1.0]
+  unique_id: 4
+  inherit_unique_id: 3
+  operator_rules:
+    aten:
+      add:
+        mindspeed.ops.npu_matmul_add: [ "matmul-add" ]
+
+- cann_version: 8.0.RC3
+  torch_version: [1.11.0, 2.1.0]
+  unique_id: 5
+  inherit_unique_id: 4
+  operator_rules:
+    aten:
+      add:
+        mindspeed.ops.npu_moe_token_permute: ["argsort-argsort-index_select"]
+        mindspeed.ops.npu_moe_token_unpermute: ["index_select-mul-reduce_sum"]
