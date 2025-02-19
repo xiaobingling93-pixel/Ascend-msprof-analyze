@@ -31,7 +31,10 @@ class TablesConfig:
         ],
         "CommunicationGroupMap": [
             ("type", "TEXT, null"),
-            ("rank_set", "TEXT, null")
+            ("rank_set", "TEXT, null"),
+            ("group_name", "TEXT, null"),
+            ("group_id", "TEXT, null"),
+            ("pg_name", "TEXT, null")
         ],
         "ClusterCommAnalyzerBandwidthMap": [
             ("rank_set", "TEXT, null"),
@@ -130,8 +133,10 @@ class TablesConfig:
         ],
         "CommunicationGroupMappingMap": [
             ("type", "TEXT, null"),
+            ("rank_set", "TEXT, null"),
             ("group_name", "TEXT, null"),
-            ("rank_set", "TEXT, null")
+            ("group_id", "TEXT, null"),
+            ("pg_name", "TEXT, null")
         ],
         "ClusterBaseInfoMap": [
             ("distributed_args", "TEXT, null")
