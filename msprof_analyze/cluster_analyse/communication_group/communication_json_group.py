@@ -28,7 +28,7 @@ class CommunicationJsonGroup(BaseCommunicationGroup):
 
     def dump_data(self):
         res = deepcopy(self.communication_group)
-        res[self.KEY_PARALLEL_GROUP_INFO] = self.comm_group_parallel_info_df.to_dict(orient="records")
+        res[self.KEY_COMM_GROUP_PARALLEL_INFO] = self.comm_group_parallel_info_df.to_dict(orient="records")
         FileManager.create_json_file(
             self.cluster_analysis_output_path, res, self.COMMUNICATION_GROUP_JSON
         )
