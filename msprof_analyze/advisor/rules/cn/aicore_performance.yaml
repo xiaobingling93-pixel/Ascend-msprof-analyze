@@ -1,0 +1,48 @@
+cube_problem: "Cube算子性能分析"
+fa_problem: "FA算子性能分析"
+vector_problem: "Vector算子性能分析"
+description: "提供一些AICORE算子的参考瓶颈"
+bound_description: "bound算子集合"
+optimization_description: "性能优化算子集合"
+affinity_description: "不亲和算子集合"
+cube_affinity_desc: "内轴无法被256整除"
+fa_affinity_desc_head_dim_128: "D不能被128整除"
+fa_affinity_desc_seq_len_128: "S不能被128整除"
+fa_affinity_desc_head_dim_seq_len_128: "D和S均不能被128整除"
+suggestion: "请根据亲和性、bound类型或优化空间尝试分析筛选出来的算子"
+affinity_suggestion: "{op_name}算子 shape: {shape} dtype: {dtype} 有不亲和特征: {suggestion}\n"
+bound_suggestion: "{op_name}算子 shape: {shape} dtype: {dtype} bound类型为: {bound} bound\n"
+optimization_suggestion: "{op_name}算子 shape: {shape} dtype: {dtype} 疑似有性能优化空间,参考性能优化空间: {optimization}%\n"
+
+cube_operators:
+  - target: aic_mac_ratio
+    bound: mac
+    threshold: 0.8
+  - target: aic_mte2_ratio
+    bound: mte2
+    threshold: 0.95
+
+fa_operators:
+  - target: aic_mte2_ratio
+    bound: mac
+    threshold: 0.8
+  - target: aic_fixpipe_ratio
+    bound: fixpipe
+    threshold: 0.75
+  - target: aiv_vec_ratio
+    bound: vec
+    threshold: 0.75
+
+vector_operators:
+  - target: total
+    bound: vec_mte2_mte3
+    threshold: 0.9
+  - target: aiv_vec_ratio
+    bound: vec
+    threshold: 0.7
+  - target: aiv_mte2_ratio
+    bound: mte2
+    threshold: 0.7
+  - target: aiv_mte3_ratio
+    bound: mte3
+    threshold: 0.7
