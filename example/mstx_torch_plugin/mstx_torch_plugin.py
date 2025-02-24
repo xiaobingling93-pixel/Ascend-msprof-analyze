@@ -14,8 +14,9 @@
 # limitations under the License.
 import os
 import functools
+import re
+import site
 import torch
-import torch_npu
 from torch.nn import Module
 from torch.utils.data import DataLoader
 from torch.optim.optimizer import register_optimizer_step_post_hook
@@ -26,6 +27,18 @@ original_save = torch.serialization.save
 original_singlenext = torch.utils.data.dataloader._SingleProcessDataLoaderIter.__next__
 original_multinext = torch.utils.data.dataloader._MultiProcessingDataLoaderIter.__next__
 origin_patch_step_function = torch.optim.Optimizer._patch_step_function
+
+
+def _check_directory_path_readable(path):
+    if not os.path.exists(path):
+        msg = f"The path dose not exist: {path}"
+        raise RuntimeError(msg)
+    if os.path.islink(path):
+        msg = f"Invalid path is a soft chain: {path}"
+        raise RuntimeError(msg)
+    if not os.access(path, os.R_OK):
+        msg = f"The path permission check failed: {path}"
+        raise RuntimeError(msg)
 
 
 class MstxState:
@@ -144,9 +157,57 @@ def _custom_step(optimizer: torch.optim.Optimizer):
     mstx_state.last_optimizer_id = id(optimizer)
 
 
+def _get_torch_npu_version_str():
+    torch_npu_version_str = ""
+    site_packages = site.getsitepackages()
+    if site_packages and site_packages[0]:
+        path = site_packages[0]
+        version_path = os.path.join(path, "torch_npu", "version.py")
+        _check_directory_path_readable(version_path)
+        # example version info: "__version__ = '2.1.0.post11.xxxxxx'"
+        try:
+            with open(version_path, "r") as f:
+                for line in f:
+                    if line.find("__version__") != -1:
+                        torch_npu_version_str = line.strip().split("=")[-1][2:-1]
+                        break
+        except Exception as e:
+            raise RuntimeError(f"Failed to open {version_path} to get torch npu version.") from e
+    return torch_npu_version_str
+
+
+def _get_torch_npu_info(version_str: str):
+    # version info example: "2.1.0.post11.xxxxxx"
+    match = re.search(r"^(\d+\.\d+\.\d+)\.post(\d+)", version_str)
+    if match and len(match.groups()) == 2:
+        return match.group(1), match.group(2)
+    else:
+        return '', ''
+
+
+def _check_pta_support_patch():
+    pta_support_patch_version = {
+        "2.1.0": 10,
+        "2.3.1": 4,
+        "2.4.0": 2,
+    }
+    torch_npu_version_str = _get_torch_npu_version_str()
+    if not torch_npu_version_str:
+        raise RuntimeError("Failed to get torch_npu version info.")
+    torch_branch, torch_npu_version = _get_torch_npu_info(torch_npu_version_str)
+    if not torch_branch or not torch_npu_version or not torch_npu_version.isdigit():
+        raise RuntimeError("Failed to get valid torch branch or torch_npu version.")
+    for branch, post_version in pta_support_patch_version.items():
+        if torch_branch == branch and int(torch_npu_version) <= post_version:
+            return False
+    return True
+
+
 def apply_mstx_patch():
+    pta_support_patch = _check_pta_support_patch()
     Module.__call__ = _custom_forward_call
-    DataLoader.__iter__ = _custom_dataloader_iter
-    torch.serialization.save = _custom_save(original_save)
+    if not pta_support_patch:
+        DataLoader.__iter__ = _custom_dataloader_iter
+        torch.serialization.save = _custom_save(original_save)
     torch.optim.Optimizer._patch_step_function = _custom_step
     register_optimizer_step_post_hook(_step_hook)
