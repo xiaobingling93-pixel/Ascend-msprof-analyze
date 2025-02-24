@@ -167,7 +167,7 @@ class AICorePerformanceChecker:
             try:
                 self.result[operator_type] = getattr(self, f"check_{operator_type}_operator")(promoting_dataset)
             except (IndexError, ValueError, AttributeError) as e:
-                logger.error(f"Failed to check ai core performance {operator_type} operator, {e}.")
+                logger.warning(f"Failed to check ai core performance {operator_type} operator, {e}.")
                 self.result[operator_type] = []
 
         if not any([self.result["cube"], self.result["fa"], self.result["vector"]]):
