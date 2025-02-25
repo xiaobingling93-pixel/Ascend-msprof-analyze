@@ -52,6 +52,7 @@ class OperatorChecker(VersionControl):
         self._tune_op_list: List[str] = []
 
         self.prompt_class = BasePrompt.get_prompt_class("OperatorChecker")
+        self.rank_id = self.prompt_class.RANK_ID
         self.pytorch_op_tune_suggestion = self.prompt_class.PYTORCH_OPERATOR_TUNE_SUGGESTION
         self.mslite_op_tune_suggestion = self.prompt_class.MSLITE_OPERATOR_TUNE_SUGGESTION
         self.pytorch_release_suggestion = self.prompt_class.PYTORCH_RELEASE_SUGGESTION
@@ -118,7 +119,7 @@ class OperatorChecker(VersionControl):
         """
 
         if rank is not None:
-            self._problem = self.prompt_class.RANK_ID.format(rank) + self._problem.lower()
+            self._problem = self.rank_id.format(rank) + self._problem.lower()
 
         task_duration_list = [float(op_info.get_attr("task_duration"))
                               for op_info in self._op_list
