@@ -440,7 +440,7 @@ class AICorePerformanceChecker:
         result.add(OptimizeRecord(optimization_item))
         headers = [
             "Type",
-            "Description and Suggestion",
+            "Description",
         ]
         result.add_detail(problem_map[op_type], headers=headers)
         for opti_issue in self.result[op_type][0]:
