@@ -100,7 +100,6 @@ class CommMatrixAnalysis(BaseAnalysis):
                 tmp_link[f"{src_rank}-{dst_rank}"] = link_dict
             return tmp_link
 
-        project_local_global_rank_map = dict()
         default_value = {
             Constant.TRANSPORT_TYPE: '',
             Constant.TRANSIT_TIME_MS: 0,
@@ -109,6 +108,7 @@ class CommMatrixAnalysis(BaseAnalysis):
         }
         for op_name, op_dict in step_dict.items():
             link_info = defaultdict(lambda: copy.deepcopy(default_value))
+            project_local_global_rank_map = dict()
             for rank_id, rank_dict in op_dict.items():
                 process_link_key(rank_id, rank_dict)
             step_dict[op_name] = convert_local_to_global_rank()
