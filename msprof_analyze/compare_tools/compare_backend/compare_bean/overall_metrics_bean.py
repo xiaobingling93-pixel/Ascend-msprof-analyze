@@ -68,11 +68,39 @@ class OverallMetricsBean:
 
         base_group_data = self._base_data.get("group", {})
         comparison_group_data = self._comparison_data.get("group", {})
+        base_pg_name_dict = self._base_data.get("pg_name_dict", {})
+        comparison_pg_name_dict = self._comparison_data.get("pg_name_dict", {})
         default_value = [0, 0, "/"]
+        # deal base and comparsion data which can match with pg_name
+        for base_pg_name, base_group_name_list in base_pg_name_dict.items():
+            if len(base_group_name_list) != 1 or base_pg_name == Constant.UNKNOWN:
+                continue
+            comparison_group_name_list = comparison_pg_name_dict.get(base_pg_name, [])
+            if len(comparison_group_name_list) != 1:
+                continue
+
+            base_data = base_group_data.pop(base_group_name_list[0], {})
+            comparison_data = comparison_group_data.pop(comparison_group_name_list[0], {})
+            description = f"\t{base_pg_name}: Communication"
+            ExcelConfig.ROW_STYLE_MAP[description] = CellFormatType.LIGHT_BLUE_NORMAL
+            self._append_data(rows_data,
+                              self._get_row_data(description,
+                                                base_data.get(ExcelConfig.COMMUNICATION_TIME, default_value),
+                                                comparison_data.get(ExcelConfig.COMMUNICATION_TIME, default_value)))
+            self._append_data(rows_data,
+                              self._get_row_data(ExcelConfig.WAIT, base_data.get(ExcelConfig.WAIT, default_value),
+                                                 comparison_data.get(ExcelConfig.WAIT, default_value)))
+            self._append_data(rows_data,
+                              self._get_row_data(ExcelConfig.TRANSMIT,
+                                                 base_data.get(ExcelConfig.TRANSMIT, default_value),
+                                                 comparison_data.get(ExcelConfig.TRANSMIT, default_value)))
+
         for group_name, base_data in base_group_data.items():
             comparison_data = comparison_group_data.pop(group_name, {})
-            self._append_data(rows_data, self._get_row_data(group_name, base_data.get("group", default_value),
-                                                            comparison_data.get("group", default_value)))
+            self._append_data(rows_data,
+                              self._get_row_data(base_data.get("description", group_name),
+                                                 base_data.get(ExcelConfig.COMMUNICATION_TIME, default_value),
+                                                 comparison_data.get(ExcelConfig.COMMUNICATION_TIME, default_value)))
             self._append_data(rows_data,
                               self._get_row_data(ExcelConfig.WAIT, base_data.get(ExcelConfig.WAIT, default_value),
                                                  comparison_data.get(ExcelConfig.WAIT, default_value)))
@@ -81,8 +109,10 @@ class OverallMetricsBean:
                                                  base_data.get(ExcelConfig.TRANSMIT, default_value),
                                                  comparison_data.get(ExcelConfig.TRANSMIT, default_value)))
         for group_name, comparison_data in comparison_group_data.items():
-            self._append_data(rows_data, self._get_row_data(group_name, default_value,
-                                                            comparison_data.get("group", default_value)))
+            self._append_data(rows_data,
+                              self._get_row_data(comparison_data.get("description", group_name),
+                                                 default_value,
+                                                 comparison_data.get(ExcelConfig.COMMUNICATION_TIME, default_value)))
             self._append_data(rows_data, self._get_row_data(ExcelConfig.WAIT, default_value,
                                                             comparison_data.get(ExcelConfig.WAIT, default_value)))
             self._append_data(rows_data, self._get_row_data(ExcelConfig.TRANSMIT, default_value,
@@ -373,13 +403,17 @@ class OverallMetricsInfo:
         }
         if self._comm_group_list:
             for group_name in self._comm_group_list:
-                group_name_index = f"\t{group_name}"
-                ExcelConfig.ROW_STYLE_MAP[group_name_index] = CellFormatType.LIGHT_BLUE_NORMAL
-                overall_metrics_data.setdefault("group", {})[group_name_index] = {
-                    "group": self.communication_data_by_group(group_name),
+                pg_name = self._profiling_info.get_pg_name_by_group(group_name)
+                description = " ".join([pg_name + ":" if pg_name != Constant.UNKNOWN else "", group_name]).strip()
+                ExcelConfig.ROW_STYLE_MAP[f"\t{description}"] = CellFormatType.LIGHT_BLUE_NORMAL
+                overall_metrics_data.setdefault("group", {})[group_name] = {
+                    "description": f"\t{description}",
+                    ExcelConfig.COMMUNICATION_TIME: self.communication_data_by_group(group_name),
                     ExcelConfig.WAIT: self.wait_data_by_group(group_name),
                     ExcelConfig.TRANSMIT: self.transmit_data_by_group(group_name)
                 }
+                overall_metrics_data.setdefault("pg_name_dict", {}).setdefault(pg_name, []).append(group_name)
+
         for kernel_name in self._profiling_info.mc2_time_dict.keys():
             mc2_name_index = f"\t{kernel_name}"
             ExcelConfig.ROW_STYLE_MAP[mc2_name_index] = CellFormatType.LIGHT_BLUE_NORMAL
