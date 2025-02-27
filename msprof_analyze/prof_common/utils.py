@@ -91,3 +91,10 @@ def convert_to_int(num):
     except (ValueError, NameError):
         logger.error(f"Can not convert %s to int", num)
     return 0
+
+
+def compute_ratio(dividend: float, divisor: float):
+    if abs(divisor) < 1e-15:
+        return 0
+    else:
+        return round(dividend / divisor, 4)

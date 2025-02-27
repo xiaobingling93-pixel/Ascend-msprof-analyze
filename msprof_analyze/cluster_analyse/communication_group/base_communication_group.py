@@ -39,6 +39,7 @@ class BaseCommunicationGroup:
         self.data_map = params.get(Constant.DATA_MAP)
         self.data_type = params.get(Constant.DATA_TYPE)
         self.analysis_mode = params.get(Constant.ANALYSIS_MODE)
+        self.is_msprof = params.get(Constant.IS_MSPROF)
         self.rank_comm_dir_dict = {}
         self.p2p_link = []
         self.collective_group_dict = defaultdict(set)
@@ -54,8 +55,9 @@ class BaseCommunicationGroup:
         comm_op_dirs = []
         for rank_id, profiling_dir_path in self.data_map.items():
             if self.data_type == Constant.TEXT:
-                comm_dir = os.path.join(profiling_dir_path, Constant.SINGLE_OUTPUT, Constant.COMM_JSON)
-                matrix_dir = os.path.join(profiling_dir_path, Constant.SINGLE_OUTPUT, Constant.COMM_MATRIX_JSON)
+                output_dir = "analyze" if self.is_msprof else Constant.SINGLE_OUTPUT
+                comm_dir = os.path.join(profiling_dir_path, output_dir, Constant.COMM_JSON)
+                matrix_dir = os.path.join(profiling_dir_path, output_dir, Constant.COMM_MATRIX_JSON)
             else:
                 comm_dir = os.path.join(profiling_dir_path, Constant.SINGLE_OUTPUT, Constant.DB_COMMUNICATION_ANALYZER)
                 matrix_dir = comm_dir

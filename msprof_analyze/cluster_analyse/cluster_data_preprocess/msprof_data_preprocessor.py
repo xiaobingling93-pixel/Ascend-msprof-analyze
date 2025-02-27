@@ -1,0 +1,98 @@
+# Copyright (c) 2025, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import os
+import re
+from collections import defaultdict
+
+from msprof_analyze.cluster_analyse.cluster_data_preprocess.data_preprocessor import DataPreprocessor
+from msprof_analyze.prof_common.constant import Constant
+from msprof_analyze.prof_common.logger import get_logger
+from msprof_analyze.prof_common.file_manager import FileManager
+
+logger = get_logger()
+
+
+class MsprofDataPreprocessor(DataPreprocessor):
+    DEVICE_HEAD = "device_"
+    INFO_JSON_PATTERN = r"^info\.json\.\d{1,2}$"
+    DB_PATTERN = r"^msprof_\d{1,20}\.db$"
+
+    def __init__(self, path_list: list):
+        super().__init__(path_list)
+        self.data_type = set()
+
+    def get_data_map(self) -> dict:
+        prof_data_uid = defaultdict(list)
+        prof_data_rank = defaultdict(list)
+        for dir_name in self.path_list:
+            info_json_file = self._find_info_json_file(dir_name)
+            if not info_json_file:
+                logger.error(f"Profiling data in not completed, please check the info.json file in the path {dir_name}")
+                continue
+
+            if self._check_db_type(dir_name):
+                self.data_type.add(Constant.DB)
+            elif os.path.exists(os.path.join(dir_name, "mindstudio_profiler_output")):
+                if os.path.exists(os.path.join(dir_name, "analyze")):
+                    self.data_type.add(Constant.TEXT)
+                else:
+                    logger.error(f"The profiling data has not been fully parsed.  You can parse it by executing "
+                                 f"the following command: msprof --analyze=on --output={dir_name}")
+                    continue
+            else:
+                logger.error(f"The profiling data has not been fully parsed.  You can parse it by executing "
+                             f"the following command: msprof --export=on --output={dir_name}; "
+                             f"msprof --analyze=on --output={dir_name}")
+                continue
+            info_json = FileManager.read_json_file(info_json_file)
+            rank_id = info_json.get("rank_id")
+            if rank_id != Constant.INVALID_RETURN:
+                prof_data_rank[rank_id].append(dir_name)
+                continue
+            host_id = info_json.get("hostUid")
+            device_id = int(os.path.basename(info_json_file).split(".")[-1])
+            prof_data_uid[(host_id, device_id)].append(dir_name)
+
+        if prof_data_rank:
+            for rank_id, dir_list in prof_data_rank.items():
+                dir_list.sort(key=lambda x: x.split('_')[-2])
+                self.data_map[rank_id] = dir_list[0]
+        else:
+            ordered_keys = sorted(prof_data_uid.keys(), key=lambda x: (x[0], x[1]))
+            rank_id = 0
+            for key in ordered_keys:
+                dir_list = prof_data_uid[key]
+                dir_list.sort(key=lambda x: x.split('_')[-2])
+                self.data_map[rank_id] = dir_list[0]
+                rank_id += 1
+        return self.data_map
+
+    def get_data_type(self):
+        if len(self.data_type) == 1:
+            return self.data_type.pop()
+        return Constant.INVALID
+
+    def _find_info_json_file(self, dir_name):
+        for file_name in os.listdir(dir_name):
+            for device_file in os.listdir(os.path.join(dir_name, file_name)):
+                if re.match(self.INFO_JSON_PATTERN, device_file):
+                    return os.path.join(dir_name, file_name, device_file)
+        return None
+
+    def _check_db_type(self, dir_name):
+        for file_name in os.listdir(dir_name):
+            if re.match(self.DB_PATTERN, file_name):
+                return True
+        return False

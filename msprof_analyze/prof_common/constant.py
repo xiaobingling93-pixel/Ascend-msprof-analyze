@@ -61,6 +61,7 @@ class Constant(object):
     # communication
     P2P = "p2p"
     COLLECTIVE = "collective"
+    TOTAL = "total"
     STEP_ID = "step_id"
     RANK_ID = "rank_id"
     GROUP_NAME = "group_name"
@@ -97,6 +98,7 @@ class Constant(object):
     TRANSPORT_TYPE = "Transport Type"
     COMM_DATA_DICT = "comm_data_dict"
     DATA_TYPE = "data_type"
+    IS_MSPROF = "is_prof"
 
     # step time
     RANK = "rank"

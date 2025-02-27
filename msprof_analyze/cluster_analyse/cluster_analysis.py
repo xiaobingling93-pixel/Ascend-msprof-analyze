@@ -21,6 +21,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 from msprof_analyze.cluster_analyse.analysis.analysis_facade import AnalysisFacade
 from msprof_analyze.cluster_analyse.cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
 from msprof_analyze.cluster_analyse.cluster_data_preprocess.mindspore_data_preprocessor import MindsporeDataPreprocessor
+from msprof_analyze.cluster_analyse.cluster_data_preprocess.msprof_data_preprocessor import MsprofDataPreprocessor
 from msprof_analyze.cluster_analyse.communication_group.communication_group_generator import CommunicationGroupGenerator
 from msprof_analyze.prof_common.additional_args_manager import AdditionalArgsManager
 from msprof_analyze.prof_common.constant import Constant
@@ -47,6 +48,7 @@ ALL_FEATURE_LIST = COMM_FEATURE_LIST + get_all_recipes()
 class Interface:
     ASCEND_PT = "ascend_pt"
     ASCEND_MS = "ascend_ms"
+    PROF = "PROF_"
 
     def __init__(self, params: dict):
         self.collection_path = PathManager.get_realpath(params.get(Constant.PROFILING_PATH))
@@ -70,27 +72,38 @@ class Interface:
     def allocate_prof_data(self):
         ascend_pt_dirs = []
         ascend_ms_dirs = []
+        prof_dirs = []
         for root, dirs, _ in os.walk(self.collection_path):
             for dir_name in dirs:
                 if dir_name.endswith(self.ASCEND_PT):
                     ascend_pt_dirs.append(os.path.join(root, dir_name))
                 if dir_name.endswith(self.ASCEND_MS):
                     ascend_ms_dirs.append(os.path.join(root, dir_name))
+                if dir_name.startswith(self.PROF):
+                    prof_dirs.append(os.path.join(root, dir_name))
         pytorch_processor = PytorchDataPreprocessor(ascend_pt_dirs)
         pt_data_map = pytorch_processor.get_data_map()
-        data_type = pytorch_processor.get_data_type()
+        pt_data_type = pytorch_processor.get_data_type()
         ms_data_map = MindsporeDataPreprocessor(ascend_ms_dirs).get_data_map()
         if pt_data_map and ms_data_map:
             logger.error("Can not analyze pytorch and mindspore meantime.")
-            return []
-        return (pt_data_map, data_type) if pt_data_map else (ms_data_map, Constant.TEXT)
+            return {}
+        if pt_data_map:
+            return {Constant.DATA_MAP: pt_data_map, Constant.DATA_TYPE: pt_data_type, Constant.IS_MSPROF: False}
+        if ms_data_map:
+            return {Constant.DATA_MAP: ms_data_map, Constant.DATA_TYPE: Constant.TEXT, Constant.IS_MSPROF: False}
+        msprof_processor = MsprofDataPreprocessor(prof_dirs)
+        prof_data_map = msprof_processor.get_data_map()
+        prof_data_type = msprof_processor.get_data_type()
+        return {Constant.DATA_MAP: prof_data_map, Constant.DATA_TYPE: prof_data_type, Constant.IS_MSPROF: True}
 
     def run(self):
         PathManager.check_input_directory_path(self.collection_path)
         PathManager.check_input_directory_path(self.cluster_analysis_output_path)
         PathManager.check_path_owner_consistent([self.collection_path, self.cluster_analysis_output_path])
 
-        data_map, data_type = self.allocate_prof_data()
+        data_dict = self.allocate_prof_data()
+        data_map, data_type = data_dict.get(Constant.DATA_MAP), data_dict.get(Constant.DATA_TYPE)
         if not data_map:
             logger.warning("Can not get rank info or profiling data.")
             return
@@ -100,32 +113,43 @@ class Interface:
 
         params = {
             Constant.COLLECTION_PATH: self.collection_path,
+            Constant.ANALYSIS_MODE: self.analysis_mode,
             Constant.DATA_MAP: data_map,
             Constant.DATA_TYPE: data_type,
-            Constant.ANALYSIS_MODE: self.analysis_mode,
+            Constant.IS_MSPROF: data_dict.get(Constant.IS_MSPROF, False),
             Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: self.cluster_analysis_output_path,
             Constant.DATA_SIMPLIFICATION: self.origin_params.get(Constant.DATA_SIMPLIFICATION, False),
             Constant.FORCE: self.force
         }
 
-        if self.analysis_mode in COMM_FEATURE_LIST:
-            FileManager.create_output_dir(self.cluster_analysis_output_path)
-            PathManager.check_path_writeable(self.cluster_analysis_output_path)
-            logger.info("Begin generate communication data.")
-            comm_data_dict = CommunicationGroupGenerator(params).generate()
-            logger.info("Communication data read completed.")
-            params[Constant.COMM_DATA_DICT] = comm_data_dict
-            AnalysisFacade(params).cluster_analyze()
-            logger.info("The cluster analysis result file has been generated: %s",
-                        self.cluster_analysis_output_path)
-            return
-
-        if data_type != Constant.DB:
-            logger.error("The current analysis node only supports DB as input data. Please check.")
-            return
-        FileManager.create_output_dir(self.cluster_analysis_output_path, is_overwrite=True)
-        self.origin_params.update(params)
-        AnalysisFacade(self.origin_params).recipe_analyze()
+        if data_type == Constant.TEXT:
+            if self.analysis_mode in COMM_FEATURE_LIST:
+                FileManager.create_output_dir(self.cluster_analysis_output_path)
+                PathManager.check_path_writeable(self.cluster_analysis_output_path)
+                logger.info("Begin generate communication data.")
+                comm_data_dict = CommunicationGroupGenerator(params).generate()
+                logger.info("Communication data read completed.")
+                params[Constant.COMM_DATA_DICT] = comm_data_dict
+                AnalysisFacade(params).cluster_analyze()
+                logger.info("The cluster analysis result file has been generated: %s",
+                            self.cluster_analysis_output_path)
+            else:
+                logger.error("The current analysis node only supports DB as input data. Please check.")
+        else:
+            if self.analysis_mode in COMM_FEATURE_LIST:
+                FileManager.create_output_dir(self.cluster_analysis_output_path)
+                PathManager.check_path_writeable(self.cluster_analysis_output_path)
+                logger.info("Begin generate communication data.")
+                comm_data_dict = CommunicationGroupGenerator(params).generate()
+                logger.info("Communication data read completed.")
+                params[Constant.COMM_DATA_DICT] = comm_data_dict
+                AnalysisFacade(params).cluster_analyze()
+                logger.info("The cluster analysis result file has been generated: %s",
+                            self.cluster_analysis_output_path)
+            else:
+                FileManager.create_output_dir(self.cluster_analysis_output_path, is_overwrite=True)
+                self.origin_params.update(params)
+                AnalysisFacade(self.origin_params).recipe_analyze()
 
 
 def cluster_analysis_main():

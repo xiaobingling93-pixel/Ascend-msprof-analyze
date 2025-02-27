@@ -15,9 +15,13 @@
 
 import os
 from copy import deepcopy
- 
+
 from msprof_analyze.cluster_analyse.communication_group.base_communication_group import BaseCommunicationGroup
 from msprof_analyze.prof_common.file_manager import FileManager
+from msprof_analyze.cluster_analyse.communication_group.msprof_communication_matrix_adapter import \
+    MsprofCommunicationMatrixAdapter
+from msprof_analyze.cluster_analyse.communication_group.msprof_communication_time_adapter import \
+    MsprofCommunicationTimeAdapter
 
 
 class CommunicationJsonGroup(BaseCommunicationGroup):
@@ -42,7 +46,11 @@ class CommunicationJsonGroup(BaseCommunicationGroup):
         comm_data = {}
         matrix_data = {}
         if os.path.exists(comm_json_path) and self.analysis_mode in ["all", "communication_time"]:
-            comm_data = FileManager.read_json_file(comm_json_path)
+            comm_data = MsprofCommunicationTimeAdapter(
+                comm_json_path).generate_comm_time_data() if self.is_msprof else FileManager.read_json_file(
+                comm_json_path)
         if os.path.exists(matrix_json_path) and self.analysis_mode in ["all", "communication_matrix"]:
-            matrix_data = FileManager.read_json_file(matrix_json_path)
+            matrix_data = MsprofCommunicationMatrixAdapter(
+                matrix_json_path).generate_comm_matrix_data() if self.is_msprof else FileManager.read_json_file(
+                matrix_json_path)
         return rank_id, comm_data, matrix_data
