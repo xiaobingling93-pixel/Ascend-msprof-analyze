@@ -423,6 +423,7 @@ class Constant(object):
 
     CONCURRENT_MODE = "concurrent"
     PROFILER_DB_PATH = "profiler_db_path"
+    ANALYSIS_DB_PATH = "analysis_db_path"
     RANK_LIST = "rank_list"
     EXPORT_TYPE = "export_type"
     EXTRA_ARGS = "args"

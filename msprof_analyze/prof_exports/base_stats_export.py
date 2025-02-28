@@ -35,6 +35,9 @@ class BaseStatsExport:
 
     def read_export_db(self):
         try:
+            if not self._db_path:
+                logger.error("db path is None.")
+                return None
             query = self.get_query()
             if query is None:
                 logger.error("query is None.")
