@@ -128,6 +128,7 @@ class Constant(object):
     TABLE_HOST_INFO = "HostInfo"
     TABLE_RANK_DEVICE_MAP = "RankDeviceMap"
     TABLE_CLUSTER_BASE_INFO = "ClusterBaseInfo"
+    TABLE_META_DATA = "META_DATA"
 
     # data config key
     CONFIG = "config"
@@ -136,6 +137,7 @@ class Constant(object):
 
     # metadata key
     DISTRIBUTED_ARGS = "distributed_args"
+    PARALLEL_GROUP_INFO = "parallel_group_info"
 
     # mode
     ALL = "all"
