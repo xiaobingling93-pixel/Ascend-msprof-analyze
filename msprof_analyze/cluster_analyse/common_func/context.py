@@ -84,7 +84,12 @@ class ConcurrentContext(Context):
 
     def map(self, func, *iterables, **kwargs):
         partial_func = partial(func, **kwargs)
-        return list(self._executor.map(partial_func, *iterables))
+        try:
+            res = list(self._executor.map(partial_func, *iterables))
+        except Exception as err:
+            logger.error(err)
+            return []
+        return res
 
     def wait(self, waitable):
         return waitable
