@@ -73,7 +73,7 @@ class TestClusterAnalysePytorchDb(TestCase):
         text_cluster_step_trace_time = ClusterStepTraceTimeDb(*df.iloc[0])
         self.assertEqual(text_cluster_step_trace_time.type, db_cluster_step_trace_time.type,
                          "Cluster step trace time db vs text 'type' property wrong.")
-        self.assertEqual(text_cluster_step_trace_time.index, db_cluster_step_trace_time.index,
+        self.assertEqual(str(text_cluster_step_trace_time.index), str(db_cluster_step_trace_time.index),
                          "Cluster step trace time db vs text 'index' property wrong.")
         self.assertEqual(round(text_cluster_step_trace_time.computing), round(db_cluster_step_trace_time.computing),
                          "Cluster step trace time db vs text 'computing' property wrong.")

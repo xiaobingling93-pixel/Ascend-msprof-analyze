@@ -54,7 +54,7 @@ class BaseAnalysis:
             if stat_name in op_name:
                 if stat_name != total:
                     return False
-            return True
+        return True
 
     @abstractmethod
     def run(self):
