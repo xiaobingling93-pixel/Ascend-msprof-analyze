@@ -85,7 +85,11 @@ class FreqAnalysis(BaseRecipeAnalysis):
     def run(self, context):
         mapper_res = self.mapper_func(context)
         self.reducer_func(mapper_res)
-        self.save_db()
+
+        if self._export_type == Constant.DB:
+            self.save_db() 
+        else:
+            logger.error("Frequence analysis is not supported for notebook export type.")
 
     def _mapper_func(self, data_map, analysis_class):
         profiler_db_path = data_map.get(Constant.PROFILER_DB_PATH)

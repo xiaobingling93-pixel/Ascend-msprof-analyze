@@ -437,5 +437,11 @@ class Constant(object):
     UINT32_BITS = 32
     UINT32_MASK = 0xffffffff
 
+    # slow rank
+    MAX_DIXON_NUM = 100
+    DIXON_THRESHOLD_1 = 7
+    DIXON_THRESHOLD_2 = 10
+    DIXON_THRESHOLD_3 = 13
+
     UNKNOWN = "unknown"
 
