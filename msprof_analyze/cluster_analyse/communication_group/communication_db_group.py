@@ -100,13 +100,16 @@ class CommunicationDBGroupOptimized(BaseCommunicationGroup):
         comm_time_data = (time_data, bandwidth_data)
         return rank_id, comm_time_data, comm_matrix_data
 
-    def set_collective_group(self, rank_id: int, time_data: list):
+    def set_group_rank_map(self, rank_id: int, time_data: list):
         for single_time_data in time_data:
-            if single_time_data.get('type') == Constant.P2P:
-                continue
+            group_type = single_time_data.get(Constant.TYPE)
             group_name = single_time_data.get(Constant.GROUP_NAME)
-            if group_name:
+            if not group_name:
+                return
+            if group_type == Constant.COLLECTIVE:
                 self.collective_group_dict[group_name].add(rank_id)
+            elif group_type == Constant.P2P:
+                self.p2p_group_dict[group_name].add(rank_id)
 
     def analyze_communication_data(self):
         for rank_id, comm_time_data, comm_matrix_data in self.rank_comm_dir_dict:
@@ -115,7 +118,7 @@ class CommunicationDBGroupOptimized(BaseCommunicationGroup):
                 if not time_data:
                     logger.warning("[WARNING] rank %s has error format in time data.", rank_id)
                     continue
-                self.set_collective_group(rank_id, time_data)
+                self.set_group_rank_map(rank_id, time_data)
                 self.communication_ops.extend(self._merge_data_with_rank(rank_id, time_data))
                 self.bandwidth_data.extend(self._merge_data_with_rank(rank_id, bandwidth_data))
             if self.analysis_mode in [Constant.ALL, Constant.COMMUNICATION_MATRIX]:
@@ -126,8 +129,8 @@ class CommunicationDBGroupOptimized(BaseCommunicationGroup):
                     if not isinstance(step_id_dict, dict):
                         logger.warning("[WARNING] rank %s has error format in matrix data.", rank_id)
                         continue
-                    self.set_p2p_link(rank_id, step_id, comm_matrix_data)
-                    self.get_collective_ops_name(rank_id, step_id_dict.get(Constant.COLLECTIVE))
+                    self.add_matrix_ops(rank_id, step_id, step_id_dict)
+                    self.set_group_rank_map(rank_id, time_data)
 
     def generate_collective_communication_group(self):
         collective_group = []

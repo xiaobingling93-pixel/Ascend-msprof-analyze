@@ -139,9 +139,13 @@ class TestClusterAnalyseCmdPytorchText(TestCase):
                    "Communication(Not Overlapped and Exclude Receive)", "Preparing"]
         self.assertEqual(headers, df.columns.tolist(), "PyTorch text result columns wrong.")
 
-        data_base = ["rank", "7", 14945901.573999925, 50289541.49199608, 14462809.01400388, 64752350.50599996,
+        data_base = ["rank", 7, 14945901.573999925, 50289541.49199608, 14462809.01400388, 64752350.50599996,
                      377397.078000026, 65612840.25, 0.0, 50289541.49199608, 1726054679554437.8]
-        self.assertEqual(data_base, df.iloc[0].loc["Type":"Preparing"].tolist(), "PyTorch text result data wrong.")
+
+        rank_7_df = df[df["Index"] == 7]
+        self.assertEqual(len(rank_7_df), 1, "PyTorch text result data wrong.")
+        data_compare = rank_7_df.iloc[0].loc["Type":"Preparing"].values.tolist()
+        self.assertEqual(data_base, data_compare, "PyTorch text result data wrong.")
 
     def communication_matrix_compare(self):
         """
@@ -153,10 +157,11 @@ class TestClusterAnalyseCmdPytorchText(TestCase):
         for header in headers:
             result_data = result_data.get(header, {})
         compare_data = []
-        for data in list(result_data.values())[:12]:
+        result_data = {k: result_data[k] for k in sorted(result_data.keys(), reverse=True)}
+        for data in list(result_data.values()):
             compare_data.append(data.get("Bandwidth(GB/s)", -1))
-        data_base = [25.0568, 641.8677, 23.4726, 23.2394, 626.9544, 24.9039,
-                     22.7738, 23.0614, 640.6486, 25.7812, 23.1025, 23.2896]
+        data_base = [641.8677, 23.4726, 23.2394, 25.0568, 22.7738, 626.9544, 23.0614, 24.9039,
+                     23.2896, 23.1025, 640.6486, 25.7812, 23.1077, 22.9017, 23.2811, 629.2938]
         self.assertEqual(data_base, compare_data, "PyTorch text result data wrong.")
 
     def communication_compare(self):
@@ -170,6 +175,7 @@ class TestClusterAnalyseCmdPytorchText(TestCase):
         for header in headers:
             result_data = result_data.get(header, {})
         board_datas = []
+        result_data = {k: result_data[k] for k in sorted(result_data.keys(), reverse=True)}
         for data in list(result_data.values())[:2]:
             board_datas.append(data.get("Communication Time Info", {}))
         compare_data = []

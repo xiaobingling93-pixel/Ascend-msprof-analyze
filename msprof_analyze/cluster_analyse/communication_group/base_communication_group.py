@@ -41,9 +41,8 @@ class BaseCommunicationGroup:
         self.analysis_mode = params.get(Constant.ANALYSIS_MODE)
         self.is_msprof = params.get(Constant.IS_MSPROF)
         self.rank_comm_dir_dict = {}
-        self.p2p_link = []
         self.collective_group_dict = defaultdict(set)
-        self.p2p_comm_group = []
+        self.p2p_group_dict = defaultdict(set)
         self.communication_group = {}
         self.parallel_group_info = {}
         self.communication_ops = []
@@ -71,52 +70,11 @@ class BaseCommunicationGroup:
         with Pool(processes=max_processes) as p:
             self.rank_comm_dir_dict = p.map(self.read_communication_func, comm_op_dirs)
 
-    def set_p2p_groups(self):
-        self.p2p_link = sorted(self.p2p_link, key=lambda x: min(x))
-        while self.p2p_link:
-            union_set = deepcopy(self.p2p_link[0])
-            rm_list = [self.p2p_link[0]]
-            for _, link_rank_set_x in enumerate(self.p2p_link[1:]):
-                if UnionFind.is_connected(link_rank_set_x, union_set):
-                    union_set = union_set.union(link_rank_set_x)
-                    rm_list.append(link_rank_set_x)
-            self.p2p_comm_group.append(union_set)
-            self.p2p_link = [element for element in self.p2p_link if element not in rm_list]
-
-    def generate_collective_communication_group(self):
+    def generate_communication_group(self):
         self.communication_group[Constant.COLLECTIVE] = \
             [list(group) for _, group in self.collective_group_dict.items()]
-
-    def generate_p2p_communication_group(self):
-        stage_group = {}
-        for _, rank_set in self.collective_group_dict.items():
-            if not self.whether_valid_comm_group(rank_set):
-                continue
-            unioned_set = set()
-            remove_key = []
-            for first_rank, stage in stage_group.items():
-                if UnionFind.is_connected(rank_set, stage):
-                    unioned_set = UnionFind.union(rank_set, stage, unioned_set)
-                    remove_key.append(first_rank)
-            if unioned_set:
-                for key in remove_key:
-                    del stage_group[key]
-                stage_group[min(unioned_set)] = unioned_set
-            else:
-                stage_group[min(rank_set)] = rank_set
-        first_rank_sort_list = sorted([first_rank for first_rank in stage_group])
         self.communication_group[Constant.P2P] = \
-            [list(stage_group.get(first_rank, {})) for first_rank in first_rank_sort_list]
-
-    def whether_valid_comm_group(self, rank_set: set):
-        """
-        while distinguish which communication group should be used to infer stage info, these group should be ignored:
-            1. group can not include more than 1 rank in every single p2p group
-        """
-        for p2p_rank_set in self.p2p_comm_group:
-            if len(rank_set.intersection(p2p_rank_set)) > 1:
-                return False
-        return True
+            [list(group) for _, group in self.p2p_group_dict.items()]
 
     @abstractmethod
     def read_communication_func(self, params: tuple):
@@ -140,7 +98,8 @@ class BaseCommunicationGroup:
                 if not isinstance(step_id_dict, dict):
                     logger.warning("rank%s's communication.json has a wrong data struct.", rank_id)
                     continue
-                self.get_collective_ops_name(rank_id, step_id_dict.get(Constant.COLLECTIVE))
+                self.add_collective_group_rank_map(rank_id, step_id_dict.get(Constant.COLLECTIVE, {}))
+                self.add_p2p_group_rank_map(rank_id, step_id_dict.get(Constant.P2P, {}))
                 for comm_op_type, comm_op_dict in step_id_dict.items():
                     self.add_communication_ops(rank_id, step_id, comm_op_type, comm_op_dict)
 
@@ -148,8 +107,10 @@ class BaseCommunicationGroup:
                 if not isinstance(step_id_dict, dict):
                     logger.warning("rank%s's communication_matrix.json has a wrong data struct.", rank_id)
                     continue
-                self.set_p2p_link(rank_id, step_id, rank_id_matrix_dict)
-                self.get_collective_ops_name(rank_id, step_id_dict.get(Constant.COLLECTIVE))
+                self.add_matrix_ops(rank_id, step_id, step_id_dict)
+                self.add_collective_group_rank_map(rank_id, step_id_dict.get(Constant.COLLECTIVE, {}))
+                self.add_p2p_group_rank_map(rank_id, step_id_dict.get(Constant.P2P, {}))
+
 
     @abstractmethod
     def dump_data(self):
@@ -168,44 +129,24 @@ class BaseCommunicationGroup:
         self.load_communication_data()
         self.analyze_communication_data()
         self.read_parallel_group_info()
-        self.set_p2p_groups()
-        self.generate_collective_communication_group()
-        self.generate_p2p_communication_group()
+        self.generate_communication_group()
         self.analyze_parallel_group_info()
         self.dump_data()
         return self.collect_comm_data()
 
-    def set_p2p_link(self, rank_id: int, step_id: str, rank_id_matrix_dict: dict):
-        ops = rank_id_matrix_dict.get(step_id, {})
-        self.add_matrix_ops(rank_id, step_id, ops)
-        if not ops:
-            logger.warning(
-                "rank%s %s do not have communication matrix ops data.", rank_id, step_id
-            )
-            return
-        p2p_ops = ops.get(Constant.P2P, {})
-        for op_name, link_dict in p2p_ops.items():
-            self.append_p2p_link(op_name, link_dict)
-
-    def append_p2p_link(self, op_name, link_dict):
-        for link in link_dict:
-            if '-' not in link:
-                logger.warning("%s has an invalid link key %s!", op_name, link)
-                break
-            src_rank = int(link.split('-')[0])
-            dst_rank = int(link.split('-')[1])
-            if src_rank != dst_rank:
-                rank_set = {src_rank, dst_rank}
-                if rank_set in self.p2p_link:
-                    continue
-                self.p2p_link.append(rank_set)
-
-    def get_collective_ops_name(self, rank_id: int, comm_op_dict: dict):
+    def add_collective_group_rank_map(self, rank_id: int, comm_op_dict: dict):
         for comm_op in comm_op_dict:
             if comm_op.startswith('Total'):
                 continue
             group_name = comm_op.split('@')[-1]
             self.collective_group_dict[group_name].add(rank_id)
+
+    def add_p2p_group_rank_map(self, rank_id: int, comm_op_dict: dict):
+        for comm_op in comm_op_dict:
+            if comm_op.startswith('Total'):
+                continue
+            group_name = comm_op.split('@')[-1]
+            self.p2p_group_dict[group_name].add(rank_id)
 
     def add_communication_ops(self, rank_id: str, step_id: str, comm_op_type: str, comm_op_dict: dict):
         for comm_op in comm_op_dict:
@@ -245,6 +186,8 @@ class BaseCommunicationGroup:
         comm_group_df = pd.DataFrame(columns=comm_group_cols)
         for group_name, rank_set in self.collective_group_dict.items():
             comm_group_df.loc[comm_group_df.shape[0]] = [Constant.COLLECTIVE, list(rank_set), group_name]
+        for group_name, rank_set in self.p2p_group_dict.items():
+            comm_group_df.loc[comm_group_df.shape[0]] = [Constant.P2P, list(rank_set), group_name]
 
         # create parallel group dataframe
         parallel_group_cols = ["group_name", "group_id", "pg_name"]
@@ -258,9 +201,6 @@ class BaseCommunicationGroup:
 
         # merge by group_name
         df = pd.merge(comm_group_df, parallel_group_df, on='group_name', how='left')
-        # add p2p group
-        for rank_set in self.communication_group[Constant.P2P]:
-            df.loc[df.shape[0]] = [Constant.P2P, list(rank_set), None, None, None]
         df.fillna("", inplace=True)
 
         self.comm_group_parallel_info_df = df
