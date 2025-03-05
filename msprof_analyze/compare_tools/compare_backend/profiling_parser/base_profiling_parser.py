@@ -12,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
 from abc import abstractmethod, ABC
 from decimal import Decimal
 
@@ -156,6 +157,7 @@ class BaseProfilingParser(ABC):
             self._dispatch_events()
             self._update_kernel_dict()
             self._update_communication_dict()
+            self._update_pg_name_map()
         if self._enable_memory_compare:
             self._update_memory_list()
         if self._enable_profiling_compare:
@@ -369,3 +371,17 @@ class BaseProfilingParser(ABC):
         with open(self._json_path, 'r') as file:
             for event in ijson.items(file, item):
                 yield TraceEventBean(event)
+
+    def _update_pg_name_map(self):
+        meta_file = os.path.join(self._profiling_path, Constant.PROFILER_METADATA)
+        if not os.path.exists(meta_file):
+            return
+        meta_data = FileManager.read_json_file(meta_file)
+        if Constant.PARALLEL_GROUP_INFO not in meta_data:
+            return
+        pg_name_map = {}
+        for group_id, group_info in meta_data[Constant.PARALLEL_GROUP_INFO].items():
+            if group_id not in pg_name_map:
+                format_group_id = " ".join(["Group", group_id, "Communication"])
+                pg_name_map[format_group_id] = group_info.get('group_name', "")
+        self._result_data.overall_metrics.update_communication_group_pg_name(pg_name_map)

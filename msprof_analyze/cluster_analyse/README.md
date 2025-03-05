@@ -79,6 +79,8 @@ experimental_config = torch_npu.profiler._ExperimentalConfig(
    | compute_op_sum       | 集群场景性能数据的device运行算子信息汇总分析，输入性能数据需要基于ascend_pytorch_profiler_{rank_id}.db文件。--export_type为db时，输出交付件cluster_analysis.db；--export_type为notebook时，在cluster_analysis_output/ComputeOpSum目录下输出交付件stats.ipynb；可根据实际情况决定是否是否打开--exclude_op_name。 | 否       |
    | hccl_sum             | 集合通信算子耗时分析，输入性能数据需要基于ascend_pytorch_profiler_{rank_id}.db文件。--export_type为db时，输出交付件cluster_analysis.db；--export_type为notebook时，在cluster_analysis_output/HcclSum目录下输出交付件stats.ipynb。 | 否       |
    | mstx_sum             | 集群场景mstx打点信息汇总分析，输入性能数据需要基于ascend_pytorch_profiler_{rank_id}.db文件。--export_type为db时，输出交付件cluster_analysis.db；--export_type为notebook时，在cluster_analysis_output/MstxSum目录下输出交付件stats.ipynb。 | 否       |
+   | freq_analysis        | 集群场景aicore frequency信息汇总分析，输入性能数据需要基于ascend_pytorch_profiler_{rank_id}.db文件。打屏输出是否存在aicore存在空闲（频率为800MHz）、异常（频率不为1800MHz或800MHz）的现象。如果有，则在输出交付件cluster_analysis.db增加对应的卡和频率信息。 | 否       |
+   | slow_rank            | 集群场景通信算子快慢卡汇总分析，输入性能数据需要基于ascend_pytorch_profiler_{rank_id}.db文件。输出交付件cluster_analysis.db中展示各个rank按照当前的快慢卡统计算法得出的快慢卡影响次数。
    | 自定义分析参数       | 与cann_api_sum、compute_op_sum、hccl_sum等参数功能类似，用户可自定义一套性能数据的分析规则，需要详细了解性能分析的开发人员，具体开发指导请参见“[自定义分析规则开发指导](#自定义分析规则开发指导)”。 | 否       |
    
    --parallel_mode参数示例如下：
