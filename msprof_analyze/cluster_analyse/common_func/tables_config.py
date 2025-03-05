@@ -139,6 +139,7 @@ class TablesConfig:
             ("pg_name", "TEXT, null")
         ],
         "ClusterBaseInfoMap": [
-            ("distributed_args", "TEXT, null")
+            ("key", "TEXT, null"),
+            ("value", "TEXT, null")
         ]
     }
