@@ -87,6 +87,7 @@ class Constant(object):
     ELAPSE_TIME_MS = "Elapse Time(ms)"
     IDLE_TIME_MS = "Idle Time(ms)"
     LARGE_PACKET_RATIO = "Large Packet Ratio"
+    TYPE = "type"
 
     # params
     DATA_MAP = "data_map"
