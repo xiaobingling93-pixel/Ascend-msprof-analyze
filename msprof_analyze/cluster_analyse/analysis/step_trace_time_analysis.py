@@ -23,6 +23,8 @@ from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.file_manager import FileManager
 from msprof_analyze.prof_common.logger import get_logger
 from msprof_analyze.cluster_analyse.analysis.msprof_step_trace_time_adapter import MsprofStepTraceTimeAdapter
+from msprof_analyze.cluster_analyse.cluster_data_preprocess.msprof_data_preprocessor import MsprofDataPreprocessor
+from msprof_analyze.cluster_analyse.analysis.msprof_step_trace_time_adapter import MsprofStepTraceTimeDBAdapter
 
 logger = get_logger()
 
@@ -37,7 +39,7 @@ class StepTraceTimeAnalysis:
         self.collection_path = param.get(Constant.COLLECTION_PATH)
         self.cluster_analysis_output_path = param.get(Constant.CLUSTER_ANALYSIS_OUTPUT_PATH)
         self.data_map = param.get(Constant.DATA_MAP)
-        self.communication_group = param.get(Constant.COMM_DATA_DICT, {}).get(Constant.COMMUNICATION_GROUP)
+        self.communication_group = param.get(Constant.COMM_DATA_DICT, {}).get(Constant.COMMUNICATION_GROUP, {})
         self.step_time_dict = {}
         self.step_data_list = []
         self.data_type = param.get(Constant.DATA_TYPE)
@@ -164,15 +166,22 @@ class StepTraceTimeAnalysis:
                     if os.path.exists(step_time_file):
                         self.step_time_dict[rank_id] = FileManager.read_csv_file(step_time_file, StepTraceTimeBean)
             else:
-                step_time_file = os.path.join(profiling_dir_path, Constant.SINGLE_OUTPUT,
-                                              Constant.DB_COMMUNICATION_ANALYZER)
-                if (os.path.exists(step_time_file) and
-                        DBManager.check_tables_in_db(step_time_file, Constant.TABLE_STEP_TRACE)):
-                    conn, cursor = DBManager.create_connect_db(step_time_file)
-                    sql = "select * from {0}".format(Constant.TABLE_STEP_TRACE)
-                    data = DBManager.fetch_all_data(cursor, sql, is_dict=False)
-                    self.step_time_dict[rank_id] = data
-                    DBManager.destroy_db_connect(conn, cursor)
+                if self.is_msprof:
+                    profiler_db = MsprofDataPreprocessor.get_msprof_profiler_db_path(profiling_dir_path)
+                    analysis_db = os.path.join(profiling_dir_path, "analyze", "communication_analyzer.db")
+                    self.step_time_dict[rank_id] = MsprofStepTraceTimeDBAdapter(
+                        {Constant.ANALYSIS_DB_PATH: analysis_db,
+                         Constant.PROFILER_DB_PATH: profiler_db}).generate_step_trace_time_data()
+                else:
+                    step_time_file = os.path.join(profiling_dir_path, Constant.SINGLE_OUTPUT,
+                                                  Constant.DB_COMMUNICATION_ANALYZER)
+                    if (os.path.exists(step_time_file) and
+                            DBManager.check_tables_in_db(step_time_file, Constant.TABLE_STEP_TRACE)):
+                        conn, cursor = DBManager.create_connect_db(step_time_file)
+                        sql = "select * from {0}".format(Constant.TABLE_STEP_TRACE)
+                        data = DBManager.fetch_all_data(cursor, sql, is_dict=False)
+                        self.step_time_dict[rank_id] = data
+                        DBManager.destroy_db_connect(conn, cursor)
             if not self.step_time_dict.get(rank_id):
                 logger.warning("Rank %s does not have a valid step_trace_time data in %s file.",
                                str(rank_id), str(self.data_type))

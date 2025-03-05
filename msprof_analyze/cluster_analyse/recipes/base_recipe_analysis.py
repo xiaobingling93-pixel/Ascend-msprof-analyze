@@ -14,7 +14,6 @@
 # limitations under the License.
 import argparse
 import os
-import re
 import shutil
 import sys
 import traceback
@@ -27,6 +26,7 @@ from msprof_analyze.cluster_analyse.common_func.utils import convert_unit
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.logger import get_logger
 from msprof_analyze.prof_common.path_manager import PathManager
+from msprof_analyze.cluster_analyse.cluster_data_preprocess.msprof_data_preprocessor import MsprofDataPreprocessor
 
 logger = get_logger()
 
@@ -183,15 +183,8 @@ class BaseRecipeAnalysis(ABC):
 
     def _get_profiler_db_path(self, rank_id, data_path):
         if self._is_msprof:
-            msprof_db_pattern = r"^msprof_\d{14}\.db$"
-            msprof_db_list = []
-            for file_name in os.listdir(data_path):
-                if re.match(msprof_db_pattern, file_name):
-                    msprof_db_list.append(file_name)
-            if msprof_db_list:
-                msprof_db_list.sort(key=lambda x: x.split(".")[0].split("_")[-1])
-                return os.path.join(data_path, msprof_db_list[-1])
-            return os.path.join(data_path, "msprof_xx.db")
+            db_path = MsprofDataPreprocessor.get_msprof_profiler_db_path(data_path)
+            return db_path if db_path else os.path.join(data_path, "msprof_xx.db")
         return os.path.join(data_path, Constant.SINGLE_OUTPUT, f"ascend_pytorch_profiler_{rank_id}.db")
 
     def _get_step_range(self, db_path):
