@@ -306,7 +306,7 @@ class AICorePerformanceChecker:
         aic_fixpipe_ratio = self.safe_divide(aic_fixpipe_ratio, length)
         aic_mte2_ratio = self.safe_divide(aic_mte2_ratio, length)
         if aic_mte2_ratio is None or aic_fixpipe_ratio is None:
-            return None, None, None
+            return None, None, None, None
         aic_fixpipe_ratio_rule, aic_mte2_ratio_rule = None, None
         for rule in self._operator_rules["fa_operators"]:
             if rule["target"] == "aic_fixpipe_ratio":
@@ -341,7 +341,7 @@ class AICorePerformanceChecker:
         aiv_vec_ratio = self.safe_divide(aiv_vec_ratio, length)
         aic_mte2_ratio = self.safe_divide(aic_mte2_ratio, length)
         if aiv_vec_ratio is None or aic_mte2_ratio is None:
-            return None, None, None
+            return None, None, None, None
         aiv_vec_ratio_rule, aic_mte2_ratio_rule = None, None
         for rule in self._operator_rules["fa_operators"]:
             if rule["target"] == "aiv_vec_ratio":

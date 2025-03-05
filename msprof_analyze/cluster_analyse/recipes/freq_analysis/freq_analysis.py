@@ -38,17 +38,15 @@ class FreqAnalysis(BaseRecipeAnalysis):
     @property
     def base_dir(self):
         return os.path.basename(os.path.dirname(__file__))
-    
+
     def reducer_func(self, mapper_res):
         if self._is_msprof:
             logger.warning("Freq analysis do not support msprof db now.")
             return
-        
-        mapper_res = list(filter(lambda res: res is not None, mapper_res))
+        mapper_res = list(filter(lambda res: res[0] is not None, mapper_res))
         if not mapper_res:
             logger.error("Mapper data is None, load profiling data failed.")
-            return 
-        
+            return
         for freqs, rank_id in mapper_res:
             if freqs == [self.COMMON_FREQ]:
                 continue
@@ -57,7 +55,6 @@ class FreqAnalysis(BaseRecipeAnalysis):
             else:
                 self.abnormal_freq_ranks.append(rank_id)
                 self.abnormal_freq_ranks_map[rank_id] = str(freqs)
-
         self.free_freq_ranks.sort()
         self.abnormal_freq_ranks.sort()
 
@@ -98,15 +95,12 @@ class FreqAnalysis(BaseRecipeAnalysis):
         service_res = service.query_data()
         aic_freq = service_res.get("AICORE_FREQ", None)
         rank_id = service_res.get("RANK_DEVICE_MAP", None)
-
         if aic_freq is None or aic_freq.empty:
             logger.error(f"No aic freq data found in {profiler_db_path}.")
-            return None
-        
+            return None, None
         if rank_id is None or rank_id.empty:
             logger.error(f"No rank_id data found in {profiler_db_path}.")
-            return None
-        
+            return None, None
         rank_id = rank_id["rankId"].values[0]
         freq_arr = aic_freq["freq"].values
         freqs = list(set(freq_arr))
