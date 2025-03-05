@@ -436,3 +436,6 @@ class Constant(object):
     # hccl_sum
     UINT32_BITS = 32
     UINT32_MASK = 0xffffffff
+
+    UNKNOWN = "unknown"
+

@@ -27,7 +27,7 @@ class ProfilingInfo:
                  'page_attention_time', 'page_attention_num', 'vector_time_trans', 'vector_num_trans',
                  'vector_time_notrans', 'vector_num_notrans', 'sdma_time_tensor_move', 'sdma_num_tensor_move',
                  'sdma_time_stream', 'sdma_num_stream', 'other_cube_time', 'other_cube_num', 'rdma_bandwidth',
-                 'sdma_bandwidth', 'communication_group_time', 'mc2_time_dict']
+                 'sdma_bandwidth', 'communication_group_time', 'mc2_time_dict', 'pg_name_dict']
     TABLE_NAME = Constant.PERFORMANCE_TABLE
     HEADERS = []
     OVERHEAD = []
@@ -93,6 +93,9 @@ class ProfilingInfo:
 
         # 按group展示通信的卡间等待和传输耗时
         self.communication_group_time = {}
+        # communication_group与pg_name的对应关系
+        self.pg_name_dict = {}
+
 
     @property
     def e2e_time_ms(self):
@@ -334,6 +337,9 @@ class ProfilingInfo:
         for time in time_dict.values():
             self.wait_time += time.get(Constant.WAIT_TIME, 0)
 
+    def update_communication_group_pg_name(self, pg_name_dict: dict):
+        self.pg_name_dict = pg_name_dict
+
     def set_memory_used(self, memory: float):
         self.memory_used = memory
 
@@ -401,3 +407,6 @@ class ProfilingInfo:
 
     def get_mc2_number_by_name(self, kernel_name: str):
         return self.mc2_time_dict.get(kernel_name, {}).get(Constant.MC2_NUMBER, 0)
+
+    def get_pg_name_by_group(self, group: str):
+        return self.pg_name_dict.get(group, Constant.UNKNOWN)
