@@ -28,15 +28,19 @@ class MsprofStepTraceTimeAdapter:
     COMM_NOT_OVERLAP_EXCLUDE_RECEIVE = "Communication(Not Overlapped and Exclude Receive)"
     PREPARE = "Preparing"
 
-    def __init__(self, file_path_list):
-        self.file_path_list = file_path_list
+    def __init__(self, file_path):
+        self.file_path = file_path
         self._data = {self.COMPUTE: 0, self.COMM_NOT_OVERLAP: 0, self.OVERLAPPED: 0, self.COMMUNICATION: 0,
                       self.FREE: 0, self.STAGE: 0, self.BUBBLE: 0, self.COMM_NOT_OVERLAP_EXCLUDE_RECEIVE: 0,
                       self.PREPARE: 0}
 
+    @classmethod
+    def generate_step_trace_time_db_data(cls):
+        return []
+
     def generate_step_trace_time_data(self):
         json_str = []
-        for file_path in self.file_path_list:
+        for file_path in self.file_path:
             json_str.extend(FileManager.read_json_file(file_path))
         receive_comm = []
         analysis_data = {}

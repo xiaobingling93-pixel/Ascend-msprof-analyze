@@ -21,6 +21,7 @@ from msprof_analyze.cluster_analyse.common_func.utils import increase_shared_val
 from msprof_analyze.prof_common.path_manager import PathManager
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.logger import get_logger
+from msprof_analyze.cluster_analyse.cluster_data_preprocess.msprof_data_preprocessor import MsprofDataPreprocessor
 
 logger = get_logger()
 
@@ -33,6 +34,7 @@ class HostInfoAnalysis(BaseAnalysis):
         super().__init__(param)
         self.all_rank_host_info = {}
         self.all_rank_device_info = []
+        self.is_msprof = param.get(Constant.IS_MSPROF)
 
     def run(self, completed_processes=None, lock=None):
         if self.data_type != Constant.DB:
@@ -83,7 +85,9 @@ class HostInfoAnalysis(BaseAnalysis):
         for rank_id, profiling_dir in self.data_map.items():
             host_info = []
             rank_device_info = []
-            db_path = os.path.join(profiling_dir, Constant.SINGLE_OUTPUT, f"ascend_pytorch_profiler_{rank_id}.db")
+            db_path = MsprofDataPreprocessor.get_msprof_profiler_db_path(
+                profiling_dir) if self.is_msprof else os.path.join(profiling_dir, Constant.SINGLE_OUTPUT,
+                                                                   f"ascend_pytorch_profiler_{rank_id}.db")
             if (os.path.exists(db_path) and DBManager.check_tables_in_db(db_path, self.TABLE_HOST_INFO)):
                 conn, curs = DBManager.create_connect_db(db_path)
                 sql = "select * from {0}".format(self.TABLE_HOST_INFO)
@@ -98,6 +102,9 @@ class HostInfoAnalysis(BaseAnalysis):
                 sql = "select * from {0}".format(self.TABLE_RANK_DEVICE_MAP)
                 rank_device_info = DBManager.fetch_all_data(curs, sql, is_dict=False)
                 DBManager.destroy_db_connect(conn, curs)
+            if self.is_msprof:
+                device_id = MsprofDataPreprocessor.get_device_id(profiling_dir)
+                rank_device_info = [[rank_id, device_id]]
             if not (rank_device_info and rank_device_info[0]):
                 if not print_empty_host_info:
                     print_empty_host_info = f"No {self.TABLE_RANK_DEVICE_MAP} data in {self.data_type} file."

@@ -16,12 +16,12 @@ import json
 import os
 import pandas as pd
 
-from cluster_analyse.common_func.utils import double_hash
-from cluster_analyse.common_func.table_constant import TableConstant
+from msprof_analyze.cluster_analyse.common_func.utils import double_hash
+from msprof_analyze.cluster_analyse.common_func.table_constant import TableConstant
 from msprof_analyze.cluster_analyse.recipes.base_recipe_analysis import BaseRecipeAnalysis
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.logger import get_logger
-from prof_common.database_service import DatabaseService
+from msprof_analyze.prof_common.database_service import DatabaseService
 
 logger = get_logger()
 

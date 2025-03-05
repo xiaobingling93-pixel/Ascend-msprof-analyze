@@ -16,17 +16,18 @@ from multiprocessing import Process, Value, Lock
 from tqdm import tqdm
 
 from msprof_analyze.cluster_analyse.analysis.communication_analysis import CommunicationAnalysis
-from msprof_analyze.cluster_analyse.analysis.communication_analysis import CommunicationAnalysisOptimized
 from msprof_analyze.cluster_analyse.analysis.comm_matrix_analysis import CommMatrixAnalysis
-from msprof_analyze.cluster_analyse.analysis.comm_matrix_analysis import CommMatrixAnalysisOptimized
 from msprof_analyze.cluster_analyse.analysis.step_trace_time_analysis import StepTraceTimeAnalysis
 from msprof_analyze.cluster_analyse.analysis.host_info_analysis import HostInfoAnalysis
 from msprof_analyze.cluster_analyse.analysis.cluster_base_info_analysis import ClusterBaseInfoAnalysis
 from msprof_analyze.cluster_analyse.common_func.context import Context
-
 from msprof_analyze.cluster_analyse.common_func.analysis_loader import get_class_from_name
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.logger import get_logger
+from msprof_analyze.cluster_analyse.recipes.comm_group_map.comm_group_map import CommGroupMap
+from msprof_analyze.cluster_analyse.recipes.communication_time_sum.communication_time_sum import \
+    CommunicationTimeSumRecipe
+from msprof_analyze.cluster_analyse.recipes.communication_matrix_sum.communication_matrix_sum import CommMatrixSum
 
 logger = get_logger()
 
@@ -34,10 +35,7 @@ logger = get_logger()
 class AnalysisFacade:
     default_module = {CommunicationAnalysis, StepTraceTimeAnalysis, CommMatrixAnalysis, HostInfoAnalysis,
                       ClusterBaseInfoAnalysis}
-    simplified_module = {
-        CommunicationAnalysisOptimized, StepTraceTimeAnalysis, CommMatrixAnalysisOptimized, HostInfoAnalysis,
-        ClusterBaseInfoAnalysis
-    }
+    simplified_module = {StepTraceTimeAnalysis, ClusterBaseInfoAnalysis, HostInfoAnalysis}
 
     def __init__(self, params: dict):
         self.params = params
@@ -47,6 +45,7 @@ class AnalysisFacade:
         process_list = []
         if self.params.get(Constant.DATA_SIMPLIFICATION) and self.params.get(Constant.DATA_TYPE) == Constant.DB:
             analysis_module = self.simplified_module
+            self.cluster_analyze_with_recipe()
         else:
             analysis_module = self.default_module
 
@@ -91,4 +90,13 @@ class AnalysisFacade:
     def recipe_analyze(self):
         recipe_class = get_class_from_name(self.params.get(Constant.ANALYSIS_MODE))
         if recipe_class:
+            self.do_recipe(recipe_class)
+
+    def cluster_analyze_with_recipe(self):
+        recipes = [["CommGroupMap", CommGroupMap]]
+        if self.params.get(Constant.ANALYSIS_MODE) in (Constant.ALL, Constant.COMMUNICATION_TIME):
+            recipes.append(["CommunicationTimeSumRecipe", CommunicationTimeSumRecipe])
+        if self.params.get(Constant.ANALYSIS_MODE) in (Constant.ALL, Constant.COMMUNICATION_MATRIX):
+            recipes.append(["CommMatrixSum", CommMatrixSum])
+        for recipe_class in recipes:
             self.do_recipe(recipe_class)

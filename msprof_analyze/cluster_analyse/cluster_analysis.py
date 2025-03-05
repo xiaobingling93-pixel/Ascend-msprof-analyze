@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import argparse
+import copy
 import os
 import sys
 
@@ -60,7 +61,6 @@ class Interface:
         self.matrix_ops = []
         self.origin_params = params
         self.cluster_analysis_output_path = self.get_cluster_analysis_output_path(params)
-        self.force = params.get(Constant.FORCE, False)
         AdditionalArgsManager().init(params)
 
     def get_cluster_analysis_output_path(self, params):
@@ -111,45 +111,31 @@ class Interface:
             logger.error("The current folder contains both DB and other files. Please check.")
             return
 
-        params = {
+        params = copy.deepcopy(self.origin_params)
+        params.update({
             Constant.COLLECTION_PATH: self.collection_path,
             Constant.ANALYSIS_MODE: self.analysis_mode,
             Constant.DATA_MAP: data_map,
             Constant.DATA_TYPE: data_type,
             Constant.IS_MSPROF: data_dict.get(Constant.IS_MSPROF, False),
-            Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: self.cluster_analysis_output_path,
-            Constant.DATA_SIMPLIFICATION: self.origin_params.get(Constant.DATA_SIMPLIFICATION, False),
-            Constant.FORCE: self.force
-        }
-
-        if data_type == Constant.TEXT:
-            if self.analysis_mode in COMM_FEATURE_LIST:
-                FileManager.create_output_dir(self.cluster_analysis_output_path)
-                PathManager.check_path_writeable(self.cluster_analysis_output_path)
-                logger.info("Begin generate communication data.")
+            Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: self.cluster_analysis_output_path
+        })
+        if self.analysis_mode in COMM_FEATURE_LIST:
+            FileManager.create_output_dir(self.cluster_analysis_output_path)
+            PathManager.check_path_writeable(self.cluster_analysis_output_path)
+            logger.info("Begin generate communication data.")
+            if data_type == Constant.TEXT or not params.get(Constant.DATA_SIMPLIFICATION):
                 comm_data_dict = CommunicationGroupGenerator(params).generate()
                 logger.info("Communication data read completed.")
                 params[Constant.COMM_DATA_DICT] = comm_data_dict
-                AnalysisFacade(params).cluster_analyze()
-                logger.info("The cluster analysis result file has been generated: %s",
-                            self.cluster_analysis_output_path)
-            else:
-                logger.error("The current analysis node only supports DB as input data. Please check.")
+            AnalysisFacade(params).cluster_analyze()
+            logger.info("The cluster analysis result file has been generated: %s",
+                        self.cluster_analysis_output_path)
+        elif data_type == Constant.TEXT:
+            logger.error("The current analysis node only supports DB as input data. Please check.")
         else:
-            if self.analysis_mode in COMM_FEATURE_LIST:
-                FileManager.create_output_dir(self.cluster_analysis_output_path)
-                PathManager.check_path_writeable(self.cluster_analysis_output_path)
-                logger.info("Begin generate communication data.")
-                comm_data_dict = CommunicationGroupGenerator(params).generate()
-                logger.info("Communication data read completed.")
-                params[Constant.COMM_DATA_DICT] = comm_data_dict
-                AnalysisFacade(params).cluster_analyze()
-                logger.info("The cluster analysis result file has been generated: %s",
-                            self.cluster_analysis_output_path)
-            else:
-                FileManager.create_output_dir(self.cluster_analysis_output_path, is_overwrite=True)
-                self.origin_params.update(params)
-                AnalysisFacade(self.origin_params).recipe_analyze()
+            FileManager.create_output_dir(self.cluster_analysis_output_path, is_overwrite=True)
+            AnalysisFacade(params).recipe_analyze()
 
 
 def cluster_analysis_main():
