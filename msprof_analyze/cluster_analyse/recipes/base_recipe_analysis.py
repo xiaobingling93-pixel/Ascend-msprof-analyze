@@ -109,7 +109,7 @@ class BaseRecipeAnalysis(ABC):
             result_db = custom_db_path if custom_db_path else os.path.join(self.output_path, file_name)
             conn, cursor = DBManager.create_connect_db(result_db)
             if isinstance(data, pd.DataFrame):
-                data.to_sql(table_name, conn, if_exists='replace', index=True)
+                data.to_sql(table_name, conn, if_exists='replace', index=index)
             else:
                 logger.error(f"Unknown dump data type: {type(data)}")
             DBManager.destroy_db_connect(conn, cursor)

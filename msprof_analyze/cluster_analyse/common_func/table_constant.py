@@ -39,3 +39,7 @@ class TableConstant:
     DST_RANK = "dst_rank"
     TRANSPORT_TYPE = "transport_type"
     OPNAME = "op_name"
+    GROUP_ID = "group_id"
+    PG_NAME = "pg_name"
+    NAME = "name"
+    VALUE = "value"

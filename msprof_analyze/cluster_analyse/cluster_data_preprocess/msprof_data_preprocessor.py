@@ -86,7 +86,10 @@ class MsprofDataPreprocessor(DataPreprocessor):
 
     def _find_info_json_file(self, dir_name):
         for file_name in os.listdir(dir_name):
-            for device_file in os.listdir(os.path.join(dir_name, file_name)):
+            file_path = os.path.join(dir_name, file_name)
+            if not os.path.isdir(file_path):
+                continue
+            for device_file in os.listdir(file_path):
                 if re.match(self.INFO_JSON_PATTERN, device_file):
                     return os.path.join(dir_name, file_name, device_file)
         return None
