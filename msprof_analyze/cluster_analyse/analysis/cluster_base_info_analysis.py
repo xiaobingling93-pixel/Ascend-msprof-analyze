@@ -28,7 +28,6 @@ logger = get_logger()
 
 
 class ClusterBaseInfoAnalysis(BaseAnalysis):
-    KEY_DISTRIBUTED_ARGS = "distributed_args"
 
     def __init__(self, param: dict):
         super().__init__(param)
@@ -56,7 +55,7 @@ class ClusterBaseInfoAnalysis(BaseAnalysis):
         result_db = os.path.join(output_path, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER)
         conn, curs = DBManager.create_connect_db(result_db)
         DBManager.create_tables(result_db, Constant.TABLE_CLUSTER_BASE_INFO)
-        save_distributed_args = [[json.dumps(self.distributed_args)]]
+        save_distributed_args = [[Constant.DISTRIBUTED_ARGS, json.dumps(self.distributed_args)]]
         sql = "insert into {} values ({value})".format(Constant.TABLE_CLUSTER_BASE_INFO,
                                                        value="?," * (len(save_distributed_args[0]) - 1) + "?")
         DBManager.executemany_sql(conn, sql, save_distributed_args)
@@ -72,9 +71,9 @@ class ClusterBaseInfoAnalysis(BaseAnalysis):
             except RuntimeError as e:
                 logger.error("Read json failed. %s", str(e))
                 continue
-            if not meta_data.get(self.KEY_DISTRIBUTED_ARGS):
+            if not meta_data.get(Constant.DISTRIBUTED_ARGS):
                 continue
-            for key, value in meta_data[self.KEY_DISTRIBUTED_ARGS].items():
+            for key, value in meta_data[Constant.DISTRIBUTED_ARGS].items():
                 if key == "rank":
                     continue
                 self.distributed_args.setdefault(key, value)
