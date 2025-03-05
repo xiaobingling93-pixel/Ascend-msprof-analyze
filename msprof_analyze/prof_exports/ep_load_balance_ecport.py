@@ -15,7 +15,7 @@
 
 from msprof_analyze.prof_exports.base_stats_export import BaseStatsExport
 from msprof_analyze.prof_common.constant import Constant
-grouped_matmul_query = """
+GROUPED_MATMUL_QUERY = """
 SELECT
     InputShapes_IDS.value AS "InputShapes"
 FROM COMPUTE_TASK_INFO
@@ -46,4 +46,4 @@ class InputShapeExport(BaseStatsExport):
             )
         else:
             filter_statement = ""
-        return grouped_matmul_query.format(filter_statement)
+        return GROUPED_MATMUL_QUERY.format(filter_statement)
