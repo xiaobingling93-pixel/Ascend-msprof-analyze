@@ -24,6 +24,7 @@ from msprof_analyze.prof_common.file_manager import FileManager
 from msprof_analyze.prof_common.logger import get_logger
 from msprof_analyze.cluster_analyse.analysis.msprof_step_trace_time_adapter import MsprofStepTraceTimeAdapter
 from msprof_analyze.cluster_analyse.cluster_data_preprocess.msprof_data_preprocessor import MsprofDataPreprocessor
+from msprof_analyze.cluster_analyse.analysis.msprof_step_trace_time_adapter import MsprofStepTraceTimeDBAdapter
 
 logger = get_logger()
 
@@ -168,9 +169,9 @@ class StepTraceTimeAnalysis:
                 if self.is_msprof:
                     profiler_db = MsprofDataPreprocessor.get_msprof_profiler_db_path(profiling_dir_path)
                     analysis_db = os.path.join(profiling_dir_path, "analyze", "communication_analyzer.db")
-                    self.step_time_dict[rank_id] = MsprofStepTraceTimeAdapter(
+                    self.step_time_dict[rank_id] = MsprofStepTraceTimeDBAdapter(
                         {Constant.ANALYSIS_DB_PATH: analysis_db,
-                         Constant.PROFILER_DB_PATH: profiler_db}).generate_step_trace_time_db_data()
+                         Constant.PROFILER_DB_PATH: profiler_db}).generate_step_trace_time_data()
                 else:
                     step_time_file = os.path.join(profiling_dir_path, Constant.SINGLE_OUTPUT,
                                                   Constant.DB_COMMUNICATION_ANALYZER)
