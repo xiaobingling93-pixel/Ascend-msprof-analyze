@@ -195,7 +195,7 @@ class CommMatrixSum(BaseRecipeAnalysis):
         data_service = DatabaseService(analysis_db_path, {})
         data_service.add_table_for_query("CommAnalyzerMatrix")
         matrix_data = data_service.query_data().get("CommAnalyzerMatrix")
-        if self._is_msprof:
+        if self._is_msprof or self._is_mindspore:
             matrix_data = self._trans_msprof_matrix_data(matrix_data)
         result_data[self.MATRIX_DATA] = matrix_data
         return result_data

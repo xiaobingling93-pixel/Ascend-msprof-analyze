@@ -84,14 +84,17 @@ class Interface:
         pytorch_processor = PytorchDataPreprocessor(ascend_pt_dirs)
         pt_data_map = pytorch_processor.get_data_map()
         pt_data_type = pytorch_processor.get_data_type()
-        ms_data_map = MindsporeDataPreprocessor(ascend_ms_dirs).get_data_map()
+        ms_processor = MindsporeDataPreprocessor(ascend_ms_dirs)
+        ms_data_map = ms_processor.get_data_map()
+        ms_data_type = ms_processor.get_data_type()
         if pt_data_map and ms_data_map:
             logger.error("Can not analyze pytorch and mindspore meantime.")
             return {}
         if pt_data_map:
             return {Constant.DATA_MAP: pt_data_map, Constant.DATA_TYPE: pt_data_type, Constant.IS_MSPROF: False}
         if ms_data_map:
-            return {Constant.DATA_MAP: ms_data_map, Constant.DATA_TYPE: Constant.TEXT, Constant.IS_MSPROF: False}
+            return {Constant.DATA_MAP: ms_data_map, Constant.DATA_TYPE: ms_data_type, Constant.IS_MSPROF: False,
+                    Constant.IS_MINDSPORE: True}
         msprof_processor = MsprofDataPreprocessor(prof_dirs)
         prof_data_map = msprof_processor.get_data_map()
         prof_data_type = msprof_processor.get_data_type()
@@ -118,6 +121,7 @@ class Interface:
             Constant.DATA_MAP: data_map,
             Constant.DATA_TYPE: data_type,
             Constant.IS_MSPROF: data_dict.get(Constant.IS_MSPROF, False),
+            Constant.IS_MINDSPORE: data_dict.get(Constant.IS_MINDSPORE, False),
             Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: self.cluster_analysis_output_path
         })
         if self.analysis_mode in COMM_FEATURE_LIST:

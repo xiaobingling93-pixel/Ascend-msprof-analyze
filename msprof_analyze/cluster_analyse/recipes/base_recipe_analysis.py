@@ -44,6 +44,7 @@ class BaseRecipeAnalysis(ABC):
         self._parallel_mode = params.get(Constant.PARALLEL_MODE, "")
         self._export_type = params.get(Constant.EXPORT_TYPE, "")
         self._is_msprof = params.get(Constant.IS_MSPROF)
+        self._is_mindspore = params.get(Constant.IS_MINDSPORE)
         self._cluster_analysis_output_path = os.path.join(
             params.get(Constant.CLUSTER_ANALYSIS_OUTPUT_PATH, self._collection_dir), Constant.CLUSTER_ANALYSIS_OUTPUT)
         self._output_path = self._cluster_analysis_output_path if self._export_type == "db" else os.path.join(
@@ -163,8 +164,7 @@ class BaseRecipeAnalysis(ABC):
             db_path_dict = {Constant.RANK_ID: rank_id, Constant.PROFILER_DB_PATH: "", Constant.ANALYSIS_DB_PATH: "",
                             Constant.STEP_RANGE: {}}
             profiler_db_path = self._get_profiler_db_path(rank_id, rank_path)
-            analysis_db_path = os.path.join(rank_path, "analyze", "communication_analyzer.db") if self._is_msprof \
-                else os.path.join(rank_path, Constant.SINGLE_OUTPUT, f"analysis.db")
+            analysis_db_path = self._get_analysis_db_path(rank_path)
             if os.path.exists(profiler_db_path):
                 db_path_dict[Constant.PROFILER_DB_PATH] = profiler_db_path
                 db_path_dict[Constant.STEP_RANGE] = self._get_step_range(profiler_db_path)
@@ -185,7 +185,16 @@ class BaseRecipeAnalysis(ABC):
         if self._is_msprof:
             db_path = MsprofDataPreprocessor.get_msprof_profiler_db_path(data_path)
             return db_path if db_path else os.path.join(data_path, "msprof_xx.db")
+        if self._is_mindspore:
+            return os.path.join(data_path, Constant.SINGLE_OUTPUT, f"ascend_mindspore_profiler_{rank_id}.db")
         return os.path.join(data_path, Constant.SINGLE_OUTPUT, f"ascend_pytorch_profiler_{rank_id}.db")
+
+    def _get_analysis_db_path(self, data_path):
+        if self._is_msprof:
+            return os.path.join(data_path, Constant.ANALYZE_DIR, "communication_analyzer.db")
+        if self._is_mindspore:
+            return os.path.join(data_path, Constant.SINGLE_OUTPUT, "communication_analyzer.db")
+        return os.path.join(data_path, Constant.SINGLE_OUTPUT, "analysis.db")
 
     def _get_step_range(self, db_path):
         step_range = {}

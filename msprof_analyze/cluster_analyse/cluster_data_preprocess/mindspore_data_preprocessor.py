@@ -12,11 +12,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
+import re
 from collections import defaultdict
 
 from msprof_analyze.cluster_analyse.cluster_data_preprocess.data_preprocessor import DataPreprocessor
-
 from msprof_analyze.prof_common.logger import get_logger
+from msprof_analyze.prof_common.constant import Constant
+from msprof_analyze.prof_common.file_manager import FileManager
 
 logger = get_logger()
 
@@ -25,6 +28,15 @@ class MindsporeDataPreprocessor(DataPreprocessor):
 
     def __init__(self, path_list: list):
         super().__init__(path_list)
+        self.data_type = set()
+
+    @classmethod
+    def get_msprof_dir(cls, profiling_path):
+        prof_pattren = r"^PROF_\d+_\d+_[0-9a-zA-Z]+"
+        for file_name in os.listdir(profiling_path):
+            if re.match(prof_pattren, file_name):
+                return os.path.join(profiling_path, file_name)
+        return ""
 
     def get_data_map(self) -> dict:
         rank_id_map = defaultdict(list)
@@ -33,6 +45,15 @@ class MindsporeDataPreprocessor(DataPreprocessor):
             if rank_id < 0:
                 logger.error("fail to get rankid or rankid invalid.")
                 continue
+            for file_name in os.listdir(dir_name):
+                if file_name.startswith(self.PROFILER_INFO_HEAD) and file_name.endswith(self.PROFILER_INFO_EXTENSION):
+                    file_path = os.path.join(dir_name, file_name)
+                    config = FileManager.read_json_file(file_path)
+                    export_type = (config.get(Constant.PROFILER_PARAMETER, {}).get(Constant.EXPORT_TYPE, Constant.TEXT))
+                    if isinstance(export_type, list):
+                        self.data_type.add(Constant.DB if Constant.DB in export_type else Constant.TEXT)
+                    else:
+                        self.data_type.add(export_type)
             rank_id_map[rank_id].append(dir_name)
 
         try:
@@ -42,3 +63,8 @@ class MindsporeDataPreprocessor(DataPreprocessor):
         except Exception as e:
             raise RuntimeError("Found invalid directory name!") from e
         return self.data_map
+
+    def get_data_type(self):
+        if len(self.data_type) == 1:
+            return self.data_type.pop()
+        return Constant.INVALID
