@@ -25,7 +25,7 @@ logger = get_logger()
 
 
 class MsprofDataPreprocessor(DataPreprocessor):
-    DEVICE_PATTERN = "device_\d{1,2}$"
+    DEVICE_PATTERN = r"device_\d{1,2}$"
     INFO_JSON_PATTERN = r"^info\.json\.\d{1,2}$"
     DB_PATTERN = r"^msprof_\d{1,20}\.db$"
 

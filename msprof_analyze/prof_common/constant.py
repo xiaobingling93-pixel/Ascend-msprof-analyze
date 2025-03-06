@@ -43,6 +43,7 @@ class Constant(object):
     FRAMEWORK_DIR = "FRAMEWORK"
     CLUSTER_ANALYSIS_OUTPUT = "cluster_analysis_output"
     SINGLE_OUTPUT = "ASCEND_PROFILER_OUTPUT"
+    ANALYZE_DIR = "analyze"
     COMM_JSON = "communication.json"
     COMM_MATRIX_JSON = "communication_matrix.json"
     STEP_TIME_CSV = "step_trace_time.csv"
@@ -100,6 +101,7 @@ class Constant(object):
     COMM_DATA_DICT = "comm_data_dict"
     DATA_TYPE = "data_type"
     IS_MSPROF = "is_prof"
+    IS_MINDSPORE = "is_mindspore"
 
     # step time
     RANK = "rank"
@@ -135,6 +137,7 @@ class Constant(object):
     CONFIG = "config"
     EXPER_CONFIG = "experimental_config"
     EXPER_EXPORT_TYPE = "_export_type"
+    PROFILER_PARAMETER = "profiler_parameters"
 
     # metadata key
     DISTRIBUTED_ARGS = "distributed_args"

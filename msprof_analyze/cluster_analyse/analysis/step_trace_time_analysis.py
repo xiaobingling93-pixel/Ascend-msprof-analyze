@@ -45,6 +45,7 @@ class StepTraceTimeAnalysis:
         self.data_type = param.get(Constant.DATA_TYPE)
         self.distributed_args = None
         self.is_msprof = param.get(Constant.IS_MSPROF)
+        self.is_mindspore = param.get(Constant.IS_MINDSPORE)
 
     @staticmethod
     def get_max_data_row(data_group_list: list):
@@ -166,12 +167,12 @@ class StepTraceTimeAnalysis:
                     if os.path.exists(step_time_file):
                         self.step_time_dict[rank_id] = FileManager.read_csv_file(step_time_file, StepTraceTimeBean)
             else:
-                if self.is_msprof:
-                    profiler_db = MsprofDataPreprocessor.get_msprof_profiler_db_path(profiling_dir_path)
-                    analysis_db = os.path.join(profiling_dir_path, "analyze", "communication_analyzer.db")
+                if self.is_msprof or self.is_mindspore:
+                    profiler_db = MsprofDataPreprocessor.get_msprof_profiler_db_path(profiling_dir_path) if \
+                        self.is_msprof else os.path.join(profiling_dir_path, Constant.SINGLE_OUTPUT,
+                                                         f"ascend_mindspore_profiler_{rank_id}.db")
                     self.step_time_dict[rank_id] = MsprofStepTraceTimeDBAdapter(
-                        {Constant.ANALYSIS_DB_PATH: analysis_db,
-                         Constant.PROFILER_DB_PATH: profiler_db}).generate_step_trace_time_data()
+                        {Constant.PROFILER_DB_PATH: profiler_db}).generate_step_trace_time_data()
                 else:
                     step_time_file = os.path.join(profiling_dir_path, Constant.SINGLE_OUTPUT,
                                                   Constant.DB_COMMUNICATION_ANALYZER)

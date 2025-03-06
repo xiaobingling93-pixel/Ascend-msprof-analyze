@@ -22,6 +22,7 @@ from msprof_analyze.prof_common.path_manager import PathManager
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.logger import get_logger
 from msprof_analyze.cluster_analyse.cluster_data_preprocess.msprof_data_preprocessor import MsprofDataPreprocessor
+from msprof_analyze.cluster_analyse.cluster_data_preprocess.mindspore_data_preprocessor import MindsporeDataPreprocessor
 
 logger = get_logger()
 
@@ -35,6 +36,7 @@ class HostInfoAnalysis(BaseAnalysis):
         self.all_rank_host_info = {}
         self.all_rank_device_info = []
         self.is_msprof = param.get(Constant.IS_MSPROF)
+        self.is_mindspore = param.get(Constant.IS_MINDSPORE)
 
     def run(self, completed_processes=None, lock=None):
         if self.data_type != Constant.DB:
@@ -85,9 +87,7 @@ class HostInfoAnalysis(BaseAnalysis):
         for rank_id, profiling_dir in self.data_map.items():
             host_info = []
             rank_device_info = []
-            db_path = MsprofDataPreprocessor.get_msprof_profiler_db_path(
-                profiling_dir) if self.is_msprof else os.path.join(profiling_dir, Constant.SINGLE_OUTPUT,
-                                                                   f"ascend_pytorch_profiler_{rank_id}.db")
+            db_path = self._get_db_path(rank_id, profiling_dir)
             if (os.path.exists(db_path) and DBManager.check_tables_in_db(db_path, self.TABLE_HOST_INFO)):
                 conn, curs = DBManager.create_connect_db(db_path)
                 sql = "select * from {0}".format(self.TABLE_HOST_INFO)
@@ -105,6 +105,10 @@ class HostInfoAnalysis(BaseAnalysis):
             if self.is_msprof:
                 device_id = MsprofDataPreprocessor.get_device_id(profiling_dir)
                 rank_device_info = [[rank_id, device_id]]
+            if self.is_mindspore:
+                prof_dir = MindsporeDataPreprocessor.get_msprof_dir(profiling_dir)
+                device_id = MsprofDataPreprocessor.get_device_id(prof_dir)
+                rank_device_info = [[rank_id, device_id]]
             if not (rank_device_info and rank_device_info[0]):
                 if not print_empty_host_info:
                     print_empty_host_info = f"No {self.TABLE_RANK_DEVICE_MAP} data in {self.data_type} file."
@@ -116,3 +120,10 @@ class HostInfoAnalysis(BaseAnalysis):
             self.all_rank_device_info.extend(rank_device_info)
         if print_empty_host_info:
             logger.warning(print_empty_host_info)
+
+    def _get_db_path(self, rank_id, profiling_dir):
+        if self.is_msprof:
+            return MsprofDataPreprocessor.get_msprof_profiler_db_path(profiling_dir)
+        if self.is_mindspore:
+            return os.path.join(profiling_dir, Constant.SINGLE_OUTPUT, f"ascend_mindspore_profiler_{rank_id}.db")
+        return os.path.join(profiling_dir, Constant.SINGLE_OUTPUT, f"ascend_pytorch_profiler_{rank_id}.db")
