@@ -100,10 +100,12 @@ class MsprofStepTraceTimeDBAdapter(MsprofStepTraceTimeAdapter):
         self._data[self.OVERLAPPED] = self._data[self.COMMUNICATION] - self._data[self.COMM_NOT_OVERLAP]
         e2e_time = self._data[self.FREE] + self._data[self.COMPUTE] + self._data[self.COMM_NOT_OVERLAP]
         self._data[self.STAGE] = e2e_time - self._data[self.BUBBLE]
-        return [[self._data[self.STEP], self._data[self.COMPUTE], self._data[self.COMM_NOT_OVERLAP],
-                 self._data[self.OVERLAPPED], self._data[self.COMMUNICATION], self._data[self.FREE],
-                 self._data[self.STAGE], self._data[self.BUBBLE], self._data[self.COMM_NOT_OVERLAP_EXCLUDE_RECEIVE],
-                 self._data[self.PREPARE]]]
+        return [[self._data[self.STEP], self._data[self.COMPUTE] / Constant.NS_TO_US,
+                 self._data[self.COMM_NOT_OVERLAP] / Constant.NS_TO_US, self._data[self.OVERLAPPED] / Constant.NS_TO_US,
+                 self._data[self.COMMUNICATION] / Constant.NS_TO_US, self._data[self.FREE] / Constant.NS_TO_US,
+                 self._data[self.STAGE] / Constant.NS_TO_US, self._data[self.BUBBLE] / Constant.NS_TO_US,
+                 self._data[self.COMM_NOT_OVERLAP_EXCLUDE_RECEIVE] / Constant.NS_TO_US,
+                 self._data[self.PREPARE] / Constant.NS_TO_US]]
 
     def _init_task_info_from_db(self):
         db_path = self.file_path.get(Constant.PROFILER_DB_PATH)
