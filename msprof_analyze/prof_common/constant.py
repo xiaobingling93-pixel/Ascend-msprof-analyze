@@ -166,6 +166,7 @@ class Constant(object):
     BLUE_COLOR = "00BFFF"
     LIGHT_BLUE_COLOR = "87CEFA"
     US_TO_MS = 1000
+    NS_TO_US = 1000
     KB_TO_MB = 1024
     INVALID_VALUE = -1
     MILLISECONDS_TO_SECONDS = 10 ** 3
