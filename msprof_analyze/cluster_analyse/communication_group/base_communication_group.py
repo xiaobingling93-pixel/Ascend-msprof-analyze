@@ -121,7 +121,7 @@ class BaseCommunicationGroup:
             Constant.COLLECTIVE_GROUP: self.collective_group_dict,
             Constant.COMMUNICATION_OPS: self.communication_ops,
             Constant.MATRIX_OPS: self.matrix_ops,
-            Constant.COMMUNICATION_GROUP: self.communication_group
+            Constant.COMMUNICATION_GROUP: self.communication_group,
         }
         return comm_data_dict
 
@@ -204,22 +204,3 @@ class BaseCommunicationGroup:
         df.fillna("", inplace=True)
 
         self.comm_group_parallel_info_df = df
-
-
-class UnionFind(object):
-    """Disjoint Set Union"""
-
-    @classmethod
-    def union(cls, first_set: set, second_set: set, third_set: set):
-        """make p and q the same set"""
-        return first_set | second_set | third_set
-
-    @classmethod
-    def is_connected(cls, first_set: set, second_set: set):
-        """
-        check whether set p and set q are connected
-        """
-        if first_set & second_set:
-            return True
-        else:
-            return False

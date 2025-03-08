@@ -15,6 +15,7 @@
 import os
 import re
 
+from cluster_analyse.analysis.stage_group_analysis import StageInfoAnalysis
 from msprof_analyze.prof_common.db_manager import DBManager
 from msprof_analyze.cluster_analyse.common_func.utils import increase_shared_value
 from msprof_analyze.cluster_analyse.cluster_utils.parallel_strategy_calculator import ParallelStrategyCalculator
@@ -43,6 +44,7 @@ class StepTraceTimeAnalysis:
         self.step_time_dict = {}
         self.step_data_list = []
         self.data_type = param.get(Constant.DATA_TYPE)
+        self.data_simplification = param.get(Constant.DATA_SIMPLIFICATION)
         self.distributed_args = None
         self.is_msprof = param.get(Constant.IS_MSPROF)
         self.is_mindspore = param.get(Constant.IS_MINDSPORE)
@@ -194,7 +196,8 @@ class StepTraceTimeAnalysis:
                     self.step_data_list.append([data_bean.step, Constant.RANK, rank_id] + data_bean.row)
                 else:
                     self.step_data_list.append([data_bean[0], Constant.RANK, rank_id] + list(data_bean[1:]))
-        stage_list = self.communication_group.get(Constant.P2P)
+
+        stage_list = self.generate_stage_group_list()
         if not stage_list:
             return
         step_group_dict = {}
@@ -222,3 +225,13 @@ class StepTraceTimeAnalysis:
                 elif self.step_time_dict.get(rank):
                     return self.step_time_dict[rank][0].all_headers
         return []
+
+    def generate_stage_group_list(self):
+        params = {
+            Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: self.cluster_analysis_output_path,
+            Constant.DATA_TYPE: self.data_type,
+            Constant.DATA_SIMPLIFICATION: self.data_simplification
+        }
+        stage_analyzer = StageInfoAnalysis(params)
+        stage_list = stage_analyzer.run()
+        return stage_list

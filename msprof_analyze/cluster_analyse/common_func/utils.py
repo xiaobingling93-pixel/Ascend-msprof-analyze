@@ -92,3 +92,22 @@ def double_hash(data):
         hash_values[1] = (hash_values[1] * prime[1] + ord(d)) & uint32_max
 
     return ((hash_values[0] << uint32_bits) | hash_values[1])
+
+
+class UnionFind(object):
+    """Disjoint Set Union"""
+
+    @classmethod
+    def union(cls, first_set: set, second_set: set, third_set: set):
+        """make p and q the same set"""
+        return first_set | second_set | third_set
+
+    @classmethod
+    def is_connected(cls, first_set: set, second_set: set):
+        """
+        check whether set p and set q are connected
+        """
+        if first_set & second_set:
+            return True
+        else:
+            return False
