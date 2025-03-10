@@ -58,13 +58,14 @@ class MstxMarkExport(BaseStatsExport):
     def __init__(self, db_path, recipe_name, step_range):
         super().__init__(db_path, recipe_name, step_range)
         self._query = self.get_query_statement()
+        self._param = (step_range.get(Constant.START_NS), step_range.get(Constant.END_NS),
+                       step_range.get(Constant.START_NS),
+                       step_range.get(Constant.END_NS)) if step_range else None
 
     def get_query_statement(self):
         if self._step_range:
-            filter_statement_1 = f"WHERE PYTORCH_API.startNs >= {self._step_range.get(Constant.START_NS)} " \
-                                 f"AND PYTORCH_API.startNs <= {self._step_range.get(Constant.END_NS)}"
-            filter_statement_2 = f"AND MSTX_EVENTS.startNs >= {self._step_range.get(Constant.START_NS)} " \
-                                 f"AND MSTX_EVENTS.startNs <= {self._step_range.get(Constant.END_NS)}"
+            filter_statement_1 = "WHERE PYTORCH_API.startNs >= ? AND PYTORCH_API.startNs <= ?"
+            filter_statement_2 = "AND MSTX_EVENTS.startNs >= ? AND MSTX_EVENTS.startNs <= ?"
         else:
             filter_statement_1, filter_statement_2 = "", ""
         return MARK_QUERY.format(filter_statement_1, filter_statement_2)
@@ -99,9 +100,5 @@ class MstxRangeExport(BaseStatsExport):
 
     def __init__(self, db_path, recipe_name, step_range):
         super().__init__(db_path, recipe_name, step_range)
-        self._query = self.get_query_statement()
-
-    def get_query_statement(self):
-        filter_statement = f"AND MSTX_EVENTS.startNs >= {self._step_range.get(Constant.START_NS)} AND " \
-                           f"MSTX_EVENTS.startNs <= {self._step_range.get(Constant.END_NS)}" if self._step_range else ""
-        return RANGE_QUERY.format(filter_statement)
+        filter_statement = "AND MSTX_EVENTS.startNs >= ? AND MSTX_EVENTS.startNs <= ?" if step_range else ""
+        self._query = RANGE_QUERY.format(filter_statement)

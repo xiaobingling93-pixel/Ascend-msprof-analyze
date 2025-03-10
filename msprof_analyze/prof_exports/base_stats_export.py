@@ -12,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import re
 
 import pandas as pd
 
@@ -29,6 +30,8 @@ class BaseStatsExport:
         self._analysis_class = analysis_class
         self._step_range = step_range
         self._query = None
+        self._param = (self._step_range.get(Constant.START_NS),
+                       self._step_range.get(Constant.END_NS)) if self._step_range else None
 
     def get_query(self):
         return self._query
@@ -43,7 +46,10 @@ class BaseStatsExport:
                 logger.error("query is None.")
                 return None
             conn, cursor = DBManager.create_connect_db(self._db_path, Constant.ANALYSIS)
-            data = pd.read_sql(query, conn)
+            if self._param is not None and re.search(Constant.SQL_PLACEHOLDER_PATTERN, query):
+                data = pd.read_sql(query, conn, params=self._param)
+            else:
+                data = pd.read_sql(query, conn)
             DBManager.destroy_db_connect(conn, cursor)
             return data
         except Exception as e:
