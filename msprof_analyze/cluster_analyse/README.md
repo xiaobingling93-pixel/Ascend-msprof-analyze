@@ -2,11 +2,11 @@
 cluster_analyse（集群分析工具）是在集群场景下，通过此工具来进行集群数据的分析，当前主要对基于通信域的迭代内耗时分析、通信时间分析以及通信矩阵分析为主， 从而定位慢卡、慢节点以及慢链路问题。
 
 ## 性能数据采集
-当前集群调优工具主要支持PyTorch场景的Ascend PyTorch Profiler采集方式和MindSpore场景的MindSpore Profiler采集方式下的集群数据。
+当前集群调优工具主要支持PyTorch场景的Ascend PyTorch Profiler采集方式和MindSpore场景的MindSpore Profiler采集方式以及msprof命令行工具采集方式下的集群数据。
 
 此工具只需要NPU的性能数据作为输入。
 
-Ascend PyTorch Profiler采集方法请参见《[NPU性能数据采集](https://gitee.com/ascend/mstt/tree/master/profiler/msprof_analyze)》，MindSpore Profiler采集方法请参见《[性能调试](https://www.mindspore.cn/mindinsight/docs/zh-CN/r2.3/performance_profiling_ascend.html)》。
+Ascend PyTorch Profiler采集方法请参见《[NPU性能数据采集](https://gitee.com/ascend/mstt/tree/master/profiler/msprof_analyze)》，MindSpore Profiler采集方法请参见《[性能调试](https://www.mindspore.cn/mindinsight/docs/zh-CN/r2.3/performance_profiling_ascend.html)》，msprof命令行采集方法请参见《[msprof命令行工具](https://www.hiascend.com/document/detail/zh/canncommercial/800/devaids/devtools/profiling/atlasprofiling_16_0010.html)》。
 
 我们要求至少是L1级别的数据。
 ```python
@@ -16,19 +16,26 @@ experimental_config = torch_npu.profiler._ExperimentalConfig(
 ```
 ### 确认数据是否可用
 
-打开采集到的某张卡数据(\*ascend_pt、\*ascend_ms结尾的文件夹)，可用的数据应该具备：
+通过上述三种方式获得性能数据，打开采集到的某张卡数据，可用的数据应该具备：
 
-- ./profiler_info_x.json,
-- ./ASCEND_PROFILER_OUTPUT/step_trace_time.csv,
-- ./ASCEND_PROFILER_OUTPUT/trace_view.json,
-- ./ASCEND_PROFILER_OUTPUT/kernel_details.csv, 
-- ./ASCEND_PROFILER_OUTPUT/communication.json,
-- ./ASCEND_PROFILER_OUTPUT/communication_matrix.json
+- Ascend PyTorch Profiler采集的\*ascend_pt目录或MindSpore Profiler采集的\*ascend_ms目录：
 
-或者具备：
+  - ./profiler_info_x.json,
+  - ./ASCEND_PROFILER_OUTPUT/step_trace_time.csv,
+  - ./ASCEND_PROFILER_OUTPUT/trace_view.json,
+  - ./ASCEND_PROFILER_OUTPUT/kernel_details.csv, 
+  - ./ASCEND_PROFILER_OUTPUT/communication.json,
+  - ./ASCEND_PROFILER_OUTPUT/communication_matrix.json
 
-- analysis.db
-- ascend_pytorch_profiler_{rank_id}.db
+  或者具备：
+
+  - analysis.db
+  - ascend_pytorch_profiler_{rank_id}.db
+
+- msprof命令行采集的PROF_XXX目录：
+
+  - --type=db、--export=on情况下解析的：msprof_{timestamp}.db
+  - --type=db、--analyze=on情况下解析的：analyze/communication_analyzer.db
 
 以上csv、json文件与db文件只能存在一类，否则集群分析工具解析异常。MindSpore场景暂不支持以上db文件。
 
