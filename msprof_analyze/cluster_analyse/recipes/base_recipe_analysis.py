@@ -53,7 +53,7 @@ class BaseRecipeAnalysis(ABC):
         self._rank_list = rank_list if rank_list == "all" else [int(rank) for rank in rank_list.split(",") if
                                                                 rank.isdigit()]
         self._step_id = params.get(Constant.STEP_ID, Constant.VOID_STEP)
-        self._extra_args = self.get_extra_argument(params.get(Constant.EXTRA_ARGS))
+        self._extra_args = self.get_extra_argument(params.get(Constant.EXTRA_ARGS, []))
         PathManager.make_dir_safety(self._output_path)
 
     def __enter__(self):
@@ -89,7 +89,10 @@ class BaseRecipeAnalysis(ABC):
     def get_extra_argument(cls, args_list) -> dict:
         parser = argparse.ArgumentParser()
         cls.add_parser_argument(parser)
-        args, _ = parser.parse_known_args(args_list)
+        args, unknown_args = parser.parse_known_args(args_list)
+        if unknown_args:
+            unknown_args = " ".join(unknown_args)
+            logger.warning(f"Invalid parameters: {unknown_args}. It will not have any effect.")
         return vars(args)
 
     @abstractmethod

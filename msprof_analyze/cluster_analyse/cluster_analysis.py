@@ -160,7 +160,12 @@ def cluster_analysis_main():
 
     args, extra_args = parser.parse_known_args()
     parameter = vars(args)
-    parameter[Constant.EXTRA_ARGS] = extra_args
+    if extra_args:
+        if parameter.get(Constant.MODE) in COMM_FEATURE_LIST:
+            unknown_args = " ".join(extra_args)
+            logger.warning(f"Invalid parameters: {unknown_args}. It will not have any effect.")
+        else:
+            parameter[Constant.EXTRA_ARGS] = extra_args
     Interface(parameter).run()
 
 
