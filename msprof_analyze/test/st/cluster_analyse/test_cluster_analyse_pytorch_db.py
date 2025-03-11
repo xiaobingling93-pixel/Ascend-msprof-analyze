@@ -45,20 +45,21 @@ class TestClusterAnalysePytorchDb(TestCase):
                                              "cluster_analysis_output", "cluster_communication_matrix.json")
     COMMUNICATION_PATH = os.path.join(ST_DATA_PATH, "cluster_data_2_db", "cluster_analysis_output_text",
                                       "cluster_analysis_output", "cluster_communication.json")
+    OUTPUT_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)), "TestClusterAnalysePytorchDb")
     COMMAND_SUCCESS = 0
 
     def setup_class(self):
         # generate db data
-        PathManager.make_dir_safety(self.ST_DATA_PATH)
+        PathManager.make_dir_safety(self.OUTPUT_PATH)
         cmd = ["msprof-analyze", "cluster", "-d", self.CLUSTER_PATH, "-m", "all",
-               "--output_path", self.ST_DATA_PATH, "--force"]
+               "--output_path", self.OUTPUT_PATH, "--force"]
         if execute_cmd(cmd) != self.COMMAND_SUCCESS or not os.path.exists(self.ST_DATA_PATH):
             self.fail("pytorch db cluster analyse task failed.")
-        self.db_path = os.path.join(self.ST_DATA_PATH, "cluster_analysis_output", "cluster_analysis.db")
+        self.db_path = os.path.join(self.OUTPUT_PATH, "cluster_analysis_output", "cluster_analysis.db")
 
     def teardown_class(self):
         # Delete db Data
-        PathManager.remove_path_safety(os.path.join(self.ST_DATA_PATH, "cluster_analysis_output"))
+        PathManager.remove_path_safety(self.OUTPUT_PATH)
 
     def test_msprof_analyze_text_db_trace_time_compare(self):
         """
@@ -201,4 +202,3 @@ class TestClusterAnalysePytorchDb(TestCase):
         self.assertEqual(round(text_cluster_communication_analyzer_time.get('Synchronization Time Ratio')),
                          round(db_cluster_communication_analyzer_time.synchronization_time_ratio),
                          "Cluster communication time db vs text 'Synchronization Time Ratio' property wrong.")
-
