@@ -39,7 +39,7 @@ def convert_to_float(data: any) -> float:
     try:
         float_value = float(data)
     except Exception:
-        logger.error('Invalid profiling data which failed to convert data to float.')
+        logger.warning('Invalid profiling data which failed to convert data to float.')
         return 0.0
     return float_value
 
@@ -48,8 +48,8 @@ def convert_to_decimal(data: any) -> Decimal:
     try:
         decimal_value = Decimal(data)
     except Exception:
-        logger.error('Invalid profiling data which failed to convert data to decimal.')
-        return 0.0
+        logger.warning('Invalid profiling data which failed to convert data to decimal.')
+        return Decimal(0)
     return decimal_value
 
 
