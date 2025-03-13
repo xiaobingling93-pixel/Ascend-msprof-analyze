@@ -22,6 +22,8 @@ from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.database_service import DatabaseService
 from msprof_analyze.cluster_analyse.common_func.utils import double_hash
 
+from msprof_analyze.cluster_analyse.common_func.table_constant import TableConstant
+
 logger = get_logger()
 
 
@@ -45,8 +47,8 @@ class CommMatrixSum(BaseRecipeAnalysis):
     def _get_parallel_group_info(cls, profiler_db_path):
         rank_map = {}
         data_service = DatabaseService(profiler_db_path, {})
-        data_service.add_table_for_query("MATA_DATA")
-        mata_df = data_service.query_data().get("MATA_DATA")
+        data_service.add_table_for_query(TableConstant.TABLE_META_DATA)
+        mata_df = data_service.query_data().get(TableConstant.TABLE_META_DATA)
         if not mata_df:
             return rank_map
         filtered_df = mata_df[mata_df['name'] == "parallel_group_info"]
@@ -193,8 +195,8 @@ class CommMatrixSum(BaseRecipeAnalysis):
         result_data[self.RANK_MAP] = self._get_parallel_group_info(profiler_db_path)
         analysis_db_path = data_map.get(Constant.ANALYSIS_DB_PATH)
         data_service = DatabaseService(analysis_db_path, {})
-        data_service.add_table_for_query("CommAnalyzerMatrix")
-        matrix_data = data_service.query_data().get("CommAnalyzerMatrix")
+        data_service.add_table_for_query(TableConstant.TABLE_COMM_ANALYZER_MATRIX)
+        matrix_data = data_service.query_data().get(TableConstant.TABLE_COMM_ANALYZER_MATRIX)
         if self._is_msprof or self._is_mindspore:
             matrix_data = self._trans_msprof_matrix_data(matrix_data)
         result_data[self.MATRIX_DATA] = matrix_data
