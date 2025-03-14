@@ -98,3 +98,4 @@ def compute_ratio(dividend: float, divisor: float):
         return 0
     else:
         return round(dividend / divisor, 4)
+

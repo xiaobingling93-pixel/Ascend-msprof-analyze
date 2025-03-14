@@ -14,7 +14,7 @@
 # limitations under the License.
 import logging
 from typing import List
-from msprof_analyze.advisor.utils.utils import singleton
+from msprof_analyze.prof_common.singleton import singleton
 from msprof_analyze.advisor.common.profiling.msprof import Msprof
 from msprof_analyze.advisor.dataset.profiling.info_collection import TaskInfo, HcclOp, HcclTask
 

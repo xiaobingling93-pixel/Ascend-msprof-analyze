@@ -23,9 +23,10 @@ from prettytable import ALL, PrettyTable
 
 from msprof_analyze.prof_common.additional_args_manager import AdditionalArgsManager
 from msprof_analyze.prof_common.constant import Constant
-from msprof_analyze.advisor.utils.utils import singleton, logger
+from msprof_analyze.advisor.utils.utils import logger
 from msprof_analyze.advisor.config.config import Config
 from msprof_analyze.advisor.utils.file import check_dir_writable
+from msprof_analyze.prof_common.singleton import singleton
 from msprof_analyze.prof_common.file_manager import FileManager
 
 

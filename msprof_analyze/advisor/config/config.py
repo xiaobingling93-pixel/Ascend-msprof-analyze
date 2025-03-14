@@ -18,7 +18,7 @@ import logging
 import os
 
 from msprof_analyze.advisor.utils.utils import Timer
-from msprof_analyze.advisor.utils.utils import singleton
+from msprof_analyze.prof_common.singleton import singleton
 from msprof_analyze.prof_common.utils import SafeConfigReader
 
 logger = logging.getLogger()
