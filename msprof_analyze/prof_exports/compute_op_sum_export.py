@@ -69,27 +69,13 @@ class ComputeOpSumExport(BaseStatsExport):
 
     def __init__(self, db_path, recipe_name, step_range):
         super().__init__(db_path, recipe_name, step_range)
-        self._query = self.get_query_statement()
-
-    def get_query_statement(self):
-        if self._step_range:
-            filter_statement = f"WHERE TASK.startNs >= {self._step_range.get(Constant.START_NS)} " \
-                               f"and TASK.startNs <= {self._step_range.get(Constant.END_NS)}"
-        else:
-            filter_statement = ""
-        return QUERY.format(filter_statement)
+        filter_statement = "WHERE TASK.startNs >= ? and TASK.startNs <= ?" if step_range else ""
+        self._query = QUERY.format(filter_statement)
 
 
 class ComputeOpSumExportExcludeOpName(BaseStatsExport):
 
     def __init__(self, db_path, recipe_name, step_range):
         super().__init__(db_path, recipe_name, step_range)
-        self._query = self.get_query_statement()
-
-    def get_query_statement(self):
-        if self._step_range:
-            filter_statement = f"WHERE TASK.startNs >= {self._step_range.get(Constant.START_NS)} " \
-                               f"and TASK.startNs <= {self._step_range.get(Constant.END_NS)}"
-        else:
-            filter_statement = ""
-        return QUERY_EXCLUDE_OPNAME.format(filter_statement)
+        filter_statement = "WHERE TASK.startNs >= ? and TASK.startNs <= ?" if step_range else ""
+        self._query = QUERY_EXCLUDE_OPNAME.format(filter_statement)

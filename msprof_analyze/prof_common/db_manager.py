@@ -190,6 +190,17 @@ class DBManager:
         return res
 
     @classmethod
+    def get_table_columns_name(cls, curs: any, table: any) -> int:
+        sql = f"PRAGMA table_info({table})"
+        try:
+            curs.execute(sql)
+            columns = curs.fetchall()
+        except sqlite3.Error as err:
+            logger.error(err)
+            return []
+        return [column[1] for column in columns]
+
+    @classmethod
     def fetch_all_data(cls: any, curs: any, sql: str, param: tuple = None, is_dict: bool = True) -> list:
         """
         fetch 10000 num of data from db each time to get all data

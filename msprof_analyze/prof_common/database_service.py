@@ -12,6 +12,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import re
+
 import pandas as pd
 
 from msprof_analyze.prof_common.db_manager import DBManager
@@ -48,6 +50,8 @@ class DatabaseService:
         self._db_path = db_path
         self._step_range = step_range
         self._table_info = {}
+        self._param = (self._step_range.get(Constant.START_NS),
+                       self._step_range.get(Constant.END_NS)) if self._step_range else None
 
     def add_table_for_query(self, table_name: str, columns=None):
         if not isinstance(table_name, str):
@@ -71,15 +75,26 @@ class DatabaseService:
             if not DBManager.judge_table_exists(cursor, table_name):
                 logger.warning(f"This table {table_name} does not exist in this database {self._db_path}.")
                 continue
-            columns_str = "*" if not columns else ",".join(columns)
+            table_columns = DBManager.get_table_columns_name(cursor, table_name)
+            if not columns:
+                columns_str = ",".join(table_columns)
+            else:
+                columns = [column for column in columns if column in table_columns]
+                columns_str = ",".join(columns)
+            if not columns_str:
+                logger.error(f"The fields to be queried in Table {table_name} are invalid.")
+                return result_data
             if table_name in self.TABLE_TS_DICT and self._step_range:
-                where_str = f"where {self.TABLE_TS_DICT.get(table_name)} >= {self._step_range.get(Constant.START_NS)}" \
-                            f" and {self.TABLE_TS_DICT.get(table_name)} <= {self._step_range.get(Constant.END_NS)}"
+                where_str = f"where {self.TABLE_TS_DICT.get(table_name)} >= ? " \
+                            f"and {self.TABLE_TS_DICT.get(table_name)} <= ?"
             else:
                 where_str = ""
             query_sql = f"select {columns_str} from {table_name} {where_str}"
             try:
-                data = pd.read_sql(query_sql, conn)
+                if self._param is not None and re.search(Constant.SQL_PLACEHOLDER_PATTERN, query_sql):
+                    data = pd.read_sql(query_sql, conn, params=self._param)
+                else:
+                    data = pd.read_sql(query_sql, conn)
                 result_data[table_name] = data
             except Exception as err:
                 logger.error(err)

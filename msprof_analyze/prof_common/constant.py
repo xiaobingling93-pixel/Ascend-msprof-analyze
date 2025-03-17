@@ -450,3 +450,4 @@ class Constant(object):
 
     UNKNOWN = "unknown"
 
+    SQL_PLACEHOLDER_PATTERN = r"\?|\%s"
