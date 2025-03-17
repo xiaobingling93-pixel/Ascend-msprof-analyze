@@ -48,10 +48,10 @@ class CommMatrixSum(BaseRecipeAnalysis):
         rank_map = {}
         data_service = DatabaseService(profiler_db_path, {})
         data_service.add_table_for_query(TableConstant.TABLE_META_DATA)
-        mata_df = data_service.query_data().get(TableConstant.TABLE_META_DATA)
-        if not mata_df:
+        meta_df = data_service.query_data().get(TableConstant.TABLE_META_DATA, None)
+        if meta_df is None or meta_df.empty:
             return rank_map
-        filtered_df = mata_df[mata_df['name'] == "parallel_group_info"]
+        filtered_df = meta_df[meta_df['name'] == "parallel_group_info"]
         if filtered_df.shape[0] == 1 and filtered_df.shape[1] == 2:
             parallel_group_info = ast.literal_eval(filtered_df.loc[1, 'value'])
             for group_name, group_info in parallel_group_info.items():
@@ -119,11 +119,12 @@ class CommMatrixSum(BaseRecipeAnalysis):
             matrix_df = rank_data.get(self.MATRIX_DATA)
             concat_df = pd.concat([concat_df, matrix_df], ignore_index=True)
         concat_df[self.RANK_SET] = ""
-        for _, row in concat_df.iterrows():
+        for index, row in concat_df.iterrows():
             if row["type"] == Constant.P2P:
-                row[self.RANK_SET] = Constant.P2P
+                row.at[index, self.RANK_SET] = Constant.P2P
+                continue
             rank_list = sorted(rank_map.get(row["group_name"], {}).values())
-            row[self.RANK_SET] = ",".join([str(rank) for rank in rank_list])
+            row.at[index, self.RANK_SET] = ",".join([str(rank) for rank in rank_list])
         grouped_df = concat_df.groupby(
             [self.RANK_SET, 'step', "hccl_op_name", "group_name", "src_rank", "dst_rank"]).agg(
             {'transport_type': 'first', 'op_name': 'first', "transit_size": "sum", "transit_time": "sum"})
