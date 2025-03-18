@@ -115,6 +115,18 @@ class FileManager:
         return content
 
     @classmethod
+    def create_common_file(cls, file_path: str, content: str) -> None:
+        base_name = os.path.basename(file_path)
+        PathManager.check_path_writeable(os.path.dirname(file_path))
+        try:
+            with os.fdopen(
+                    os.open(file_path, os.O_WRONLY | os.O_CREAT, Constant.FILE_AUTHORITY),
+                    'w') as file:
+                file.write(content)
+        except Exception as e:
+            raise RuntimeError(f"Can't create file: {base_name}") from e
+
+    @classmethod
     def create_csv_file(cls, profiler_path: str, data: list, file_name: str, headers: list = None) -> None:
         if not data:
             return

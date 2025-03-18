@@ -27,6 +27,7 @@ from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.logger import get_logger
 from msprof_analyze.prof_common.path_manager import PathManager
 from msprof_analyze.cluster_analyse.cluster_data_preprocess.msprof_data_preprocessor import MsprofDataPreprocessor
+from msprof_analyze.prof_common.file_manager import FileManager
 
 logger = get_logger()
 
@@ -135,12 +136,10 @@ class BaseRecipeAnalysis(ABC):
         if replace_dict is None:
             shutil.copy(template_file, output_file_path)
         else:
-            with open(template_file, 'r') as f:
-                template_content = f.read()
-                for key, value in replace_dict.items():
-                    template_content = template_content.replace(str(key), str(value))
-            with open(output_file_path, 'w') as f:
-                f.write(template_content)
+            template_content = FileManager.read_common_file(template_file)
+            for key, value in replace_dict.items():
+                template_content = template_content.replace(str(key), str(value))
+            FileManager.create_common_file(output_file_path, template_content)
         logger.info(f"Notebook export path is: {output_file_path}")
 
     def add_helper_file(self, helper_file):
