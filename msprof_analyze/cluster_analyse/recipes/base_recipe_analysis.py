@@ -122,7 +122,7 @@ class BaseRecipeAnalysis(ABC):
             result_csv = os.path.join(self.output_path, file_name)
             if isinstance(data, pd.DataFrame):
                 data = convert_unit(data, self.DB_UNIT, self.UNIT)
-                data.to_csv(result_csv, index=index)
+                FileManager.create_csv_from_dataframe(result_csv, data, index=index)
             else:
                 logger.error(f"Unknown dump data type: {type(data)}")
 
@@ -135,6 +135,7 @@ class BaseRecipeAnalysis(ABC):
         template_file = os.path.join(template_path, self.base_dir, filename)
         if replace_dict is None:
             shutil.copy(template_file, output_file_path)
+            os.chmod(output_file_path, Constant.FILE_AUTHORITY)
         else:
             template_content = FileManager.read_common_file(template_file)
             for key, value in replace_dict.items():
@@ -148,6 +149,7 @@ class BaseRecipeAnalysis(ABC):
 
         if helper_file_path is not None:
             shutil.copy(helper_file_path, helper_output_path)
+            os.chmod(helper_output_path, Constant.FILE_AUTHORITY)
 
     def _get_rank_db(self):
         invalid_rank_id = []
