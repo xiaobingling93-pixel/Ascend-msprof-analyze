@@ -29,7 +29,7 @@
 # limitations under the License.
 
 from typing import Dict
-from msprof_analyze.advisor.utils.utils import singleton
+from msprof_analyze.prof_common.singleton import singleton
 
 
 @singleton

@@ -15,7 +15,7 @@
 import logging
 import os
 from collections import defaultdict
-from msprof_analyze.advisor.utils.utils import singleton
+from msprof_analyze.prof_common.singleton import singleton
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.file_manager import FileManager
 from msprof_analyze.advisor.dataset.cluster.hccl_collection import HcclInfo
