@@ -139,6 +139,7 @@ class Interface:
             logger.error("The current analysis node only supports DB as input data. Please check.")
         else:
             FileManager.create_output_dir(self.cluster_analysis_output_path, is_overwrite=True)
+            PathManager.check_path_writeable(self.cluster_analysis_output_path)
             AnalysisFacade(params).recipe_analyze()
 
 
