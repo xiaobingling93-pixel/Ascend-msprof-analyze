@@ -15,6 +15,7 @@
 
 import os
 import sqlite3
+from typing import List
 
 from msprof_analyze.cluster_analyse.common_func.empty_class import EmptyClass
 from msprof_analyze.cluster_analyse.common_func.tables_config import TablesConfig
@@ -190,7 +191,7 @@ class DBManager:
         return res
 
     @classmethod
-    def get_table_columns_name(cls, curs: any, table: any) -> int:
+    def get_table_columns_name(cls, curs: any, table: any) -> List[str]:
         sql = f"PRAGMA table_info({table})"
         try:
             curs.execute(sql)
