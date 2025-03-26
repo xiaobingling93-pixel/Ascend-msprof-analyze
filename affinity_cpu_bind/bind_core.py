@@ -203,6 +203,9 @@ class BindCoreManager():
         logging.info('NPU total id list: %s', self.npu_id_list)
 
     def _get_npu_affinity(self) -> bool:
+        if not self.npu_id_list:
+            logging.error('NPU id list is empty')
+            return False
         cpu_num = os.cpu_count()
         cpu_num_for_each_npu = cpu_num // len(self.npu_id_list)
         get_npu_topo_cmd = 'npu-smi info -t topo'
