@@ -42,10 +42,10 @@ class CannApiSum(BaseRecipeAnalysis):
         grouped = stats_res.groupby("name")
         res = {}
         total_time = grouped["totalTimeNs"].sum()
-        res["timeRatio"] = total_time / total_time.sum() * 100.0
+        res["timeRatio"] = total_time / total_time.sum() * 100.0 if total_time.sum() else 0
         res["totalTimeNs"] = total_time
         res["totalCount"] = grouped["totalCount"].sum()
-        res["averageNs"] = res["totalTimeNs"] / res["totalCount"]
+        res["averageNs"] = res["totalTimeNs"] / res["totalCount"] if res["totalCount"] else 0
         res["Q1Ns"] = grouped["Q1Ns"].min()
         res["medNs"] = grouped["medNs"].median()
         res["Q3Ns"] = grouped["Q3Ns"].max()

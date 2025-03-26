@@ -59,13 +59,17 @@ def judge_dixon(time_list):
     # 计算狄克逊检验的检验指标，次小值和最小值差，比上最大值和最小值的差。根据数据数量改变次小值和最大值的选取
     if n <= Constant.MAX_DIXON_NUM:
         if n <= Constant.DIXON_THRESHOLD_1:
-            flag = (sorted_list[1] - sorted_list[0]) / (sorted_list[-1] - sorted_list[0])
+            flag = (sorted_list[1] - sorted_list[0]) / (sorted_list[-1] - sorted_list[0]) \
+                if (sorted_list[-1] - sorted_list[0]) else 0
         elif n <= Constant.DIXON_THRESHOLD_2:
-            flag = (sorted_list[1] - sorted_list[0]) / (sorted_list[-2] - sorted_list[0])
+            flag = (sorted_list[1] - sorted_list[0]) / (sorted_list[-2] - sorted_list[0]) \
+                if (sorted_list[-2] - sorted_list[0]) else 0
         elif n <= Constant.DIXON_THRESHOLD_3:
-            flag = (sorted_list[2] - sorted_list[0]) / (sorted_list[-2] - sorted_list[0])
+            flag = (sorted_list[2] - sorted_list[0]) / (sorted_list[-2] - sorted_list[0]) \
+                if (sorted_list[-2] - sorted_list[0]) else 0
         else:
-            flag = (sorted_list[2] - sorted_list[0]) / (sorted_list[-3] - sorted_list[0])
+            flag = (sorted_list[2] - sorted_list[0]) / (sorted_list[-3] - sorted_list[0]) \
+                if (sorted_list[-3] - sorted_list[0]) else 0
         
         # 根据数据数量查表，若计算的检验指标较大，则认为有异常值，耗时最短的卡是慢卡
         if flag > DIXON_TABLE_995[n]:
