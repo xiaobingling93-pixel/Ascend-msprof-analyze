@@ -66,7 +66,7 @@ def stdev(df, aggregated):
     var_sum = np.dot(df["totalCount"] - 1, df["stdev"] ** 2)
     deviation = df["averageNs"] - aggregated["averageNs"].loc[df.name]
     dev_sum = np.dot(df["totalCount"], deviation ** 2)
-    return np.sqrt((var_sum + dev_sum) / (instance - 1))
+    return np.sqrt((var_sum + dev_sum) / (instance - 1)) if (instance - 1) else 0
 
 
 def convert_unit(df: pd.DataFrame, src_unit, dst_unit):
