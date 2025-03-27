@@ -90,7 +90,8 @@ class CannApiSum(BaseRecipeAnalysis):
         self.add_helper_file("cluster_display.py")
 
     def save_db(self):
-        self.dump_data(self._stats_rank_data, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER, "CannApiSumRank")
+        self.dump_data(self._stats_rank_data, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER, "CannApiSumRank",
+                       index=False)
         self.dump_data(self._stats_data, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER, "CannApiSum")
 
     def _mapper_func(self, data_map, analysis_class):

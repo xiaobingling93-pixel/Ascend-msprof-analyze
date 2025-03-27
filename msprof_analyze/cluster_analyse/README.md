@@ -76,7 +76,9 @@ experimental_config = torch_npu.profiler._ExperimentalConfig(
    | --exclude_op_name    | 控制compute_op_name结果是否包含op_name,示例：--exclude_op_name,后面不需要跟参数。<br/>**只有-m配置compute_op_sum时可配置此参数。** | 否       |
    
    --mode参数说明：
-   
+
+    --mode参数设置不同的数据解析模式，可分析生成cluster_analysis.db交付件，交付件详细内容请参见[cluster_analysis.db交付件表结构说明](#cluster_analysisdb交付件表结构说明)。
+
    | 参数名               | 说明                                                         | 是否必选 |
    | -------------------- | ------------------------------------------------------------ | -------- |
    | communication_matrix | 解析通信矩阵数据。                                           | 否       |
@@ -86,6 +88,9 @@ experimental_config = torch_npu.profiler._ExperimentalConfig(
    | compute_op_sum       | 集群场景性能数据的device运行算子信息汇总分析，输入性能数据需要基于ascend_pytorch_profiler_{rank_id}.db文件。--export_type为db时，输出交付件cluster_analysis.db；--export_type为notebook时，在cluster_analysis_output/ComputeOpSum目录下输出交付件stats.ipynb；可根据实际情况决定是否是否打开--exclude_op_name。 | 否       |
    | hccl_sum             | 集合通信算子耗时分析，输入性能数据需要基于ascend_pytorch_profiler_{rank_id}.db文件。--export_type为db时，输出交付件cluster_analysis.db；--export_type为notebook时，在cluster_analysis_output/HcclSum目录下输出交付件stats.ipynb。 | 否       |
    | mstx_sum             | 集群场景mstx打点信息汇总分析，输入性能数据需要基于ascend_pytorch_profiler_{rank_id}.db文件。--export_type为db时，输出交付件cluster_analysis.db；--export_type为notebook时，在cluster_analysis_output/MstxSum目录下输出交付件stats.ipynb。 | 否       |
+   | comm_group_map       | 集群场景通信域与并行策略呈现，输入性能数据需要基于ascend_pytorch_profiler_{rank_id}.db文件和analysis.db。--export_type为db时，输出交付件cluster_analysis.db。 | 否       |
+   | communication_time_sum | 集群场景通信时间和带宽汇总分析，输入性能数据需要基于analysis.db。需要先运行comm_group_map，依赖其生成的CommunicationGroupMapping表，--export_type为db时，输出交付件cluster_analysis.db。| 否   |
+   | communication_matrix_sum | 集群场景通信矩阵汇总分析，输入性能数据需要基于analysis.db。--export_type为db时，输出交付件cluster_analysis.db。| 否   |
    | freq_analysis        | 集群场景aicore frequency信息汇总分析，输入性能数据需要基于ascend_pytorch_profiler_{rank_id}.db文件。打屏输出是否存在aicore存在空闲（频率为800MHz）、异常（频率不为1800MHz或800MHz）的现象。如果有，则在输出交付件cluster_analysis.db增加对应的卡和频率信息。 | 否       |
    | ep_load_balance       | 集群场景moe负载信息汇总分析，输入性能数据需要基于ascend_pytorch_profiler_{rank_id}.db文件。输出交付件cluster_analysis.db增加EPTokensSummary, TopEPTokensInfo分析表格。 | 否       |
    | slow_rank            | 集群场景通信算子快慢卡汇总分析，输入性能数据需要基于ascend_pytorch_profiler_{rank_id}.db文件。输出交付件cluster_analysis.db中展示各个rank按照当前的快慢卡统计算法得出的快慢卡影响次数。
@@ -182,7 +187,7 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 
 #### cluster_analysis.db
 
-解析analysis.db或ascend_pytorch_profiler_{rank_id}.db生成的交付件，根据数据解析模式不同而解析不同的数据，可以使用MindStudio Insight工具展示。
+解析analysis.db或ascend_pytorch_profiler_{rank_id}.db生成的交付件，根据数据解析模式不同而解析不同的数据，详情介绍请参见[cluster_analysis.db交付件表结构说明](#cluster_analysisdb交付件表结构说明)
 
 #### communication_group.json
 
@@ -205,6 +210,493 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 - 数据解析模式为mstx_sum时生成，保存在cluster_analysis_output/MstxSum目录下。
 
   可使用jupyter notebook工具或MindStudio Insight工具打开，主要展示集群场景mstx打点信息，分为框架侧、CANN侧和Device侧三部分的打点信息。
+
+## cluster_analysis.db交付件表结构说明
+
+说明：
+
+msprof-analyze配置--mode参数时可分析并输出cluster_analysis.db交付件，本节介绍该交付件的表结构和字段说明。
+
+### compute_op_sum
+
+设置-m compute_op_sum时，会生成以下表。
+
+#### ComputeOpAllRankStats
+
+说明：
+
+基于db格式的集群性能数据，针对全部rank的数据，以OpType和TaskType分组，对计算算子的耗时进行统计分析。
+
+格式：
+
+| 字段名 | 类型 | 含义 |
+| ------ | ---- | ---- |
+| OpType   | TEXT    | 计算算子类型                           |
+| TaskType | TEXT    | 算子执行的加速器类型                    |
+| Count    | INTEGER | 以OpType和TaskType分组进行统计的算子数量 |
+| MeanNs   | REAL    | 耗时的平均值                           |
+| StdNs    | REAL    | 耗时的标准差                           |
+| MinNs    | REAL    | 耗时的最小值                           |
+| Q1Ns     | REAL    | 耗时的25%分位数                        |
+| MedianNs | REAL    | 耗时的50%分位数                        |
+| Q3Ns     | REAL    | 耗时的75%分位数                        |
+| MaxNs    | REAL    | 耗时的最大值                           |
+| SumNs    | REAL    | 耗时的总和                             |
+
+#### ComputeOpPerRankStatsByOpType
+
+说明：
+
+基于db格式的集群性能数据，针对每个rank的数据，以OpType和TaskType分组，对计算算子的耗时进行统计分析。
+
+格式：
+
+| 字段名 | 类型 | 含义 |
+| ------ | ---- | ---- |
+| OpType   | TEXT    | 计算算子类型                           |
+| TaskType | TEXT    | 算子执行的加速器类型                    |
+| Count    | INTEGER | 以OpType和TaskType分组进行统计的算子数量 |
+| MeanNs   | REAL    | 耗时的平均值                           |
+| StdNs    | REAL    | 耗时的标准差                           |
+| MinNs    | REAL    | 耗时的最小值                           |
+| Q1Ns     | REAL    | 耗时的25%分位数                        |
+| MedianNs | REAL    | 耗时的50%分位数                        |
+| Q3Ns     | REAL    | 耗时的75%分位数                        |
+| MaxNs    | REAL    | 耗时的最大值                           |
+| SumNs    | REAL    | 耗时的总和                             |
+| Rank     | INTEGER | rank_id                               |
+
+#### ComputeOpPerRankStatsByOpName
+
+说明：
+
+配置--exclude_op_name参数时不会生成该表；
+基于db格式的集群性能数据，针对每个rank的数据，以OpName、OpType、TaskType和InputShapes分组，对计算算子的耗时进行统计分析。
+
+格式：
+
+| 字段名 | 类型 | 含义 |
+| ------ | ---- | ---- |
+| OpName      | TEXT    | 计算算子名字                           |
+| OpType      | TEXT    | 计算算子类型                           |
+| TaskType    | TEXT    | 算子执行的加速器类型                    |
+| InputShapes | TEXT    | 算子的输入维度                         |
+| Count       | INTEGER | 这个分组的算子数量                     |
+| MeanNs      | REAL    | 耗时的平均值                           |
+| StdNs       | REAL    | 耗时的标准差                           |
+| MinNs       | REAL    | 耗时的最小值                           |
+| Q1Ns        | REAL    | 耗时的25%分位数                        |
+| MedianNs    | REAL    | 耗时的50%分位数                        |
+| Q3Ns        | REAL    | 耗时的75%分位数                        |
+| MaxNs       | REAL    | 耗时的最大值                           |
+| SumNs       | REAL    | 耗时的总和                             |
+| Rank        | INTEGER | rank_id                               |
+
+### cann_api_sum
+
+设置-m cann_api_sum时，会生成以下表。
+
+#### CannApiSum
+
+说明：
+
+基于db格式的集群性能数据，针对全部rank的数据，对每一种api（名字不同）的耗时进行统计分析。
+
+格式：
+
+| 字段名 | 类型 | 含义 |
+| ------ | ---- | ---- |
+| name           | TEXT    | API名字                           |
+| timeRatio      | REAL    | API的耗时占所有API总耗时的百分比 |
+| totalTimeNs    | INTEGER | API的总耗时                    |
+| totalCount     | INTEGER | API的数量                      |
+| averageNs      | REAL    | 耗时的平均值                       |
+| Q1Ns           | REAL    | 耗时的25%分位数                    |
+| medNs          | REAL    | 耗时的50%分位数                    |
+| Q3Ns           | REAL    | 耗时的75%分位数                    |
+| minNs          | REAL    | 耗时的最小值                       |
+| maxNs          | REAL    | 耗时的最大值                       | 
+| stdev          | REAL    | 耗时的标准差                       |
+| minRank        | TEXT    | minNs对应的rank的集合              |
+| maxRank        | TEXT    | maxNs对应的rank的集合              |
+
+#### CannApiSumRank
+
+说明：
+
+基于db格式的集群性能数据，针对每个rank的数据，对每一种api（名字不同）的耗时进行统计分析。
+
+格式：
+
+| 字段名 | 类型 | 含义 |
+| ------ | ---- | ---- |
+| name          | TEXT    | API名字            |
+| durationRatio | REAL    | API的耗时占卡内所有API总耗时的百分比 |
+| totalTimeNs   | INTEGER | API的总耗时        |
+| totalCount    | INTEGER | API的数量          |
+| averageNs     | REAL    | 耗时的平均值       |
+| minNs         | REAL    | 耗时的最小值       |
+| Q1Ns          | REAL    | 耗时的25%分位数    |
+| medNs         | REAL    | 耗时的50%分位数    |
+| Q3Ns          | REAL    | 耗时的75%分位数    |
+| maxNs         | REAL    | 耗时的最大值       |
+| stdev         | REAL    | 耗时的标准差       |
+| rank          | INTEGER | rank_id           |
+
+### hccl_sum
+
+设置-m hccl_sum时，会生成以下表。
+
+#### HcclAllRankStats
+
+说明：
+
+基于db格式的集群性能数据，针对全部rank的数据，对每一种通信算子类型（例如hcom_broadcast_）的耗时进行统计分析。
+
+格式：
+
+| 字段名 | 类型 | 含义 |
+| ------ | ---- | ---- |
+| OpType   | TEXT    | 通信算子类型    |
+| Count    | INTEGER | 数量           |
+| MeanNs   | REAL    | 耗时的平均值    |
+| StdNs    | REAL    | 耗时的标准差    |
+| MinNs    | REAL    | 耗时的最小值    |
+| Q1Ns     | REAL    | 耗时的25%分位数 |
+| MedianNs | REAL    | 耗时的50%分位数 |
+| Q3Ns     | REAL    | 耗时的75%分位数 |
+| MaxNs    | REAL    | 耗时的最大值    | 
+| SumNs    | REAL    | 耗时的总和      |
+
+#### HcclPerRankStats
+
+说明：
+
+基于db格式的集群性能数据，针对每个rank的数据，对每一种通信算子类型（例如hcom_broadcast_）的耗时进行统计分析。
+
+格式：
+
+| 字段名 | 类型 | 含义 |
+| ------ | ---- | ---- |
+| OpType   | TEXT    | 通信算子类型    |
+| Count    | INTEGER | 数量           |
+| MeanNs   | REAL    | 耗时的平均值    |
+| StdNs    | REAL    | 耗时的标准差    |
+| MinNs    | REAL    | 耗时的最小值    |
+| Q1Ns     | REAL    | 耗时的25%分位数 |
+| MedianNs | REAL    | 耗时的50%分位数 |
+| Q3Ns     | REAL    | 耗时的75%分位数 |
+| MaxNs    | REAL    | 耗时的最大值    | 
+| SumNs    | REAL    | 耗时的总和      |
+| Rank     | INTEGER | rank_id        |
+
+#### HcclGroupNameMap
+
+说明：
+
+通信域内包含的rank。
+
+格式：
+
+| 字段名 | 类型 | 含义 |
+| ------ | ---- | ---- |
+| GroupName | TEXT | 通信域，例如：10.170.22.98%enp67s0f5_60000_0_1708156014257149 |
+| GroupId   | TEXT | 通信域的hash值的后三位 |
+| Ranks     | TEXT | 该通信域的所有rank |
+
+#### HcclTopOpStats
+
+说明：
+
+基于db格式的集群性能数据，对所有rank的通信算子的耗时进行分析，展示耗时平均值排名TOP N（默认为 15）的通信算子的数据。
+
+格式：
+
+| 字段名 | 类型 | 含义 |
+| ------ | ---- | ---- |
+| OpName   | TEXT    | 通信算子名，例如hcom_allReduce__606_0_1 |
+| Count    | INTEGER | 数量           |
+| MeanNs   | REAL    | 耗时的平均值    |
+| StdNs    | REAL    | 耗时的标准差    |
+| MinNs    | REAL    | 耗时的最小值    |
+| Q1Ns     | REAL    | 耗时的25%分位数 |
+| MedianNs | REAL    | 耗时的50%分位数 |
+| Q3Ns     | REAL    | 耗时的75%分位数 |
+| MaxNs    | REAL    | 耗时的最大值    | 
+| SumNs    | REAL    | 耗时的总和      |
+| MinRank  | INTEGER | 该通信算子耗时最小的rank |
+| MaxRank  | INTEGER | 该通信算子耗时最大的rank |
+
+### comm_group_map
+
+设置-m comm_group_map时，会生成以下表。
+
+#### CommunicationGroupMapping
+
+说明：
+
+基于db格式的集群性能数据，生成通信域与并行策略的对应关系。
+
+格式：
+
+| 字段名 | 类型 | 含义 |
+| ------ | ---- | ---- |
+| type       | TEXT | 算子类型，包含collective和p2p, 其中算子名包含"send"，"recv"，"receive"的算子被认为是p2p |
+| rank_set   | TEXT | 通信域内包含的rank（global rank）|
+| group_name | TEXT | 通信域的hash值，可映射成group_id |
+| group_id   | TEXT | hccl内部定义的通信域名字，例如：10.170.22.98%enp67s0f5_60000_0_1708156014257149 |
+| pg_name    | TEXT | 业务定义的通信域名字，例如："dp"，"dp_cp"，"mp"等等 |
+
+### communication_time_sum
+
+设置-m communication_time_sum时，会生成以下表。
+
+#### ClusterCommunicationTime
+
+说明：
+
+基于db格式的集群性能数据，分析集群通信时间。
+
+格式：
+
+| 字段名 | 类型 | 含义 |
+| ------ | ---- | ---- |
+| step                       | TEXT    | 算子所属的step |
+| rank_id                    | INTEGER | global rank |
+| hccl_op_name               | TEXT    | 通信算子名，例如hcom_allReduce__606_0_1 |
+| group_name                 | TEXT    | 通信域hashId，例如3915571125887837303 |
+| start_timestamp            | REAL    | 开始时间，单位：us |
+| elapsed_time               | REAL    | 通信总耗时，单位：ms |
+| transit_time               | REAL    | 传输时间，单位：ms |
+| wait_time                  | REAL    | 等待时间，单位：ms |
+| synchronization_time       | REAL    | 同步时间，单位：ms |
+| idle_time                  | REAL    | 空闲时间，单位：ms |
+| synchronization_time_ratio | REAL    | 同步时间占比，synchronization_time /（transit_time + synchronization_time） |
+| wait_time_ratio            | REAL    | 等待时间占比，wait_time /（transit_time + wait_time） |
+
+#### ClusterCommunicationBandwidth
+
+说明：
+
+基于db格式的集群性能数据，分析集群通信带宽。
+
+格式：
+
+| 字段名 | 类型 | 含义 |
+| ------ | ---- | ---- |
+| step               | TEXT    | 算子所属的step |
+| rank_id            | INTEGER | global rank |
+| hccl_op_name       | TEXT    | 通信算子名，例如hcom_allReduce__606_0_1 |
+| group_name         | TEXT    | 通信域hashId，例如3915571125887837303 |
+| band_type          | TEXT    | 传输类型，包含：LOCAL、SDMA、RDMA、HCCS等 |
+| transit_size       | REAL    | 传输的数据量，单位：MB |
+| transit_time       | REAL    | 传输耗时，单位：ms |
+| bandwidth          | REAL    | 带宽，单位：GB/s |
+| large_packet_ratio | REAL    | 大数据包的比例 |
+| package_size       | REAL    | 一次传输的通信数据包大小，单位：MB |
+| count              | INTEGER | 通信传输次数 |
+| total_duration     | REAL    | 通信传输总耗时，单位：ms |
+
+### communication_matrix_sum 
+
+设置-m communication_matrix_sum时，会生成以下表。
+
+#### ClusterCommunicationMatrix
+
+说明：
+
+基于db格式的集群性能数据，生成通信矩阵数据。
+
+格式：
+
+| 字段名 | 类型 | 含义 |
+| ------ | ---- | ---- |
+| step           | TEXT    | 算子所属的step |
+| hccl_op_name   | TEXT    | 矩阵分析后的精简算子名，例如：send-top1 |
+| group_name     | TEXT    | 通信域hashId，例如3915571125887837303 |
+| src_rank       | REAL    | 发送数据的rankId，例如：0|
+| dst_rank       | REAL    | 接收数据的rankId，例如：1|
+| transport_type | TEXT    | 传输类型，包含：LOCAL、SDMA、RDMA等 |
+| op_name        | TEXT    | 算子的原始名字 |
+| transit_size   | REAL    | 传输的数据量，单位：MB |
+| transit_time   | REAL    | 传输耗时，单位：ms |
+| bandwidth      | REAL    | 带宽，单位：GB/s |
+
+### mstx_sum 
+
+设置-m mstx_sum时，会生成以下表。
+
+#### MSTXAllFrameworkStats
+
+说明：
+
+基于db格式的集群性能数据，分析mstx打点数据的框架侧耗时（不区分rank）。
+
+格式：
+
+| 字段名 | 类型 | 含义 |
+| ------ | ---- | ---- |
+| Name     | TEXT    | mstx打点数据携带信息 |
+| Count    | INTEGER | 该迭代内以Name为分组的打点的次数 |
+| MeanNs   | REAL    | 平均值 |
+| StdNs    | REAL    | 标准差 |
+| MinNs    | REAL    | 最小值 |
+| Q1Ns     | REAL    | 25%分位数 |
+| MedianNs | REAL    | 50%分位数 |
+| Q3Ns     | REAL    | 75%分位数 |
+| MaxNs    | REAL    | 最大值 |
+| SumNs    | REAL    | 总和 |
+| StepId   | INTEGER | 迭代id |
+
+#### MSTXAllCannStats
+
+说明：
+
+基于db格式的集群性能数据，分析mstx打点数据的cann层耗时（不区分rank）。
+
+格式：
+
+| 字段名 | 类型 | 含义 |
+| ------ | ---- | ---- |
+| Name     | TEXT    | mstx打点数据携带信息 |
+| Count    | INTEGER | 该迭代内以Name为分组的打点的次数 |
+| MeanNs   | REAL    | 平均值 |
+| StdNs    | REAL    | 标准差 |
+| MinNs    | REAL    | 最小值 |
+| Q1Ns     | REAL    | 25%分位数 |
+| MedianNs | REAL    | 50%分位数 |
+| Q3Ns     | REAL    | 75%分位数 |
+| MaxNs    | REAL    | 最大值 |
+| SumNs    | REAL    | 总和 |
+| StepId   | INTEGER | 迭代id |
+
+#### MSTXAllDeviceStats
+
+说明：
+
+基于db格式的集群性能数据，分析mstx打点数据的device侧耗时（不区分rank）。
+
+格式：
+
+| 字段名 | 类型 | 含义 |
+| ------ | ---- | ---- |
+| Name     | TEXT    | mstx打点数据携带信息 |
+| Count    | INTEGER | 该迭代内以Name为分组的打点的次数 |
+| MeanNs   | REAL    | 平均值 |
+| StdNs    | REAL    | 标准差 |
+| MinNs    | REAL    | 最小值 |
+| Q1Ns     | REAL    | 25%分位数 |
+| MedianNs | REAL    | 50%分位数 |
+| Q3Ns     | REAL    | 75%分位数 |
+| MaxNs    | REAL    | 最大值 |
+| SumNs    | REAL    | 总和 |
+| StepId   | INTEGER | 迭代id |
+
+#### MSTXMarkStats
+
+说明：
+
+基于db格式的集群性能数据，针对每个rank的打点数据，以Rank，StepId分组，对mstx打点的耗时进行统计分析。
+
+格式：
+
+| 字段名 | 类型 | 含义 |
+| ------ | ---- | ---- |
+| Name                | TEXT    | mstx打点数据携带信息 |
+| FrameworkDurationNs | REAL    | 框架侧耗时 |
+| CannDurationNs      | REAL    | CANN层耗时 |
+| DeviceDurationNs    | REAL    | device侧耗时 |
+| Rank                | INTEGER | global rank |
+| StepId              | INTEGER | 迭代id |
+
+### freq_analysis
+
+说明：
+
+基于db格式的集群性能数据，分析aicore frequency，提供npu降频一键检测能力。频率分为三种情况：
+* 正常情况下，应当稳定在1800MHz；
+* 当npu空闲时间较长时，设备会自动降频，会掉到800MHz；
+* 当npu因为各种原因，出现降频现象时，除了1800MHz，800MHz，还有出现其他异常频率。
+
+设置-m freq_analysis时，如果发生降频，会生成以下表。
+
+#### FreeFrequencyRanks
+
+说明：
+
+对应第二种情况。
+
+格式：
+
+| 字段名 | 类型 | 含义 |
+| ------ | ---- | ---- |
+| rankId          | INTEGER | global rank |
+| aicoreFrequency | TEXT    | [800, 1800] |
+
+#### AbnormalFrequencyRanks
+
+说明：
+
+对应第三种情况。
+
+格式：
+
+| 字段名 | 类型 | 含义 |
+| ------ | ---- | ---- |
+| rankId          | INTEGER | global rank |
+| aicoreFrequency | TEXT    | 异常频率列表，；例如：[800, 1150, 1450, 1800] |
+
+### ep_load_balance
+
+说明：
+
+集群训练场景下，MOE负载不均指的是，在分布式环境下，不同的专家模型处理的任务量不均衡，导致某些专家过载（处理过多任务），而其他专家闲置。这种负载不均会降低系统的整体效率，甚至可能导致性能瓶颈。
+
+设置-m ep_load_balance时，会生成以下表。
+
+#### EPTokensSummary
+
+说明：
+
+基于db格式的集群性能数据，分析GroupedMatmul算子的shape信息。
+
+格式：
+
+| 字段名 | 类型 | 含义 |
+| ------ | ---- | ---- |
+| rank               | INTEGER | global rank |
+| epRanks            | TEXT    | 同一个ep(Expert Parallelism)的rank集合，例如0,1 |
+| inputShapesSummary | INTEGER | 该rank的GroupedMatmul算子的inputshapes的第一个维度的总和 |
+
+#### TopEPTokensInfo
+
+说明：
+
+负载不均的ep。
+
+格式：
+
+| 字段名 | 类型 | 含义 |
+| ------ | ---- | ---- |
+| epRanks    | TEXT    | 负载不均的ep(Expert Parallelism)的rank集合，例如0,1 |
+| tokensDiff | INTEGER | 同一个ep内最大值与最小值之间的差值 |
+
+### slow_rank
+
+设置-m slow_rank时，会生成以下表。
+
+#### SlowRank
+
+说明：
+
+基于db格式的集群性能数据，进行慢卡分析。
+
+格式：
+
+| 字段名 | 类型 | 含义 |
+| ------ | ---- | ---- |
+| rankId          | INTEGER | 慢卡    |
+| slowAffectCount | INTEGER | 该rank影响了多少次通信 |
 
 ## 附录
 
