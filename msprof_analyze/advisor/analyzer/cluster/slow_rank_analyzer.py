@@ -167,7 +167,9 @@ class SlowRankAnalyzer(BaseAnalyzer):
         if dimension_index is None or rank_id_index is None:
             return global_step_rank
 
-        data_list = [tuple_list[dimension_index] for tuple_list in self.format_datas.get("data")]
+        data_list = [tuple_list[dimension_index] for tuple_list in self.format_datas.get("data", [])]
+        if not data_list:
+            return global_step_rank
         max_time, min_time = max(data_list), min(data_list)
 
         if self.compute_max_gap_ratio(data_list, sum(data_list) / len(

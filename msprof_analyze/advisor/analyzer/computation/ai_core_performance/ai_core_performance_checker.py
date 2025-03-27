@@ -14,6 +14,9 @@
 import logging
 import os
 from functools import reduce
+
+from msprof_analyze.advisor.utils.utils import safe_division, convert_to_int_with_exception, \
+    convert_to_float_with_warning
 from msprof_analyze.advisor.dataset.profiling.profiling_dataset import ProfilingDataset
 from msprof_analyze.advisor.result.item import OptimizeItem, OptimizeRecord
 from msprof_analyze.advisor.result.result import OptimizeResult
@@ -78,7 +81,7 @@ class AICorePerformanceChecker:
         for shapes in input_shapes:
             if "," not in shapes and shapes != "":
                 # 多的一维是 bias ，预先乘2
-                memory += int(shapes) * 2
+                memory += convert_to_int_with_exception(shapes) * 2
                 continue
             memory += reduce(lambda x, y: x * y, map(int, shapes.split(",")))
         memory += reduce(lambda x, y: x * y, map(int, output_shapes.split(",")))
@@ -120,12 +123,14 @@ class AICorePerformanceChecker:
             return
 
         operator_list = profiling_dataset.op_summary.op_list
-        total_duration = sum(float(operator.task_duration) for operator in operator_list)
+        total_duration = sum(convert_to_float_with_warning(operator.task_duration) for operator in operator_list)
         if (total_duration == 0):
             return
         cube_memory_dict, vector_type_dict = {}, {}
 
         for op in operator_list:
+            if not op.input_shapes or not op.output_shapes:
+                continue
             shapes = op.input_shapes[1:-1] + "-" + op.output_shapes[1:-1]
             # preliminary filter cube operator
             if op.task_type == "AI_CORE" and "matmul" in op.op_type.lower():
@@ -153,7 +158,8 @@ class AICorePerformanceChecker:
 
         # filter vector operator
         for op_type in vector_type_dict:
-            duration_group_by_time = sum(float(op.task_duration) for op in vector_type_dict[op_type])
+            duration_group_by_time = sum(convert_to_float_with_warning(op.task_duration)
+                                         for op in vector_type_dict[op_type])
             if (duration_group_by_time / total_duration) >= 0.01 or duration_group_by_time >= 1000000:
                 for op in vector_type_dict[op_type]:
                     shapes = op.input_shapes[1:-1] + "-" + op.output_shapes[1:-1]
@@ -187,7 +193,7 @@ class AICorePerformanceChecker:
                         if (operator.op_name == op and
                                 operator.input_shapes[1:-1] + "-" + operator.output_shapes[1:-1] == shape):
                             dtype = operator.input_data_types
-                            shape_duration += float(operator.task_duration)
+                            shape_duration += convert_to_float_with_warning(operator.task_duration)
                     affinity_queue.append({"op_name": op,
                                            "shape": shape.split("-")[0],
                                            "dtype": dtype,
@@ -199,7 +205,8 @@ class AICorePerformanceChecker:
                         if (operator.op_name == op and operator.input_shapes[1:-1] + "-" +
                                 operator.output_shapes[1:-1] == shape):
                             shape_list.append(operator)
-                    shape_duration = sum(float(operator.task_duration) for operator in shape_list)
+                    shape_duration = sum(convert_to_float_with_warning(operator.task_duration)
+                                         for operator in shape_list)
                     dtype = shape_list[0].input_data_types if shape_list else None
                     bound, optimization = self.del_cube_operator_bound(shape_list)
                     if bound is None and optimization is None:
@@ -223,8 +230,8 @@ class AICorePerformanceChecker:
         bound, optimization, aic_mac_ratio, aic_mte2_ratio, length = "", 0., 0., 0., 0
         for operator in shape_list:
             try:
-                aic_mac_ratio += float(operator.aic_mac_ratio)
-                aic_mte2_ratio += float(operator.aic_mte2_ratio)
+                aic_mac_ratio += convert_to_float_with_warning(operator.aic_mac_ratio)
+                aic_mte2_ratio += convert_to_float_with_warning(operator.aic_mte2_ratio)
                 length += 1
             except ValueError:
                 continue
@@ -296,9 +303,9 @@ class AICorePerformanceChecker:
                     operator.input_shapes[1:-1] + "-" +
                     operator.output_shapes[1:-1] + "-grad" == shape):
                 try:
-                    aic_fixpipe_ratio += float(operator.aic_fixpipe_ratio)
-                    aic_mte2_ratio += float(operator.aic_mte2_ratio)
-                    shape_duration += float(operator.task_duration)
+                    aic_fixpipe_ratio += convert_to_float_with_warning(operator.aic_fixpipe_ratio)
+                    aic_mte2_ratio += convert_to_float_with_warning(operator.aic_mte2_ratio)
+                    shape_duration += convert_to_float_with_warning(operator.task_duration)
                     dtype = operator.input_data_types
                     length += 1
                 except ValueError:
@@ -332,9 +339,9 @@ class AICorePerformanceChecker:
             if (operator.op_name == op and
                     operator.input_shapes[1:-1] + "-" + operator.output_shapes[1:-1] == shape):
                 try:
-                    aiv_vec_ratio += float(operator.aiv_vec_ratio)
-                    aic_mte2_ratio += float(operator.aic_mte2_ratio)
-                    shape_duration += float(operator.task_duration)
+                    aiv_vec_ratio += convert_to_float_with_warning(operator.aiv_vec_ratio)
+                    aic_mte2_ratio += convert_to_float_with_warning(operator.aic_mte2_ratio)
+                    shape_duration += convert_to_float_with_warning(operator.task_duration)
                     length += 1
                 except ValueError:
                     continue
@@ -372,10 +379,10 @@ class AICorePerformanceChecker:
                     if (operator.op_name == op_name and
                             operator.input_shapes[1:-1] + "-" + operator.output_shapes[1:-1] == shape):
                         try:
-                            aiv_vec_ratio += float(operator.aiv_vec_ratio)
-                            aiv_mte2_ratio += float(operator.aiv_mte2_ratio)
-                            aiv_mte3_ratio += float(operator.aiv_mte3_ratio)
-                            shape_duration += float(operator.task_duration)
+                            aiv_vec_ratio += convert_to_float_with_warning(operator.aiv_vec_ratio)
+                            aiv_mte2_ratio += convert_to_float_with_warning(operator.aiv_mte2_ratio)
+                            aiv_mte3_ratio += convert_to_float_with_warning(operator.aiv_mte3_ratio)
+                            shape_duration += convert_to_float_with_warning(operator.task_duration)
                             dtype = operator.input_data_types
                             length += 1
                         except ValueError:
@@ -508,12 +515,15 @@ class AICorePerformanceChecker:
         shapes = shape.split("-")[0].split(";")
         if (len(shape.split("-")[0].split(";")[0].split(","))) == 4:
             # NZ格式
-            b_axis, c_axis = int(shapes[0].split(",")[1]), int(shapes[0].split(",")[2])
-            f_axis, g_axis = int(shapes[1].split(",")[1]), int(shapes[1].split(",")[2])
+            b_axis, c_axis = (convert_to_int_with_exception(shapes[0].split(",")[1]),
+                              convert_to_int_with_exception(shapes[0].split(",")[2]))
+            f_axis, g_axis = (convert_to_int_with_exception(shapes[1].split(",")[1]),
+                              convert_to_int_with_exception(shapes[1].split(",")[2]))
             return (b_axis * c_axis % self.INNER_AXIS_256 == 0) and (f_axis * g_axis % self.INNER_AXIS_256 == 0)
         elif (len(shape.split("-")[0].split(";")[0].split(","))) == 2:
             # ND格式
-            l_axis, k_axis = int(shapes[0].split(",")[1]), int(shapes[1].split(",")[1])
+            l_axis, k_axis = (convert_to_int_with_exception(shapes[0].split(",")[1]),
+                              convert_to_int_with_exception(shapes[1].split(",")[1]))
             return (l_axis % self.INNER_AXIS_256 == 0) and (k_axis % self.INNER_AXIS_256 == 0)
         else:
             return False
@@ -525,24 +535,25 @@ class AICorePerformanceChecker:
         suggestion = ""
         if "varlen" in op.lower():
             # 处理变长算子 如果不亲和则affinity_flag为False
-            inner_axis = int(shape.split("-")[0].split(";")[0].split(",")[2])
+            inner_axis = convert_to_int_with_exception(shape.split("-")[0].split(";")[0].split(",")[2])
             if inner_axis % self.INNER_AXIS_128 != 0:
                 affinity_flag = True
                 suggestion = self._fa_affinity_desc_head_dim_128
                 for operator in fa_list:
                     if (operator.op_name == op and
                             operator.input_shapes[1:-1] + "-" + operator.output_shapes[1:-1] == shape):
-                        shape_duration += float(operator.task_duration)
+                        shape_duration += convert_to_float_with_warning(operator.task_duration)
                         dtype = operator.input_data_types
         else:
             # 处理定长算子 如果不亲和则affinity_flag为False
             head_dim = 0
-            seq_len = int(shape.split("-")[1].split(";")[0].split(",")[2])
+            seq_len = convert_to_int_with_exception(shape.split("-")[1].split(";")[0].split(",")[2])
             input_first_tensor = shape.split("-")[0].split(";")[0].split(",")
             if len(input_first_tensor) == 3:
-                head_dim = int(input_first_tensor[2]) / int(shape.split("-")[1].split(";")[0].split(",")[1])
+                head_dim = safe_division(convert_to_int_with_exception(input_first_tensor[2]),
+                                         convert_to_int_with_exception(shape.split("-")[1].split(";")[0].split(",")[1]))
             else:
-                head_dim = int(input_first_tensor[3])
+                head_dim = convert_to_int_with_exception(input_first_tensor[3])
             if head_dim % self.INNER_AXIS_128 != 0 and seq_len % self.INNER_AXIS_128 != 0:
                 affinity_flag = True
                 suggestion = self._fa_affinity_desc_head_dim_seq_len_128
@@ -557,6 +568,6 @@ class AICorePerformanceChecker:
                     if (operator.op_name == op and
                             operator.input_shapes[1:-1] + "-" +
                             operator.output_shapes[1:-1] == shape):
-                        shape_duration += float(operator.task_duration)
+                        shape_duration += convert_to_float_with_warning(operator.task_duration)
                         dtype = operator.input_data_types
         return affinity_flag, dtype, shape_duration, suggestion

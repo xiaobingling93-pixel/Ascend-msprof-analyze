@@ -447,7 +447,7 @@ def convert_to_int(data: any) -> int:
     try:
         int_value = int(convert_to_float(data))
     except ValueError:
-        logger.error(f"Can not convert %s to int.", data)
+        logger.warning(f"Can not convert %s to int.", data)
         return 0
     return int_value
 
