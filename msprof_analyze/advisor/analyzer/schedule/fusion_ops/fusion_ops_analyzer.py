@@ -284,7 +284,7 @@ class TimelineFusionOpsAnalyzer(BaseAnalyzer):
         op_pattern_list = op_rule.split(Constant.OP_SEP)
         format_op_pattern = ""
         for op_pattern in op_pattern_list:
-            matched_res = re.search(r'\((.*?)\)', op_pattern)
+            matched_res = re.search(r'\((\w+)\)', op_pattern)
 
             ops_index_range = (matched_res.start() + 1, matched_res.end() - 1) if matched_res else (
                 0, len(op_pattern))

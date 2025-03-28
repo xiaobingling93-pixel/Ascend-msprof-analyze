@@ -4,10 +4,17 @@
   operator_rules:
     aten:
       add:
-        torch_npu.npu_confusion_transpose: [ "(permute|transpose)-(contiguous){0,1}-(reshape|view)",
-                                             "(reshape|view)-(contiguous){0,1}-(permute|transpose)" ]
+        torch_npu.npu_confusion_transpose: [ "(permute)-(contiguous){0,1}-(reshape)",
+                                             "(permute)-(contiguous){0,1}-(view)",
+                                             "(transpose)-(contiguous){0,1}-(reshape)",
+                                             "(transpose)-(contiguous){0,1}-(view)",
+                                             "(reshape)-(contiguous){0,1}-(permute)",
+                                             "(reshape)-(contiguous){0,1}-(transpose)",
+                                             "(view)-(contiguous){0,1}-(permute)",
+                                             "(view)-(contiguous){0,1}-(transpose)" ]
         torch_npu.fast_gelu: [ gelu ]
-        torch_npu.npu_scaled_masked_softmax: [ "softmax-(mul){0,1}-(masked_fill_|add)" ]
+        torch_npu.npu_scaled_masked_softmax: [ "softmax-(mul){0,1}-(masked_fill_)",
+                                               "softmax-(mul){0,1}-(add)"]
         optimizer.clip_grad_norm_fused_: [ add-reciprocal-mul ]
     Optimizer:
       add:
@@ -29,8 +36,10 @@
   operator_rules:
     aten:
       add:
-        torch_npu.npu_fusion_attention: ["matmul-(add){0,1}-(mul){0,1}-(masked_fill_|add){0,1}-softmax-(dropout){0,1}-matmul"]
-        torch_npu.npu_rotary_mul: ["(chunk|slice)-neg-cat-(mul){0,2}-add"]
+        torch_npu.npu_fusion_attention: ["matmul-(add){0,1}-(mul){0,1}-(masked_fill_){0,1}-softmax-(dropout){0,1}-matmul",
+                                         "matmul-(add){0,1}-(mul){0,1}-(add){0,1}-softmax-(dropout){0,1}-matmul",]
+        torch_npu.npu_rotary_mul: ["(chunk)-neg-cat-(mul){0,2}-add",
+                                   "(slice)-neg-cat-(mul){0,2}-add"]
 
 - cann_version: 7.0.0
   torch_version: [1.11.0, 2.1.0]
@@ -40,9 +49,11 @@
     aten:
       add:
         torch_npu.npu_rms_norm: ["(pow){0,1}-(mean){0,1}-(add){0,1}-rsqrt-mul-(type_as){0,1}"]
-        torch_npu.npu_swiglu: [ "(slice|chunk)-silu-mul", "(slice|chunk)-mul-silu",
-                                "(slice|chunk)-sigmoid-mul-mul", "(slice|chunk)-mul-sigmoid-mul",
-                                "(slice|chunk)-mul-mul-sigmoid" ]
+        torch_npu.npu_swiglu: [ "(slice)-silu-mul", "(chunk)-silu-mul",
+                                "(slice)-mul-silu", "(chunk)-mul-silu",
+                                "(slice)-sigmoid-mul-mul", "(chunk)-sigmoid-mul-mul",
+                                "(slice)-mul-sigmoid-mul", "(chunk)-mul-sigmoid-mul",
+                                "(slice)-mul-mul-sigmoid", "(chunk)-mul-mul-sigmoid" ]
 
 - cann_version: 8.0.RC1
   torch_version: [1.11.0, 2.1.0]
@@ -51,7 +62,8 @@
   operator_rules:
     aten:
       add:
-        torch_npu.npu_geglu: [ "(slice|chunk)-gelu-mul", "(slice|chunk)-mul-gelu" ]
+        torch_npu.npu_geglu: [ "(slice)-gelu-mul", "(chunk)-gelu-mul",
+                               "(slice)-mul-gelu", "(chunk)-mul-gelu"]
         torch_npu.npu_group_norm_silu: [ "group_norm-silu" ]
         torch.addmm: [ "mul-mul-add" ]
         torch_npu.npu_add_layer_norm: [ "add-layer_norm" ]
@@ -63,7 +75,8 @@
   operator_rules:
     aten:
       add:
-        torch_npu.npu_geglu: [ "(slice|chunk)-gelu-mul", "(slice|chunk)-mul-gelu" ]
+        torch_npu.npu_geglu: [ "(slice)-gelu-mul", "(chunk)-gelu-mul",
+                               "(slice)-mul-gelu", "(chunk)-mul-gelu"]
         torch_npu.npu_group_norm_silu: [ "group_norm-silu" ]
         torch.addmm: [ "mul-mul-add" ]
         torch_npu.npu_add_layer_norm: [ "add-layer_norm" ]
