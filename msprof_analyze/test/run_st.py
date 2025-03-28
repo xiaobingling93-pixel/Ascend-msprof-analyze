@@ -20,6 +20,8 @@ import sys
 import threading
 
 stop_print_thread = False
+# 当前ci环境不支持该用例
+BLACKLIST_FILES = ["test_cann_api_sum.py"]
 
 
 def print_stout(output):
@@ -43,6 +45,10 @@ def stop_stout_threads(thread_list):
 def start_st_process(module_name):
     st_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "st", module_name)
     cmd = ["python3", "-m", "pytest", "-s", st_path]
+    for case in BLACKLIST_FILES:
+        ignored_case_path = os.path.join(st_path, case)
+        if os.path.exists(ignored_case_path):
+            cmd.extend(["--ignore", ignored_case_path])
     process = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     stout_thread = threading.Thread(target=print_stout, args=(process.stdout,))
     stout_thread.start()
