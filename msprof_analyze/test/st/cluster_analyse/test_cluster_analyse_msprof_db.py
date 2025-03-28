@@ -83,7 +83,7 @@ class TestClusterAnalyseMsprofDb(TestCase):
     def test_comm_matrix_data(self):
         query = "SELECT * FROM ClusterCommunicationMatrix WHERE hccl_op_name = 'Total Op Info' "
         data = pd.read_sql(query, self.conn)
-        self.assertEqual(len(data), 43)
+        self.assertEqual(len(data), 71)
         query = "SELECT transport_type, transit_size, transit_time, bandwidth FROM ClusterCommunicationMatrix WHERE " \
                 "hccl_op_name='Total Op Info'  and group_name='11262865095472569221' and src_rank=5 and dst_rank=1"
         data = pd.read_sql(query, self.conn)
