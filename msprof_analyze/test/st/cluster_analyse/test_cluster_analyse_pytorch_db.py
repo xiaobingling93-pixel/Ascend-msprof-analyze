@@ -71,6 +71,7 @@ class TestClusterAnalysePytorchDb(TestCase):
                          "Cluster step trace time count wrong.")
         query = "SELECT * FROM ClusterStepTraceTime where type= 'rank' and [index] = 7"
         db_cluster_step_trace_time = select_by_query(self.db_path, query, ClusterStepTraceTimeDb)
+        df = df[df["Index"] == 7]
         text_cluster_step_trace_time = ClusterStepTraceTimeDb(*df.iloc[0])
         self.assertEqual(text_cluster_step_trace_time.type, db_cluster_step_trace_time.type,
                          "Cluster step trace time db vs text 'type' property wrong.")
