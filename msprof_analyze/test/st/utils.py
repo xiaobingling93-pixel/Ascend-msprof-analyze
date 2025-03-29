@@ -19,6 +19,8 @@ import logging
 import sqlite3
 
 COMMAND_SUCCESS = 0
+ST_DATA_PATH = os.getenv("MSTT_PROFILER_ST_DATA_PATH",
+                         "/home/dcs-50/smoke_project_for_msprof_analyze/mstt_profiler/st_data")
 
 
 def execute_cmd(cmd):

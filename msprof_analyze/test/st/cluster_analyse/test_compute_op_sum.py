@@ -21,14 +21,13 @@ from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.db_manager import DBManager
 from msprof_analyze.prof_common.path_manager import PathManager
 from msprof_analyze.test.st.utils import execute_cmd
+from msprof_analyze.test.st.utils import ST_DATA_PATH
 
 
 class TestComputeOpSum(TestCase):
     """
     Test recipe: compute_op_sum
     """
-    ST_DATA_PATH = os.getenv("MSTT_PROFILER_ST_DATA_PATH",
-                             "/home/dcs-50/smoke_project_for_msprof_analyze/mstt_profiler/st_data")
     CLUSTER_PATH = os.path.join(ST_DATA_PATH, "cluster_data_2_db")
     OUTPUT_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)), "TestComputeOpSum")
     COMMAND_SUCCESS = 0

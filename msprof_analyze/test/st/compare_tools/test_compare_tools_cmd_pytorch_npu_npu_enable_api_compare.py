@@ -19,11 +19,10 @@ import pandas as pd
 
 from msprof_analyze.prof_common.path_manager import PathManager
 from msprof_analyze.test.st.utils import execute_cmd, check_result_file
+from msprof_analyze.test.st.utils import ST_DATA_PATH
 
 
 class TestCompareToolsCmdPytorchNpuVsNpuEnableApiCompare(TestCase):
-    ST_DATA_PATH = os.getenv("MSTT_PROFILER_ST_DATA_PATH",
-                             "/home/dcs-50/smoke_project_for_msprof_analyze/mstt_profiler/st_data")
     BASE_PROFILING_PATH = os.path.join(ST_DATA_PATH, "cluster_data_3", "n122-122-067_12380_20240912033946038_ascend_pt")
     COMPARISON_PROFILING_PATH = os.path.join(ST_DATA_PATH, "cluster_data_3",
                                              "n122-122-067_12380_20240912033946038_ascend_pt")

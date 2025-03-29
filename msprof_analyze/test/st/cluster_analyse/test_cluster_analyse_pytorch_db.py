@@ -14,7 +14,6 @@
 # limitations under the License.
 """Test cluster analyse pytorch db"""
 import os
-
 from unittest import TestCase
 
 import pandas as pd
@@ -29,14 +28,13 @@ from msprof_analyze.test.st.cluster_analyse.cluster_communication_analyzer_matri
 from msprof_analyze.test.st.cluster_analyse.cluster_communication_analyzer_time_db \
     import ClusterCommunicationAnalyzerTime
 from msprof_analyze.test.st.cluster_analyse.cluster_step_trace_time_db import ClusterStepTraceTimeDb
+from msprof_analyze.test.st.utils import ST_DATA_PATH
 
 
 class TestClusterAnalysePytorchDb(TestCase):
     """
        Test cluster analyse pytorch db
     """
-    ST_DATA_PATH = os.getenv("MSTT_PROFILER_ST_DATA_PATH",
-                             "/home/dcs-50/smoke_project_for_msprof_analyze/mstt_profiler/st_data/")
     CLUSTER_PATH = os.path.join(ST_DATA_PATH, "cluster_data_2_db")
     db_path = ""
     STEP_TRACE_TIME_PATH = os.path.join(ST_DATA_PATH, "cluster_data_2_db", "cluster_analysis_output_text",
@@ -53,7 +51,7 @@ class TestClusterAnalysePytorchDb(TestCase):
         PathManager.make_dir_safety(self.OUTPUT_PATH)
         cmd = ["msprof-analyze", "cluster", "-d", self.CLUSTER_PATH, "-m", "all",
                "--output_path", self.OUTPUT_PATH, "--force"]
-        if execute_cmd(cmd) != self.COMMAND_SUCCESS or not os.path.exists(self.ST_DATA_PATH):
+        if execute_cmd(cmd) != self.COMMAND_SUCCESS or not os.path.exists(self.OUTPUT_PATH):
             self.fail("pytorch db cluster analyse task failed.")
         self.db_path = os.path.join(self.OUTPUT_PATH, "cluster_analysis_output", "cluster_analysis.db")
 

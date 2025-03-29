@@ -18,15 +18,15 @@ import logging
 import subprocess
 import pandas as pd
 from unittest import TestCase
+
 from msprof_analyze.prof_common.path_manager import PathManager
+from msprof_analyze.test.st.utils import ST_DATA_PATH
 
 
 class TestClusterAnalyseCmdPytorchText(TestCase):
     """
     PyTorch text type cluster data
     """
-    ST_DATA_PATH = os.getenv("MSTT_PROFILER_ST_DATA_PATH",
-                             "/home/dcs-50/smoke_project_for_msprof_analyze/mstt_profiler/st_data")
     CLUSTER_PATH = os.path.join(ST_DATA_PATH, "cluster_data_2")
     OUTPUT_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                                "ClusterAnalyseCmdPytorchText")

@@ -19,11 +19,10 @@ import pandas as pd
 
 from msprof_analyze.prof_common.path_manager import PathManager
 from msprof_analyze.test.st.utils import execute_cmd, check_result_file
+from msprof_analyze.test.st.utils import ST_DATA_PATH
 
 
 class TestCompareToolsCmdMindSpore(TestCase):
-    ST_DATA_PATH = os.getenv("MSTT_PROFILER_ST_DATA_PATH",
-                             "/home/dcs-50/smoke_project_for_msprof_analyze/mstt_profiler/st_data")
     BASE_PROFILING_PATH = os.path.join(ST_DATA_PATH, "ms_cluster_data_1", "ubuntu_3543034_20250228021645572_ascend_ms")
     COMPARISON_PROFILING_PATH = os.path.join(ST_DATA_PATH, "ms_cluster_data_1",
                                              "ubuntu_3543025_20250228021645573_ascend_ms")
