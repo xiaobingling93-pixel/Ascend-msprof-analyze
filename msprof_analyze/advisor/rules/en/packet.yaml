@@ -1,4 +1,4 @@
-problem: "Packet analysis"
+problem: "Packet Analysis"
 description: "Excessive small communication packets may cause host delivery bottlenecks.\n"
 sdma_problem: "In the SDMA communication, {abnormal_ratio} of the communication data volume is less than {min_size} MB, and the total time is {abnormal_time} ms.\n"
 rdma_problem: "In the RDMA communication, {abnormal_ratio} of the communication data volume is less than {min_size} MB, and the total time is {abnormal_time} ms."

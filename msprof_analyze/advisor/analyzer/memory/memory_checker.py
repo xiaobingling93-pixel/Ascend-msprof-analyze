@@ -72,7 +72,7 @@ class MemoryOpsChecker:
         if not self.memory_issues:
             return
 
-        self.optimization_item.append(OptimizeItem("Memory", self.desc, self.suggestions))
+        self.optimization_item.append(OptimizeItem("Memory Operator Issues", self.desc, self.suggestions))
         for optimization in self.optimization_item:
             result.add(OptimizeRecord(optimization))
 

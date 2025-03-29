@@ -1,4 +1,4 @@
-problem: "FUSIBLE OPERATOR ANALYSIS"
+problem: "Fusible Operator Analysis"
 mte_problem: "OPERATOR SEQUENCE ANALYSIS BASED ON MTE BOUND"
 host_problem: "OPERATOR SEQUENCE ANALYSIS BASED ON MTE BOUND"
 description: "Detected a total of {count} operator sequences with fusion value, with a total end-to-end duration of {wall_duration}ms, including {npu_time}ms for NPU time, {host_threshold} for host bottleneck duration percentage, 

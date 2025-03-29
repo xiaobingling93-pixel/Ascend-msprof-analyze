@@ -54,7 +54,7 @@ class SyncBNChecker:
         if not self.syncbn_issues:
             return
 
-        self.optimization_item.append(OptimizeItem("SyncBatchNorm", self.desc, self.suggestions))
+        self.optimization_item.append(OptimizeItem("SyncBatchNorm Issues", self.desc, self.suggestions))
         for optimization in self.optimization_item:
             result.add(OptimizeRecord(optimization))
 

@@ -14,7 +14,7 @@
 # limitations under the License.
 
 class TimelineFusionOpsPrompt(object):
-    PROBLEM = "Affinity Apis"
+    PROBLEM = "Affinity API Issues"
     DESCRIPTION = "On the runtime env cann-{} and torch-{}, found {} apis to be replaced"
     SUGGESTION = "Please replace training api according to sub table 'Affinity training api'"
     EMPTY_STACK_DESCRIPTION = ", but with no stack"

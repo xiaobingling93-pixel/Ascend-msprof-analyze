@@ -64,7 +64,7 @@ class DataloaderChecker:
         if not self.dataloader_issues:
             return
 
-        self.optimization_item.append(OptimizeItem("Slow dataloader", self.desc, self.suggestions))
+        self.optimization_item.append(OptimizeItem("Slow Dataloader Issues", self.desc, self.suggestions))
         for optimization in self.optimization_item:
             result.add(OptimizeRecord(optimization))
 
