@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
-import subprocess
 import logging
 from unittest import TestCase
 
@@ -23,11 +22,10 @@ from bs4 import BeautifulSoup
 
 from msprof_analyze.prof_common.path_manager import PathManager
 from msprof_analyze.test.st.advisor.utils import get_files, execute_cmd
+from msprof_analyze.test.st.utils import ST_DATA_PATH
 
 
 class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
-    ST_DATA_PATH = os.getenv("MSTT_PROFILER_ST_DATA_PATH",
-                             "/home/dcs-50/smoke_project_for_msprof_analyze/mstt_profiler/st_data")
     BASE_PROFILING_PATH = os.path.join(ST_DATA_PATH, "cluster_data_3", "n122-122-067_12380_20240912033946038_ascend_pt")
     COMPARISON_PROFILING_PATH = os.path.join(ST_DATA_PATH, "cluster_data_2",
                                              "n122-120-121_12321_20240911113658382_ascend_pt")

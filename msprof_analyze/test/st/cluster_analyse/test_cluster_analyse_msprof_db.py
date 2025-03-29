@@ -21,14 +21,13 @@ import pandas as pd
 from msprof_analyze.prof_common.path_manager import PathManager
 from msprof_analyze.test.st.utils import execute_cmd
 from msprof_analyze.prof_common.db_manager import DBManager
+from msprof_analyze.test.st.utils import ST_DATA_PATH
 
 
 class TestClusterAnalyseMsprofDb(TestCase):
     """
        Test cluster analyse msprof db
     """
-    ST_DATA_PATH = os.getenv("MSTT_PROFILER_ST_DATA_PATH",
-                             "/home/dcs-50/smoke_project_for_msprof_analyze/mstt_profiler/st_data/")
     CLUSTER_PATH = os.path.join(ST_DATA_PATH, "cluster_data_msprof_db")
     OUTPUT_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)), "TestClusterAnalyseMsprofDb")
     COMMAND_SUCCESS = 0
@@ -40,7 +39,7 @@ class TestClusterAnalyseMsprofDb(TestCase):
         PathManager.make_dir_safety(self.OUTPUT_PATH)
         cmd = ["msprof-analyze", "cluster", "-d", self.CLUSTER_PATH, "-m", "all",
                "--output_path", self.OUTPUT_PATH, "--force", "--data_simplification"]
-        if execute_cmd(cmd) != self.COMMAND_SUCCESS or not os.path.exists(self.ST_DATA_PATH):
+        if execute_cmd(cmd) != self.COMMAND_SUCCESS or not os.path.exists(self.OUTPUT_PATH):
             self.fail("pytorch db cluster analyse task failed.")
         self.db_path = os.path.join(self.OUTPUT_PATH, "cluster_analysis_output", "cluster_analysis.db")
         self.conn, self.cursor = DBManager.create_connect_db(self.db_path)
