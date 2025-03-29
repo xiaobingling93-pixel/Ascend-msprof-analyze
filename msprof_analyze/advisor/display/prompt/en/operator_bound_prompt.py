@@ -14,6 +14,6 @@
 # limitations under the License.
 
 class OperatorBoundPrompt(object):
-    PROBLEM = "operator no bound"
+    PROBLEM = "Operator No Bound Issues"
     DESCRIPTION = "There is no mte, cube, vector, scalar ratio is more than {},\n" \
                   "Top task duration operators need to be tuned are as follows: \n"

@@ -53,11 +53,11 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
             "Kernel compare of Target and Benchmark",
             "Byte Alignment Analysis",
             "Bandwidth Contention Analysis",
-            "AICPU operator",
-            "Dynamic Shape Operator",
-            "FUSIBLE OPERATOR ANALYSIS",
-            "Affinity Apis",
-            "Operator Dispatch"
+            "AICPU Issues",
+            "Operator Dynamic Shape Issues",
+            "Fusible Operator Analysis",
+            "Affinity API Issues",
+            "Operator Dispatch Issues"
         ]
 
         # True presents the attr is nan
@@ -231,7 +231,7 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
         b_names = ["Square", "Suggestion 1:", "Equal", "Suggestion 1:"]
 
         try:
-            df = pd.read_excel(self.RESULT_EXCEL.get("all", None), sheet_name='AICPU operator', header=0)
+            df = pd.read_excel(self.RESULT_EXCEL.get("all", None), sheet_name='AICPU Issues', header=0)
         except FileNotFoundError:
             logging.error("File %s not found.", str(self.RESULT_EXCEL.get("all", None)))
             return
@@ -285,7 +285,7 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
         ignore_api = ["torch_npu.optim.NpuFusedAdamW", "torch_npu.npu_confusion_transpose"]
 
         try:
-            df = pd.read_excel(self.RESULT_EXCEL.get("all", None), sheet_name='Affinity Apis', header=0)
+            df = pd.read_excel(self.RESULT_EXCEL.get("all", None), sheet_name='Affinity API Issues', header=0)
         except FileNotFoundError:
             logging.error("File %s not found.", str(self.RESULT_EXCEL.get("all", None)))
             return
@@ -315,7 +315,7 @@ class TestAdvisorCmdSingleAscendPtNoCompare(TestCase):
         t1_elapsed_time = ['58486.704798215804']
 
         try:
-            df = pd.read_excel(self.RESULT_EXCEL.get("all", None), sheet_name='Operator Dispatch', header=0)
+            df = pd.read_excel(self.RESULT_EXCEL.get("all", None), sheet_name='Operator Dispatch Issues', header=0)
         except FileNotFoundError:
             logging.error("File %s not found.", str(self.RESULT_EXCEL.get("all", None)))
             return

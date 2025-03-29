@@ -87,7 +87,7 @@ class SynchronizeStreamChecker(TimelineBaseChecker):
         if not self.synchronize_issues:
             return
 
-        self.optimization_item.append(OptimizeItem("SynchronizeStream", self.desc, self.suggestions))
+        self.optimization_item.append(OptimizeItem("Synchronize Stream Issues", self.desc, self.suggestions))
         for optimization in self.optimization_item:
             result.add(OptimizeRecord(optimization))
 

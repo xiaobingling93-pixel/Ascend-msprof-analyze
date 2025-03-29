@@ -15,7 +15,7 @@
 
 class AICoreFreqPrompt(object):
     RANK_ID = "RANK {} "
-    PROBLEM = "AI Core Frequency"
+    PROBLEM = "AI Core Frequency Issues"
     DESCRIPTION = "{} operators are found during frequency reduction, and the reduction " \
                   "ratio is larger than {}."
     RANK_DESCRIPTION = "For rank {}, "

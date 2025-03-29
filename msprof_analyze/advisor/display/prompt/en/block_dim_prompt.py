@@ -14,7 +14,7 @@
 # limitations under the License.
 
 class BlockDimPrompt(object):
-    PROBLEM = "block dim"
+    PROBLEM = "Block Dim Issues"
     DESCRIPTION = "some operator does not make full use of {} ai core"
     AIV_NUM_DESCRIPTION = " or {} ai vector core"
     TOP_DURATION_OP_DESCRIPTION = ";\n Top-{} operator of task duration are as follows:\n"

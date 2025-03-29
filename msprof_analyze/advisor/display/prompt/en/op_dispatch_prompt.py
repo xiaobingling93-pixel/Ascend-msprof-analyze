@@ -14,7 +14,7 @@
 # limitations under the License.
 
 class OpDispatchPrompt(object):
-    PROBLEM = "Operator Dispatch"
+    PROBLEM = "Operator Dispatch Issues"
     DESCRIPTION = "Found {} operator compile issues."
     SUGGESTION = "Please place the following code at the entrance of the python script to disable jit compile. " \
                  "Code: `torch_npu.npu.set_compile_mode(jit_compile=False); " \

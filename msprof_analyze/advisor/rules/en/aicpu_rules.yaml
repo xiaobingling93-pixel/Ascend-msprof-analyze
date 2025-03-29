@@ -1,4 +1,4 @@
-problem: "AICPU operator"
+problem: "AICPU Issues"
 description: "Some operators and task duration exceed {} us, such as :\n"
 suggestion: "Modify code to avoid aicpu operator"
 double_suggestion: "Try to convert double type operator to float, such as {}"

@@ -15,7 +15,7 @@
 
 class DynamicShapePrompt(object):
     RANK_ID = "RANK {} "
-    PROBLEM = "Dynamic Shape Operator"
+    PROBLEM = "Operator Dynamic Shape Issues"
     DESCRIPTION = "Found all operators are dynamic shape"
     ENABLE_COMPILED_SUGGESTION = \
         "Please place the following code at the entrance of the python script to disable jit compile.\n " \
