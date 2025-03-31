@@ -69,7 +69,7 @@ PyTorch Profiler采集结果数据目录结构如下：
 
 #### NPU性能数据采集
 
-通过Ascend PyTorch Profiler工具采集NPU的性能数据，采集参数配置与GPU基本一致，只需将GPU的性能数据采集代码中torch.profiler替换成torch_npu.profiler。，参考链接：[Profiling数据采集](https://gitee.com/ascend/mstt/tree/master/profiler/msprof_analyze)。
+通过Ascend PyTorch Profiler工具采集NPU的性能数据，采集参数配置与GPU基本一致，只需将GPU的性能数据采集代码中torch.profiler替换成torch_npu.profiler，参考链接：[Profiling数据采集](https://gitee.com/ascend/mstt/tree/master/profiler/msprof_analyze)。
 
 Ascend PyTorch Profiler采集结果数据目录结构如下：
 
