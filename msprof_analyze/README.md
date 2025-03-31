@@ -117,6 +117,7 @@ Successfully installed msprof-analyze-{version}
 
 | profiler版本 | 发布日期       | 下载链接                                                                                                                                      | 校验码                                                       |
 |------------|------------|-------------------------------------------------------------------------------------------------------------------------------------------| ------------------------------------------------------------ |
+| 2.0.2      | 2025-03-31 | [msprof_analyze-2.0.2-py3-none-any.whl](https://ptdbg.obs.myhuaweicloud.com/profiler/package/2.0.2/msprof_analyze-2.0.2-py3-none-any.whl) | 4227ff628187297b2f3bc14b9dd3a8765833ed25d527f750bc266a8d29f86935 |
 | 2.0.1      | 2025-02-28 | [msprof_analyze-2.0.1-py3-none-any.whl](https://ptdbg.obs.myhuaweicloud.com/profiler/package/2.0.1/msprof_analyze-2.0.1-py3-none-any.whl) | 82dfe2c779dbab9015f61d36ea0c32d832b6d182454b3f7db68e6c0ed49c0423 |
 | 2.0.0      | 2025-02-08 | [msprof_analyze-2.0.0-py3-none-any.whl](https://ptdbg.obs.myhuaweicloud.com/profiler/package/2.0.0/msprof_analyze-2.0.0-py3-none-any.whl) | 8e44e5f3e7681c377bb2657a600ad9841d3bed11061ddd7844c30e8a97242101 |
 | 1.3.4      | 2025-01-20 | [msprof_analyze-1.3.4-py3-none-any.whl](https://ptdbg.obs.myhuaweicloud.com/profiler/package/1.3.4/msprof_analyze-1.3.4-py3-none-any.whl) | 8de92188d1a97105fb14cadcb0875ccd5f66629ee3bb25f37178da1906f4cce2 |
