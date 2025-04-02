@@ -29,8 +29,8 @@ logger = get_logger()
 
 class EPLoadBalance(BaseRecipeAnalysis):
 
-    EPTOKENSSUMMARY = "EPTokensSummary"
-    TOPEPTOKENSINFO = "TopEPTokensInfo"
+    EP_TOKENS_SUMMARY = "EPTokensSummary"
+    TOP_EP_TOKENS_INFO = "TopEPTokensInfo"
     META_DATA = "META_DATA"
     Top_Num = 20
     GROUPEP = "exp"
@@ -98,8 +98,10 @@ class EPLoadBalance(BaseRecipeAnalysis):
             logger.error("ep_load_balance is only supported for db export type.")
 
     def save_db(self):
-        self.dump_data(self.ep_tokens_summary, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER, self.EPTOKENSSUMMARY)
-        self.dump_data(self.top_ep_tokens_map, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER, self.TOPEPTOKENSINFO)
+        self.dump_data(self.ep_tokens_summary, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER, self.EP_TOKENS_SUMMARY,
+                       index=False)
+        self.dump_data(self.top_ep_tokens_map, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER, self.TOP_EP_TOKENS_INFO,
+                       index=False)
 
     def _mapper_func(self, data_map, analysis_class):
         profiler_db_path = data_map.get(Constant.PROFILER_DB_PATH)
