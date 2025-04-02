@@ -18,23 +18,27 @@ import os
 
 import numpy as np
 import pandas as pd
-
+from msprof_analyze.cluster_analyse.common_func.analysis_loader import get_class_from_name
 from msprof_analyze.cluster_analyse.common_func.table_constant import TableConstant
 from msprof_analyze.cluster_analyse.recipes.base_recipe_analysis import BaseRecipeAnalysis
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.database_service import DatabaseService
 from msprof_analyze.prof_common.logger import get_logger
+from msprof_analyze.prof_common.db_manager import DBManager
 
 logger = get_logger()
 
 
-class CommunicationTimeSumRecipe(BaseRecipeAnalysis):
+class CommunicationTimeSum(BaseRecipeAnalysis):
     TABLE_CLUSTER_COMM_TIME = "ClusterCommunicationTime"
     TABLE_CLUSTER_COMM_BANDWIDTH = "ClusterCommunicationBandwidth"
 
+    TABLE_COMMUNICATION_GROUP_MAPPING = "CommunicationGroupMapping"
+
     def __init__(self, params):
         super().__init__(params)
-        logger.info("CommunicationSum init.")
+        self.params = params
+        logger.info("CommunicationTimeSum init.")
         self.communication_time = None
         self.communication_bandwidth = None
 
@@ -43,6 +47,10 @@ class CommunicationTimeSumRecipe(BaseRecipeAnalysis):
         return os.path.basename(os.path.dirname(__file__))
 
     def run(self, context):
+        if not self.check_table_exist(self.TABLE_COMMUNICATION_GROUP_MAPPING):
+            if not self.run_communication_group_map_recipe(context):
+                logger.error("Create CommunicationGroupMap table failed!")
+                return
         mapper_res = self.mapper_func(context)
         self.reducer_func(mapper_res)
         if self._export_type == Constant.DB:
@@ -58,12 +66,12 @@ class CommunicationTimeSumRecipe(BaseRecipeAnalysis):
             return
         cluster_db_path = os.path.join(self.output_path, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER)
         data_service = DatabaseService(cluster_db_path, None)
-        data_service.add_table_for_query("CommunicationGroupMapping",
+        data_service.add_table_for_query(self.TABLE_COMMUNICATION_GROUP_MAPPING,
                                          [TableConstant.RANK_SET, TableConstant.GROUP_NAME])
         df_dict = data_service.query_data()
-        rank_set_df = df_dict.get("CommunicationGroupMapping", None)
+        rank_set_df = df_dict.get(self.TABLE_COMMUNICATION_GROUP_MAPPING, None)
         if rank_set_df is None or rank_set_df.empty:
-            logger.error(f"There is no CommunicationGroupMapping data in {cluster_db_path}.")
+            logger.error(f"There is no {self.TABLE_COMMUNICATION_GROUP_MAPPING} data in {cluster_db_path}.")
             return
         communication_time = pd.concat(mapper_res_time)
         communication_bandwidth = pd.concat(mapper_res_bw)
@@ -75,6 +83,29 @@ class CommunicationTimeSumRecipe(BaseRecipeAnalysis):
                        self.TABLE_CLUSTER_COMM_TIME, index=False)
         self.dump_data(self.communication_bandwidth, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER,
                        self.TABLE_CLUSTER_COMM_BANDWIDTH, index=False)
+
+    def check_table_exist(self, table):
+        db_path = os.path.join(self.output_path, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER)
+        conn, cursor = DBManager.create_connect_db(db_path)
+        table_exist = DBManager.judge_table_exists(cursor, table)
+        DBManager.destroy_db_connect(conn, cursor)
+        return table_exist
+
+    def run_communication_group_map_recipe(self, context):
+        """
+        Run Recipe to create CommunicationGroupMapping table
+        """
+        logger.info(f"Run CommunicationGroupMap recipe first to get {self.TABLE_COMMUNICATION_GROUP_MAPPING} table")
+        recipe_class = get_class_from_name("communication_group_map")
+        if not recipe_class or len(recipe_class) != 2:  # 2: (class_name, class)
+            return False
+        try:
+            group_map_recipe = recipe_class[1](self.params)
+            group_map_recipe.run(context)
+        except Exception as e:
+            logger.error(f"Run CommunicationGroupMap recipe failed: {e}!")
+            return False
+        return self.check_table_exist(self.TABLE_COMMUNICATION_GROUP_MAPPING)
 
     def _compute_time_info(self, communication_time, rank_set_df):
         """

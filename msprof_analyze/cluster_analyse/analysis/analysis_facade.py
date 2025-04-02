@@ -24,9 +24,9 @@ from msprof_analyze.cluster_analyse.common_func.context import Context
 from msprof_analyze.cluster_analyse.common_func.analysis_loader import get_class_from_name
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.logger import get_logger
-from msprof_analyze.cluster_analyse.recipes.comm_group_map.comm_group_map import CommGroupMap
+from msprof_analyze.cluster_analyse.recipes.communication_group_map.communication_group_map import CommunicationGroupMap
 from msprof_analyze.cluster_analyse.recipes.communication_time_sum.communication_time_sum import \
-    CommunicationTimeSumRecipe
+    CommunicationTimeSum
 from msprof_analyze.cluster_analyse.recipes.communication_matrix_sum.communication_matrix_sum import CommMatrixSum
 
 logger = get_logger()
@@ -77,6 +77,9 @@ class AnalysisFacade:
             pbar.refresh()
 
     def do_recipe(self, recipe_class):
+        if not recipe_class or len(recipe_class) != 2:
+            logger.error(f"Invalid input recipe_class, should be two elements, e.g. (class_name, class)")
+            return
         try:
             logger.info(f"Recipe {recipe_class[0]} analysis is starting to launch.")
             with Context.create_context(self.params.get(Constant.PARALLEL_MODE)) as context:
@@ -93,9 +96,9 @@ class AnalysisFacade:
             self.do_recipe(recipe_class)
 
     def cluster_analyze_with_recipe(self):
-        recipes = [["CommGroupMap", CommGroupMap]]
+        recipes = [["CommunicationGroupMap", CommunicationGroupMap]]
         if self.params.get(Constant.ANALYSIS_MODE) in (Constant.ALL, Constant.COMMUNICATION_TIME):
-            recipes.append(["CommunicationTimeSumRecipe", CommunicationTimeSumRecipe])
+            recipes.append(["CommunicationTimeSum", CommunicationTimeSum])
         if self.params.get(Constant.ANALYSIS_MODE) in (Constant.ALL, Constant.COMMUNICATION_MATRIX):
             recipes.append(["CommMatrixSum", CommMatrixSum])
         for recipe_class in recipes:

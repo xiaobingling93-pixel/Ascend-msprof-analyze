@@ -26,12 +26,12 @@ from msprof_analyze.prof_common.database_service import DatabaseService
 logger = get_logger()
 
 
-class CommGroupMap(BaseRecipeAnalysis):
+class CommunicationGroupMap(BaseRecipeAnalysis):
     COMMUNICATION_GROUP_MAPPING_TABLE = "CommunicationGroupMapping"
 
     def __init__(self, params):
         super().__init__(params)
-        logger.info("CommGroupMap init.")
+        logger.info("CommunicationGroupMap init.")
         self.group_df = None
 
     @property
