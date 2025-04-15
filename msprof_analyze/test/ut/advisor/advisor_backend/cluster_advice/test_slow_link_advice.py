@@ -12,13 +12,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
 import unittest
 
 from msprof_analyze.advisor.advisor_backend.cluster_advice.slow_link_advice import SlowLinkAdvice
 
 
 class TestSlowLinkAdvice(unittest.TestCase):
-
     DATA = 'data'
     BOTTLENECK = 'bottleneck'
     ADVICE = 'advice'
@@ -26,7 +26,8 @@ class TestSlowLinkAdvice(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.prof_dir = './resource/advisor'
+        cls.prof_dir = os.path.abspath(
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../../../resource/advisor'))
         cls.expect_data = {
             0: {
                 'RDMA time(ms)': 0,
@@ -46,10 +47,10 @@ class TestSlowLinkAdvice(unittest.TestCase):
             }
         }
         cls.expect_bottleneck = 'SDMA bandwidth(GB/s): \n' \
-            'The average is 2.355, ' \
-            'while the maximum  is 2.359GB/s and ' \
-            'the minimum is 2.352GB/s. ' \
-            'the difference is 0.007GB/s. \n'
+                                'The average is 2.355, ' \
+                                'while the maximum  is 2.359GB/s and ' \
+                                'the minimum is 2.352GB/s. ' \
+                                'the difference is 0.007GB/s. \n'
 
     def test_compute_ratio_abnormal(self):
         result = SlowLinkAdvice.compute_ratio(19.0, 0)

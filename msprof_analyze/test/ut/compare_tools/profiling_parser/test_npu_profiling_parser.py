@@ -146,9 +146,8 @@ class TestNPUProfilingParser(unittest.TestCase):
                 patch("msprof_analyze.compare_tools.compare_backend.profiling_parser."
                       "npu_profiling_parser.NPUProfilingParser.__init__",
                       return_value=None), \
-                patch(
-                    "compare_backend.profiling_parser.npu_profiling_parser.BaseProfilingParser."
-                    "_trace_event_generator",
+                patch("msprof_analyze.compare_tools.compare_backend.profiling_parser.npu_profiling_parser."
+                      "BaseProfilingParser._trace_event_generator",
                     return_value=(TraceEventBean(event) for event in self.meta_events)):
             res = NPUProfilingParser({}, {})
             res._hccl_op_tid_list = []

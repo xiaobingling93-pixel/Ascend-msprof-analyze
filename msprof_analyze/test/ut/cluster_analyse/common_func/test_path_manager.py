@@ -20,9 +20,9 @@ import pytest
 from msprof_analyze.prof_common.path_manager import PathManager
 
 
-PATH_DIR = "resource"
-PATH_FILE = "resource/test.csv"
-PATH_TEMP = "temp"
+PATH_DIR = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../../resource'))
+PATH_FILE = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../../resource/test.csv'))
+PATH_TEMP = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../../temp'))
 
 
 class TestPathManager(unittest.TestCase):

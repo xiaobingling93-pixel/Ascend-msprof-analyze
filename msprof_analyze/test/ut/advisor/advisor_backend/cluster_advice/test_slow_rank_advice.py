@@ -12,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
 import unittest
 
 from msprof_analyze.advisor.advisor_backend.cluster_advice.slow_rank_advice import SlowRankAdvice
@@ -26,7 +27,8 @@ class TestSlowRankAdvice(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.prof_dir = './resource/advisor'
+        cls.prof_dir = os.path.abspath(
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../../../resource/advisor'))
         cls.expect_data = {
             0: [80309.68717187493, 683731.2897031249, 990605.1042031233, 0],
             1: [80435.74650000008, 133385.97745312497, 1488610.0587500026, 0],
