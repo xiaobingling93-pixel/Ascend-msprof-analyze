@@ -174,6 +174,7 @@ class Constant(object):
     INVALID_VALUE = -1
     MILLISECONDS_TO_SECONDS = 10 ** 3
     MICROSECONDS_TO_SECONDS = 10 ** 6
+    MILLISECONDS_TO_MICROSECONDS = 10 ** 3
 
     PROFILING_TYPE = "profiling type"
 

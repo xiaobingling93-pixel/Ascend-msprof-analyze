@@ -24,6 +24,7 @@ class OverallMetricsBean:
     TABLE_NAME = Constant.OVERALL_METRICS_TABLE
     HEADERS = ExcelConfig.HEADERS.get(TABLE_NAME)
     OVERHEAD = ExcelConfig.OVERHEAD.get(TABLE_NAME)
+    DEFAULT_VALUE = [0, 0, "/"]
 
     def __init__(self, base_info: ProfilingInfo, comparison_info: ProfilingInfo):
         self._base_data = OverallMetricsInfo(base_info).overall_metrics
@@ -39,29 +40,29 @@ class OverallMetricsBean:
 
         base_mc2_data = self._base_data.get("mc2", {})
         comparison_mc2_data = self._comparison_data.get("mc2", {})
-        default_value = [0, 0, "/"]
         for kernel_name, base_data in base_mc2_data.items():
             comparison_data = comparison_mc2_data.pop(kernel_name, {})
-            self._append_data(rows_data, self._get_row_data(kernel_name, base_data.get("mc2", default_value),
-                                                            comparison_data.get("mc2", default_value)))
+            self._append_data(rows_data, self._get_row_data(kernel_name, base_data.get("mc2", self.DEFAULT_VALUE),
+                                                            comparison_data.get("mc2", self.DEFAULT_VALUE)))
             self._append_data(rows_data,
                               self._get_row_data(ExcelConfig.MC2_COMPUTING_TIME,
-                                                 base_data.get(ExcelConfig.MC2_COMPUTING_TIME, default_value),
-                                                 comparison_data.get(ExcelConfig.MC2_COMPUTING_TIME, default_value)))
+                                                 base_data.get(ExcelConfig.MC2_COMPUTING_TIME, self.DEFAULT_VALUE),
+                                                 comparison_data.get(ExcelConfig.MC2_COMPUTING_TIME,
+                                                                     self.DEFAULT_VALUE)))
             self._append_data(rows_data,
                               self._get_row_data(ExcelConfig.MC2_COMMUNICATION_TIME,
-                                                 base_data.get(ExcelConfig.MC2_COMMUNICATION_TIME, default_value),
+                                                 base_data.get(ExcelConfig.MC2_COMMUNICATION_TIME, self.DEFAULT_VALUE),
                                                  comparison_data.get(ExcelConfig.MC2_COMMUNICATION_TIME,
-                                                                     default_value)))
+                                                                     self.DEFAULT_VALUE)))
         for kernel_name, comparison_data in comparison_mc2_data.items():
-            self._append_data(rows_data, self._get_row_data(kernel_name, default_value,
-                                                            comparison_data.get("mc2", default_value)))
-            self._append_data(rows_data, self._get_row_data(ExcelConfig.MC2_COMPUTING_TIME, default_value,
+            self._append_data(rows_data, self._get_row_data(kernel_name, self.DEFAULT_VALUE,
+                                                            comparison_data.get("mc2", self.DEFAULT_VALUE)))
+            self._append_data(rows_data, self._get_row_data(ExcelConfig.MC2_COMPUTING_TIME, self.DEFAULT_VALUE,
                                                             comparison_data.get(ExcelConfig.MC2_COMPUTING_TIME,
-                                                                                default_value)))
-            self._append_data(rows_data, self._get_row_data(ExcelConfig.MC2_COMMUNICATION_TIME, default_value,
+                                                                                self.DEFAULT_VALUE)))
+            self._append_data(rows_data, self._get_row_data(ExcelConfig.MC2_COMMUNICATION_TIME, self.DEFAULT_VALUE,
                                                             comparison_data.get(ExcelConfig.MC2_COMMUNICATION_TIME,
-                                                                                default_value)))
+                                                                                self.DEFAULT_VALUE)))
 
         rows_data.extend(
             self._get_rows(self._base_data.get("before_group", {}), self._comparison_data.get("before_group", {})))
@@ -70,7 +71,6 @@ class OverallMetricsBean:
         comparison_group_data = self._comparison_data.get("group", {})
         base_pg_name_dict = self._base_data.get("pg_name_dict", {})
         comparison_pg_name_dict = self._comparison_data.get("pg_name_dict", {})
-        default_value = [0, 0, "/"]
         # deal base and comparsion data which can match with pg_name
         for base_pg_name, base_group_name_list in base_pg_name_dict.items():
             if len(base_group_name_list) != 1 or base_pg_name == Constant.UNKNOWN:
@@ -85,39 +85,45 @@ class OverallMetricsBean:
             ExcelConfig.ROW_STYLE_MAP[description] = CellFormatType.LIGHT_BLUE_NORMAL
             self._append_data(rows_data,
                               self._get_row_data(description,
-                                                base_data.get(ExcelConfig.COMMUNICATION_TIME, default_value),
-                                                comparison_data.get(ExcelConfig.COMMUNICATION_TIME, default_value)))
+                                                 base_data.get(ExcelConfig.COMMUNICATION_TIME, self.DEFAULT_VALUE),
+                                                 comparison_data.get(ExcelConfig.COMMUNICATION_TIME,
+                                                                     self.DEFAULT_VALUE)))
             self._append_data(rows_data,
-                              self._get_row_data(ExcelConfig.WAIT, base_data.get(ExcelConfig.WAIT, default_value),
-                                                 comparison_data.get(ExcelConfig.WAIT, default_value)))
+                              self._get_row_data(ExcelConfig.WAIT, base_data.get(ExcelConfig.WAIT, self.DEFAULT_VALUE),
+                                                 comparison_data.get(ExcelConfig.WAIT, self.DEFAULT_VALUE)))
             self._append_data(rows_data,
                               self._get_row_data(ExcelConfig.TRANSMIT,
-                                                 base_data.get(ExcelConfig.TRANSMIT, default_value),
-                                                 comparison_data.get(ExcelConfig.TRANSMIT, default_value)))
+                                                 base_data.get(ExcelConfig.TRANSMIT, self.DEFAULT_VALUE),
+                                                 comparison_data.get(ExcelConfig.TRANSMIT, self.DEFAULT_VALUE)))
 
         for group_name, base_data in base_group_data.items():
             comparison_data = comparison_group_data.pop(group_name, {})
             self._append_data(rows_data,
                               self._get_row_data(base_data.get("description", group_name),
-                                                 base_data.get(ExcelConfig.COMMUNICATION_TIME, default_value),
-                                                 comparison_data.get(ExcelConfig.COMMUNICATION_TIME, default_value)))
+                                                 base_data.get(ExcelConfig.COMMUNICATION_TIME, self.DEFAULT_VALUE),
+                                                 comparison_data.get(ExcelConfig.COMMUNICATION_TIME,
+                                                                     self.DEFAULT_VALUE)))
             self._append_data(rows_data,
-                              self._get_row_data(ExcelConfig.WAIT, base_data.get(ExcelConfig.WAIT, default_value),
-                                                 comparison_data.get(ExcelConfig.WAIT, default_value)))
+                              self._get_row_data(ExcelConfig.WAIT, base_data.get(ExcelConfig.WAIT, self.DEFAULT_VALUE),
+                                                 comparison_data.get(ExcelConfig.WAIT, self.DEFAULT_VALUE)))
             self._append_data(rows_data,
                               self._get_row_data(ExcelConfig.TRANSMIT,
-                                                 base_data.get(ExcelConfig.TRANSMIT, default_value),
-                                                 comparison_data.get(ExcelConfig.TRANSMIT, default_value)))
+                                                 base_data.get(ExcelConfig.TRANSMIT, self.DEFAULT_VALUE),
+                                                 comparison_data.get(ExcelConfig.TRANSMIT, self.DEFAULT_VALUE)))
         for group_name, comparison_data in comparison_group_data.items():
             self._append_data(rows_data,
                               self._get_row_data(comparison_data.get("description", group_name),
-                                                 default_value,
-                                                 comparison_data.get(ExcelConfig.COMMUNICATION_TIME, default_value)))
-            self._append_data(rows_data, self._get_row_data(ExcelConfig.WAIT, default_value,
-                                                            comparison_data.get(ExcelConfig.WAIT, default_value)))
-            self._append_data(rows_data, self._get_row_data(ExcelConfig.TRANSMIT, default_value,
-                                                            comparison_data.get(ExcelConfig.TRANSMIT, default_value)))
+                                                 self.DEFAULT_VALUE,
+                                                 comparison_data.get(ExcelConfig.COMMUNICATION_TIME,
+                                                                     self.DEFAULT_VALUE)))
+            self._append_data(rows_data, self._get_row_data(ExcelConfig.WAIT, self.DEFAULT_VALUE,
+                                                            comparison_data.get(ExcelConfig.WAIT, self.DEFAULT_VALUE)))
+            self._append_data(rows_data, self._get_row_data(ExcelConfig.TRANSMIT, self.DEFAULT_VALUE,
+                                                            comparison_data.get(ExcelConfig.TRANSMIT,
+                                                                                self.DEFAULT_VALUE)))
 
+        rows_data.extend(
+            self._get_rows(self._base_data.get("group_overlap", {}), self._comparison_data.get("group_overlap", {})))
         rows_data.extend(
             self._get_rows(self._base_data.get("after_group", {}), self._comparison_data.get("after_group", {})))
         return rows_data
@@ -126,8 +132,12 @@ class OverallMetricsBean:
     def _get_rows(cls, base_data_dict, comparison_data_dict):
         rows_data = []
         for index, base_data in base_data_dict.items():
-            comparison_data = comparison_data_dict.get(index)
+            comparison_data = comparison_data_dict.pop(index, cls.DEFAULT_VALUE)
             row = cls._get_row_data(index, base_data, comparison_data)
+            if row:
+                rows_data.append(row)
+        for index, comparison_data in comparison_data_dict.items():
+            row = cls._get_row_data(index, cls.DEFAULT_VALUE, comparison_data)
             if row:
                 rows_data.append(row)
         return rows_data
@@ -413,6 +423,19 @@ class OverallMetricsInfo:
                     ExcelConfig.TRANSMIT: self.transmit_data_by_group(group_name)
                 }
                 overall_metrics_data.setdefault("pg_name_dict", {}).setdefault(pg_name, []).append(group_name)
+
+        if self._profiling_info.communication_overlap_time:
+            ExcelConfig.ROW_STYLE_MAP[ExcelConfig.UNCOVERED_COMM_OVERLAP] = CellFormatType.LIGHT_BLUE_NORMAL
+            comm_overlap_time = sum(self._profiling_info.communication_overlap_time.values())
+            overall_metrics_data.setdefault("group_overlap", {})[ExcelConfig.UNCOVERED_COMM_OVERLAP] = [
+                comm_overlap_time, comm_overlap_time / self.e2e_time, "/"]
+            for group_set, overlap_time in self._profiling_info.communication_overlap_time.items():
+                pg_name_1 = self._profiling_info.get_pg_name_by_group(group_set[0])
+                pg_name_2 = self._profiling_info.get_pg_name_by_group(group_set[1])
+                pg_name = f"\t\t{pg_name_1 if pg_name_1 != Constant.UNKNOWN else group_set[0]} & " \
+                          f"{pg_name_2 if pg_name_2 != Constant.UNKNOWN else group_set[1]}"
+                overall_metrics_data.setdefault("group_overlap", {})[pg_name] = [overlap_time,
+                                                                                 overlap_time / self.e2e_time, "/"]
 
         for kernel_name in self._profiling_info.mc2_time_dict.keys():
             mc2_name_index = f"\t{kernel_name}"
