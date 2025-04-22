@@ -320,6 +320,7 @@ class ExcelConfig(object):
     COMMUNICATION_TIME = "Uncovered Communication Time"
     WAIT = "\t\tWait"
     TRANSMIT = "\t\tTransmit"
+    UNCOVERED_COMM_OVERLAP = "\tUncovered Communication Overlapped"
 
     # free time
     FREE_TIME = "Free Time"

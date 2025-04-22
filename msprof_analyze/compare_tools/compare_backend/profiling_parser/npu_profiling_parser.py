@@ -74,6 +74,34 @@ class NPUProfilingParser(BaseProfilingParser):
         return Constant.PROFILING_PATH
 
     @staticmethod
+    def __calculate_uncovered_comm_range(comm_events, uncovered_comm_events):
+        class Event:
+            def __init__(self, start_time, end_time):
+                self.start_time = start_time
+                self.end_time = end_time
+
+        uncovered_comm_range = []
+        index = 0
+        for comm_event in comm_events:
+            while index < len(uncovered_comm_events):
+                if uncovered_comm_events[index].end_time < comm_event.start_time:
+                    index += 1
+                    continue
+                if uncovered_comm_events[index].start_time > comm_event.end_time:
+                    break
+                if uncovered_comm_events[index].end_time < comm_event.end_time:
+                    uncovered_comm_range.append(
+                        Event(max(comm_event.start_time, uncovered_comm_events[index].start_time),
+                              uncovered_comm_events[index].end_time))
+                    index += 1
+                    continue
+                uncovered_comm_range.append(
+                    Event(max(comm_event.start_time, uncovered_comm_events[index].start_time),
+                          min(comm_event.end_time, uncovered_comm_events[index].end_time)))
+                break
+        return uncovered_comm_range
+
+    @staticmethod
     def __calculate_overlap_time_with_uncovered_communication(uncovered_communication_events: list, events: list):
         overlap_time = 0
         events.sort(key=lambda x: x.start_time)
@@ -251,10 +279,37 @@ class NPUProfilingParser(BaseProfilingParser):
         self.__add_sdma_time()
         self.__add_overlap_analysis_time()
         self.__add_communication_wait_time()
+        self.__add_uncovered_communication_overlap_time()
         self._result_data.overall_metrics.calculate_schedule_time()
         self._result_data.overall_metrics.trans_time_to_s()
         self._result_data.overall_metrics.calculate_other_time()
         self._update_bandwidth()
+
+    def __add_uncovered_communication_overlap_time(self):
+        comm_overlap_time_dict = {}
+        comm_tid_list = list(self._group_comm_tid_dict.keys())
+        if not comm_tid_list:
+            return
+        uncovered_communication_events = list(filter(lambda x: x.is_comm_not_overlap(), self._overlap_analysis))
+        uncovered_communication_events.sort(key=lambda x: x.start_time)
+        for index, comm_tid in enumerate(comm_tid_list):
+            if index == len(comm_tid_list) - 1:
+                continue
+            for index_2 in range(index + 1, len(comm_tid_list)):
+                comm_op_events_1 = list(filter(lambda x: x.tid == comm_tid, self._comm_list))
+                comm_op_events_1.sort(key=lambda x: x.start_time)
+                uncovered_comm_op_events_1 = self.__calculate_uncovered_comm_range(comm_op_events_1,
+                                                                                   uncovered_communication_events)
+                comm_op_events_2 = list(filter(lambda x: x.tid == comm_tid_list[index_2], self._comm_list))
+                comm_op_events_2.sort(key=lambda x: x.start_time)
+                uncovered_comm_op_events_2 = self.__calculate_uncovered_comm_range(comm_op_events_2,
+                                                                                   uncovered_communication_events)
+                overlap_time = self.__calculate_overlap_time_with_uncovered_communication(uncovered_comm_op_events_1,
+                                                                                          uncovered_comm_op_events_2)
+                if overlap_time:
+                    comm_overlap_time_dict[(self._hccl_tid_name_dict.get(comm_tid), self._hccl_tid_name_dict.get(
+                        comm_tid_list[index_2]))] = overlap_time / Constant.MILLISECONDS_TO_MICROSECONDS
+        self._result_data.overall_metrics.update_communication_overlap_time(comm_overlap_time_dict)
 
     def __add_communication_wait_time(self):
         """
@@ -405,10 +460,6 @@ class NPUProfilingParser(BaseProfilingParser):
         level = json_data.get('config', {}).get('experimental_config', {}).get('_profiler_level', '')
         if self.LEVEL_0 != level:
             return
-        self._result_data.overall_metrics.is_level0 = True
-        if self.ACTIVE_CPU in json_data.get('config', {}).get('common_config', {}).get('activities', []):
-            return
-        self._result_data.overall_metrics.minimal_profiling = True
 
     def __add_lccl_time(self):
         for event in self._all_kernels.values():
