@@ -124,6 +124,7 @@ class Constant(object):
     DB_CLUSTER_COMMUNICATION_ANALYZER = "cluster_analysis.db"
 
     # db tables
+    TABLE_COMMUNICATION_GROUP = "CommunicationGroup"
     TABLE_COMM_ANALYZER_BANDWIDTH = "CommAnalyzerBandwidth"
     TABLE_COMM_ANALYZER_TIME = "CommAnalyzerTime"
     TABLE_COMM_ANALYZER_MATRIX = "CommAnalyzerMatrix"
@@ -132,6 +133,10 @@ class Constant(object):
     TABLE_RANK_DEVICE_MAP = "RankDeviceMap"
     TABLE_CLUSTER_BASE_INFO = "ClusterBaseInfo"
     TABLE_META_DATA = "META_DATA"
+    TABLE_COMMUNICATION_GROUP_MAPPING = "CommunicationGroupMapping"
+    TABLE_CLUSTER_COMMUNICATION_MATRIX = "ClusterCommAnalyzerMatrix"
+    TABLE_CLUSTER_COMMUNICATION_BANDWIDTH = "ClusterCommAnalyzerBandwidth"
+    TABLE_CLUSTER_COMMUNICATION_TIME = "ClusterCommunicationTime"
 
     # data config key
     CONFIG = "config"
@@ -452,3 +457,8 @@ class Constant(object):
     UNKNOWN = "unknown"
 
     SQL_PLACEHOLDER_PATTERN = r"\?|\%s"
+
+    # cluster_analysis_output
+    COMMUNICATION_GROUP_JSON = "communication_group.json"
+    CLUSTER_COMMUNICATION_MATRIX_JSON = "cluster_communication_matrix.json"
+    KEY_COMM_GROUP_PARALLEL_INFO = "comm_group_parallel_info"

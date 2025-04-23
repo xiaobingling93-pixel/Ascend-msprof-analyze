@@ -54,7 +54,7 @@ class TestStepTraceTimeAnalysis(unittest.TestCase):
                 StepTraceTimeBean({"Step": 1, "time1": 10, "time2": 20})
             ]
         }
-        check.communication_group = {Constant.P2P: [[0, 1]]}
+        check.communication_data_dict = {Constant.STAGE: [[0, 1]]}
         check.analyze_step_time()
         self.assertIn([0, 'stage', (0, 1), 10.0, 20.0], check.step_data_list)
 
@@ -75,7 +75,7 @@ class TestStepTraceTimeAnalysis(unittest.TestCase):
                 StepTraceTimeBean({"Step": None, "time1": 1, "time2": 1}),
             ],
         }
-        check.communication_group = {Constant.P2P: [[0, 1], [2, 3]]}
+        check.communication_data_dict = {Constant.STAGE: [[0, 1], [2, 3]]}
         check.analyze_step_time()
         self.assertIn([None, 'stage', (2, 3), 2.0, 3.0], check.step_data_list)
         self.assertIn([None, 'rank', 0, 1.0, 2.0], check.step_data_list)

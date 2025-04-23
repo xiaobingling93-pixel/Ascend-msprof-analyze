@@ -18,6 +18,10 @@ from multiprocessing import Value, Lock
 import numpy as np
 import pandas as pd
 
+from msprof_analyze.prof_common.logger import get_logger
+
+logger = get_logger()
+
 
 def format_columns(df: pd.DataFrame):
     formatted_df = df.rename(
@@ -98,16 +102,20 @@ class UnionFind(object):
     """Disjoint Set Union"""
 
     @classmethod
-    def union(cls, first_set: set, second_set: set, third_set: set):
-        """make p and q the same set"""
-        return first_set | second_set | third_set
+    def union(cls, *args):
+        result = set()
+        for s in args:
+            if not isinstance(s, set):
+                logger.warning(f"All arguments must be sets, got {type(s).__name__}")
+                return set()
+            result |= s
+        return result
 
     @classmethod
     def is_connected(cls, first_set: set, second_set: set):
         """
         check whether set p and set q are connected
         """
-        if first_set & second_set:
-            return True
-        else:
+        if not isinstance(first_set, set) or not isinstance(second_set, set):
             return False
+        return len(first_set & second_set) > 0

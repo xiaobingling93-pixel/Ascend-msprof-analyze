@@ -15,7 +15,6 @@
 import os
 import re
 
-from cluster_analyse.analysis.stage_group_analysis import StageInfoAnalysis
 from msprof_analyze.prof_common.db_manager import DBManager
 from msprof_analyze.cluster_analyse.common_func.utils import increase_shared_value
 from msprof_analyze.cluster_analyse.cluster_utils.parallel_strategy_calculator import ParallelStrategyCalculator
@@ -26,6 +25,7 @@ from msprof_analyze.prof_common.logger import get_logger
 from msprof_analyze.cluster_analyse.analysis.msprof_step_trace_time_adapter import MsprofStepTraceTimeAdapter
 from msprof_analyze.cluster_analyse.cluster_data_preprocess.msprof_data_preprocessor import MsprofDataPreprocessor
 from msprof_analyze.cluster_analyse.analysis.msprof_step_trace_time_adapter import MsprofStepTraceTimeDBAdapter
+from msprof_analyze.cluster_analyse.analysis.stage_group_analysis import StageInfoAnalysis
 
 logger = get_logger()
 
@@ -40,7 +40,7 @@ class StepTraceTimeAnalysis:
         self.collection_path = param.get(Constant.COLLECTION_PATH)
         self.cluster_analysis_output_path = param.get(Constant.CLUSTER_ANALYSIS_OUTPUT_PATH)
         self.data_map = param.get(Constant.DATA_MAP)
-        self.communication_group = param.get(Constant.COMM_DATA_DICT, {}).get(Constant.COMMUNICATION_GROUP, {})
+        self.communication_data_dict = param.get(Constant.COMM_DATA_DICT, {})
         self.step_time_dict = {}
         self.step_data_list = []
         self.data_type = param.get(Constant.DATA_TYPE)
@@ -84,7 +84,7 @@ class StepTraceTimeAnalysis:
         self.partition_ranks_data()
         self.dump_data()
         increase_shared_value(completed_processes, lock)
-        logger.warning("StepTraceTimeAnalysis completed")
+        logger.info("StepTraceTimeAnalysis completed")
 
     def partition_ranks_data(self):
         if not self.distributed_args:
@@ -227,10 +227,13 @@ class StepTraceTimeAnalysis:
         return []
 
     def generate_stage_group_list(self):
+        if Constant.STAGE in self.communication_data_dict:
+            return self.communication_data_dict[Constant.STAGE]
         params = {
             Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: self.cluster_analysis_output_path,
             Constant.DATA_TYPE: self.data_type,
-            Constant.DATA_SIMPLIFICATION: self.data_simplification
+            Constant.DATA_SIMPLIFICATION: self.data_simplification,
+            Constant.COMM_DATA_DICT: self.communication_data_dict
         }
         stage_analyzer = StageInfoAnalysis(params)
         stage_list = stage_analyzer.run()

@@ -121,7 +121,7 @@ class BaseCommunicationGroup:
             Constant.COLLECTIVE_GROUP: self.collective_group_dict,
             Constant.COMMUNICATION_OPS: self.communication_ops,
             Constant.MATRIX_OPS: self.matrix_ops,
-            Constant.COMMUNICATION_GROUP: self.communication_group,
+            Constant.COMMUNICATION_GROUP: self.communication_group
         }
         return comm_data_dict
 
@@ -204,3 +204,4 @@ class BaseCommunicationGroup:
         df.fillna("", inplace=True)
 
         self.comm_group_parallel_info_df = df
+
