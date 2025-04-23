@@ -31,6 +31,7 @@ class ProfilingParser(BaseProfilingParser):
         self._enable_api_compare = True
         self._bwd_tid = 1
         self._step_id = -1
+        self._step_range = []
 
     def _update_kernel_details(self):
         pass
