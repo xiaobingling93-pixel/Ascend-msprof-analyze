@@ -18,6 +18,8 @@ from queue import Queue
 from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
 from msprof_analyze.compare_tools.compare_backend.utils.module_node import ModuleNode
 from msprof_analyze.compare_tools.compare_backend.utils.torch_op_node import TorchOpNode
+from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.db_data_bean.framework_api_bean import \
+    FrameworkApiBean
 
 
 class TreeBuilder:
@@ -43,7 +45,10 @@ class TreeBuilder:
                     last_node.add_child_node(tree_node)
                     last_node = tree_node
                     if kernel_dict:
-                        tree_node.set_kernel_list(kernel_dict.get(event.start_time, []))
+                        if isinstance(event, FrameworkApiBean):
+                            tree_node.set_kernel_list(kernel_dict.get(event.cann_connection_id, []))
+                        else:
+                            tree_node.set_kernel_list(kernel_dict.get(event.start_time, []))
                 else:
                     event.set_name(last_node.name)
                     last_node.set_memory_allocated(event)
