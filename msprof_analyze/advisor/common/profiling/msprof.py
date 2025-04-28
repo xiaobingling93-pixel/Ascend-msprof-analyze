@@ -114,6 +114,8 @@ class Msprof(ProfilingParser):
         max_time = 0.0
         task_checker = TaskChecker()
         is_iter = False
+        self._tasks = [None] * len(self._raw_data)
+        task_index = 0
         for item in self._raw_data:
             task = TaskInfo(item)
             if task.cat == "Iteration Time":
@@ -130,7 +132,8 @@ class Msprof(ProfilingParser):
             if task_checker.is_sqe(task):
                 continue
 
-            self._tasks.append(task)
+            self._tasks[task_index] = task
+            task_index += 1
             self._parse_task(task)
 
             start_time = task.start_time
@@ -146,6 +149,7 @@ class Msprof(ProfilingParser):
             self._iteration_time = dur
             self._max_time = max_time
             self._min_time = min_time
+        self._tasks = self._tasks[:task_index]
         if self._tasks:
             self._tasks.sort(key=lambda x: x.start_time)
             return True
