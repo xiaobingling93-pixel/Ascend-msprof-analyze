@@ -26,12 +26,14 @@ from msprof_analyze.advisor.common.enum_params_parser import EnumParamsParser
 from msprof_analyze.advisor.dataset.dataset import Dataset
 from msprof_analyze.advisor.dataset.profiling.device_info import DeviceInfoParser
 from msprof_analyze.advisor.utils.utils import join_prof_path
+from msprof_analyze.advisor.utils.utils import singleton
 from msprof_analyze.prof_common.file_manager import FileManager
 
 
 logger = logging.getLogger()
 
 
+@singleton
 class ProfilingDataset(Dataset):
     prof_type = ""
 

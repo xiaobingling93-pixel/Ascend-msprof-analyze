@@ -23,8 +23,8 @@ from msprof_analyze.advisor.common.analyzer_scopes import SupportedScopes
 
 
 class TestByteAlignmentAnalyzer(unittest.TestCase):
-    TMP_DIR = "./ascend_pt"
-    OUTPUT_DIR = "./ascend_pt/ASCEND_PROFILER_OUTPUT"
+    TMP_DIR = "./TestByteAlignmentAnalyzer/ascend_pt"
+    OUTPUT_DIR = "./TestByteAlignmentAnalyzer/ascend_pt/ASCEND_PROFILER_OUTPUT"
     interface = None
     err_interface = None
 
