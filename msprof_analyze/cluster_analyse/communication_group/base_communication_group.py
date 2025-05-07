@@ -205,21 +205,3 @@ class BaseCommunicationGroup:
 
         self.comm_group_parallel_info_df = df
 
-
-class UnionFind(object):
-    """Disjoint Set Union"""
-
-    @classmethod
-    def union(cls, first_set: set, second_set: set, third_set: set):
-        """make p and q the same set"""
-        return first_set | second_set | third_set
-
-    @classmethod
-    def is_connected(cls, first_set: set, second_set: set):
-        """
-        check whether set p and set q are connected
-        """
-        if first_set & second_set:
-            return True
-        else:
-            return False
