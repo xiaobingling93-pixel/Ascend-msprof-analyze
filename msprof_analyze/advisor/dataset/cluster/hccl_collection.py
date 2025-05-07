@@ -17,19 +17,22 @@ hccl info
 """
 import logging
 
+import pandas as pd
+
 logger = logging.getLogger()
 
 
-class HcclInfo():
-    def __init__(self, group: str, step: str, rank: str, op: str, rank_dict: dict) -> None:
+class HcclInfo:
+    def __init__(self, group: str, step: str, rank: str, op_name: str,
+                 start_time: float, elapse_time: float, sdma_info: dict, rdma_info: dict):
         self._group = group
         self._step = step
         self._rank = rank
-        self._name = op.split("@")[0]
-        self._ts = self.get_communication_time_info(rank_dict, "Start Timestamp(us)")
-        self._elapse_time = self.get_communication_time_info(rank_dict, "Elapse Time(ms)")
-        self._sdma_info = self.get_communication_info(rank_dict, "SDMA")
-        self._rdma_info = self.get_communication_info(rank_dict, "RDMA")
+        self._name = op_name
+        self._ts = start_time
+        self._elapse_time = elapse_time
+        self._sdma_info = sdma_info
+        self._rdma_info = rdma_info
 
     @property
     def group(self):
@@ -73,6 +76,15 @@ class HcclInfo():
         communication_time_info = rank_dict.get('Communication Time Info', dict())
         return communication_time_info.get(name, 0)
 
+    @classmethod
+    def construct_instance_from_dict(cls, group: str, step: str, rank: str, op: str, rank_dict: dict):
+        return cls(group, step, rank, op.split("@")[0],
+                   HcclInfo.get_communication_time_info(rank_dict, "Start Timestamp(us)"),
+                   HcclInfo.get_communication_time_info(rank_dict, "Elapse Time(ms)"),
+                   HcclInfo.get_communication_info(rank_dict, "SDMA"),
+                   HcclInfo.get_communication_info(rank_dict, "RDMA")
+                   )
+
     def get_rdma_transmit_time(self):
         return self.rdma_info.get('Transit Time(ms)', 0)
 
@@ -81,3 +93,4 @@ class HcclInfo():
 
     def get_rdma_bandwidth(self):
         return self.rdma_info.get('Bandwidth(GB/s)', 0)
+

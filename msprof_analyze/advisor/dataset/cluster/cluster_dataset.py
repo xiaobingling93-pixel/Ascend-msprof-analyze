@@ -12,12 +12,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import json
 import logging
 
 import os
 import re
-
+from abc import ABC, abstractmethod
 from collections import defaultdict
+
+import numpy as np
+import pandas as pd
+
+from msprof_analyze.prof_common.db_manager import DBManager
+
+from msprof_analyze.prof_common.database_service import DatabaseService
+
 from msprof_analyze.advisor.dataset.dataset import Dataset
 from msprof_analyze.prof_common.singleton import singleton
 from msprof_analyze.prof_common.file_manager import FileManager
@@ -25,11 +34,14 @@ from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.cluster_analyse.cluster_analysis import Interface
 from msprof_analyze.advisor.dataset.cluster.cluster_step_trace_time_bean import ClusterStepTraceTimeBean
 from msprof_analyze.advisor.dataset.cluster.hccl_collection import HcclInfo
+from msprof_analyze.prof_exports.communicaion_info_export import (ClusterCommunicationInfoExport,
+                                                                  ClusterBandwidthInfoExport,
+                                                                  ClusterStepTraceTimeExport)
 
 logger = logging.getLogger()
 
 
-class ClusterDataset(Dataset):
+class ClusterDataset(ABC, Dataset):
 
     def __init__(self, collection_path, data: dict, **kwargs) -> None:
         super().__init__(collection_path, data, **kwargs)
@@ -46,6 +58,11 @@ class ClusterDataset(Dataset):
                 return True
         return False
 
+    def is_db_cluster_analysis_data_simplification(self):
+        db_path = os.path.join(self.output_path, Constant.CLUSTER_ANALYSIS_OUTPUT,
+                               Constant.DB_CLUSTER_COMMUNICATION_ANALYZER)
+        return DBManager.check_tables_in_db(db_path, "CommunicationGroupMapping")
+
     def cluster_analyze(self):
         if self.is_cluster_analysis_output_exist():
             return
@@ -54,6 +71,10 @@ class ClusterDataset(Dataset):
             Constant.MODE: "all",
             Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: self.output_path
         }
+        if self.data_type == Constant.DB:
+            parameter[Constant.DATA_SIMPLIFICATION] = True
+            parameter[Constant.PARALLEL_MODE] = Constant.CONCURRENT_MODE
+            parameter[Constant.EXPORT_TYPE] = Constant.DB
         logger.info("cluster analysis is in the process, please wait...")
         try:
             Interface(parameter).run()
@@ -76,6 +97,26 @@ class ClusterDataset(Dataset):
         data = FileManager.read_json_file(json_path)
         return data
 
+    def load_db_data(self, table):
+        db_path = os.path.join(self.output_path, Constant.CLUSTER_ANALYSIS_OUTPUT,
+                               Constant.DB_CLUSTER_COMMUNICATION_ANALYZER)
+        database = DatabaseService(db_path=db_path, step_range={})
+        database.add_table_for_query(table)
+        res = database.query_data()
+        return res.get(table, None)
+
+    @abstractmethod
+    def parse_from_text(self):
+        pass
+
+    @abstractmethod
+    def parse_from_db(self):
+        pass
+
+    def _parse(self):
+        self.cluster_analyze()
+        return self.parse_from_db() if self.data_type == Constant.DB else self.parse_from_text()
+
 
 @singleton
 class ClusterStepTraceTimeDataset(ClusterDataset):
@@ -87,7 +128,7 @@ class ClusterStepTraceTimeDataset(ClusterDataset):
         self._stages = []
         super().__init__(collection_path, data, **kwargs)
 
-    def format_data(self, step_data: list):
+    def format_text_data(self, step_data: list):
         step_dict = defaultdict(lambda: [0, 0, 0])
         for step_bean in step_data:
             if step_bean.type == self.RANK:
@@ -110,22 +151,51 @@ class ClusterStepTraceTimeDataset(ClusterDataset):
                 self._stages.append(stage)
         return step_dict
 
+    def format_db_data(self, step_df):
+        if step_df is None:
+            return None
+        # process stage info
+        self._stages = (step_df[step_df['type'] == 'stage']['index'].dropna()
+                        .apply(lambda x: sorted(list(map(int, re.findall(r'\d+', x)))))
+                        .tolist())
+        # process rank info
+        rank_df = step_df[step_df['type'] == 'rank']
+        rank_df['step'] = rank_df['step'].fillna(Constant.DEFAULT_STEP)
+        rank_df["step_rank"] = rank_df.apply(lambda row: f"{row['step']}_{row['index']}", axis=1)
+        step_dict = (rank_df.set_index('step_rank')[['computing', 'communication_not_overlapped', 'free']].
+                     apply(list, axis=1).to_dict())
+        return step_dict
+
+
     def get_data(self):
         return self._step_dict
 
     def get_stages(self):
         return sorted(self._stages)
 
-    def _parse(self):
-        self.cluster_analyze()
+    def parse_from_text(self):
         try:
             step_data = self.load_csv_data(Constant.CLUSTER_STEP_TIME_CSV, ClusterStepTraceTimeBean)
         except RuntimeError as e:
-            logger.error("捕获到异常：%s", e)
+            logger.error("Exception when run load_csv_data：%s", e)
             self._step_dict = None
             return False
-        self._step_dict = self.format_data(step_data)
+        self._step_dict = self.format_text_data(step_data)
         return True
+
+    def parse_from_db(self):
+        db_path = os.path.join(self.output_path, Constant.CLUSTER_ANALYSIS_OUTPUT,
+                               Constant.DB_CLUSTER_COMMUNICATION_ANALYZER)
+        export = ClusterStepTraceTimeExport(db_path)
+        df = export.read_export_db()
+        try:
+            self._step_dict = self.format_db_data(df)
+        except RuntimeError as e:
+            logger.error("Exception when run format_db_data：%s", e)
+            self._step_dict = None
+            return False
+        return True
+
 
 
 @singleton
@@ -175,7 +245,7 @@ class ClusterCommunicationDataset(ClusterDataset):
         op_name = op.split("@")[0]
         for rank_id, rank_dict in op_dict.items():
             try:
-                hccl_info = HcclInfo(group, step, rank_id, op, rank_dict)
+                hccl_info = HcclInfo.construct_instance_from_dict(group, step, rank_id, op, rank_dict)
                 if self.hccl_dict[group].get(op_name) is None:
                     self.hccl_dict[group].setdefault(op_name, defaultdict(list))
                 if self.hccl_dict[group][op_name].get(step) is None:
@@ -213,13 +283,55 @@ class ClusterCommunicationDataset(ClusterDataset):
     def get_data(self):
         return self.rank_bw_dict
 
-    def _parse(self):
-        self.cluster_analyze()
+    def parse_from_text(self):
         try:
             communication_json = self.load_json_data(Constant.CLUSTER_COMM_JSON)
         except RuntimeError as e:
-            logger.error("捕获到异常：%s", e)
+            logger.error("Exception when run load_json_data：%s", e)
             self.rank_bw_dict = None
             return False
         self.process(communication_json)
         return True
+
+    def parse_from_db(self):
+        data_simplification = self.is_db_cluster_analysis_data_simplification()
+        db_path = os.path.join(self.output_path, Constant.CLUSTER_ANALYSIS_OUTPUT,
+                               Constant.DB_CLUSTER_COMMUNICATION_ANALYZER)
+
+        self.process_bandwidth_db(db_path, data_simplification)
+        self.process_hccl_info_db(db_path, data_simplification)
+
+    def process_hccl_info_db(self, db_path, data_simplification):
+        export = ClusterCommunicationInfoExport(db_path, data_simplification)
+        df = export.read_export_db()
+        df['sdma_dict'] = df['sdma_dict'].apply(lambda x: json.loads(x) if pd.notna(x) else {})
+        df['rdma_dict'] = df['rdma_dict'].apply(lambda x: json.loads(x) if pd.notna(x) else {})
+        for row in df.itertuples(index=False):
+            group, op_name, step = row.rank_set, row.hccl_op_name, row.step
+            hccl_info = HcclInfo(group, step, row.rank_id, op_name, row.start_timestamp,
+                                 row.elapsed_time, row.sdma_dict, row.rdma_dict)
+            self.hccl_dict[group][op_name][step].append(hccl_info)
+
+    def process_bandwidth_db(self, db_path, data_simplification):
+        export = ClusterBandwidthInfoExport(db_path, data_simplification)
+        df = export.read_export_db()
+        processed_steps = df['step'].astype(str).str.lower().str.lstrip('step').replace('', str(Constant.DEFAULT_STEP))
+        df['step_rank'] = processed_steps + '_' + df['rank_id'].astype(str)
+        bandwidth_df = df.groupby(['band_type', 'step_rank']).agg({
+                       'transit_time': 'sum',
+                       'transit_size': 'sum'
+        }).reset_index()
+        bandwidth_df['bandwidth'] = np.where(bandwidth_df['transit_time'] > Constant.EPS,
+                                             bandwidth_df['transit_size'] / bandwidth_df['transit_time'],
+                                             0).round(4)
+        for row in bandwidth_df.itertuples(index=False):
+            if row.band_type == self.SDMA:
+                self.rank_bw_dict[row.step_rank][self.SDMA_SIZE_MB] = row.transit_size
+                self.rank_bw_dict[row.step_rank][self.SDMA_TIME_MS] = row.transit_time
+                self.rank_bw_dict[row.step_rank][self.SDMA_TIME_MS] = row.transit_time
+                self.rank_bw_dict[row.step_rank][self.SDMA_BANDWIDTH] = row.bandwidth
+            elif row.band_type == self.RDMA:
+                self.rank_bw_dict[row.step_rank][self.RDMA_SIZE_MB] = row.transit_size
+                self.rank_bw_dict[row.step_rank][self.RDMA_TIME_MS] = row.transit_time
+                self.rank_bw_dict[row.step_rank][self.RDMA_BANDWIDTH] = row.bandwidth
+

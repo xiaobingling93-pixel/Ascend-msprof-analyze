@@ -122,6 +122,7 @@ class Constant(object):
     # db name
     DB_COMMUNICATION_ANALYZER = "analysis.db"
     DB_CLUSTER_COMMUNICATION_ANALYZER = "cluster_analysis.db"
+    DB_MS_COMMUNICATION_ANALYZER = "communication_analyzer.db"
 
     # db tables
     TABLE_COMMUNICATION_GROUP = "CommunicationGroup"
