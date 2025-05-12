@@ -58,7 +58,6 @@ class NPUProfilingParser(BaseProfilingParser):
         self._hccl_tid_name_dict = {}
         self._c_core_sqe_list = []
         self._c_core_sqe_index = 0
-        self._dispatch_func = self._get_dispatch_func()
         if any((self._enable_profiling_compare, self._enable_operator_compare, self._enable_memory_compare,
                 self._enable_api_compare, self._enable_communication_compare)):
             self._filter_meta_id()
@@ -154,6 +153,8 @@ class NPUProfilingParser(BaseProfilingParser):
             func_list.add(self._picking_hccl_event)
             func_list.add(self._picking_flow_event)
         if self._enable_api_compare:
+            func_list.add(self._picking_torch_op_event)
+        if self._step_id != Constant.VOID_STEP:
             func_list.add(self._picking_torch_op_event)
         return list(func_list)
 
