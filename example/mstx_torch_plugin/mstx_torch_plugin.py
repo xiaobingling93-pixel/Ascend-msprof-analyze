@@ -12,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from datetime import datetime
 import os
 import functools
 import re
@@ -27,6 +28,11 @@ original_save = torch.serialization.save
 original_singlenext = torch.utils.data.dataloader._SingleProcessDataLoaderIter.__next__
 original_multinext = torch.utils.data.dataloader._MultiProcessingDataLoaderIter.__next__
 origin_patch_step_function = torch.optim.Optimizer._patch_step_function
+
+
+def _print_warn_msg(message: str):
+    time_str = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    print(f"{time_str} [WARNING] [{os.getpid()}] mstx_torch_plugin.py: {message}")
 
 
 def _check_directory_path_readable(path):
@@ -172,7 +178,7 @@ def _get_torch_npu_version_str():
                         torch_npu_version_str = line.strip().split("=")[-1][2:-1]
                         break
         except Exception as e:
-            raise RuntimeError(f"Failed to open {version_path} to get torch npu version.") from e
+            _print_warn_msg(f"Failed to open {version_path} to get torch npu version.")
     return torch_npu_version_str
 
 
@@ -193,10 +199,12 @@ def _check_pta_support_patch():
     }
     torch_npu_version_str = _get_torch_npu_version_str()
     if not torch_npu_version_str:
-        raise RuntimeError("Failed to get torch_npu version info.")
+        _print_warn_msg("Failed to get torch_npu version info.")
+        return False
     torch_branch, torch_npu_version = _get_torch_npu_info(torch_npu_version_str)
     if not torch_branch or not torch_npu_version or not torch_npu_version.isdigit():
-        raise RuntimeError("Failed to get valid torch branch or torch_npu version.")
+        _print_warn_msg("Failed to get valid torch branch or torch_npu version.")
+        return False
     for branch, post_version in pta_support_patch_version.items():
         if torch_branch == branch and int(torch_npu_version) <= post_version:
             return False
