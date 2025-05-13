@@ -19,6 +19,7 @@ import re
 
 from tqdm import tqdm
 
+from msprof_analyze.advisor.dataset.stack.db_stack_finder import DBStackFinder
 from msprof_analyze.advisor.analyzer.base_analyzer import BaseAnalyzer
 from msprof_analyze.advisor.display.prompt.base_prompt import BasePrompt
 from msprof_analyze.prof_common.constant import Constant
@@ -139,7 +140,13 @@ class TimelineFusionOpsAnalyzer(BaseAnalyzer):
     def query_stack(self, event_dataset):
         if all([len(matched_index) == 0 for matched_index in self._matched_op_index.values()]):
             return
+        if event_dataset.data_type == Constant.TEXT:
+            self.query_stack_from_timeline_json(event_dataset)
+        elif event_dataset.data_type == Constant.DB:
+            self.query_stack_from_db(event_dataset.timeline_file)
 
+
+    def query_stack_from_timeline_json(self, event_dataset):
         op_stack_list = event_dataset.parse_data_with_generator(self._query_stack_by_matched_index)
         for op_stack in op_stack_list:
             for op_rule, stack in op_stack.items():
@@ -147,8 +154,19 @@ class TimelineFusionOpsAnalyzer(BaseAnalyzer):
                     self.matched_op_stacks[op_rule] = {}
                 if stack == Constant.TIMELINE_FUSION_OPS_NO_STACK_FLAG:
                     continue
-                if stack not in self.matched_op_stacks[op_rule]:
-                    self.matched_op_stacks[op_rule][stack] = 0
+                self.matched_op_stacks[op_rule].setdefault(stack, 0)
+                self.matched_op_stacks[op_rule][stack] += 1
+
+    def query_stack_from_db(self, db_path):
+        stack_helper = DBStackFinder(db_path)
+        for op_rule, matched_index in self._matched_op_index.items():
+            stack_dict = stack_helper.get_api_stack_by_index(matched_index)
+            self.matched_op_stacks[op_rule] = {}
+            if not stack_dict:
+                continue
+            self.empty_stacks = False
+            for stack in stack_dict.values():
+                self.matched_op_stacks[op_rule].setdefault(stack, 0)
                 self.matched_op_stacks[op_rule][stack] += 1
 
     def _match_ops(self, event_dataset, ops: str, npu_api: str, mode: str):

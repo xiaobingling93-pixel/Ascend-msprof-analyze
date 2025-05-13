@@ -26,7 +26,7 @@ from msprof_analyze.prof_common.additional_args_manager import AdditionalArgsMan
 logger = logging.getLogger()
 
 
-class OpStackFinder:
+class TimelineOpStackFinder:
 
     def __init__(self):
         self.n_processes = get_analyze_processes()
@@ -53,9 +53,9 @@ class OpStackFinder:
 
         return Constant.TIMELINE_BACKWARD_NO_STACK_CODE
 
-    def get_api_stack_by_op(self, event_dataset: ComputationAnalysisDataset, op_name: List[str] = None,
-                            task_type: str = None,
-                            disable_multiprocess=False):
+    def get_api_stack_by_op_name(self, event_dataset: ComputationAnalysisDataset, op_name: List[str] = None,
+                                 task_type: str = None,
+                                 disable_multiprocess=False):
         """
         :Param event_dataset: dataset of timeline event
         :Param op_name: operator name, e.g. IndexPutV2
@@ -141,6 +141,18 @@ class OpStackFinder:
         return self._stack_record
 
     def _get_api_stack_by_op(self, event_dataset: ComputationAnalysisDataset, op_name: str, task_type: str):
+        """
+        对于单个op，从timeline文件中获取stack信息
+        根据torch_to_npu连线：
+            input: hardware层op_name, task_type
+            step1: 根据op_name, task_type 找到timeline中对应的event，得到ts, tid, task_id等信息
+            step2: dataset.torch_to_npu, key: f"{op.ph}-{op.id}", op.id为end_event.ts，也就是当前op的ts
+                找到ph=s时的连线信息，pid: start_event.pid, tid=start_event.tid, ts: start_event.ts
+            step3: dataset.ops_with_stack, key: op.ts, value: TimelineEvent, 记录了所有有stack信息的event
+                根据start_event.ts 获取其对应的dataset_index，记录到self.matched_index
+                self._task_id_record记录了start_event's index, 对应的hardware层[task_id, op_name, op_type]
+            step4: 在dataset初始化阶段并没有读取全部的stack信息并保存，在后续需要重新遍历获取
+        """
         for _, src_op_event in event_dataset.ops_with_task_type.items():
 
             op_task_type = src_op_event.get(Constant.TASK_TYPE)
