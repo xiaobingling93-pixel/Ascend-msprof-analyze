@@ -363,7 +363,7 @@ class BaseProfilingParser(ABC):
             name_list = communication_op.lower_name.split("_")
             if len(name_list) < 2:
                 continue
-            comm_name = name_list[1]
+            comm_name = name_list[1] if name_list[0] == "hcom" else name_list[0]
             self._result_data.update_communication_dict(comm_name, communication_op.dur)
             while task_index < len(comm_task_list):
                 task_event = comm_task_list[task_index]

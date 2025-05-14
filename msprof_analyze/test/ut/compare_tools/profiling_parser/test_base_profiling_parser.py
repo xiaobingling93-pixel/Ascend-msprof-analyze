@@ -98,7 +98,7 @@ class TestBaseProfilingParser(unittest.TestCase):
                  2: {"start": MockEvent(1, 2, 12), "end": MockEvent(2, 3, 22)},
                  3: {}}
     all_kernels = {"2-3-23": MockEvent(2, 3, 23), "2-3-21": MockEvent(2, 3, 21), "2-3-22": MockEvent(2, 3, 22)}
-    comm_events = [{"ph": "X", "name": "hccl_allreduce", "pid": 7, "tid": 3, "ts": 1, "dur": 2}]
+    comm_events = [{"ph": "X", "name": "hcom_allreduce", "pid": 7, "tid": 3, "ts": 1, "dur": 2}]
     task_events = [{"ph": "X", "name": "notify_wait", "pid": 7, "tid": 1, "ts": 2, "dur": 1},
                    {"ph": "X", "name": "notify_wait", "pid": 7, "tid": 1, "ts": 5, "dur": 1}]
 
