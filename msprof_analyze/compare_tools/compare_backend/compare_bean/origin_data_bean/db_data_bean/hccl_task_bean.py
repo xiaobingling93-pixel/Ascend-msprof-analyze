@@ -12,7 +12,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from decimal import Decimal
+
 from msprof_analyze.prof_common.constant import Constant
+from msprof_analyze.compare_tools.compare_backend.utils.common_func import convert_to_decimal
 
 
 class HcclTaskBean:
@@ -29,9 +32,21 @@ class HcclTaskBean:
         return self._data.get("Duration", 0) / Constant.NS_TO_US
 
     @property
+    def start_time(self) -> Decimal:
+        return convert_to_decimal(self._data.get("startNs", 0)) / Constant.NS_TO_US
+
+    @property
+    def end_time(self) -> Decimal:
+        return convert_to_decimal(self._data.get("endNs", 0)) / Constant.NS_TO_US
+
+    @property
     def task_id(self):
         return self._data.get("opId", "")
 
     @property
     def group_name(self):
         return self._data.get("GroupName", "")
+
+    @property
+    def plane_id(self):
+        return self._data.get("planeId", "")
