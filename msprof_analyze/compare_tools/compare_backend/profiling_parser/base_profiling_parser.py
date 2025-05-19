@@ -124,7 +124,8 @@ class BaseProfilingParser(ABC):
         if self._step_id == Constant.VOID_STEP:
             return self._step_range
         step_list = []
-        for event in self._result_data.torch_op_data:
+        events = self._result_data.torch_op_data or self._trace_event_generator(self._profiling_type)
+        for event in events:
             if event.is_step_profiler():
                 step_id = event.name.split("#")[-1]
                 step_list.append(step_id)
