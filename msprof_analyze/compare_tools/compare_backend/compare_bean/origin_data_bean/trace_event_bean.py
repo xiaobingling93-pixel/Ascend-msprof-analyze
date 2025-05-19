@@ -132,6 +132,18 @@ class TraceEventBean:
     def is_torch_op(self) -> bool:
         return self._is_torch_op
 
+    @property
+    def input_dims(self):
+        return self.args.get("Input Dims", Constant.NA)
+
+    @property
+    def input_type(self):
+        return self.args.get("Input type", Constant.NA)
+
+    @property
+    def call_stack(self):
+        return self.args.get("Call stack", Constant.NA)
+
     @is_torch_op.setter
     def is_torch_op(self, value: bool):
         self._is_torch_op = value

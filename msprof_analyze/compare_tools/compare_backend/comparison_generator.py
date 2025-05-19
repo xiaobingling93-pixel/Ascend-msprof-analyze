@@ -24,6 +24,8 @@ from msprof_analyze.compare_tools.compare_backend.utils.args_manager import Args
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.additional_args_manager import AdditionalArgsManager
 from msprof_analyze.prof_common.logger import get_logger
+from msprof_analyze.compare_tools.compare_backend.profiling_parser.npu_profiling_db_parser import \
+    NPUProfilingDbParser
 
 logger = get_logger()
 
@@ -52,14 +54,26 @@ class ComparisonGenerator:
             logger.error("%s", e)
 
     def load_data(self):
-        self._data_dict[Constant.BASE_DATA] = self.PARSER_DICT.get(self._args_manager.base_profiling_type)(
-            self._args_manager.args,
-            self._args_manager.base_path_dict,
-            self._args_manager.base_step).load_data()
-        self._data_dict[Constant.COMPARISON_DATA] = self.PARSER_DICT.get(self._args_manager.comparison_profiling_type)(
-            self._args_manager.args,
-            self._args_manager.comparison_path_dict,
-            self._args_manager.comparison_step).load_data()
+        if self._args_manager.base_path_dict.get(Constant.PROFILER_DB_PATH):
+            self._data_dict[Constant.BASE_DATA] = NPUProfilingDbParser(self._args_manager.args,
+                                                                       self._args_manager.base_path_dict,
+                                                                       self._args_manager.base_step).load_data()
+        else:
+            self._data_dict[Constant.BASE_DATA] = self.PARSER_DICT.get(self._args_manager.base_profiling_type)(
+                self._args_manager.args,
+                self._args_manager.base_path_dict,
+                self._args_manager.base_step).load_data()
+        if self._args_manager.comparison_path_dict.get(Constant.PROFILER_DB_PATH):
+            self._data_dict[Constant.COMPARISON_DATA] = \
+                NPUProfilingDbParser(self._args_manager.args,
+                                     self._args_manager.comparison_path_dict,
+                                     self._args_manager.comparison_step).load_data()
+        else:
+            self._data_dict[Constant.COMPARISON_DATA] = self.PARSER_DICT.get(
+                self._args_manager.comparison_profiling_type)(
+                self._args_manager.args,
+                self._args_manager.comparison_path_dict,
+                self._args_manager.comparison_step).load_data()
 
     def generate_compare_result(self):
         overall_data = {

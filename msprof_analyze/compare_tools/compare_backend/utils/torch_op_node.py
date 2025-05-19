@@ -46,19 +46,19 @@ class TorchOpNode:
 
     @property
     def input_shape(self):
-        return str(self._event.args.get("Input Dims", Constant.NA))
+        return str(self._event.input_dims)
 
     @property
     def origin_input_shape(self):
-        return self._event.args.get("Input Dims", Constant.NA)
+        return self._event.input_dims
 
     @property
     def input_type(self):
-        return str(self._event.args.get("Input type", Constant.NA))
+        return str(self._event.input_type)
 
     @property
     def call_stack(self):
-        return str(self._event.args.get("Call stack", Constant.NA))
+        return str(self._event.call_stack)
 
     @property
     def parent(self):
