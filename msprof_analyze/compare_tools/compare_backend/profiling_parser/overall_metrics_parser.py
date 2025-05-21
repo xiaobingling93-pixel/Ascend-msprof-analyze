@@ -306,7 +306,8 @@ class OverallMetricsParser:
         sql = """
         SELECT  
             STRING_IDS.value AS "task_type",
-            round(TASK.endNs - TASK.startNs) AS "Duration"
+            round(TASK.endNs - TASK.startNs) AS "Duration",
+            TASK.streamId AS "streamId"
         FROM 
             TASK LEFT JOIN STRING_IDS ON TASK.taskType == STRING_IDS.id {}
         """
@@ -316,11 +317,20 @@ class OverallMetricsParser:
             all_data = DBManager.fetch_all_data(self.npu_db_parser.cursor, sql, param=self.npu_db_parser.step_range)
         else:
             all_data = DBManager.fetch_all_data(self.npu_db_parser.cursor, sql)
-        dur_list = []
+
+        event_wait_stream, ai_core_stream = set(), set()
+        sdma_dict = {}
         for op in all_data:
-            if op.get("task_type", "") in frozenset({'SDMA_SQE', 'PCIE_DMA_SQE'}):
-                dur_list.append(op.get("Duration", 0) / Constant.NS_TO_US)
-        self.npu_db_parser.result_data.overall_metrics.update_sdma_stream_info(sum(dur_list), len(dur_list))
+            if op.get("task_type", "") == "EVENT_WAIT_SQE":
+                event_wait_stream.add(op.get("streamId"))
+            elif op.get("task_type", "") in frozenset({'SDMA_SQE', 'PCIE_DMA_SQE'}):
+                sdma_dict.setdefault(op.get("streamId"), []).append(op.get("Duration", 0) / Constant.NS_TO_US)
+        for compute_op in self.npu_db_parser.compute_op_data:
+            ai_core_stream.add(compute_op.stream_id)
+        compute_stream = event_wait_stream & ai_core_stream if event_wait_stream else ai_core_stream
+        for stream in compute_stream:
+            dur_list = sdma_dict.get(stream, [])
+            self.npu_db_parser.result_data.overall_metrics.update_sdma_stream_info(sum(dur_list), len(dur_list))
 
     def calculate_overlap_analysis_time(self):
         compute_op = [[op.start_time, op.end_time] for op in self.npu_db_parser.compute_op_data]

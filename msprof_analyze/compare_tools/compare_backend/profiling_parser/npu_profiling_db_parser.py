@@ -126,6 +126,7 @@ class NPUProfilingDbParser:
             SELECT
                 NAME_IDS.value AS "OpName",
                 TASK.globalTaskId AS "globalTaskId",
+                TASK.streamId AS "streamId",
                 COMPUTE_TASK_INFO.globalTaskId AS "TaskId",
                 OPTYPE_IDS.value AS "opType",
                 TASKTYPE_IDS.value AS "TaskType",

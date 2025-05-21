@@ -45,6 +45,10 @@ class KernelBean:
         return self._data.get("TaskId", "")
 
     @property
+    def stream_id(self):
+        return self._data.get("streamId", "")
+
+    @property
     def task_type(self):
         return self._data.get("TaskType", "")
 
