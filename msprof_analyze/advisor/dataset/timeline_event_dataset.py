@@ -14,10 +14,14 @@
 # limitations under the License.
 
 import logging
+import re
 import traceback
 from collections import OrderedDict
 
 import ijson
+
+from msprof_analyze.advisor.dataset.timeline_op_collector.timeline_op_sql import TimelineDBHelper
+from msprof_analyze.advisor.dataset.dataset import Dataset
 from tqdm import tqdm
 
 from msprof_analyze.prof_common.constant import Constant
@@ -46,22 +50,21 @@ from msprof_analyze.advisor.dataset.timeline_op_collector.timeline_op_collector 
 logger = logging.getLogger()
 
 
-class BaseTimelineEventDataset:
+class BaseTimelineEventDataset(Dataset):
     PROFILER_STEP_PREFIX = "ProfilerStep"
-
     collector_map = {}
 
     def __init__(self, collection_path, data: dict, build_dataset=True, **kwargs) -> None:
-        self.timeline_dir = collection_path
+        self.collection_path = collection_path
         self.profiler_step = []
-        self.timeline_data_list = get_file_path_from_directory(collection_path,
-                                                               lambda file: file.endswith("trace_view.json"))
+        self.timeline_file = ""
         self.dataset_len = None
         self.step = kwargs.get("step")
         self.step_duration = kwargs.get("step_duration", 0.0)
-        if not build_dataset:
-            return
+        self.data_type = self.get_data_type()
 
+        if not build_dataset or not self.get_timeline_file_list():
+            return
         if self.parse():
             key = self.get_key()
             if key not in data:
@@ -96,29 +99,72 @@ class BaseTimelineEventDataset:
         return True
 
     def parse(self):
+        return self.parse_from_db() if self.data_type == Constant.DB else self.parse_from_text()
 
-        if len(self.timeline_data_list) == 0:
-            logger.warning("Please ensure trace_view.json in %s, skip timeline analysis.", self.timeline_dir)
+    def get_timeline_file_list(self):
+        if self.data_type == Constant.TEXT:
+            timeline_file_list = get_file_path_from_directory(
+                self.collection_path,
+                lambda file: self.TRACE_VIEW_PATTERN.match(file)
+            )
+        elif self.data_type == Constant.DB:
+            # 尝试匹配 PyTorch 和 MindSpore 两种 DB 文件
+            pytorch_files = get_file_path_from_directory(
+                self.collection_path,
+                lambda file: self.PYTORCH_DB_PATTERN.match(file)
+            )
+            mindspore_files = get_file_path_from_directory(
+                self.collection_path,
+                lambda file: self.MINDSPORE_DB_PATTERN.match(file)
+            )
+            if pytorch_files and mindspore_files:
+                logger.error("Both PyTorch and MindSpore DB files found, ambiguous!")
+                return False
+            elif pytorch_files:
+                timeline_file_list = pytorch_files
+            elif mindspore_files:
+                timeline_file_list = mindspore_files
+            else:
+                logger.error("No valid PyTorch/MindSpore DB files found!")
+                return False
+        else:
+            logger.error("Invalid data_type: %s", self.data_type)
             return False
 
-        if len(self.timeline_data_list) > 1:
-            logger.warning("Found multiple trace_view.json in %s, load the file of device 0 for analysis  .",
-                           self.timeline_dir)
+        if len(timeline_file_list) == 0:
+            logger.warning(f"Please ensure timeline file in {self.collection_path}, skip timeline analysis.")
+            return False
+        if len(timeline_file_list) > 1:
+            logger.warning(f"Found multiple timeline files in {self.collection_path}, "
+                           f"load the file of device 0 for analysis.")
+        self.timeline_file = sorted(timeline_file_list)[0]
+        return True
 
+    def parse_from_text(self):
         result = self.parse_data_with_generator(self.add_event)
-
         if not self.dataset_len:
             self.dataset_len = len(result)
         return True
 
+    def parse_from_db(self):
+        db_helper = TimelineDBHelper(self.timeline_file)
+        if not db_helper.init_timeline_db_helper():
+            return False
+        for _, collector in tqdm(self.collector_map.items(), leave=False,
+                                 desc="Building dataset for timeline analysis"):
+            for event_type in collector.get_event_type():
+                df = db_helper.query_timeline_event(event_type)
+                collector.add_op_from_db(df)
+        db_helper.destory_db_connection()
+        return True
+
     def parse_data_with_generator(self, func):
         result = []
-        timeline_data_path = sorted(self.timeline_data_list)[0]
-        if not check_path_valid(timeline_data_path):
+        if not check_path_valid(self.timeline_file) or self.data_type == Constant.DB:
             return result
 
         try:
-            with open(timeline_data_path, "r") as f:
+            with open(self.timeline_file, "r") as f:
                 for i, event in tqdm(enumerate(ijson.items(f, "item")),
                                      leave=False, ncols=100, desc="Building dataset for timeline analysis",
                                      total=self.dataset_len):
@@ -128,7 +174,7 @@ class BaseTimelineEventDataset:
 
         except Exception:
             logger.warning("Error %s while parsing file %s, continue to timeline analysis", traceback.format_exc(),
-                           timeline_data_path)
+                           self.timeline_file)
         return result
 
     def _get_target_ops_by_step(self, op_list):
@@ -168,6 +214,7 @@ class BaseTimelineEventDataset:
             collector.post_process(target_op_list, **collector_kwargs)
             for property_name, property_value in collector.attribute_to_dataset.items():
                 setattr(self, property_name, property_value)
+
 
 
 @singleton

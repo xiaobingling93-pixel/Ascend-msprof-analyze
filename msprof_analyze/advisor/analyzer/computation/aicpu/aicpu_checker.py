@@ -18,7 +18,7 @@ from functools import partial
 from typing import List, Dict, Optional
 
 from msprof_analyze.advisor.analyzer.computation.operator_checker import OperatorChecker, logger
-from msprof_analyze.advisor.analyzer.schedule.fusion_ops.timeline_api_stack_checker import OpStackFinder
+from msprof_analyze.advisor.dataset.stack.timeline_stack_finder import TimelineOpStackFinder
 from msprof_analyze.advisor.dataset.dataset import Dataset
 from msprof_analyze.advisor.dataset.profiling.profiling_dataset import ProfilingDataset
 from msprof_analyze.advisor.dataset.timeline_event_dataset import ComputationAnalysisDataset
@@ -100,15 +100,15 @@ class AicpuChecker(OperatorChecker):
             return False
         op_summary = profiling_data.op_summary
 
-        def get_opeartor_stack_info(api_stack_finder: OpStackFinder, op_name_list: list) -> list:
+        def get_opeartor_stack_info(api_stack_finder: TimelineOpStackFinder, op_name_list: list) -> list:
             data: Dict[str, Dataset] = {}
             event_dataset = ComputationAnalysisDataset(collection_path=profiling_data.collection_path,
                                                        data=data,
                                                        task_type=Constant.AI_CPU)
 
             # disable multiprocessing, avoid cost time of enable new process for light task
-            api_stack_finder.get_api_stack_by_op(event_dataset, op_name_list, Constant.AI_CPU,
-                                                 disable_multiprocess=True)
+            api_stack_finder.get_api_stack_by_op_name(event_dataset, op_name_list, Constant.AI_CPU,
+                                                      disable_multiprocess=True)
             return api_stack_finder.get_stack_record()
 
         self._op_list = []
@@ -131,7 +131,7 @@ class AicpuChecker(OperatorChecker):
         for op in self._op_list:
             if op.op_name not in op_name_list:
                 op_name_list.append(op.op_name)
-        api_stack_finder = OpStackFinder()
+        api_stack_finder = TimelineOpStackFinder()
         stack_record = get_opeartor_stack_info(api_stack_finder, op_name_list)
 
         # task_id 到 stack 信息的对应

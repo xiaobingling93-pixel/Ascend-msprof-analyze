@@ -21,9 +21,7 @@ import os
 import re
 
 from msprof_analyze.prof_common.constant import Constant
-
 from msprof_analyze.prof_common.file_manager import FileManager
-
 from msprof_analyze.advisor.config.config import Config
 
 logger = logging.getLogger()
@@ -34,6 +32,9 @@ class Dataset:
     :param collection_path: dataSet absolute path
     dataset base class
     """
+    PYTORCH_DB_PATTERN = re.compile(r'ascend_pytorch_profiler(?:_\d+)?\.db$')
+    MINDSPORE_DB_PATTERN = re.compile(r'ascend_mindspore_profiler(?:_\d+)?\.db$')
+    TRACE_VIEW_PATTERN = re.compile(r'trace_view\.json$')
 
     def __init__(self, collection_path, data=None, **kwargs) -> None:
         if data is None:
@@ -63,9 +64,6 @@ class Dataset:
         return cls.__name__.rsplit('.', maxsplit=1)[-1]
 
     def get_data_type(self):
-        pytorch_pattern = re.compile(r'ascend_pytorch_profiler_\d+\.db$')
-        mindspore_pattern = re.compile(r'ascend_mindspore_profiler_\d+\.db$')
-
         # 递归搜索ASCEND_PROFILER_PATH文件夹
         for root, dirs, _ in os.walk(self.collection_path):
             if Constant.ASCEND_PROFILER_OUTPUT in dirs:
@@ -73,7 +71,7 @@ class Dataset:
 
                 # 检查profiler目录下的文件
                 for file in os.listdir(profiler_dir):
-                    if pytorch_pattern.match(file) or mindspore_pattern.match(file):
+                    if self.PYTORCH_DB_PATTERN.match(file) or self.MINDSPORE_DB_PATTERN.match(file):
                         return Constant.DB  # 找到任意一种.db文件即返回
 
         return Constant.TEXT
