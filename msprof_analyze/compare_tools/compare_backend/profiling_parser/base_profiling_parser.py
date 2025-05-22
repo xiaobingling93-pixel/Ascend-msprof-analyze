@@ -134,7 +134,7 @@ class BaseProfilingParser(ABC):
                     break
         if not self._step_range:
             valid_step = ", ".join(step_list)
-            raise RuntimeError(f"Invalid step id: {self._step_id},  please choose from the valid steps: {valid_step}")
+            raise RuntimeError(f"Invalid step id: {self._step_id}, please choose from the valid steps: {valid_step}")
         return self._step_range
 
     @abstractmethod

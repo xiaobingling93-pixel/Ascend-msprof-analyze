@@ -12,6 +12,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
+
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.db_manager import DBManager
 from msprof_analyze.compare_tools.compare_backend.profiling_parser.base_profiling_parser import ProfilingResult
@@ -91,11 +93,13 @@ class NPUProfilingDbParser:
 
     def _prepare_data(self):
         self._get_step_range()
-        self._query_torch_op_data()
+        if os.path.basename(self._db_path).startswith("ascend_pytorch_profiler"):
+            self._query_torch_op_data()
         self._query_compute_op_data()
         self._query_comm_op_data()
         self._query_comm_task_data()
-        self._query_memory_data()
+        if os.path.basename(self._db_path).startswith("ascend_pytorch_profiler"):
+            self._query_memory_data()
 
     def _get_step_range(self):
         if self.step_id != Constant.VOID_STEP:
@@ -104,10 +108,11 @@ class NPUProfilingDbParser:
             if not all_data:
                 raise RuntimeError('The profiling data lacks step markers. Please re-collect it.')
             for data in all_data:
-                if int(data[0]) == int(self.step_id):
-                    self.step_range = [data[1], data[2]]
+                if int(data.get("id")) == int(self.step_id):
+                    self.step_range = [data.get("startNs"), data.get("endNs")]
             if not self.step_range:
-                raise RuntimeError(f"Invalid Step Id: {self.step_id}")
+                valid_step = ", ".join([str(data.get("id")) for data in all_data])
+                raise RuntimeError(f"Invalid Step Id: {self.step_id}, please choose from the valid steps: {valid_step}")
 
     def _query_torch_op_data(self):
         if any((self._enable_memory_compare, self._enable_operator_compare, self._enable_profiling_compare,
@@ -121,7 +126,8 @@ class NPUProfilingDbParser:
                 self.result_data.update_torch_op_data(FrameworkApiBean(data))
 
     def _query_compute_op_data(self):
-        if self._enable_operator_compare or self._args.max_kernel_num or self._enable_profiling_compare:
+        if any((self._enable_operator_compare, self._args.max_kernel_num, self._enable_profiling_compare,
+                self._enable_kernel_compare)):
             sql = """
             SELECT
                 NAME_IDS.value AS "OpName",
