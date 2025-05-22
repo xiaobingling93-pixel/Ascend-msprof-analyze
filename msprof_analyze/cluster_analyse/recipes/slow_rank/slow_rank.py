@@ -114,15 +114,22 @@ class SlowRankAnalysis(BaseRecipeAnalysis):
 
         analyzer = SlowRankVoteAnalysis(comm_ops_df)
         perpector_df = analyzer.run()
-        
+
         if self._export_type == Constant.DB:
-            self.save_db(perpector_df) 
+            self.save_db(perpector_df)
+        elif self._export_type == "notebook":
+            self.save_notebook(perpector_df)
         else:
             logger.error("SlowRank analysis is not supported for notebook export type.")
 
     def save_db(self, perpector_df):
         self.dump_data(perpector_df, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER, "SlowRank")
-            
+
+    def save_notebook(self, perpector_df):
+        self.dump_data(perpector_df, "rank_stats.csv")
+        self.create_notebook("stats.ipynb")
+        self.add_helper_file("cluster_display.py")
+
     def _mapper_func(self, data_map, analysis_class):
         profiler_db_path = data_map.get(Constant.PROFILER_DB_PATH)
         step_range = data_map.get(Constant.STEP_RANGE)

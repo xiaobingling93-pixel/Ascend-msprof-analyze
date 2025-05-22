@@ -189,6 +189,29 @@ def display_graph(figs, x_axis, y_axes, title=None,
         figs.append(fig)
 
 
+def display_bar(x_axis, y_axes, title=None, y_index=None):
+    if isinstance(y_axes, pd.DataFrame):
+        data = y_axes.set_index(x_axis)
+    elif isinstance(y_axes, dict):
+        data = pd.DataFrame(y_axes, index=x_axis)
+    elif isinstance(y_axes, pd.Series):
+        data = pd.DataFrame({"": y_axes}, index=x_axis)
+    elif isinstance(y_axes, np.ndarray):
+        data = pd.DataFrame({"": pd.Series(y_axes)}, index=x_axis)
+    else:
+        return
+
+    fig = data.plot.bar(title=title)
+    fig.bar_label(fig.containers[0])
+    if y_index is not None and y_index in y_axes:
+        # get index of the top1
+        top1_indices = data[y_index].nlargest(1).index
+        # change the color for the top1
+        for i, bar in enumerate(fig.patches):
+            if data.index[i] in top1_indices:
+                bar.set_color('#FFA500')  # highlight in orange
+
+
 def display_stats_per_rank_groups_combobox(rank_stats_gdf):
     names = list(rank_stats_gdf.groups.keys())
     if len(names) > 1:
