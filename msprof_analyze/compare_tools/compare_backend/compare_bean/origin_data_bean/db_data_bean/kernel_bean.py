@@ -18,6 +18,8 @@ from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.compare_tools.compare_backend.compare_config.compare_config import CompareConfig
 from msprof_analyze.compare_tools.compare_backend.utils.common_func import convert_to_decimal
 
+from msprof_analyze.prof_common.utils import convert_to_float
+
 
 class KernelBean:
 
@@ -96,3 +98,9 @@ class KernelBean:
         global_task_id = self._data.get("globalTaskId", "")
         return bool(
             pmu_data.get(global_task_id, {}).get("aicore_time") or pmu_data.get(global_task_id, {}).get("mac_time"))
+
+    def mc2_computing_time(self, pmu_data):
+        task_pmu = pmu_data.get(self._data.get("globalTaskId", ""), {})
+        return (max(convert_to_float(task_pmu.get("aic_mac_time", 0)) / Constant.NS_TO_US,
+                    convert_to_float(task_pmu.get("aic_mte2_time", 0)) / Constant.NS_TO_US) +
+                convert_to_float(task_pmu.get("aiv_time", 0)) / Constant.NS_TO_US)

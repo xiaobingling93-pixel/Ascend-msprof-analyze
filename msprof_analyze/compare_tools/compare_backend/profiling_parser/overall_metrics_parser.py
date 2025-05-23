@@ -40,6 +40,30 @@ class OverallMetricsParser:
             if op.cann_connection_id}
         self.not_overlapped_comm = []
         self.pmu_data = {}
+        self._c_core_sqe_list = None
+        self._c_core_sqe_index = 0
+
+    @property
+    def c_core_sqe_list(self):
+        if self._c_core_sqe_list is not None:
+            return self._c_core_sqe_list
+        sql = """
+        SELECT 
+            round(TASK.endNs - TASK.startNs) AS "Duration",
+            TASK.startNs AS "startNs",
+            TASK.endNs AS "endNs"
+        FROM 
+            TASK LEFT JOIN STRING_IDS ON TASK.taskType == STRING_IDS.id 
+        WHERE STRING_IDS.value == 'C_CORE_SQE' {}
+        ORDER BY TASK.startNs
+        """
+        sql = sql.format("AND TASK.startNs>=? AND TASK.startNs<=?") if self.npu_db_parser.step_range else sql.format("")
+        if self.npu_db_parser.step_range:
+            all_data = DBManager.fetch_all_data(self.npu_db_parser.cursor, sql, param=self.npu_db_parser.step_range)
+        else:
+            all_data = DBManager.fetch_all_data(self.npu_db_parser.cursor, sql)
+        self._c_core_sqe_list = [KernelBean(data) for data in all_data]
+        return self._c_core_sqe_list
 
     @staticmethod
     def merge_intervals(intervals):
@@ -155,6 +179,12 @@ class OverallMetricsParser:
         if kernel.is_sdma():
             self.npu_db_parser.result_data.overall_metrics.update_sdma_tensor_move_info(kernel.dur)
             return
+        if kernel.is_mc2():
+            communication_time = self.calculate_mc2_communication_time(kernel)
+            computing_time = kernel.mc2_computing_time(self.pmu_data)
+            self.npu_db_parser.result_data.overall_metrics.update_mc2_info(kernel.name, kernel.dur, computing_time,
+                                                                           communication_time)
+            return
         flow_start_time = self.connect_map.get(kernel.connection_id)
         if flow_start_time:
             while self.cpu_cube_op_index < len(self.cpu_cube_op):
@@ -222,6 +252,24 @@ class OverallMetricsParser:
                 self.npu_db_parser.result_data.overall_metrics.update_matmul_cube_info(kernel.dur)
             else:
                 self.npu_db_parser.result_data.overall_metrics.update_matmul_vector_info(kernel.dur)
+
+    def calculate_mc2_communication_time(self, kernel: KernelBean):
+        sqe_data = []
+        while self._c_core_sqe_index < len(self.c_core_sqe_list):
+            end_time = self.c_core_sqe_list[self._c_core_sqe_index].end_time
+            if end_time < kernel.start_time:
+                self._c_core_sqe_index += 1
+                continue
+            if end_time <= kernel.end_time:
+                sqe_data.append(self.c_core_sqe_list[self._c_core_sqe_index])
+                self._c_core_sqe_index += 1
+                continue
+            break
+        communication_time = 0
+        for i in range(0, len(sqe_data), 2):
+            if i + 1 < len(sqe_data):
+                communication_time += sqe_data[i + 1].end_time - sqe_data[i].end_time
+        return float(communication_time)
 
     def calculate_communication_wait_time(self):
         """
