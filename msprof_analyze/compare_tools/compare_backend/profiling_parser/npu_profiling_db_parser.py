@@ -29,6 +29,8 @@ from msprof_analyze.compare_tools.compare_backend.profiling_parser.overall_metri
     OverallMetricsParser
 from msprof_analyze.prof_common.logger import get_logger
 
+from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.op_stastic_bean import OpStatisticBean
+
 logger = get_logger()
 
 
@@ -170,13 +172,29 @@ class NPUProfilingDbParser:
                 if data_bean.connection_id:
                     self.result_data.update_kernel_dict(data_bean.connection_id, data_bean)
                 if self._enable_kernel_compare:
-                    input_shapes = data_bean.input_shapes if data_bean.input_shapes else 'N/A'
-                    kernels_dict.setdefault(data_bean.op_type, {}).setdefault(input_shapes, []).append(
-                        [data_bean.name, data_bean.dur])
+                    if self._args.use_kernel_type:
+                        kernels_dict.setdefault((data_bean.op_type, data_bean.core_type), []).append(data_bean.dur)
+                    else:
+                        input_shapes = data_bean.input_shapes if data_bean.input_shapes else 'N/A'
+                        kernels_dict.setdefault(data_bean.op_type, {}).setdefault(input_shapes, []).append(
+                            [data_bean.name, data_bean.dur])
                 if self._enable_profiling_compare:
                     self.compute_op_data.append(data_bean)
             if kernels_dict:
-                self.result_data.update_kernel_details(kernels_dict)
+                if self._args.use_kernel_type:
+                    kernel_data = {}
+                    for (op_type, core_type), dur_list in kernels_dict.items():
+                        kernel_data[f"{op_type}-{core_type}"] = OpStatisticBean(
+                            {"OP Type": op_type,
+                             "Core Type": core_type,
+                             "Total Time(us)": sum(dur_list),
+                             "Avg Time(us)": sum(dur_list) / len(dur_list) if dur_list else 0,
+                             "Max Time(us)": max(dur_list) if dur_list else 0,
+                             "Min Time(us)": min(dur_list) if dur_list else 0,
+                             "Count": len(dur_list)})
+                    self.result_data.update_kernel_details(kernel_data)
+                else:
+                    self.result_data.update_kernel_details(kernels_dict)
 
     def _query_comm_op_data(self):
         if self._enable_communication_compare or self._enable_profiling_compare:

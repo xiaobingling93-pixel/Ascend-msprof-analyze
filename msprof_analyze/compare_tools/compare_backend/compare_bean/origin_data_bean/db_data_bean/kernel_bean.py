@@ -59,6 +59,10 @@ class KernelBean:
         return self._data.get("opType", "")
 
     @property
+    def core_type(self):
+        return self.task_type
+
+    @property
     def input_shapes(self):
         return self._data.get("InputShapes", "")
 
