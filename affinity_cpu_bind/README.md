@@ -2,7 +2,7 @@
 
 昇腾亲和性CPU绑核工具支持用户无需修改代码，直接运行工具即可实现按CPU亲和性策略绑核，提升推理或训练性能。
 
-绑核工具用户arm服务器环境，对于训练或推理任务因为CPU资源调度等出现host_bound问题时使用，可改善该问题；对于非host_bound的场景无明显改善效果。
+绑核工具适用于ARM服务器环境，对于训练或推理任务因为CPU资源调度等出现host_bound问题时使用，可改善该问题；对于非host_bound的场景无明显改善效果。
 
 ## 使用须知
 
@@ -25,7 +25,7 @@
 
  - 直接执行绑核命令
 ```bash
-python3 bind_core.py -app="inferenec/train cmd"
+python3 bind_core.py -app="inference/train cmd"
 ```
 -app或--application：配置训练或推理程序的执行命令，执行命令前后加引号。
 -t或--time：设置绑核之前的等待时间，单位为秒。

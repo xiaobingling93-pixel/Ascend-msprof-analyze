@@ -2,7 +2,7 @@
 
 部分torch原生的API在下发和执行时会包括多个小算子，下发和执行耗时较长，可以通过替换成NPU API来使能融合算子，提升训练性能。
 
-torch_npu api的功能和参数描述见[API列表](https://www.hiascend.com/document/detail/zh/canncommercial/700/modeldevpt/ptmigr/ptaoplist_000002.html)。
+torch_npu API的功能和参数描述见[API列表](https://www.hiascend.com/document/detail/zh/canncommercial/700/modeldevpt/ptmigr/ptaoplist_000002.html)。
 
 ## 优化器替换
 
@@ -96,7 +96,7 @@ import torch
 
 data = torch.rand(64, 3, 64, 128).cuda()
 batch, channel, height, width = data.shape
-result = dat.view(batch, height*channel*width).transpose(1, 0)
+result = data.view(batch, height*channel*width).transpose(1, 0)
 ```
 
 torch_npu代码示例如下：
@@ -221,7 +221,7 @@ class TorchRMSNorm(torch.nn.Module):
 
 input_data = torch.randn(128, 256).cuda()
 torch_rms_norm = TorchRMSNorm((128, 256))
-result = torch_rms_norm(data)
+result = torch_rms_norm(input_data)
 ```
 
 torch_npu代码示例如下：
@@ -242,7 +242,7 @@ class NpuRMSNorm(torch.nn.Module):
 
 input_data = torch.randn(128, 256).cuda()
 npu_rms_norm = NpuRMSNorm((128, 256))
-result = npu_rms_norm(data)
+result = npu_rms_norm(input_data)
 ```
 
 ### torch_npu.npu_swiglu
@@ -268,7 +268,7 @@ class TorchSwiGlu(torch.nn.Module):
 
 input_data = torch.randn(128, 256).cuda()
 torch_swiglu = TorchSwiGlu()
-result = torch_swiglu(data)
+result = torch_swiglu(input_data)
 ```
 
 torch_npu代码示例如下：
@@ -289,7 +289,7 @@ class NpuSwiGlu(torch.nn.Module):
 
 input_data = torch.randn(128, 256).cuda()
 npu_swiglu = NpuSwiGlu()
-result = npu_swiglu(data)
+result = npu_swiglu(input_data)
 ```
 
 ### torch_npu.npu_rotary_mul
