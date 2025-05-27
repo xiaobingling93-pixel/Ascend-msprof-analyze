@@ -17,7 +17,6 @@ from decimal import Decimal
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.compare_tools.compare_backend.compare_config.compare_config import CompareConfig
 from msprof_analyze.compare_tools.compare_backend.utils.common_func import convert_to_decimal
-
 from msprof_analyze.prof_common.utils import convert_to_float
 
 
@@ -53,6 +52,10 @@ class KernelBean:
     @property
     def task_type(self):
         return self._data.get("TaskType", "")
+
+    @property
+    def rts_task_type(self):
+        return self._data.get("rtsTaskType", "")
 
     @property
     def op_type(self):
@@ -99,9 +102,11 @@ class KernelBean:
         return any(trans_mask in self.name.lower() for trans_mask in CompareConfig().trans_mask)
 
     def is_cube_kernel_cat(self, pmu_data):
+        if not pmu_data:
+            return any((self.rts_task_type == "KERNEL_AICORE", self.rts_task_type == "KERNEL_MIX_AIC"))
         global_task_id = self._data.get("globalTaskId", "")
-        return bool(
-            pmu_data.get(global_task_id, {}).get("aicore_time") or pmu_data.get(global_task_id, {}).get("mac_time"))
+        return any(
+            (pmu_data.get(global_task_id, {}).get("aicore_time"), pmu_data.get(global_task_id, {}).get("mac_time")))
 
     def mc2_computing_time(self, pmu_data):
         task_pmu = pmu_data.get(self._data.get("globalTaskId", ""), {})

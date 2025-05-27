@@ -138,6 +138,7 @@ class NPUProfilingDbParser:
                 COMPUTE_TASK_INFO.globalTaskId AS "TaskId",
                 OPTYPE_IDS.value AS "opType",
                 TASKTYPE_IDS.value AS "TaskType",
+                RTS_TYPE_IDS.value AS "rtsTaskType",
                 INPUTSHAPES_IDS.value AS "InputShapes",
                 round(TASK.endNs - TASK.startNs) AS "Duration",
                 TASK.startNs AS "startNs",
@@ -156,6 +157,9 @@ class NPUProfilingDbParser:
             LEFT JOIN
                 STRING_IDS AS TASKTYPE_IDS
                 ON TASKTYPE_IDS.id == COMPUTE_TASK_INFO.taskType
+            LEFT JOIN
+                STRING_IDS AS RTS_TYPE_IDS
+                ON RTS_TYPE_IDS.id == TASK.taskType
             LEFT JOIN
                 STRING_IDS AS INPUTSHAPES_IDS
                 ON INPUTSHAPES_IDS.id == COMPUTE_TASK_INFO.inputShapes
