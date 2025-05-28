@@ -34,7 +34,6 @@ class Dataset:
     """
     PYTORCH_DB_PATTERN = re.compile(r'ascend_pytorch_profiler(?:_\d+)?\.db$')
     MINDSPORE_DB_PATTERN = re.compile(r'ascend_mindspore_profiler(?:_\d+)?\.db$')
-    TRACE_VIEW_PATTERN = re.compile(r'trace_view\.json$')
 
     def __init__(self, collection_path, data=None, **kwargs) -> None:
         if data is None:

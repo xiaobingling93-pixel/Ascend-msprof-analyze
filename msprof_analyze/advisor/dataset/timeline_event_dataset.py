@@ -53,6 +53,7 @@ logger = logging.getLogger()
 class BaseTimelineEventDataset(Dataset):
     PROFILER_STEP_PREFIX = "ProfilerStep"
     collector_map = {}
+    TRACE_VIEW_PATTERN = re.compile(r'trace_view\.json$')
 
     def __init__(self, collection_path, data: dict, build_dataset=True, **kwargs) -> None:
         self.collection_path = collection_path

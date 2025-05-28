@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
 # Copyright (C) 2024-2024. Huawei Technologies Co., Ltd. All rights reserved.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,9 +14,12 @@
 # limitations under the License.
 
 import logging
+import os
 from typing import Dict, List
+import json
+import pandas as pd
 
-from msprof_analyze.advisor.dataset.profiling.info_collection import TaskInfo, HcclOp
+from msprof_analyze.advisor.dataset.profiling.info_collection import TaskInfo
 from msprof_analyze.advisor.dataset.profiling.profiling_parser import ProfilingParser
 
 logger = logging.getLogger()
@@ -54,7 +56,7 @@ class Msprof(ProfilingParser):
     def __init__(self, path: str) -> None:
         super().__init__(path)
         self._tasks: List[TaskInfo] = []
-        self._hccl_tasks: List[HcclOp] = []
+        self._hccl_tasks: List[TaskInfo] = []
         self._iteration_time = 0.0
         self._model_id = None
         self._iteration_id = None
@@ -90,6 +92,10 @@ class Msprof(ProfilingParser):
     @property
     def tasks(self):
         return self._tasks
+
+    @property
+    def hccl_tasks(self):
+        return self._hccl_tasks
 
     @property
     def model_id(self):
@@ -162,3 +168,96 @@ class Msprof(ProfilingParser):
             self._model_id = int(task.name.split(":")[1])
         elif "process_name" == task.name:
             self._process_pid[task.args.get("name")] = task.pid
+
+
+class MsprofDB(Msprof):
+    FILE_PATTERN_MSG = "ascend_*_profiler.db"
+    FILE_INFO = "timeline info from db"
+
+    file_pattern_list = [r'^ascend_pytorch_profiler(?:_\d+)?\.db$',
+                         r'^ascend_mindspore_profiler(?:_\d+)?\.db$',
+                         r'^msprof_\d{14}\.db$']
+
+    HCCL_TASK_SQL = """
+    SELECT
+      str.value as name,
+      task.globalPid as pid,
+      task.startNs / 1000.0 as ts,
+      (task.endNs - task.startNs) / 1000.0 as dur,
+      JSON_OBJECT(
+          'task type', str.value,
+          'stream id', task.streamId,
+          'task id', task.taskId,
+          'transport type', trans.name,
+          'link type', link.name,
+          'size(Byte)', comm.size
+      ) as args
+      
+    FROM COMMUNICATION_TASK_INFO as comm 
+    LEFT JOIN TASK as task ON comm.globalTaskId = task.globalTaskId
+    LEFT JOIN STRING_IDS as str ON str.id = comm.taskType
+    LEFT JOIN ENUM_HCCL_LINK_TYPE as link ON link.id = comm.linkType
+    LEFT JOIN ENUM_HCCL_TRANSPORT_TYPE as trans ON trans.id = comm.transportType
+    """
+
+    HCCL_OP_SQL = """
+    SELECT
+        str.value as name,
+        comm.startNs / 1000.0 as ts,
+        (comm.endNs - comm.startNs) / 1000.0 as dur
+    FROM COMMUNICATION_OP as comm 
+    LEFT JOIN STRING_IDS as str ON str.id = comm.opName
+    """
+
+    NODE_INFO_SQL = """
+    WITH ranked_apis AS (
+        SELECT 
+            str.value AS name,
+            api.startNs / 1000.0 AS ts,
+            (api.endNs - api.startNs) / 1000.0 AS dur,
+            type.name as type,
+            LAG(str.value) OVER (ORDER BY api.startNs) AS prev_name
+        FROM CANN_API as api
+        JOIN STRING_IDS as str ON api.name = str.id
+        JOIN ENUM_API_TYPE as type ON api.type = type.id
+    )
+    SELECT 
+        name,
+        ts,
+        dur,
+        json_object('item_id', prev_name) AS args
+    FROM ranked_apis
+    WHERE type = 'node'
+    ORDER BY ts;
+    """
+
+    def __init__(self, path: str) -> None:
+        super().__init__(path)
+
+
+    def parse_from_file(self, db_path: str):
+        if not db_path or not os.path.exists(db_path):
+            logger.error("db path is None.")
+            return False
+        self.process_communication_tasks(db_path)
+        self.process_node_tasks(db_path)
+        return True
+
+    def process_communication_tasks(self, db_path):
+        self._process_task_data(db_path, self.HCCL_TASK_SQL, self._hccl_tasks)
+        self._process_task_data(db_path, self.HCCL_OP_SQL, self._hccl_tasks)
+        self._hccl_tasks.sort(key=lambda x: x.start_time)
+
+    def process_node_tasks(self, db_path):
+        self._process_task_data(db_path, self.NODE_INFO_SQL, self._tasks)
+
+    def _process_task_data(self, db_path, sql: str, result: list):
+        df = self._execute_sql(db_path, sql)
+        if df.empty:
+            return
+        if 'args' in df.columns:
+            df['args'] = df['args'].apply(lambda x: json.loads(x) if pd.notna(x) else {})
+        result.extend([TaskInfo(record) for record in df.to_dict('records')])
+
+
+
