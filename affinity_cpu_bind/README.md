@@ -25,7 +25,7 @@
 
  - 直接执行绑核命令
 ```bash
-python3 bind_core.py -app="inferenec/train cmd"
+python3 bind_core.py -app="inference/train cmd"
 ```
 -app或--application：配置训练或推理程序的执行命令，执行命令前后加引号。
 -t或--time：设置绑核之前的等待时间，单位为秒。
