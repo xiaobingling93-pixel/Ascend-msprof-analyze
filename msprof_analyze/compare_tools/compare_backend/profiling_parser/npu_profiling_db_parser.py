@@ -28,7 +28,6 @@ from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.
 from msprof_analyze.compare_tools.compare_backend.profiling_parser.overall_metrics_parser import \
     OverallMetricsParser
 from msprof_analyze.prof_common.logger import get_logger
-
 from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.op_stastic_bean import OpStatisticBean
 
 logger = get_logger()
@@ -41,6 +40,7 @@ class NPUProfilingDbParser:
         PYTORCH_API.endNs AS "endNs",
         PYTORCH_API.connectionId AS "connectionId",
         STRING_IDS.value AS "name",
+        SHAPES.value AS "inputShapes",
         CONNECTION_IDS.connectionId AS "cann_connectionId"
     FROM 
         PYTORCH_API 
@@ -48,6 +48,8 @@ class NPUProfilingDbParser:
         CONNECTION_IDS ON PYTORCH_API.connectionId=CONNECTION_IDS.id
     LEFT JOIN 
         STRING_IDS ON PYTORCH_API.name=STRING_IDS.id 
+    LEFT JOIN 
+        STRING_IDS AS SHAPES ON PYTORCH_API.inputShapes=SHAPES.id 
     LEFT JOIN 
         ENUM_API_TYPE ON PYTORCH_API.type=ENUM_API_TYPE.id
     WHERE 
