@@ -28,6 +28,7 @@ from msprof_analyze.prof_common.logger import get_logger
 from msprof_analyze.prof_common.path_manager import PathManager
 from msprof_analyze.cluster_analyse.cluster_data_preprocess.msprof_data_preprocessor import MsprofDataPreprocessor
 from msprof_analyze.prof_common.file_manager import FileManager
+from msprof_analyze.prof_common.utils import convert_to_int
 
 logger = get_logger()
 
@@ -51,7 +52,7 @@ class BaseRecipeAnalysis(ABC):
         self._output_path = self._cluster_analysis_output_path if self._export_type == "db" else os.path.join(
             self._cluster_analysis_output_path, self._recipe_name)
         rank_list = params.get(Constant.RANK_LIST, 'all')
-        self._rank_list = rank_list if rank_list == "all" else [int(rank) for rank in rank_list.split(",") if
+        self._rank_list = rank_list if rank_list == "all" else [convert_to_int(rank) for rank in rank_list.split(",") if
                                                                 rank.isdigit()]
         self._step_id = params.get(Constant.STEP_ID, Constant.VOID_STEP)
         self._extra_args = self.get_extra_argument(params.get(Constant.EXTRA_ARGS, []))
