@@ -15,6 +15,7 @@
 
 import os
 from abc import abstractmethod
+from math import isclose
 
 from msprof_analyze.advisor.advisor_backend.advice_base import AdviceBase
 from msprof_analyze.cluster_analyse.cluster_analysis import Interface
@@ -30,10 +31,9 @@ class ClusterAdviceBase(AdviceBase):
 
     @staticmethod
     def compute_max_gap_ratio(data: list, mean: float):
-        if mean == 0:
-            return 0
-        else:
+        if data and not isclose(mean, 0):
             return (max(data) - min(data)) / mean
+        return 0
 
     def path_check(self):
         """
