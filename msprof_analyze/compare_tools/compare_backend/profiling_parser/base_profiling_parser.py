@@ -30,6 +30,7 @@ from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.file_manager import FileManager
 from msprof_analyze.prof_common.logger import get_logger
 from msprof_analyze.prof_common.path_manager import PathManager
+from msprof_analyze.prof_common.utils import convert_to_int
 
 logger = get_logger()
 
@@ -129,7 +130,7 @@ class BaseProfilingParser(ABC):
             if event.is_step_profiler():
                 step_id = event.name.split("#")[-1]
                 step_list.append(step_id)
-                if int(step_id) == int(self._step_id):
+                if convert_to_int(step_id, Constant.VOID_STEP) == int(self._step_id):
                     self._step_range = [event.start_time, event.end_time]
                     break
         if not self._step_range:

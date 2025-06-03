@@ -85,12 +85,12 @@ def convert_to_float(num):
     return 0
 
 
-def convert_to_int(num):
+def convert_to_int(num, default_value=0):
     try:
         return int(num)
     except (ValueError, NameError):
         logger.error(f"Can not convert %s to int", num)
-    return 0
+    return default_value
 
 
 def compute_ratio(dividend: float, divisor: float):
@@ -98,4 +98,3 @@ def compute_ratio(dividend: float, divisor: float):
         return 0
     else:
         return round(dividend / divisor, 4)
-
