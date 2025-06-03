@@ -25,6 +25,9 @@ class FrameworkApiBean:
     def __init__(self, data):
         self._data = data
         self.is_torch_op = False
+        self.x_mode = True
+        self._name = data.get("name", "")
+        self.pid = Constant.INVALID_VALUE
 
     @property
     def dur(self) -> float:
@@ -40,7 +43,7 @@ class FrameworkApiBean:
 
     @property
     def name(self) -> str:
-        return self._data.get("name", "")
+        return self._name
 
     @property
     def lower_name(self) -> str:
@@ -65,6 +68,12 @@ class FrameworkApiBean:
     @property
     def call_stack(self):
         return self._data.get("callStack", Constant.NA)
+
+    def reset_name(self, name):
+        self._name = name
+
+    def is_optimizer(self):
+        return self.lower_name.startswith("optimizer")
 
     def is_step_profiler(self):
         return self.name.find("ProfilerStep#") != -1
@@ -95,3 +104,6 @@ class FrameworkApiBean:
 
     def is_cpu_cube_op(self) -> bool:
         return self.is_matmul_for_cpu_op() or self.is_fa_for_cpu_op() or self.is_conv_for_cpu_op()
+
+    def is_x_mode(self) -> bool:
+        return self.x_mode

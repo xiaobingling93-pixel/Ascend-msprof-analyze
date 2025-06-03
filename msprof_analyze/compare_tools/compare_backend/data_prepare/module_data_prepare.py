@@ -21,6 +21,9 @@ from msprof_analyze.compare_tools.compare_backend.utils.module_node import Modul
 from msprof_analyze.compare_tools.compare_backend.utils.tree_builder import TreeBuilder
 from msprof_analyze.prof_common.constant import Constant
 
+from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.db_data_bean.framework_api_bean import \
+    FrameworkApiBean
+
 
 class ModuleDataPrepare:
     def __init__(self, profiling_data: ProfilingResult):
@@ -50,17 +53,34 @@ class ModuleDataPrepare:
                 queue.put(sub_module_node)
 
     def build_module_tree(self):
+        class Event:
+            def __init__(self, start_time):
+                self.start_time = start_time
+                self.x_mode = False
+
+            def is_x_mode(self):
+                return self.x_mode
+
         if not self._nn_module_list:
             return [None, None]
         self._dispatch_torch_op()
-        event_list = [TraceEventBean({"ts": ts}) for ts in self.profiling_data.kernel_dict.keys()]
+        if isinstance(self._nn_module_list[0], FrameworkApiBean):
+            kernel_dict = {}
+            for torch_op in self.profiling_data.torch_op_data:
+                kernel_list = self.profiling_data.kernel_dict.get(torch_op.cann_connection_id)
+                if kernel_list:
+                    kernel_dict[torch_op.start_time] = kernel_list
+            event_list = [Event(start_time) for start_time in kernel_dict.keys()]
+        else:
+            event_list = [TraceEventBean({"ts": ts}) for ts in self.profiling_data.kernel_dict.keys()]
+            kernel_dict = self.profiling_data.kernel_dict
         self._nn_module_list.extend(event_list)
-        root_node = TreeBuilder.build_module_tree(self._nn_module_list, self.profiling_data.kernel_dict)
+        root_node = TreeBuilder.build_module_tree(self._nn_module_list, kernel_dict)
         func_root_node = TreeBuilder.build_module_tree(self._call_function, {})
         bwd_module_list = self.get_bwd_module(root_node)
         if bwd_module_list:
             bwd_module_list.extend(event_list)
-        bwd_root_node = TreeBuilder.build_module_tree(bwd_module_list, self.profiling_data.kernel_dict)
+        bwd_root_node = TreeBuilder.build_module_tree(bwd_module_list, kernel_dict)
         self.match_torch_op(root_node, bwd_root_node)
         self.update_module_node_info(root_node, bwd_root_node, func_root_node)
         return [root_node, bwd_root_node]
