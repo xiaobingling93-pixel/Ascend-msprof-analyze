@@ -318,6 +318,20 @@ class OverallMetricsParser:
             group_comm_time_dict[group_name] = {
                 Constant.WAIT_TIME: wait_time,
                 Constant.TRANSMIT_TIME: uncovered_communication_time - wait_time}
+
+        group_name_list = set(notify_wait_task_group_by_plane_id.keys())
+        comm_op_dict = {}
+        for comm_op in self.npu_db_parser.comm_op_data:
+            if comm_op.group_name in group_name_list:
+                continue
+            comm_op_dict.setdefault(comm_op.group_name, []).append(comm_op)
+        for group_name, comm_ops in comm_op_dict.items():
+            uncovered_communication_time = self.__calculate_overlap_time_with_uncovered_communication(
+                self.not_overlapped_comm, comm_ops)
+            group_comm_time_dict[group_name] = {
+                Constant.WAIT_TIME: 0,
+                Constant.TRANSMIT_TIME: uncovered_communication_time}
+
         self.npu_db_parser.result_data.overall_metrics.update_communication_group_time(group_comm_time_dict)
 
     def calculate_uncovered_communication_overlap_time(self):
