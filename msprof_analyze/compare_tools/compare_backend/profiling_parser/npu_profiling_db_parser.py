@@ -30,6 +30,8 @@ from msprof_analyze.compare_tools.compare_backend.profiling_parser.overall_metri
 from msprof_analyze.prof_common.logger import get_logger
 from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.op_stastic_bean import OpStatisticBean
 
+from msprof_analyze.compare_tools.compare_backend.utils.common_func import convert_to_decimal
+
 logger = get_logger()
 
 
@@ -99,6 +101,8 @@ class NPUProfilingDbParser:
         self._get_step_range()
         if os.path.basename(self._db_path).startswith("ascend_pytorch_profiler"):
             self._query_torch_op_data()
+            self._query_python_function_data()
+            self._query_fwdbwd_data()
         self._query_compute_op_data()
         self._query_comm_op_data()
         self._query_comm_task_data()
@@ -336,3 +340,53 @@ class NPUProfilingDbParser:
                                                      Constant.TS: allocation_time / Constant.NS_TO_US,
                                                      Constant.ALLOCATION_TIME: allocation_time / Constant.NS_TO_US,
                                                      Constant.RELEASE_TIME: release_time / Constant.NS_TO_US})
+
+    def _query_python_function_data(self):
+        if self._enable_operator_compare:
+            sql = self.pytorch_api_sql.format(
+                "AND PYTORCH_API.startNs>=? AND PYTORCH_API.startNs<=?") if len(self.step_range) == 2 else \
+                self.pytorch_api_sql.format("")
+            param = ('trace', self.step_range[0], self.step_range[1]) if len(self.step_range) == 2 else ('trace',)
+            all_data = DBManager.fetch_all_data(self.cursor, sql, param=param)
+            for data in all_data:
+                self.result_data.update_python_function_data(FrameworkApiBean(data))
+
+    def _query_fwdbwd_data(self):
+        class Event:
+            def __init__(self, start_time):
+                self.start_time = start_time
+                self.pid = Constant.INVALID_VALUE
+
+        sql = """
+        SELECT T.connectionId, T.startNs
+        FROM (
+            SELECT 
+                CONNECTION_IDS.connectionId AS "connectionId",
+                COUNT(0) AS "cnt",
+                GROUP_CONCAT(PYTORCH_API.startNs) AS "startNs"
+            FROM 
+                PYTORCH_API
+            LEFT JOIN 
+                CONNECTION_IDS 
+            ON 
+                PYTORCH_API.connectionId == CONNECTION_IDS.id
+            WHERE 
+                PYTORCH_API.connectionId IS NOT NULL {}
+            GROUP BY 
+                CONNECTION_IDS.connectionId
+        ) T WHERE T.cnt == 2
+        """
+        if self._enable_operator_compare:
+            sql = sql.format(
+                "AND PYTORCH_API.startNs>=? AND PYTORCH_API.startNs<=?") if self.step_range else sql.format("")
+            if self.step_range:
+                all_data = DBManager.fetch_all_data(self.cursor, sql, param=self.step_range)
+            else:
+                all_data = DBManager.fetch_all_data(self.cursor, sql)
+            fwdbwd_dict = {}
+            for data in all_data:
+                start_time_list = [convert_to_decimal(start_ns) / Constant.NS_TO_US
+                                   for start_ns in data.get("startNs").split(",")]
+                fwdbwd_dict[data.get("connectionId")] = {"start": Event(min(start_time_list)),
+                                                         "end": Event(max(start_time_list))}
+            self.result_data.update_fwdbwd_dict_data(fwdbwd_dict)

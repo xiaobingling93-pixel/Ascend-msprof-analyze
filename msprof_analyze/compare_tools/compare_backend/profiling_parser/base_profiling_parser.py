@@ -59,6 +59,9 @@ class ProfilingResult:
     def update_fwdbwd_data(self, flow_type: str, event: TraceEventBean):
         self.fwdbwd_dict.setdefault(event.id, {})[flow_type] = event
 
+    def update_fwdbwd_dict_data(self, fwdbwd_dict: dict):
+        self.fwdbwd_dict = fwdbwd_dict
+
     def update_kernel_dict(self, start_time: Decimal, kernel_event: TraceEventBean):
         self.kernel_dict.setdefault(start_time, []).append(KernelEvent(kernel_event, self._profiling_type))
 
