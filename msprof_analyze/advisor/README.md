@@ -8,7 +8,7 @@ Ascend PyTorch Profiler、msprof采集方法请参见《[性能调优工具](htt
 
 ### 约束
 
-不支持对db格式文件分析。
+CANN软件版本8.0RC1之前仅支持对text格式文件分析，8.0RC1及之后支持text、db格式的采集数据分析。
 
 ### 操作步骤
 

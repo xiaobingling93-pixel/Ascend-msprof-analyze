@@ -48,34 +48,44 @@ class DBStackFinder:
     GROUP BY api.startNs, api.name, api_name_str.value, api.globalTid, api.endNs, api.dataset_index;
     """
 
-    QUERY_TASK_STACK_WITH_NAME = """
-    WITH op_connection AS (
-    SELECT 
-        str.value AS opName,
-        str_type.value AS taskType,
-        TASK.connectionId AS taskConnId,
-        conn.id AS apiConnId
-    FROM 
-        COMPUTE_TASK_INFO AS CTI
-    JOIN TASK ON CTI.globalTaskId = TASK.globalTaskId
-    JOIN STRING_IDS AS str ON str.id = CTI.name
-    JOIN STRING_IDS AS str_type ON str_type.id = CTI.taskType
-    JOIN CONNECTION_IDS AS conn ON conn.connectionId = TASK.connectionId
-    WHERE str_type.value is ?
+    QUERY_TASK_STACK_WITH_NAME_TEMPLATE = """
+    WITH combined_tasks AS (
+        SELECT name, taskType, globalTaskId FROM COMPUTE_TASK_INFO
+        {comm_schedule}
+    ),
+    task_connections AS (
+        SELECT 
+            str.value AS op_name,
+            task.taskId AS task_id,
+            str_type.value AS task_type,
+            conn.id AS api_conn_id
+        FROM combined_tasks ct
+        JOIN TASK task ON ct.globalTaskId = task.globalTaskId
+        JOIN STRING_IDS str ON str.id = ct.name
+        JOIN STRING_IDS str_type ON str_type.id = ct.taskType
+        JOIN CONNECTION_IDS conn ON conn.connectionId = task.connectionId
+        WHERE str_type.value = ?
     )
-
+    
     SELECT 
-        api_name_str.value AS name,
+        tc.op_name,
+        tc.task_id,
+        tc.task_type,
+        api_str.value AS api_name,
         api.startNs / 1000.0 AS ts,
         (api.endNs - api.startNs) / 1000.0 AS dur,
-        GROUP_CONCAT(stack_str.value, ';\n' ORDER BY call.stackDepth ASC) AS call_stack
-    FROM op_connection 
-    LEFT JOIN PYTORCH_API AS api ON op_connection.apiConnId = api.connectionId
-    LEFT JOIN STRING_IDS AS api_name_str ON api.name = api_name_str.id
-    LEFT JOIN PYTORCH_CALLCHAINS AS call ON api.callchainId = call.id
-    LEFT JOIN STRING_IDS AS stack_str ON call.stack = stack_str.id
-    WHERE api.callchainId IS NOT NULL
-    GROUP BY api.startNs, api.name, api_name_str.value, api.globalTid, api.endNs
+        GROUP_CONCAT(stack_str.value, ';\n' ORDER BY cc.stackDepth ASC) AS call_stack
+    FROM task_connections tc
+    JOIN PYTORCH_API api ON tc.api_conn_id = api.connectionId
+    JOIN STRING_IDS api_str ON api.name = api_str.id
+    JOIN PYTORCH_CALLCHAINS cc ON api.callchainId = cc.id
+    JOIN STRING_IDS stack_str ON cc.stack = stack_str.id
+    GROUP BY tc.op_name, tc.task_id, tc.task_type, api_str.value, api.startNs, api.endNs
+    """
+
+    COMBINE_COMMUNICATION_SCHEDULE_INFO = """
+    UNION ALL
+    SELECT name, taskType, globalTaskId FROM COMMUNICATION_SCHEDULE_TASK_INFO
     """
 
     def __init__(self, db_path):
@@ -83,20 +93,37 @@ class DBStackFinder:
         self.related_table = [Constant.TABLE_PYTORCH_API, Constant.TABLE_PYTORCH_CALLCHAINS]
         self.stack_map = {}
 
-    def get_task_stack_by_name(self, op_name: List[str], task_type: str):
+    def get_task_stack_by_op_name(self, op_name: List[str], task_type: str):
+        """
+        input:
+            op_name: ascend_hardware上的算子名称，此处仅限为计算类算子
+            task_type: e.g. AI_CPU/AI_CORE/MIX_AIC
+        output:
+            List[List[task_id, op_name, task_type, stack]]: 所有算子名称相符的堆栈信息
+        """
         tag = task_type + "_" + "stack"
         if tag not in self.stack_map or self.stack_map[tag] is None:
-            if not self._query_stack(tag, self.QUERY_TASK_STACK_WITH_NAME, [task_type]):
-                return {}
+            comm_schedule = self.COMBINE_COMMUNICATION_SCHEDULE_INFO \
+                if DBManager.check_tables_in_db(self._db_path, Constant.TABLE_COMMUNICATION_SCHEDULE_TASK_INFO) \
+                else ""
+            if not self._query_stack(tag, self.QUERY_TASK_STACK_WITH_NAME_TEMPLATE.format(comm_schedule=comm_schedule),
+                                     [task_type]):
+                return []
 
         df = self.stack_map[tag]
-        filtered_df = df[df['dataset_index'].isin(op_name)]
+        filtered_df = df[df['op_name'].isin(op_name)]
 
         if filtered_df.empty:
-            return {}
-        return filtered_df.set_index("dataset_index")["call_stack"].to_dict()
+            return []
+        return filtered_df[['task_id', 'op_name', 'task_type', 'call_stack']].values.tolist()
 
-    def get_api_stack_by_index(self, index_list: List[int]):
+    def get_api_stack_by_api_index(self, index_list: List[int]):
+        """
+        input:
+            index_list: 框架侧api的根据startNs排序的index
+        output:
+            Dict: key为index, value为对应的stack
+        """
         tag = "api_stack"
         if tag not in self.stack_map or self.stack_map[tag] is None:
             if not self._query_stack(tag, self.QUERY_API_CALL_STACK_SQL):
@@ -120,7 +147,7 @@ class DBStackFinder:
         try:
             conn, cursor = DBManager.create_connect_db(self._db_path)
             if params:
-                df = pd.read_sql(sql, conn, params)
+                df = pd.read_sql(sql, conn, params=params)
             else:
                 df = pd.read_sql(sql, conn)
             DBManager.destroy_db_connect(conn, cursor)

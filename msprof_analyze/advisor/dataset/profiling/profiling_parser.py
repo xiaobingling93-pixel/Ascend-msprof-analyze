@@ -18,7 +18,10 @@ import os
 import re
 from abc import abstractmethod
 from typing import List, Dict
+import pandas as pd
 
+from msprof_analyze.prof_common.constant import Constant
+from msprof_analyze.prof_common.db_manager import DBManager
 from msprof_analyze.advisor.dataset.profiling.info_collection import logger
 from msprof_analyze.advisor.utils.utils import get_file_path_from_directory, SafeOpen, format_excel_title
 from msprof_analyze.prof_common.file_manager import FileManager
@@ -36,7 +39,8 @@ class ProfilingParser:
     def __init__(self, path: str) -> None:
         self._path = path
         self._raw_data: Dict = dict()
-        self._filename = ""
+        self._file_name = ""
+        self._file_path = ""
 
     @property
     def path(self):
@@ -44,6 +48,10 @@ class ProfilingParser:
         path
         """
         return self._path
+
+    @property
+    def file_path(self):
+        return self._file_path
 
     @staticmethod
     def file_match_func(pattern):
@@ -82,6 +90,27 @@ class ProfilingParser:
                 title_dict[idx] = title.replace(" ", "_")
         return title_dict
 
+    @staticmethod
+    def _execute_sql(db_path, sql, tables_to_check=None):
+        if not db_path or not sql:
+            return pd.DataFrame()
+        conn, cursor = None, None
+        try:
+            conn, cursor = DBManager.create_connect_db(db_path, Constant.ANALYSIS)
+            # check table existence first if necessary
+            if tables_to_check and any(not DBManager.judge_table_exists(cursor, table) for table in tables_to_check):
+                logger.debug(f"Tables not exist: {tables_to_check}")
+                return pd.DataFrame()
+            # query sql and return dataframe
+            data = pd.read_sql(sql, conn)
+            return data
+        except Exception as e:
+            logger.error(f"File {db_path} read failed error: {e}")
+            return pd.DataFrame()
+        finally:
+            if conn and cursor:
+                DBManager.destroy_db_connect(conn, cursor)
+
     @abstractmethod
     def parse_from_file(self, file: str):
         """
@@ -103,7 +132,7 @@ class ProfilingParser:
         """
         get raw file name and data
         """
-        return self._filename, self._raw_data
+        return self._file_name, self._raw_data
 
     def _parse_from_file(self):
         if not isinstance(self.file_pattern_list, list):
@@ -114,10 +143,10 @@ class ProfilingParser:
             if not file_list:
                 continue
             # get last file
-            target_file = file_list[-1]
+            self._file_path = file_list[-1]
             if len(file_list) > 1:
-                logger.warning("Multiple copies of %s were found, use %s", self.FILE_INFO, target_file)
-            return self.parse_from_file(target_file)
+                logger.warning("Multiple copies of %s were found, use %s", self.FILE_INFO, self._file_path)
+            return self.parse_from_file(self._file_path)
         return False
 
     def _parse_csv(self, file, check_csv=True) -> bool:
@@ -127,7 +156,7 @@ class ProfilingParser:
         except RuntimeError as e:
             logger.error("File size check failed: %s", e)
             return False
-        self._filename = os.path.splitext(os.path.basename(file))[0]
+        self._file_name = os.path.splitext(os.path.basename(file))[0]
         with SafeOpen(file, encoding="utf-8") as csv_file:
             try:
                 csv_content = csv.reader(csv_file)
@@ -149,7 +178,7 @@ class ProfilingParser:
 
     def _parse_json(self, file) -> bool:
         logger.debug("Parse file %s", file)
-        self._filename = os.path.splitext(os.path.basename(file))[0]
+        self._file_name = os.path.splitext(os.path.basename(file))[0]
         try:
             self._raw_data = FileManager.read_json_file(file)
         except RuntimeError as error:

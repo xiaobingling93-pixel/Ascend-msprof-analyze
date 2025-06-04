@@ -17,6 +17,7 @@ import os
 from functools import partial
 from typing import List, Dict, Optional
 
+from msprof_analyze.advisor.dataset.stack.db_stack_finder import DBStackFinder
 from msprof_analyze.advisor.analyzer.computation.operator_checker import OperatorChecker, logger
 from msprof_analyze.advisor.dataset.stack.timeline_stack_finder import TimelineOpStackFinder
 from msprof_analyze.advisor.dataset.dataset import Dataset
@@ -100,17 +101,6 @@ class AicpuChecker(OperatorChecker):
             return False
         op_summary = profiling_data.op_summary
 
-        def get_opeartor_stack_info(api_stack_finder: TimelineOpStackFinder, op_name_list: list) -> list:
-            data: Dict[str, Dataset] = {}
-            event_dataset = ComputationAnalysisDataset(collection_path=profiling_data.collection_path,
-                                                       data=data,
-                                                       task_type=Constant.AI_CPU)
-
-            # disable multiprocessing, avoid cost time of enable new process for light task
-            api_stack_finder.get_api_stack_by_op_name(event_dataset, op_name_list, Constant.AI_CPU,
-                                                      disable_multiprocess=True)
-            return api_stack_finder.get_stack_record()
-
         self._op_list = []
 
         max_task_duration = 0.0
@@ -131,8 +121,7 @@ class AicpuChecker(OperatorChecker):
         for op in self._op_list:
             if op.op_name not in op_name_list:
                 op_name_list.append(op.op_name)
-        api_stack_finder = TimelineOpStackFinder()
-        stack_record = get_opeartor_stack_info(api_stack_finder, op_name_list)
+        stack_record = self.get_operator_stack_info(profiling_data, op_name_list)
 
         # task_id 到 stack 信息的对应
         self._op_list.sort(key=lambda x: int(x.task_id))
@@ -162,6 +151,34 @@ class AicpuChecker(OperatorChecker):
         if bool(double_type_ai_cpu_operator):
             self._suggestion.append(self.double_suggestion.format(",".join(double_type_ai_cpu_operator)))
         return True
+
+    def get_operator_stack_info(self, profiling_dataset: ProfilingDataset, op_name_list: List[str]):
+        if not op_name_list:
+            return []
+        if profiling_dataset.data_type == Constant.TEXT:
+            return self.query_stack_from_timeline_json(collection_path=profiling_dataset.collection_path,
+                                                       op_name_list=op_name_list,
+                                                       task_type=Constant.AI_CPU)
+        elif profiling_dataset.data_type == Constant.DB and hasattr(profiling_dataset, "op_summary"):
+            db_path = profiling_dataset.op_summary.file_path
+            return self.query_stack_from_db(db_path, op_name_list, Constant.AI_CPU)
+        return []
+
+    def query_stack_from_timeline_json(self, collection_path, op_name_list, task_type):
+        data: Dict[str, Dataset] = {}
+        event_dataset = ComputationAnalysisDataset(collection_path=collection_path,
+                                                   data=data,
+                                                   task_type=task_type)
+
+        # disable multiprocessing, avoid cost time of enable new process for light task
+        api_stack_finder = TimelineOpStackFinder()
+        api_stack_finder.get_api_stack_by_op_name(event_dataset, op_name_list, Constant.AI_CPU,
+                                                  disable_multiprocess=True)
+        return api_stack_finder.get_stack_record()
+
+    def query_stack_from_db(self, db_path, op_name_list, task_type):
+        stack_helper = DBStackFinder(db_path)
+        return stack_helper.get_task_stack_by_op_name(op_name_list, task_type)
 
     def make_render(self, html_render, record, add_render_list=True, **kwargs):
         priority = kwargs.get("priority")

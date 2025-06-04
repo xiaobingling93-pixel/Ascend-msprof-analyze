@@ -12,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from msprof_analyze.compare_tools.compare_backend.profiling_parser.npu_profiling_db_parser import NPUProfilingDbParser
 from msprof_analyze.compare_tools.compare_backend.profiling_parser.gpu_profiling_parser import GPUProfilingParser
 from msprof_analyze.compare_tools.compare_backend.profiling_parser.npu_profiling_parser import NPUProfilingParser
 from msprof_analyze.compare_tools.compare_backend.utils.args_manager import ArgsManager
@@ -53,8 +54,11 @@ class OverallPerfInterface:
 
     def _load_data(self):
         args = Args(enable_profiling_compare=True)
-        profiling_type = self._profiling_path_dict.get(Constant.PROFILING_TYPE, Constant.NPU)
-        self._profiling_data = self.PARSER_DICT.get(profiling_type)(args, self._profiling_path_dict).load_data()
+        if self._profiling_path_dict.get(Constant.PROFILER_DB_PATH):
+            self._profiling_data = NPUProfilingDbParser(args, self._profiling_path_dict).load_data()
+        else:
+            profiling_type = self._profiling_path_dict.get(Constant.PROFILING_TYPE, Constant.NPU)
+            self._profiling_data = self.PARSER_DICT.get(profiling_type)(args, self._profiling_path_dict).load_data()
 
     def _generate_result(self):
         overall_data = self._profiling_data.overall_metrics

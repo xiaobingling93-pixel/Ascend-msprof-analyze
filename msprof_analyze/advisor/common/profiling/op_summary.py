@@ -15,9 +15,12 @@
 # limitations under the License.
 
 import logging
+import os
 from decimal import Decimal
 from typing import List, Any
+import pandas as pd
 
+from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.advisor.dataset.profiling.info_collection import OpInfo
 from msprof_analyze.advisor.dataset.profiling.profiling_parser import ProfilingParser
 from msprof_analyze.advisor.utils.utils import format_excel_title, lazy_property
@@ -88,3 +91,174 @@ class OpSummary(ProfilingParser):
                 task_dict[op_info.op_name].append(op_info)
 
         return task_dict
+
+
+class OpSummaryDB(OpSummary):
+    FILE_PATTERN_MSG = "ascend_*_profiler.db"
+    FILE_INFO = "op summary from db"
+
+    file_pattern_list = [r'^ascend_pytorch_profiler(?:_\d+)?\.db$',
+                         r'^ascend_mindspore_profiler(?:_\d+)?\.db$',
+                         r'^msprof_\d{14}\.db$']
+
+    COMPUTE_INFO_SQL = """
+    WITH compute_info AS (
+        SELECT 
+            (SELECT value FROM STRING_IDS WHERE id = t.name) AS op_name,
+            t.globalTaskId,
+            t.blockDim AS block_dim,
+            t.mixBlockDim AS mix_block_dim,
+            (SELECT value FROM STRING_IDS WHERE id = t.opType) AS op_type,
+            (SELECT value FROM STRING_IDS WHERE id = t.taskType) AS task_type,
+            (SELECT value FROM STRING_IDS WHERE id = t.inputFormats) AS input_formats,
+            (SELECT value FROM STRING_IDS WHERE id = t.inputShapes) AS input_shapes,
+            (SELECT value FROM STRING_IDS WHERE id = t.inputDataTypes) AS input_data_types,
+            (SELECT value FROM STRING_IDS WHERE id = t.outputShapes) AS output_shapes,
+            (SELECT value FROM STRING_IDS WHERE id = t.outputFormats) AS output_formats,
+            (SELECT value FROM STRING_IDS WHERE id = t.outputDataTypes) AS output_data_types
+        FROM 
+            COMPUTE_TASK_INFO t
+    )
+    SELECT
+        compute_info.*,
+        task.startNs as task_start_time,
+        task.endNs as task_end_time,
+        task.endNs - task.startNs as task_duration,
+        task.deviceId as device_id,
+        task.modelId as model_id,
+        task.streamId as stream_id,
+        task.contextId as context_id,
+        task.taskId as task_id
+    FROM 
+        compute_info
+    LEFT JOIN 
+        TASK as task ON compute_info.globalTaskId = task.globalTaskId;
+    """
+
+    PMU_SQL = """
+    SELECT
+        pmu.globalTaskId,
+        str.value as name,
+        pmu.value
+    FROM TASK_PMU_INFO AS pmu
+    LEFT JOIN STRING_IDS AS str ON str.id = pmu.name
+    """
+
+    COMMUNICATION_INFO_SQL = """
+    WITH comm_info AS (
+        SELECT 
+            (SELECT value FROM STRING_IDS WHERE id = c.opName) AS op_name,
+            (SELECT value FROM STRING_IDS WHERE id = c.opType) AS op_type,
+            startNs as task_start_time,
+            endNs as task_end_time,
+            endNs - startNs as task_duration,
+            connectionId
+        FROM 
+            COMMUNICATION_OP c
+    )
+    SELECT 
+        comm.*,
+        t.deviceId as device_id,
+        t.modelId as model_id,
+        'COMMUNICATION' as task_type
+    FROM 
+        comm_info comm
+    JOIN (
+        SELECT 
+            connectionId,
+            deviceId,
+            modelId
+        FROM TASK
+        GROUP BY connectionId
+        HAVING COUNT(DISTINCT deviceId) = 1 AND COUNT(DISTINCT modelId) = 1
+    ) t ON comm.connectionId = t.connectionId
+    """
+
+    COMMUNICATION_SCHEDULE_SQL = """
+        SELECT
+        (SELECT value FROM STRING_IDS WHERE id = CSTI.name) AS op_name,
+        (SELECT value FROM STRING_IDS WHERE id = CSTI.opType) AS op_type,
+        (SELECT value FROM STRING_IDS WHERE id = CSTI.taskType) AS task_type,
+        task.startNs as task_start_time,
+        task.endNs as task_end_time,
+        task.endNs - task.startNs as task_duration,
+        task.deviceId as device_id,
+        task.modelId as model_id,
+        task.streamId as stream_id,
+        task.contextId as context_id,
+        task.taskId as task_id
+    FROM COMMUNICATION_SCHEDULE_TASK_INFO as CSTI 
+    LEFT JOIN TASK as task ON task.globalTaskId = CSTI.globalTaskId
+    """
+
+    def __init__(self, path: str) -> None:
+        super().__init__(path)
+
+    def parse_from_file(self, db_path: str):
+        if not db_path or not os.path.exists(db_path):
+            logger.error("db path is None.")
+            return False
+        # export data
+        compute_df = self.export_compute_task(db_path)
+        communication_df = self._execute_sql(db_path, self.COMMUNICATION_INFO_SQL)
+        comm_schedule_df = self._execute_sql(db_path, self.COMMUNICATION_SCHEDULE_SQL,
+                                             [Constant.TABLE_COMMUNICATION_SCHEDULE_TASK_INFO])
+        if compute_df.empty and communication_df.empty and comm_schedule_df.empty:
+            logger.warning(f"No compute and communication operators in db: {db_path}")
+            return False
+        # post process
+        total_df = self.post_process([compute_df, communication_df, comm_schedule_df])
+        # calculate total
+        self._total_task_duration = float(total_df['task_duration'].sum())
+        self._total_task_wait_time = float(total_df['task_wait_time'].sum())
+        # convert to op_list
+        self.convert_to_op_info_list(total_df)
+        return True
+
+    def get_static_shape_operators(self) -> List[Any]:
+        logger.debug("No op state info in db file")
+        return []
+
+    def export_compute_task(self, db_path):
+        # export basic compute_task_info, task_pmu_info
+        basic_df = self._execute_sql(db_path, self.COMPUTE_INFO_SQL)
+        pmu_df = self._execute_sql(db_path, self.PMU_SQL, [Constant.TABLE_TASK_PMU_INFO])
+        if basic_df.empty or pmu_df.empty:
+            return basic_df
+        # join pmu info
+        pivoted_pmu_df = pmu_df.pivot_table(
+            index='globalTaskId',
+            columns='name',
+            values='value',
+            aggfunc='first'  # 如果有多个值，取第一个
+        ).reset_index()
+        compute_df = basic_df.merge(pivoted_pmu_df, on='globalTaskId', how='left').fillna(0)
+        return compute_df
+
+    def export_communication_task(self, db_path):
+        return self._execute_sql(db_path, self.COMMUNICATION_INFO_SQL)
+
+    def post_process(self, df_list):
+        # union compute and communication operator info
+        total_df = pd.concat(df_list, ignore_index=True).sort_values(by='task_start_time')
+        total_df = total_df.fillna('N/A')
+        # calculate task_wait_time
+        total_df['task_wait_time'] = total_df['task_end_time'] - total_df['task_start_time'].shift(1)
+        total_df.loc[0, 'task_wait_time'] = 0
+        # process time units
+        time_cols = [col for col in total_df.columns.tolist() if 'time' in col]
+        time_cols.append('task_duration')
+        for col in time_cols:
+            total_df[col] = total_df[col].apply(lambda x: Decimal(x) / 1000 if x != 'N/A' else x)
+        # process columns
+        total_df = total_df.rename(columns={'aiv_total_time': 'aiv_time', 'aic_total_time': 'aicore_time'},
+                                   errors='ignore')
+        total_df = total_df.drop(columns=['task_end_time', 'globalTaskId', 'connectionId'], errors='ignore')
+        return total_df
+
+    def convert_to_op_info_list(self, df):
+        for row in df.itertuples(index=False):
+            op_info = OpInfo()
+            for col in df.columns:
+                setattr(op_info, col, getattr(row, col))
+            self.op_list.append(op_info)

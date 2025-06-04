@@ -318,7 +318,7 @@ def format_excel_title(title: str) -> str:
         "accelerator_core": "task_type",
         "start_time": "task_start_time",
         "duration": "task_duration",
-        "wait_time": "wait_time"
+        "wait_time": "task_wait_time"
     }
     return kernel_details_col_name_map.get(title, title)
 

@@ -19,8 +19,8 @@ import os
 import yaml
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.advisor.common.profiling.ge_info import GeInfo
-from msprof_analyze.advisor.common.profiling.msprof import Msprof
-from msprof_analyze.advisor.common.profiling.op_summary import OpSummary
+from msprof_analyze.advisor.common.profiling.msprof import Msprof, MsprofDB
+from msprof_analyze.advisor.common.profiling.op_summary import OpSummary, OpSummaryDB
 from msprof_analyze.advisor.common.profiling.tasktime import TaskTime
 from msprof_analyze.advisor.common.enum_params_parser import EnumParamsParser
 from msprof_analyze.advisor.dataset.dataset import Dataset
@@ -42,7 +42,7 @@ class ProfilingDataset(Dataset):
         self.prof_type = kwargs.get(
             Constant.PROFILING_TYPE_UNDER_LINE, EnumParamsParser().get_default(Constant.PROFILING_TYPE_UNDER_LINE))
         self.patterns = self.parse_pattern()
-        self.current_version_pattern = self.get_current_version_pattern()
+        self.current_version_pattern = {}
         self._info = None
         super().__init__(collection_path, data)
 
@@ -76,10 +76,14 @@ class ProfilingDataset(Dataset):
         else:
             logger.warning(f"Unsupported arguments : %s to build %s", dirs_pattern, self.__class__.__name__)
 
-    def get_current_version_pattern(self):
-        for version_config_dict in self.patterns['versions']:
-            if version_config_dict['version'] == self.cann_version:
-                return version_config_dict
+    def get_current_data_pattern(self):
+        """
+        get data pattern by version and data_type
+        """
+        for config_dict in self.patterns['versions']:
+            if (config_dict['version'] == self.cann_version and
+                    config_dict['data_type'] == self.data_type):
+                return config_dict
         return dict()
 
     def parse_pattern(self, config_path="config/profiling_data_version_config.yaml"):
@@ -101,6 +105,7 @@ class ProfilingDataset(Dataset):
         return self.collection_path
     
     def _parse(self):
+        self.current_version_pattern = self.get_current_data_pattern()
         info = DeviceInfoParser(self.collection_path)
         if info.parse_data():
             self._info = info

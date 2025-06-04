@@ -59,25 +59,32 @@ class HcclDetailDataset:
         return cls.__module__.rsplit('.', maxsplit=1)[-1]
 
     def _parse(self, timeline_dataset: Msprof):
+        hccl_tasks = self._get_hccl_tasks(timeline_dataset)
+        if not hccl_tasks:
+            return
+        self._process(hccl_tasks)
+
+    def _get_hccl_tasks(self, timeline_dataset: Msprof):
+        if timeline_dataset.hccl_tasks:
+            return timeline_dataset.hccl_tasks
         tasks = self._get_tasks(timeline_dataset)
         self._hccl_pid = self._get_hccl_pid(tasks)
         if self._hccl_pid == -1:
-            return
-        self._process(tasks)
+            return []
+        return [task for task in tasks if task.pid == self._hccl_pid]
 
-    def _process(self, tasks: List[TaskInfo]):
+    def _process(self, hccl_tasks: List[TaskInfo]):
         task_handlers = {
             "hcom": lambda sub_task: self._start_new_hccl_op(sub_task),
             "Reduce": lambda sub_task: self._add_reduce_inline(sub_task),
             "Memcpy": lambda sub_task: self._add_memcpy(sub_task)
         }
 
-        for task in tasks:
-            if task.pid == self._hccl_pid:
-                handler = task_handlers.get(task.name.split('_')[0])
-                result = handler(task) if handler else None
-                if result is not None:
-                    self._current_hccl_op = result
+        for task in hccl_tasks:
+            handler = task_handlers.get(task.name.split('_')[0])
+            result = handler(task) if handler else None
+            if result is not None:
+                self._current_hccl_op = result
 
         if self._current_hccl_op:
             self._hccl_ops.append(self._current_hccl_op)

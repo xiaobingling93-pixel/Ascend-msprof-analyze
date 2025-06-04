@@ -160,7 +160,7 @@ class TimelineFusionOpsAnalyzer(BaseAnalyzer):
     def query_stack_from_db(self, db_path):
         stack_helper = DBStackFinder(db_path)
         for op_rule, matched_index in self._matched_op_index.items():
-            stack_dict = stack_helper.get_api_stack_by_index(matched_index)
+            stack_dict = stack_helper.get_api_stack_by_api_index(matched_index)
             self.matched_op_stacks[op_rule] = {}
             if not stack_dict:
                 continue

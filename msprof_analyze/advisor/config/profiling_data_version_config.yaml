@@ -1,5 +1,6 @@
 versions:
   - version: 8.0.0
+    data_type: 'text'
     dirs_pattern:
       ASCEND_PROFILER_OUTPUT: [ op_summary, msprof ]
       ^PROF_\d{6}_\d{17}_\w+$:
@@ -8,10 +9,56 @@ versions:
       op_summary: OpSummary
       msprof: Msprof
     file_attr:
-      msprof: [trace_view.json, '^msprof_\d{14}\.json$']
+      msprof: [ trace_view.json, '^msprof_\d{14}\.json$' ]
+      op_summary: [ kernel_details.csv, '^op_summary_\d{14}\.csv$' ]
+
+  - version: 8.0.0
+    data_type: 'db'
+    dirs_pattern:
+      ASCEND_PROFILER_OUTPUT: [ op_summary, msprof ]
+      ^PROF_\d{6}_\d{17}_\w+$: [ op_summary, msprof ]
+    class_attr:
+      op_summary: OpSummaryDB
+      msprof: MsprofDB
+    file_attr:
+      msprof: ['^ascend_pytorch_profiler(?:_\d+)?\.db$',
+               '^ascend_mindspore_profiler(?:_\d+)?\.db$',
+               '^msprof_\d{14}\.db$']
+      op_summary: ['^ascend_pytorch_profiler(?:_\d+)?\.db$',
+                   '^ascend_mindspore_profiler(?:_\d+)?\.db$',
+                   '^msprof_\d{14}\.db$']
+
+  - version: 8.0.RC2
+    data_type: 'text'
+    dirs_pattern:
+      ASCEND_PROFILER_OUTPUT: [ op_summary, msprof ]
+      ^PROF_\d{6}_\d{17}_\w+$:
+        mindstudio_profiler_output: [ op_summary, msprof ]
+    class_attr:
+      op_summary: OpSummary
+      msprof: Msprof
+    file_attr:
+      msprof: [ trace_view.json, '^msprof_\d{14}\.json$' ]
       op_summary: [ kernel_details.csv, '^op_summary_\d{14}\.csv$' ]
 
   - version: 8.0.RC2
+    data_type: 'db'
+    dirs_pattern:
+      ASCEND_PROFILER_OUTPUT: [ op_summary, msprof ]
+      ^PROF_\d{6}_\d{17}_\w+$: [ op_summary, msprof ]
+    class_attr:
+      op_summary: OpSummaryDB
+      msprof: MsprofDB
+    file_attr:
+      msprof: [ '^ascend_pytorch_profiler(?:_\d+)?\.db$',
+                '^ascend_mindspore_profiler(?:_\d+)?\.db$',
+                '^msprof_\d{14}\.db$' ]
+      op_summary: [ '^ascend_pytorch_profiler(?:_\d+)?\.db$',
+                    '^ascend_mindspore_profiler(?:_\d+)?\.db$',
+                    '^msprof_\d{14}\.db$' ]
+
+  - version: 8.0.RC1
+    data_type: 'text'
     dirs_pattern:
       ASCEND_PROFILER_OUTPUT: [ op_summary, msprof ]
       ^PROF_\d{6}_\d{17}_\w+$:
@@ -20,22 +67,27 @@ versions:
       op_summary: OpSummary
       msprof: Msprof
     file_attr:
-      msprof: [trace_view.json, '^msprof_\d{14}\.json$']
+      msprof: [ trace_view.json, '^msprof_\d{14}\.json$' ]
       op_summary: [ kernel_details.csv, '^op_summary_\d{14}\.csv$' ]
 
   - version: 8.0.RC1
+    data_type: 'db'
     dirs_pattern:
       ASCEND_PROFILER_OUTPUT: [ op_summary, msprof ]
-      ^PROF_\d{6}_\d{17}_\w+$:
-        mindstudio_profiler_output: [ op_summary, msprof ]
+      ^PROF_\d{6}_\d{17}_\w+$: [ op_summary, msprof ]
     class_attr:
-      op_summary: OpSummary
-      msprof: Msprof
+      op_summary: OpSummaryDB
+      msprof: MsprofDB
     file_attr:
-      msprof: [trace_view.json, '^msprof_\d{14}\.json$']
-      op_summary: [ kernel_details.csv, '^op_summary_\d{14}\.csv$' ]
+      msprof: [ '^ascend_pytorch_profiler(?:_\d+)?\.db$',
+                '^ascend_mindspore_profiler(?:_\d+)?\.db$',
+                '^msprof_\d{14}\.db$' ]
+      op_summary: [ '^ascend_pytorch_profiler(?:_\d+)?\.db$',
+                    '^ascend_mindspore_profiler(?:_\d+)?\.db$',
+                    '^msprof_\d{14}\.db$' ]
 
   - version: 7.0.0
+    data_type: 'text'
     dirs_pattern:
       ASCEND_PROFILER_OUTPUT: [ op_summary, msprof ]
       ^PROF_\d{6}_\d{17}_\w+$:
@@ -59,6 +111,7 @@ versions:
       ge_info: ge_info.db
 
   - version: 7.0.RC1
+    data_type: 'text'
     dirs_pattern:
       ASCEND_PROFILER_OUTPUT: [ op_summary, msprof ]
       ^PROF_\d{6}_\d{17}_\w+$:
@@ -82,6 +135,7 @@ versions:
       ge_info: ge_info.db
 
   - version: 6.3.RC2
+    data_type: 'text'
     dirs_pattern:
       ASCEND_PROFILER_OUTPUT: [ op_summary, msprof ]
       ^PROF_\d{6}_\d{17}_\w+$:
