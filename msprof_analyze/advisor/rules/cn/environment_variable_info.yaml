@@ -26,9 +26,6 @@ HOST_CACHE_CAPACITY:
         当缓存的形状再次出现时，host执行性能将得到提高，但host内存使用量会增加。\n
         具体的增加与HOST_CACHE_CAPACITY的值和模型的大小成正比。"
   suggest: "设置一个非零数字，例如'export HOST_CACHE_CAPACITY=20'"
-ASCEND_ENHANCE_ENABLE:
-  desc: "启用hccl ffts+模式。0-禁用，1-启用。"
-  suggest: "建议通过执行命令'export ASCEND_ENHANCE_enable=1'启用hccl ffts+模式。"
 PYTORCH_NPU_ALLOC_CONF:
   desc: "控制缓存分配器的行为。\n
        可选参数为max_split_size_mb、garbage_collection_threshold和expandable_segments。\n
@@ -40,7 +37,7 @@ ASCEND_LAUNCH_BLOCKING:
   desc: "是否在操作执行期间启用同步模式。\n
         当设置为1时，强制算子同步运行，从而更容易调试和跟踪代码中的问题。\n
         如果设置为0，则任务将以异步模式执行。"
-  suggest: "export ASCEND_LAUNCH_BLOCKING=1"
+  suggest: "export ASCEND_LAUNCH_BLOCKING=0"
 HCCL_ALGO:
   desc: "用于配置集合通信Server间跨机通信算法，支持如下几种取值：ring, H-D_R, NHR, NHR_V1, NB, pipeline.\n
          当不设置此环境变量时，会根据产品形态、节点数以及数据量自动选择算法。"
