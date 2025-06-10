@@ -1,0 +1,230 @@
+# Copyright (c) 2025, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import os
+import unittest
+from unittest.mock import MagicMock
+
+from msprof_analyze.prof_common.constant import Constant
+from msprof_analyze.compare_tools.compare_backend.profiling_parser.npu_profiling_db_parser import \
+    NPUProfilingDbParser
+from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.db_data_bean.framework_api_bean import \
+    FrameworkApiBean
+from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.db_data_bean.hccl_op_bean import \
+    HcclOpBean
+from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.db_data_bean.hccl_task_bean import \
+    HcclTaskBean
+from msprof_analyze.prof_common.db_manager import DBManager
+from msprof_analyze.prof_common.path_manager import PathManager
+
+
+class TestNPUProfilingDbParser(unittest.TestCase):
+    db_path, args, conn, cursor = None, None, None, None
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.db_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "profiler.db")
+        cls.conn, cls.cursor = DBManager.create_connect_db(cls.db_path)
+
+        cls._create_test_tables()
+        cls._insert_test_data()
+
+        cls.args = MagicMock()
+        cls.args.enable_profiling_compare = True
+        cls.args.enable_operator_compare = True
+        cls.args.enable_memory_compare = True
+        cls.args.enable_communication_compare = True
+        cls.args.enable_api_compare = True
+        cls.args.enable_kernel_compare = True
+        cls.args.use_kernel_type = False
+        cls.args.max_kernel_num = 100
+        cls.path_dict = {Constant.PROFILER_DB_PATH: cls.db_path}
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        DBManager.destroy_db_connect(cls.conn, cls.cursor)
+        cls.conn, cls.cursor = None, None
+        if os.path.exists(cls.db_path):
+            os.remove(cls.db_path)
+
+    @classmethod
+    def _create_test_tables(cls):
+        cls.cursor.execute("""
+        CREATE TABLE PYTORCH_API (
+            id INTEGER PRIMARY KEY,
+            startNs INTEGER,
+            endNs INTEGER,
+            connectionId INTEGER,
+            name INTEGER,
+            inputShapes INTEGER,
+            type INTEGER
+        )
+        """)
+
+        cls.cursor.execute("""
+        CREATE TABLE STRING_IDS (
+            id INTEGER PRIMARY KEY,
+            value TEXT
+        )
+        """)
+
+        cls.cursor.execute("""
+        CREATE TABLE ENUM_API_TYPE (
+            id INTEGER PRIMARY KEY,
+            name TEXT
+        )
+        """)
+
+        cls.cursor.execute("""
+        CREATE TABLE COMPUTE_TASK_INFO (
+            globalTaskId INTEGER PRIMARY KEY,
+            name INTEGER,
+            opType INTEGER,
+            taskType INTEGER,
+            inputShapes INTEGER
+        )
+        """)
+
+        cls.cursor.execute("""
+        CREATE TABLE TASK (
+            globalTaskId INTEGER PRIMARY KEY,
+            startNs INTEGER,
+            endNs INTEGER,
+            streamId INTEGER,
+            connectionId INTEGER,
+            taskType INTEGER
+        )
+        """)
+
+        cls.cursor.execute("""
+        CREATE TABLE COMMUNICATION_OP (
+            opId INTEGER PRIMARY KEY,
+            startNs INTEGER,
+            endNs INTEGER,
+            opType INTEGER,
+            opName INTEGER,
+            groupName INTEGER,
+            connectionId INTEGER
+        )
+        """)
+
+        cls.cursor.execute("""
+        CREATE TABLE COMMUNICATION_TASK_INFO (
+            opId INTEGER PRIMARY KEY,
+            planeId INTEGER,
+            globalTaskId INTEGER,
+            taskType INTEGER,
+            groupName INTEGER
+        )
+        """)
+
+        cls.cursor.execute("""
+        CREATE TABLE OP_MEMORY (
+            id INTEGER PRIMARY KEY,
+            name INTEGER,
+            size INTEGER,
+            allocationTime INTEGER,
+            releaseTime INTEGER,
+            duration INTEGER
+        )
+        """)
+
+        cls.cursor.execute("""
+        CREATE TABLE STEP_TIME (
+            id INTEGER PRIMARY KEY,
+            startNs INTEGER,
+            endNs INTEGER
+        )
+        """)
+
+        cls.cursor.execute("""
+        CREATE TABLE CONNECTION_IDS (
+            id INTEGER PRIMARY KEY,
+            connectionId INTEGER
+        )
+        """)
+
+    @classmethod
+    def _insert_test_data(cls):
+        cls.cursor.execute("INSERT INTO STRING_IDS (id, value) VALUES (1, 'op')")
+        cls.cursor.execute("INSERT INTO STRING_IDS (id, value) VALUES (2, 'conv2d')")
+        cls.cursor.execute("INSERT INTO CONNECTION_IDS (id, connectionId) VALUES (1, 1)")
+        cls.cursor.execute("INSERT INTO ENUM_API_TYPE (id, name) VALUES (1, 'op')")
+        cls.cursor.execute("INSERT INTO STEP_TIME (id, startNs, endNs) VALUES (1, 1500, 1600)")
+        cls.cursor.execute("""
+        INSERT INTO PYTORCH_API (startNs, endNs, connectionId, name, inputShapes, type)
+        VALUES (1500, 1600, 1, 2, 3, 1)
+        """)
+        cls.cursor.execute("""
+        INSERT INTO COMMUNICATION_OP (opId, startNs, endNs, opType, opName, groupName, connectionId)
+        VALUES (1, 1500, 1600, 2, 2, 3, 1)
+        """)
+        cls.cursor.execute("""
+        INSERT INTO TASK (globalTaskId, startNs, endNs, streamId, connectionId, taskType)
+        VALUES (1, 1500, 1600, 2, 2, 3)
+        """)
+        cls.cursor.execute("""
+        INSERT INTO COMMUNICATION_TASK_INFO (opId, planeId, globalTaskId, taskType, groupName)
+        VALUES (1, 1, 1, 2, 3)
+        """)
+        cls.conn.commit()
+
+    def test_initialization(self):
+        parser = NPUProfilingDbParser(self.args, self.path_dict)
+        self.assertEqual(parser._db_path, self.db_path)
+        self.assertTrue(parser._enable_profiling_compare)
+        self.assertIsNotNone(parser.conn)
+        self.assertIsNotNone(parser.cursor)
+
+    def test_get_step_range(self):
+        parser = NPUProfilingDbParser(self.args, self.path_dict, step_id=1)
+        parser._get_step_range()
+        self.assertEqual(parser.step_range, [1500, 1600])
+
+    def test_get_step_range_invalid_id(self):
+        with self.assertRaises(RuntimeError):
+            parser = NPUProfilingDbParser(self.args, self.path_dict, step_id=999)
+            parser._get_step_range()
+
+    def test_query_torch_op_data(self):
+        parser = NPUProfilingDbParser(self.args, self.path_dict)
+        parser._get_step_range()
+        parser._query_torch_op_data()
+
+        self.assertGreater(len(parser.result_data.torch_op_data), 0)
+        self.assertIsInstance(parser.result_data.torch_op_data[0], FrameworkApiBean)
+
+    def test_query_compute_op_data(self):
+        parser = NPUProfilingDbParser(self.args, self.path_dict)
+        parser._query_compute_op_data()
+
+        self.assertTrue(hasattr(parser.result_data, 'kernel_dict'))
+        if parser._enable_kernel_compare:
+            self.assertTrue(hasattr(parser.result_data, 'kernel_details'))
+
+    def test_query_comm_data(self):
+        parser = NPUProfilingDbParser(self.args, self.path_dict)
+        parser._query_comm_op_data()
+        parser._query_comm_task_data()
+
+        self.assertGreater(len(parser.comm_op_data), 0)
+        self.assertIsInstance(parser.comm_op_data[0], HcclOpBean)
+        self.assertGreater(len(parser.comm_task_data), 0)
+        self.assertIsInstance(parser.comm_task_data[0], HcclTaskBean)
+
+    def test_query_memory_data(self):
+        parser = NPUProfilingDbParser(self.args, self.path_dict)
+        parser._query_memory_data()
+
+        self.assertTrue(hasattr(parser.result_data, 'memory_list'))
