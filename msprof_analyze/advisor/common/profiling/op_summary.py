@@ -131,7 +131,7 @@ class OpSummaryDB(OpSummary):
         task.taskId as task_id
     FROM 
         compute_info
-    LEFT JOIN 
+    JOIN 
         TASK as task ON compute_info.globalTaskId = task.globalTaskId;
     """
 
@@ -141,7 +141,7 @@ class OpSummaryDB(OpSummary):
         str.value as name,
         pmu.value
     FROM TASK_PMU_INFO AS pmu
-    LEFT JOIN STRING_IDS AS str ON str.id = pmu.name
+    JOIN STRING_IDS AS str ON str.id = pmu.name
     """
 
     COMMUNICATION_INFO_SQL = """
@@ -188,7 +188,7 @@ class OpSummaryDB(OpSummary):
         task.contextId as context_id,
         task.taskId as task_id
     FROM COMMUNICATION_SCHEDULE_TASK_INFO as CSTI 
-    LEFT JOIN TASK as task ON task.globalTaskId = CSTI.globalTaskId
+    JOIN TASK as task ON task.globalTaskId = CSTI.globalTaskId
     """
 
     def __init__(self, path: str) -> None:

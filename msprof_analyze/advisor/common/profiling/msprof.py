@@ -194,10 +194,10 @@ class MsprofDB(Msprof):
       ) as args
       
     FROM COMMUNICATION_TASK_INFO as comm 
-    LEFT JOIN TASK as task ON comm.globalTaskId = task.globalTaskId
-    LEFT JOIN STRING_IDS as str ON str.id = comm.taskType
-    LEFT JOIN ENUM_HCCL_LINK_TYPE as link ON link.id = comm.linkType
-    LEFT JOIN ENUM_HCCL_TRANSPORT_TYPE as trans ON trans.id = comm.transportType
+    JOIN TASK as task ON comm.globalTaskId = task.globalTaskId
+    JOIN STRING_IDS as str ON str.id = comm.taskType
+    JOIN ENUM_HCCL_LINK_TYPE as link ON link.id = comm.linkType
+    JOIN ENUM_HCCL_TRANSPORT_TYPE as trans ON trans.id = comm.transportType
     """
 
     HCCL_OP_SQL = """
@@ -206,7 +206,7 @@ class MsprofDB(Msprof):
         comm.startNs / 1000.0 as ts,
         (comm.endNs - comm.startNs) / 1000.0 as dur
     FROM COMMUNICATION_OP as comm 
-    LEFT JOIN STRING_IDS as str ON str.id = comm.opName
+    JOIN STRING_IDS as str ON str.id = comm.opName
     """
 
     NODE_INFO_SQL = """
