@@ -92,6 +92,10 @@ class FusibleOperatorChecker:
                 any(task.op_name.lower().startswith(item) for item in ["hcom", "lccl", "lcoc"]))
 
     @staticmethod
+    def check_aicpu(task: OpInfo):
+        return task.task_type == Constant.AI_CPU
+
+    @staticmethod
     def calculate_total_time(pre_timestamp, timestamp, duration):
         total_time = (convert_to_float_with_warning(timestamp) + convert_to_float_with_warning(duration) -
                       convert_to_float_with_warning(pre_timestamp))
@@ -109,7 +113,7 @@ class FusibleOperatorChecker:
                                                              tasks[-1].task_duration)
         length = len(profiling_dataset.op_summary.op_list)
         for index, task in enumerate(tasks):
-            if self.check_hccl(task):
+            if self.check_hccl(task) or self.check_aicpu(task):
                 continue
             start_time = convert_to_float_with_warning(task.task_start_time)
             key = self.generate_key(task)
@@ -120,7 +124,7 @@ class FusibleOperatorChecker:
                 if i + index >= length:
                     break
                 new_task = tasks[i + index]
-                if self.check_hccl(new_task):
+                if self.check_hccl(new_task) or self.check_aicpu(new_task):
                     break
                 key = key + self._SPLITTER + self.generate_key(new_task)
                 duration = duration + convert_to_float_with_warning(new_task.task_duration)
