@@ -511,9 +511,12 @@ class AICorePerformanceChecker:
         return True
 
     def _check_cube_inner_axis(self, shape):
-        # 判断输入shape内轴是否为256的倍数
         shapes = shape.split("-")[0].split(";")
-        if (len(shape.split("-")[0].split(";")[0].split(","))) == 4:
+        if len(shapes) < 2:
+            logger.error(f"Error: Incorrect input shape, shape is {shape}.")
+            return False
+        # 判断输入shape内轴是否为256的倍数
+        if len(shapes[0].split(",")) == 4 and len(shapes[1].split(",")) == 4:
             # NZ格式
             b_axis, c_axis = (convert_to_int_with_exception(shapes[0].split(",")[1]),
                               convert_to_int_with_exception(shapes[0].split(",")[2]))
@@ -522,8 +525,8 @@ class AICorePerformanceChecker:
             return (b_axis * c_axis % self.INNER_AXIS_256 == 0) and (f_axis * g_axis % self.INNER_AXIS_256 == 0)
         elif (len(shape.split("-")[0].split(";")[0].split(","))) == 2:
             # ND格式
-            l_axis, k_axis = (convert_to_int_with_exception(shapes[0].split(",")[1]),
-                              convert_to_int_with_exception(shapes[1].split(",")[1]))
+            l_axis, k_axis = (convert_to_int_with_exception(shapes[0].split(",")[-1]),
+                              convert_to_int_with_exception(shapes[1].split(",")[-1]))
             return (l_axis % self.INNER_AXIS_256 == 0) and (k_axis % self.INNER_AXIS_256 == 0)
         else:
             return False
