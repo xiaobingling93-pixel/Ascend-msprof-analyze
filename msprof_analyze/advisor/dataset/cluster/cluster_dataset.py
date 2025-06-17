@@ -228,8 +228,10 @@ class ClusterCommunicationDataset(ClusterDataset):
         return {
             self.RDMA_TIME_MS: 0,
             self.RDMA_SIZE_MB: 0,
+            self.RDMA_BANDWIDTH: 0,
             self.SDMA_TIME_MS: 0,
             self.SDMA_SIZE_MB: 0,
+            self.SDMA_BANDWIDTH: 0
         }
 
     def process(self, communication_json: dict):
@@ -327,7 +329,6 @@ class ClusterCommunicationDataset(ClusterDataset):
         for row in bandwidth_df.itertuples(index=False):
             if row.band_type == self.SDMA:
                 self.rank_bw_dict[row.step_rank][self.SDMA_SIZE_MB] = row.transit_size
-                self.rank_bw_dict[row.step_rank][self.SDMA_TIME_MS] = row.transit_time
                 self.rank_bw_dict[row.step_rank][self.SDMA_TIME_MS] = row.transit_time
                 self.rank_bw_dict[row.step_rank][self.SDMA_BANDWIDTH] = row.bandwidth
             elif row.band_type == self.RDMA:

@@ -188,7 +188,7 @@ class AnalyzerController:
     def _get_step_rank_for_cluster_statistic_diff(target_cluster_statistic_data, benchmark_cluster_statistic_data,
                                                   headers, dimension, get_max=False):
         if dimension not in headers:
-            logger.error("Error dimension %s for cluster statistics data, optionals are %s.", dimension, headers)
+            logger.warning("Invalid dimension %s for cluster statistics data, optionals are %s.", dimension, headers)
             return None, None, None
 
         dimension_index = safe_index_value(headers, dimension)
