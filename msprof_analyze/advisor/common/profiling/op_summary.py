@@ -194,17 +194,17 @@ class OpSummaryDB(OpSummary):
     def __init__(self, path: str) -> None:
         super().__init__(path)
 
-    def parse_from_file(self, db_path: str):
-        if not db_path or not os.path.exists(db_path):
+    def parse_from_file(self, file: str):
+        if not db_path or not os.path.exists(file):
             logger.error("db path is None.")
             return False
         # export data
-        compute_df = self.export_compute_task(db_path)
-        communication_df = self._execute_sql(db_path, self.COMMUNICATION_INFO_SQL)
-        comm_schedule_df = self._execute_sql(db_path, self.COMMUNICATION_SCHEDULE_SQL,
+        compute_df = self.export_compute_task(file)
+        communication_df = self._execute_sql(file, self.COMMUNICATION_INFO_SQL)
+        comm_schedule_df = self._execute_sql(file, self.COMMUNICATION_SCHEDULE_SQL,
                                              [Constant.TABLE_COMMUNICATION_SCHEDULE_TASK_INFO])
         if compute_df.empty and communication_df.empty and comm_schedule_df.empty:
-            logger.warning(f"No compute and communication operators in db: {db_path}")
+            logger.warning(f"No compute and communication operators in db: {file}")
             return False
         # post process
         total_df = self.post_process([compute_df, communication_df, comm_schedule_df])
