@@ -20,6 +20,7 @@ logger = get_logger()
 class StepTraceTimeBean:
     STEP = "Step"
     COMPLEMENT_HEADER = ["Step", "Type", "Index"]
+    EXCLUDE_HEADER = ["Step", "Device_id"]
 
     def __init__(self, data: list):
         self._data = data
@@ -28,7 +29,7 @@ class StepTraceTimeBean:
     def row(self) -> list:
         row = []
         for field_name in self._data.keys():
-            if field_name == self.STEP:
+            if field_name in self.EXCLUDE_HEADER:
                 continue
             try:
                 row.append(float(self._data.get(field_name, )))
@@ -43,4 +44,5 @@ class StepTraceTimeBean:
 
     @property
     def all_headers(self) -> list:
-        return self.COMPLEMENT_HEADER + list(self._data.keys())[1:]
+        headers = [filed_name for filed_name in self._data.keys() if filed_name not in self.EXCLUDE_HEADER]
+        return self.COMPLEMENT_HEADER + headers

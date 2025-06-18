@@ -35,6 +35,19 @@ class StepTraceTimeAnalysis:
     CLUSTER_TRACE_TIME_TABLE = "ClusterStepTraceTime"
     PROFILER_METADATA_JSON = "profiler_metadata.json"
     PARALLEL_HEADERS = ["DP Index", "PP Index", "TP Index"]
+    STEP_TRACE_TIME_SQL = """
+    SELECT 
+        step, 
+        computing,communication_not_overlapped,
+        overlapped,
+        communication,
+        free,
+        stage,
+        bubble,
+        communication_not_overlapped_and_exclude_receive,
+        preparing
+    FROM {}
+    """
 
     def __init__(self, param: dict):
         self.collection_path = param.get(Constant.COLLECTION_PATH)
@@ -181,7 +194,7 @@ class StepTraceTimeAnalysis:
                     if (os.path.exists(step_time_file) and
                             DBManager.check_tables_in_db(step_time_file, Constant.TABLE_STEP_TRACE)):
                         conn, cursor = DBManager.create_connect_db(step_time_file)
-                        sql = "select * from {0}".format(Constant.TABLE_STEP_TRACE)
+                        sql = self.STEP_TRACE_TIME_SQL.format(Constant.TABLE_STEP_TRACE)
                         data = DBManager.fetch_all_data(cursor, sql, is_dict=False)
                         self.step_time_dict[rank_id] = data
                         DBManager.destroy_db_connect(conn, cursor)
