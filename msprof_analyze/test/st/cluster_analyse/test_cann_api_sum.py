@@ -71,7 +71,7 @@ class TestCannApiSum(TestCase):
         """
         检查CannApiSumRank的表头
         """
-        expected_columns = ["index", "name", "durationRatio", "totalTimeNs", "totalCount", "averageNs", "minNs",
+        expected_columns = ["name", "durationRatio", "totalTimeNs", "totalCount", "averageNs", "minNs",
                             "Q1Ns", "medNs", "Q3Ns", "maxNs", "stdev", "rank"]
         return DBManager.get_table_columns_name(self.cursor,
                                                  TestCannApiSum.TABLE_CANN_API_SUM_RANK) == expected_columns
