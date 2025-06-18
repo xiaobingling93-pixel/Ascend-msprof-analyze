@@ -195,7 +195,7 @@ class OpSummaryDB(OpSummary):
         super().__init__(path)
 
     def parse_from_file(self, file: str):
-        if not db_path or not os.path.exists(file):
+        if not file or not os.path.exists(file):
             logger.error("db path is None.")
             return False
         # export data
