@@ -38,7 +38,7 @@ class ConnectionManager:
         return self.connection
 
     @staticmethod
-    def check_db_exists(db_path:str, dbs:List) -> bool:
+    def check_db_exists(db_path:str, dbs: List) -> bool:
         """
         check db exists
         """
@@ -64,7 +64,7 @@ class ConnectionManager:
             return None
         return conn
 
-    def check_table_exists(self, tables:List) -> bool:
+    def check_table_exists(self, tables: List) -> bool:
         """
         check table exists
         """
@@ -73,7 +73,7 @@ class ConnectionManager:
                 return False
         return True
 
-    def check_column_exists(self, table_name:str, columns:List) -> bool:
+    def check_column_exists(self, table_name: str, columns: List) -> bool:
         """
         check column exists
         """

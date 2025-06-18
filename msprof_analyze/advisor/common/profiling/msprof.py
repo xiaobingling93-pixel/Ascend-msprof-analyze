@@ -235,12 +235,12 @@ class MsprofDB(Msprof):
         super().__init__(path)
 
 
-    def parse_from_file(self, db_path: str):
-        if not db_path or not os.path.exists(db_path):
+    def parse_from_file(self, file: str):
+        if not file or not os.path.exists(file):
             logger.error("db path is None.")
             return False
-        self.process_communication_tasks(db_path)
-        self.process_node_tasks(db_path)
+        self.process_communication_tasks(file)
+        self.process_node_tasks(file)
         return True
 
     def process_communication_tasks(self, db_path):

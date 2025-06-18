@@ -77,7 +77,7 @@ class CommunicationDBGroup(BaseCommunicationGroup):
 
     def dump_data(self):
         self.comm_group_parallel_info_df["rank_set"] = (self.comm_group_parallel_info_df["rank_set"].
-                                                        apply(lambda x:  "(" + ",".join(str(i) for i in x) + ")"))
+                                                        apply(lambda x: "(" + ",".join(str(i) for i in x) + ")"))
         res = self.comm_group_parallel_info_df.values.tolist()
         dump_group_db(res, self.COMMUNICATION_GROUP_TABLE, self.cluster_analysis_output_path)
 
@@ -149,7 +149,7 @@ class CommunicationDBGroupOptimized(BaseCommunicationGroup):
 
     def dump_data(self):
         self.comm_group_parallel_info_df["rank_set"] = (self.comm_group_parallel_info_df["rank_set"].
-                                                        apply(lambda x:  "(" + ",".join(str(i) for i in x) + ")"))
+                                                        apply(lambda x: "(" + ",".join(str(i) for i in x) + ")"))
         res = self.comm_group_parallel_info_df.values.tolist()
         dump_group_db(res, self.COMMUNICATION_GROUP_MAPPING_TABLE, self.cluster_analysis_output_path)
 
