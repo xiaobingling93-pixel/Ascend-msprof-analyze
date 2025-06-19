@@ -38,7 +38,7 @@ class ConnectionManager:
         return self.connection
 
     @staticmethod
-    def check_db_exists(db_path:str, dbs: List) -> bool:
+    def check_db_exists(db_path: str, dbs: List) -> bool:
         """
         check db exists
         """
