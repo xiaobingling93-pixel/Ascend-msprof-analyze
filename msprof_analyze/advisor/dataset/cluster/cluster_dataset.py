@@ -159,7 +159,7 @@ class ClusterStepTraceTimeDataset(ClusterDataset):
                         .apply(lambda x: sorted(list(map(int, re.findall(r'\d+', x)))))
                         .tolist())
         # process rank info
-        rank_df = step_df[step_df['type'] == 'rank']
+        rank_df = step_df[step_df['type'] == 'rank'].copy()
         rank_df['step'] = rank_df['step'].fillna(Constant.DEFAULT_STEP)
         rank_df["step_rank"] = rank_df.apply(lambda row: f"{row['step']}_{row['index']}", axis=1)
         step_dict = (rank_df.set_index('step_rank')[['computing', 'communication_not_overlapped', 'free']].
