@@ -200,7 +200,7 @@ class OpSummaryDB(OpSummary):
             return False
         # export data
         compute_df = self.export_compute_task(file)
-        communication_df = self._execute_sql(file, self.COMMUNICATION_INFO_SQL)
+        communication_df = self._execute_sql(file, self.COMMUNICATION_INFO_SQL, [Constant.TABLE_COMMUNICATION_OP])
         comm_schedule_df = self._execute_sql(file, self.COMMUNICATION_SCHEDULE_SQL,
                                              [Constant.TABLE_COMMUNICATION_SCHEDULE_TASK_INFO])
         if compute_df.empty and communication_df.empty and comm_schedule_df.empty:
@@ -221,7 +221,7 @@ class OpSummaryDB(OpSummary):
 
     def export_compute_task(self, db_path):
         # export basic compute_task_info, task_pmu_info
-        basic_df = self._execute_sql(db_path, self.COMPUTE_INFO_SQL)
+        basic_df = self._execute_sql(db_path, self.COMPUTE_INFO_SQL, [Constant.TABLE_COMPUTE_TASK_INFO])
         pmu_df = self._execute_sql(db_path, self.PMU_SQL, [Constant.TABLE_TASK_PMU_INFO])
         if basic_df.empty or pmu_df.empty:
             return basic_df

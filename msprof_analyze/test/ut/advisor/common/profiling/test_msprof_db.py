@@ -15,6 +15,8 @@
 import unittest
 from unittest.mock import patch, MagicMock
 import pandas as pd
+from msprof_analyze.prof_common.constant import Constant
+
 from msprof_analyze.advisor.common.profiling.msprof import MsprofDB
 from msprof_analyze.advisor.dataset.profiling.info_collection import TaskInfo
 
@@ -68,8 +70,9 @@ class TestMsprofDB(unittest.TestCase):
         self.assertEqual(self.msprof_db.hccl_tasks[2].name, 'Notify_Wait')
         
         # Verify SQL calls
-        mock_execute_sql.assert_any_call(self.test_db_path, MsprofDB.HCCL_TASK_SQL)
-        mock_execute_sql.assert_any_call(self.test_db_path, MsprofDB.HCCL_OP_SQL)
+        mock_execute_sql.assert_any_call(self.test_db_path, MsprofDB.HCCL_TASK_SQL,
+                                         [Constant.TABLE_COMMUNICATION_TASK_INFO])
+        mock_execute_sql.assert_any_call(self.test_db_path, MsprofDB.HCCL_OP_SQL, [Constant.TABLE_COMMUNICATION_OP])
         self.assertEqual(mock_execute_sql.call_count, 2)
 
     @patch.object(MsprofDB, '_execute_sql')
@@ -89,7 +92,7 @@ class TestMsprofDB(unittest.TestCase):
         self.assertEqual(len(self.msprof_db.tasks), 2)
         self.assertIsInstance(self.msprof_db.tasks[0], TaskInfo)
         self.assertEqual(self.msprof_db.tasks[0].name, 'node1')
-        mock_execute_sql.assert_called_with(self.test_db_path, self.msprof_db.NODE_INFO_SQL)
+        mock_execute_sql.assert_called_with(self.test_db_path, self.msprof_db.NODE_INFO_SQL, None)
 
     @patch.object(MsprofDB, '_execute_sql')
     def test_process_task_data_when_empty_dataframe_then_no_tasks_added(self, mock_execute_sql):
@@ -98,4 +101,4 @@ class TestMsprofDB(unittest.TestCase):
         
         self.msprof_db._process_task_data(self.test_db_path, MsprofDB.HCCL_OP_SQL, self.msprof_db.tasks)
         self.assertEqual(len(self.msprof_db.tasks), 0)
-        mock_execute_sql.assert_called_with(self.test_db_path, MsprofDB.HCCL_OP_SQL)
+        mock_execute_sql.assert_called_with(self.test_db_path, MsprofDB.HCCL_OP_SQL, None)

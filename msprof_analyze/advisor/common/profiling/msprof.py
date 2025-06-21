@@ -19,6 +19,7 @@ from typing import Dict, List
 import json
 import pandas as pd
 
+from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.advisor.dataset.profiling.info_collection import TaskInfo
 from msprof_analyze.advisor.dataset.profiling.profiling_parser import ProfilingParser
 
@@ -234,7 +235,6 @@ class MsprofDB(Msprof):
     def __init__(self, path: str) -> None:
         super().__init__(path)
 
-
     def parse_from_file(self, file: str):
         if not file or not os.path.exists(file):
             logger.error("db path is None.")
@@ -244,15 +244,15 @@ class MsprofDB(Msprof):
         return True
 
     def process_communication_tasks(self, db_path):
-        self._process_task_data(db_path, self.HCCL_TASK_SQL, self._hccl_tasks)
-        self._process_task_data(db_path, self.HCCL_OP_SQL, self._hccl_tasks)
+        self._process_task_data(db_path, self.HCCL_TASK_SQL, self._hccl_tasks, [Constant.TABLE_COMMUNICATION_TASK_INFO])
+        self._process_task_data(db_path, self.HCCL_OP_SQL, self._hccl_tasks, [Constant.TABLE_COMMUNICATION_OP])
         self._hccl_tasks.sort(key=lambda x: x.start_time)
 
     def process_node_tasks(self, db_path):
         self._process_task_data(db_path, self.NODE_INFO_SQL, self._tasks)
 
-    def _process_task_data(self, db_path, sql: str, result: list):
-        df = self._execute_sql(db_path, sql)
+    def _process_task_data(self, db_path, sql: str, result: list, tables_to_check=None):
+        df = self._execute_sql(db_path, sql, tables_to_check)
         if df.empty:
             return
         if 'args' in df.columns:

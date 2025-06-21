@@ -19,8 +19,8 @@ from collections import defaultdict
 
 import numpy as np
 import pandas as pd
+from msprof_analyze.prof_common.db_manager import DBManager
 from msprof_analyze.cluster_analyse.common_func.table_constant import TableConstant
-
 from msprof_analyze.prof_common.singleton import singleton
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.file_manager import FileManager
@@ -133,6 +133,10 @@ class CommunicationDataset(Dataset):
             raise ValueError(msg) from e
 
     def parse_from_db(self):
+        expected_tables = [Constant.TABLE_COMM_ANALYZER_TIME, Constant.TABLE_COMM_ANALYZER_BANDWIDTH]
+        if not DBManager.check_tables_in_db(self.communication_file, *expected_tables):
+            logger.warning(f"Communication tables: {expected_tables} not found in {self.communication_file}")
+            return False
         export = CommunicationInfoExport(self.communication_file, self.is_pta)
         df = export.read_export_db()
         if TableConstant.STEP not in df.columns:
