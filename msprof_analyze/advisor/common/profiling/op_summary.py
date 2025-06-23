@@ -16,10 +16,12 @@
 
 import logging
 import os
+from abc import abstractmethod
 from decimal import Decimal
 from typing import List, Any
 import pandas as pd
 
+from msprof_analyze.cluster_analyse.common_func.table_constant import TableConstant
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.advisor.dataset.profiling.info_collection import OpInfo
 from msprof_analyze.advisor.dataset.profiling.profiling_parser import ProfilingParser
@@ -28,22 +30,64 @@ from msprof_analyze.advisor.utils.utils import format_excel_title, lazy_property
 logger = logging.getLogger()
 
 
-class OpSummary(ProfilingParser):
-    """
-    op summary
-    """
-    FILE_PATTERN_MSG = "op_summary_*.csv"
+class OpSummaryBase(ProfilingParser):
+    FILE_PATTERN_MSG = "op_summary file pattern"
     FILE_INFO = "op summary"
     STATIC_OP_STATE = "static"
     DYNAMIC_OP_STATE = "dynamic"
 
-    file_pattern_list = [r"^op_summary_[_\d]+\.csv$"]
+    file_pattern_list = []
 
     def __init__(self, path: str) -> None:
         super().__init__(path)
         self.op_list: List[OpInfo] = []
         self._total_task_duration = 0.0
         self._total_task_wait_time = 0.0
+
+    @abstractmethod
+    def parse_from_file(self, file: str):
+        return False
+
+    @abstractmethod
+    def get_static_shape_operators(self):
+        return False
+
+    @abstractmethod
+    def contains_op_state_info(self):
+        return False
+
+    def get_total_task_duration(self):
+        """
+        get total task duration of all operators
+        :return:
+        """
+        return self._total_task_duration
+
+    @lazy_property
+    def task_dict(self):
+        """
+        task dict
+        """
+        task_dict = {}
+        for op_info in self.op_list:
+            if op_info.op_name not in task_dict:
+                task_dict[op_info.op_name] = [op_info]
+            else:
+                task_dict[op_info.op_name].append(op_info)
+
+        return task_dict
+
+
+class OpSummary(OpSummaryBase):
+    """
+    op summary
+    """
+    FILE_PATTERN_MSG = "op_summary_*.csv"
+    FILE_INFO = "op summary from text"
+    file_pattern_list = [r"^op_summary_[_\d]+\.csv$"]
+
+    def __init__(self, path: str) -> None:
+        super().__init__(path)
         self._raw_data: List[List[str]] = []
 
     def parse_from_file(self, file: str):
@@ -71,29 +115,11 @@ class OpSummary(ProfilingParser):
         return [op_info.get_attr("op_name")
                 for op_info in self.op_list if op_info.get_attr("op_state") == self.STATIC_OP_STATE]
 
-    def get_total_task_duration(self):
-        """
-        get total task duration of all operators
-        :return:
-        """
-        return self._total_task_duration
-
-    @lazy_property
-    def task_dict(self):
-        """
-        task dict
-        """
-        task_dict = {}
-        for op_info in self.op_list:
-            if op_info.op_name not in task_dict:
-                task_dict[op_info.op_name] = [op_info]
-            else:
-                task_dict[op_info.op_name].append(op_info)
-
-        return task_dict
+    def contains_op_state_info(self):
+        return True
 
 
-class OpSummaryDB(OpSummary):
+class OpSummaryDB(OpSummaryBase):
     FILE_PATTERN_MSG = "ascend_*_profiler.db"
     FILE_INFO = "op summary from db"
 
@@ -116,6 +142,7 @@ class OpSummaryDB(OpSummary):
             (SELECT value FROM STRING_IDS WHERE id = t.outputShapes) AS output_shapes,
             (SELECT value FROM STRING_IDS WHERE id = t.outputFormats) AS output_formats,
             (SELECT value FROM STRING_IDS WHERE id = t.outputDataTypes) AS output_data_types
+            {op_state}
         FROM 
             COMPUTE_TASK_INFO t
     )
@@ -133,6 +160,10 @@ class OpSummaryDB(OpSummary):
         compute_info
     JOIN 
         TASK as task ON compute_info.globalTaskId = task.globalTaskId;
+    """
+
+    SELECT_OP_STATE = """,
+            (SELECT value FROM STRING_IDS WHERE id = t.opState) AS op_state
     """
 
     PMU_SQL = """
@@ -193,6 +224,7 @@ class OpSummaryDB(OpSummary):
 
     def __init__(self, path: str) -> None:
         super().__init__(path)
+        self.has_op_state = False
 
     def parse_from_file(self, file: str):
         if not file or not os.path.exists(file):
@@ -215,13 +247,26 @@ class OpSummaryDB(OpSummary):
         self.convert_to_op_info_list(total_df)
         return True
 
+    def contains_op_state_info(self):
+        return self.has_op_state
+
     def get_static_shape_operators(self) -> List[Any]:
-        logger.debug("No op state info in db file")
-        return []
+        if not self.contains_op_state_info():
+            return []
+        return [op_info.get_attr("op_name")
+                for op_info in self.op_list if op_info.get_attr("op_state") == self.STATIC_OP_STATE]
+
 
     def export_compute_task(self, db_path):
+        # check whether opState in COMPUTE_TASK_INFO
+        if self._check_table_column_exists(db_path, Constant.TABLE_COMPUTE_TASK_INFO, TableConstant.OP_STATE):
+            comp_info_sql = self.COMPUTE_INFO_SQL.format(op_state=self.SELECT_OP_STATE)
+            self.has_op_state = True
+        else:
+            comp_info_sql = self.COMPUTE_INFO_SQL.format(op_state="")
+            self.has_op_state = False
         # export basic compute_task_info, task_pmu_info
-        basic_df = self._execute_sql(db_path, self.COMPUTE_INFO_SQL, [Constant.TABLE_COMPUTE_TASK_INFO])
+        basic_df = self._execute_sql(db_path, comp_info_sql, [Constant.TABLE_COMPUTE_TASK_INFO])
         pmu_df = self._execute_sql(db_path, self.PMU_SQL, [Constant.TABLE_TASK_PMU_INFO])
         if basic_df.empty or pmu_df.empty:
             return basic_df

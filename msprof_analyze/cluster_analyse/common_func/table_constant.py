@@ -42,6 +42,7 @@ class TableConstant:
     PG_NAME = "pg_name"
     NAME = "name"
     VALUE = "value"
+    OP_STATE = "opState"
 
     # table name
     TABLE_STRING_IDS = "STRING_IDS"

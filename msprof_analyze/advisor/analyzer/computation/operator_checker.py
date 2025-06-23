@@ -160,6 +160,9 @@ class OperatorChecker(VersionControl):
         else:
             # CANN 8.0.RC1 之后 op_state 属性从 op_summary 文件中获取
             if hasattr(profiling_database, "op_summary"):
+                if not profiling_database.op_summary.contains_op_state_info():
+                    logger.warning("Skip dynamic shape check because of not containing OpState information")
+                    return False
                 static_shape_operators = profiling_database.op_summary.get_static_shape_operators()
                 if len(static_shape_operators) == 0:
                     return True
