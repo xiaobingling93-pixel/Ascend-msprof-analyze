@@ -190,18 +190,22 @@ class BaseCommunicationGroup:
             comm_group_df.loc[comm_group_df.shape[0]] = [Constant.P2P, list(rank_set), group_name]
 
         # create parallel group dataframe
-        parallel_group_cols = ["group_name", "group_id", "pg_name"]
+        parallel_group_cols = ["group_name", "group_id", "pg_name", "global_ranks"]
         parallel_group_df = pd.DataFrame(columns=parallel_group_cols)
         for group_id, parallel_info in self.parallel_group_info.items():
             group_name = str(double_hash(group_id))  # group_name is hashed group_id
             pg_name = parallel_info.get("group_name", "")
-            if not pg_name:
+            global_ranks = parallel_info.get("global_ranks", [])
+            if not pg_name or not global_ranks:
                 continue
-            parallel_group_df.loc[parallel_group_df.shape[0]] = [group_name, group_id, pg_name]
+            parallel_group_df.loc[parallel_group_df.shape[0]] = [group_name, group_id, pg_name, global_ranks]
 
         # merge by group_name
         df = pd.merge(comm_group_df, parallel_group_df, on='group_name', how='left')
         df.fillna("", inplace=True)
+        if self.parallel_group_info:
+            df["rank_set"] = df["global_ranks"]
 
+        df = df.drop(columns=["global_ranks"])
         self.comm_group_parallel_info_df = df
 
