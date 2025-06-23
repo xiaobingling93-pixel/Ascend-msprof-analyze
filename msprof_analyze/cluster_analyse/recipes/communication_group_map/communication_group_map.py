@@ -27,6 +27,7 @@ logger = get_logger()
 
 
 class CommunicationGroupMap(BaseRecipeAnalysis):
+    GLOBAL_RANKS = "global_ranks"
     COMMUNICATION_GROUP_MAPPING_TABLE = "CommunicationGroupMapping"
 
     def __init__(self, params):
@@ -69,9 +70,15 @@ class CommunicationGroupMap(BaseRecipeAnalysis):
         group_df = pd.merge(comm_group_combined_df, parallel_info_combined_df, on=TableConstant.GROUP_NAME, how="left")
         group_df.fillna("", inplace=True)
         # column order
-        column_order = [TableConstant.TYPE, TableConstant.RANK_SET, TableConstant.GROUP_NAME,
-                        TableConstant.GROUP_ID, TableConstant.PG_NAME]
-        self.group_df = group_df[column_order]
+        if parallel_info_combined_df.empty:
+            column_order = [TableConstant.TYPE, TableConstant.RANK_SET, TableConstant.GROUP_NAME,
+                            TableConstant.GROUP_ID, TableConstant.PG_NAME]
+            self.group_df = group_df[column_order]
+        else:
+            column_order = [TableConstant.TYPE, self.GLOBAL_RANKS, TableConstant.GROUP_NAME,
+                            TableConstant.GROUP_ID, TableConstant.PG_NAME]
+            self.group_df = group_df[column_order].copy()
+            self.group_df.rename(columns={self.GLOBAL_RANKS: TableConstant.RANK_SET}, inplace=True)
 
     def save_db(self):
         self.dump_data(self.group_df, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER,
@@ -101,8 +108,8 @@ class CommunicationGroupMap(BaseRecipeAnalysis):
         meta_data_res = profiler_data_service.query_data()
         meta_data_df = meta_data_res.get(Constant.TABLE_META_DATA)
         # process parallel_info_df
-        parallel_info_df = pd.DataFrame(columns=[TableConstant.GROUP_NAME,
-                                                 TableConstant.GROUP_ID, TableConstant.PG_NAME])
+        parallel_info_df = pd.DataFrame(columns=[TableConstant.GROUP_NAME, TableConstant.GROUP_ID,
+                                                 TableConstant.PG_NAME, self.GLOBAL_RANKS])
         if Constant.PARALLEL_GROUP_INFO not in meta_data_df[TableConstant.NAME].values:
             return comm_time_df, parallel_info_df
         info_str = meta_data_df.loc[meta_data_df[TableConstant.NAME] == Constant.PARALLEL_GROUP_INFO,
@@ -111,12 +118,10 @@ class CommunicationGroupMap(BaseRecipeAnalysis):
         for group_id, parallel_info in info_dict.items():
             group_name = str(double_hash(group_id))  # group_name is hashed group_id
             pg_name = parallel_info.get(TableConstant.GROUP_NAME, "")
-            if not pg_name:
+            global_ranks = parallel_info.get(self.GLOBAL_RANKS, [])
+            if not pg_name or not global_ranks:
                 continue
-            parallel_info_df.loc[parallel_info_df.shape[0]] = [group_name, group_id, pg_name]
+            parallel_info_df.loc[parallel_info_df.shape[0]] = [group_name, group_id, pg_name,
+                                                               "(" + ",".join(str(i) for i in global_ranks) + ")"]
 
         return comm_time_df, parallel_info_df
-
-
-
-

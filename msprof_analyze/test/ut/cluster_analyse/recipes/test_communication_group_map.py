@@ -53,7 +53,8 @@ class TestCommunicationGroupMap(unittest.TestCase):
         expected_parallel_info_df = pd.DataFrame({
             "group_name": ["5862276097510448909"],
             "group_id": ["group_name_1"],
-            "pg_name": ["dp"]
+            "pg_name": ["dp"],
+            "global_ranks": ["(0,1)"]
         })
         self.assertTrue(comm_time_df.equals(expected_comm_time_df))
         self.assertTrue(parallel_info_df.equals(expected_parallel_info_df))
@@ -70,12 +71,13 @@ class TestCommunicationGroupMap(unittest.TestCase):
             pd.DataFrame({
                 "group_name": ["5862276097510448909"],
                 "group_id": ["group_name_1"],
-                "pg_name": ["dp"]
+                "pg_name": ["dp"],
+                "global_ranks": ["(0,1)"]
             }))
         ]
         expected_group_df = pd.DataFrame({
             "type": ["collective"],
-            "rank_set": ["(0)"],
+            "rank_set": ["(0,1)"],
             "group_name": ["5862276097510448909"],
             "group_id": ["group_name_1"],
             "pg_name": ["dp"]
