@@ -111,6 +111,20 @@ class ProfilingParser:
             if conn and cursor:
                 DBManager.destroy_db_connect(conn, cursor)
 
+    @staticmethod
+    def _check_table_column_exists(db_path, table, column):
+        conn, cursor = None, None
+        try:
+            conn, cursor = DBManager.create_connect_db(db_path, Constant.ANALYSIS)
+            cols = DBManager.get_table_columns_name(cursor, table)
+            return column in cols
+        except Exception as e:
+            logger.error(f"Check {column} existence in table {table} error: {e}")
+            return False
+        finally:
+            if conn and cursor:
+                DBManager.destroy_db_connect(conn, cursor)
+
     @abstractmethod
     def parse_from_file(self, file: str):
         """
