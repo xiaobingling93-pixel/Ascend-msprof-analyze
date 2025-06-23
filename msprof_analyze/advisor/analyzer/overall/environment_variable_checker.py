@@ -33,9 +33,8 @@ class EnvironmentVariableChecker:
         "HCCL_RDMA_SL": lambda x: x != "",
         "ACLNN_CACHE_LIMIT": lambda x: x == "" or convert_to_int_with_exception(x) < 10000,
         "HOST_CACHE_CAPACITY": lambda x: x == "" or convert_to_int_with_exception(x) == 0,
-        "ASCEND_ENHANCE_ENABLE": lambda x: convert_to_int_with_exception(x) == 0,
         "PYTORCH_NPU_ALLOC_CONF": lambda x: isinstance(x, str) and "expandable_segments:True" not in x,
-        "ASCEND_LAUNCH_BLOCKING": lambda x: convert_to_int_with_exception(x) != 1,
+        "ASCEND_LAUNCH_BLOCKING": lambda x: x != "" and convert_to_int_with_exception(x) == 1,
         "HCCL_ALGO": lambda x: x != "",
     }
 
