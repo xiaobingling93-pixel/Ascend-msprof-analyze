@@ -157,17 +157,18 @@ class OverallMetricsParser:
                 all_data[0].get('totalReserved', 0) / 1024 / 1024 / 1024)
 
     def calculate_computing_time(self):
-        sql = """
-        SELECT 
-            TASK_PMU_INFO.globalTaskId AS "globalTaskId",
-            STRING_IDS.value AS "pmuName",
-            TASK_PMU_INFO.value AS "value"
-        FROM
-            TASK_PMU_INFO LEFT JOIN STRING_IDS ON TASK_PMU_INFO.name == STRING_IDS.id
-        """
-        all_data = DBManager.fetch_all_data(self.npu_db_parser.cursor, sql)
-        for data in all_data:
-            self.pmu_data.setdefault(data.get("globalTaskId"), {})[data.get("pmuName")] = data.get("value")
+        if DBManager.judge_table_exists(self.npu_db_parser.cursor, "TASK_PMU_INFO"):
+            sql = """
+            SELECT 
+                TASK_PMU_INFO.globalTaskId AS "globalTaskId",
+                STRING_IDS.value AS "pmuName",
+                TASK_PMU_INFO.value AS "value"
+            FROM
+                TASK_PMU_INFO LEFT JOIN STRING_IDS ON TASK_PMU_INFO.name == STRING_IDS.id
+            """
+            all_data = DBManager.fetch_all_data(self.npu_db_parser.cursor, sql)
+            for data in all_data:
+                self.pmu_data.setdefault(data.get("globalTaskId"), {})[data.get("pmuName")] = data.get("value")
         self.npu_db_parser.compute_op_data.sort(key=lambda x: x.start_time)
         for kernel in self.npu_db_parser.compute_op_data:
             self.categorize_computing_performance_data(kernel)
