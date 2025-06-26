@@ -35,11 +35,13 @@ WHERE
     AND si.value LIKE '%"dataType":%'
     AND si.value LIKE '%"groupName":%'
     AND si.value LIKE '%"opName":%'
+    {}
     """
 
 
 class Mstx2CommopExport(BaseStatsExport):
 
-    def __init__(self, db_path, recipe_name):
-        super().__init__(db_path, recipe_name)
-        self._query = QUERY
+    def __init__(self, db_path, recipe_name, step_range):
+        super().__init__(db_path, recipe_name, step_range)
+        filter_stat = "AND ta.startNs >= ? and ta.startNs <= ?" if step_range else ""
+        self._query = QUERY.format(filter_stat)
