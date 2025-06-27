@@ -64,12 +64,13 @@ class Mstx2Commop(BaseRecipeAnalysis):
 
     def _mapper_func(self, data_map, analysis_class):
         profiler_db_path = data_map.get(Constant.PROFILER_DB_PATH)
-        data_service = DatabaseService(profiler_db_path)
+        step_range = data_map.get(Constant.STEP_RANGE)
+        data_service = DatabaseService(profiler_db_path, step_range)
         data_service.add_table_for_query("ENUM_HCCL_DATA_TYPE", ["id", "name"])
         data_service.add_table_for_query("STRING_IDS", ["id", "value"])
         df_dict = data_service.query_data()
 
-        df = Mstx2CommopExport(profiler_db_path, analysis_class).read_export_db()
+        df = Mstx2CommopExport(profiler_db_path, analysis_class, step_range).read_export_db()
 
         if df is None or df.empty:
             logger.warning(f"There is no stats data in {profiler_db_path}.")
