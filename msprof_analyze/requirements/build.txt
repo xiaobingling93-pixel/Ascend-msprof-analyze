@@ -6,10 +6,8 @@ PyYaml
 tqdm
 prettytable
 ijson
-requests
 xlsxwriter>=3.0.6
 sqlalchemy
-urllib3<2.0
 numpy<=1.26.4
 pandas
 psutil
