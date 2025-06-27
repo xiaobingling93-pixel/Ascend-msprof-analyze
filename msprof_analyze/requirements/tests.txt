@@ -11,9 +11,7 @@ PyYaml
 tqdm
 prettytable
 ijson
-requests
 xlsxwriter
 sqlalchemy
-urllib3<2.0
 beautifulsoup4
 openpyxl
