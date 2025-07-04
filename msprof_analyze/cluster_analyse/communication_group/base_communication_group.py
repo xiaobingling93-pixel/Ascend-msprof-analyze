@@ -196,8 +196,6 @@ class BaseCommunicationGroup:
             group_name = str(double_hash(group_id))  # group_name is hashed group_id
             pg_name = parallel_info.get("group_name", "")
             global_ranks = parallel_info.get("global_ranks", [])
-            if not pg_name or not global_ranks:
-                continue
             parallel_group_df.loc[parallel_group_df.shape[0]] = [group_name, group_id, pg_name, global_ranks]
 
         # merge by group_name

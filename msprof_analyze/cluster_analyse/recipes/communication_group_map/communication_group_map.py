@@ -119,8 +119,6 @@ class CommunicationGroupMap(BaseRecipeAnalysis):
             group_name = str(double_hash(group_id))  # group_name is hashed group_id
             pg_name = parallel_info.get(TableConstant.GROUP_NAME, "")
             global_ranks = parallel_info.get(self.GLOBAL_RANKS, [])
-            if not pg_name or not global_ranks:
-                continue
             parallel_info_df.loc[parallel_info_df.shape[0]] = [group_name, group_id, pg_name,
                                                                "(" + ",".join(str(i) for i in global_ranks) + ")"]
 
