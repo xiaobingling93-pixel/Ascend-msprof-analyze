@@ -19,6 +19,7 @@ from msprof_analyze.compare_tools.compare_backend.utils.common_func import conve
 
 class OperatorMemoryBean:
     __slots__ = ['_data', '_name', '_size', '_allocation_time', '_release_time']
+    NA = "N/A"
 
     def __init__(self, data: dict):
         self._data = data
@@ -38,13 +39,13 @@ class OperatorMemoryBean:
 
     @property
     def allocation_time(self) -> Decimal:
-        if not self._allocation_time:
+        if not self._allocation_time or self._allocation_time == self.NA:
             return Decimal(0)
         return convert_to_decimal(self._allocation_time)
 
     @property
     def release_time(self) -> Decimal:
-        if not self._release_time:
+        if not self._release_time or self._release_time == self.NA:
             return Decimal(0)
         return convert_to_decimal(self._release_time)
 
