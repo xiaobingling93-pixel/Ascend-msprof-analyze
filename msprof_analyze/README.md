@@ -16,6 +16,7 @@ MindStudio Training Tools工具针对训练&大模型场景，提供端到端性
 ### 版本配套说明
 
 - Ascend PyTorch Profiler接口支持AscendPyTorch 1.11.0或更高版本，支持的PyTorch和CANN以及PyTorch和Python软件版本配套关系请参见《[Ascend Extension for PyTorch插件](https://gitee.com/ascend/pytorch)》。
+- MindSpore Profiler接口支持MindSpore 2.5.0或更高版本，支持的MindSpore和CANN以及MindSpore和Python软件版本配套关系请参见《[MindSpore-安装](https://www.mindspore.cn/install/)》。
 - Ascend PyTorch Profiler接口支持的固件驱动版本与配套CANN软件支持的固件驱动版本相同，开发者可通过“[昇腾社区-固件与驱动](https://gitee.com/link?target=https%3A%2F%2Fwww.hiascend.com%2Fhardware%2Ffirmware-drivers%2Fcommunity%3Fproduct%3D2%26model%3D28%26cann%3D8.0.RC3.alpha003%26driver%3D1.0.25.alpha)”页面根据产品型号与CANN软件版本获取配套的固件与驱动。
 
 ### 采集方式一：通过with语句进行采集
