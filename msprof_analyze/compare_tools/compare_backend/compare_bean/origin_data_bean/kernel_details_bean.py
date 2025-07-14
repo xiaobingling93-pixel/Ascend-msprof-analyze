@@ -155,5 +155,5 @@ class KernelDetailsBean:
         self._aicore_time = self._data.get("aicore_time(us)", "")
         self._mac_time = self._data.get('mac_time(us)', "")
         self._duration = self._data.get('Duration(us)', 0)
-        self._step_id = self._data.get('Step Id', "")
+        self._step_id = self._data.get('Step Id', self._data.get('Step ID', ""))
         self._start_time = Decimal(self._data.get("Start Time(us)", "0"))
