@@ -146,6 +146,8 @@ class OverallMetricsParser:
         self.npu_db_parser.result_data.overall_metrics.calculate_other_time()
 
     def calculate_memory_usage_peak(self):
+        if not DBManager.judge_table_exists(self.npu_db_parser.cursor, Constant.TABLE_MEMORY_RECORD):
+            return
         sql = "SELECT max(totalReserved) AS 'totalReserved' FROM MEMORY_RECORD {}"
         sql = sql.format("WHERE timestamp>=? AND timestamp<=?") if self.npu_db_parser.step_range else sql.format("")
         if self.npu_db_parser.step_range:
@@ -157,7 +159,7 @@ class OverallMetricsParser:
                 all_data[0].get('totalReserved', 0) / 1024 / 1024 / 1024)
 
     def calculate_computing_time(self):
-        if DBManager.judge_table_exists(self.npu_db_parser.cursor, "TASK_PMU_INFO"):
+        if DBManager.judge_table_exists(self.npu_db_parser.cursor, Constant.TABLE_TASK_PMU_INFO):
             sql = """
             SELECT 
                 TASK_PMU_INFO.globalTaskId AS "globalTaskId",
