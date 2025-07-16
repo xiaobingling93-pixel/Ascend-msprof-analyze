@@ -106,7 +106,9 @@ class BaseAnalyzer(VersionControl, metaclass=ABCMeta):
         pass
 
     def identify_profiling_type(self, profiling_type_list):
-        profiling_type = None
+        profiling_type = ""
+        if not profiling_type_list:
+            return profiling_type
         if self.collection_path.endswith(ASCEND_MS):
             profiling_type = [elem for elem in profiling_type_list if Constant.MINDSPORE in elem][0]
         elif self.collection_path.endswith(ASCEND_PT):

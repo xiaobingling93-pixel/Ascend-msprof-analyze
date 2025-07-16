@@ -372,7 +372,7 @@ class ClusterPipelineAdvice(ClusterAdviceBase):
             if rank_id in data_map:
                 rank_prof_dirs[rank_id] = data_map[rank_id]
             else:
-                logger.warning('Rank %s not found in %s', str(self.collection_path))
+                logger.warning('Rank %s not found in %s', str(rank_id), str(self.collection_path))
 
         return rank_prof_dirs
 
