@@ -123,6 +123,8 @@ class NPUProfilingDbParser:
                 raise RuntimeError(f"Invalid Step Id: {self.step_id}, please choose from the valid steps: {valid_step}")
 
     def _query_torch_op_data(self):
+        if not DBManager.judge_table_exists(self.cursor, Constant.TABLE_PYTORCH_API):
+            return
         if any((self._enable_memory_compare, self._enable_operator_compare, self._enable_profiling_compare,
                 self._enable_api_compare)):
             sql = self.pytorch_api_sql.format(
@@ -134,6 +136,8 @@ class NPUProfilingDbParser:
                 self.result_data.update_torch_op_data(FrameworkApiBean(data))
 
     def _query_compute_op_data(self):
+        if not DBManager.judge_table_exists(self.cursor, Constant.TABLE_COMPUTE_TASK_INFO):
+            return
         if any((self._enable_operator_compare, self._args.max_kernel_num, self._enable_profiling_compare,
                 self._enable_kernel_compare)):
             sql = """
@@ -207,6 +211,8 @@ class NPUProfilingDbParser:
                     self.result_data.update_kernel_details(kernels_dict)
 
     def _query_comm_op_data(self):
+        if not DBManager.judge_table_exists(self.cursor, Constant.TABLE_COMMUNICATION_OP):
+            return
         if self._enable_communication_compare or self._enable_profiling_compare:
             sql = """
             SELECT
@@ -240,6 +246,8 @@ class NPUProfilingDbParser:
             self.comm_op_data = [HcclOpBean(data) for data in all_data]
 
     def _query_comm_task_data(self):
+        if not DBManager.judge_table_exists(self.cursor, Constant.TABLE_COMMUNICATION_TASK_INFO):
+            return
         if self._enable_communication_compare or self._enable_profiling_compare:
             sql = """
             SELECT
@@ -271,6 +279,8 @@ class NPUProfilingDbParser:
             self.comm_task_data = [HcclTaskBean(data) for data in all_data]
 
     def _query_memory_data(self):
+        if not DBManager.judge_table_exists(self.cursor, Constant.TABLE_OP_MEMORY):
+            return
         if self._enable_memory_compare:
             sql = """
             SELECT  
@@ -342,6 +352,8 @@ class NPUProfilingDbParser:
                                                      Constant.RELEASE_TIME: release_time / Constant.NS_TO_US})
 
     def _query_python_function_data(self):
+        if not DBManager.judge_table_exists(self.cursor, Constant.TABLE_PYTORCH_API):
+            return
         if self._enable_operator_compare:
             sql = self.pytorch_api_sql.format(
                 "AND PYTORCH_API.startNs>=? AND PYTORCH_API.startNs<=?") if len(self.step_range) == 2 else \
@@ -357,6 +369,8 @@ class NPUProfilingDbParser:
                 self.start_time = start_time
                 self.pid = Constant.INVALID_VALUE
 
+        if not DBManager.judge_table_exists(self.cursor, Constant.TABLE_PYTORCH_API):
+            return
         sql = """
         SELECT T.connectionId, T.startNs
         FROM (
