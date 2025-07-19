@@ -111,10 +111,8 @@ class PathManager:
             if not os.path.exists(path):
                 continue
             if os.stat(path).st_uid != os.getuid():
-                check_msg = input("The path does not belong to you, do you want to continue? [y/n]")
-                if check_msg.lower() != "y":
-                    raise RuntimeError("The user choose not to continue.")
-                return
+                raise RuntimeError("The path does not belong to you. You can add the '--force' parameter and "
+                                   "retry. This parameter will ignore the file owner and file size!")
 
     @classmethod
     def check_path_writeable(cls, path):
@@ -211,10 +209,9 @@ class PathManager:
             return
         file_size = os.path.getsize(file_path)
         if file_size > Constant.MAX_FILE_SIZE_5_GB:
-            check_msg = input(
-                f"The file({file_path}) size exceeds the preset max value. Continue reading the file? [y/n]")
-            if check_msg.lower() != "y":
-                raise RuntimeError(f"[WARNING] The user choose not to read the file: {file_path}")
+            raise RuntimeError(f"The file({file_path}) size is {file_size} Byte, exceeds the preset max value. "
+                               f"You can add the '--force' parameter and retry. This parameter will ignore "
+                               f"the file owner and file size!")
 
     @classmethod
     def expanduser_for_cli(cls, ctx, parm, str_name: str):
