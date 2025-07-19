@@ -120,7 +120,7 @@ experimental_config = torch_npu.profiler._ExperimentalConfig(
 
 A列： Step数，是采集性能数据时设置的，一般来说集群性能数据采集一个step足够，如果采集多个step，需要先筛选一下。
 
-B列： Type，主要分两种，rank和stage，和后面的Index强相关，可以理解为一个是单卡rank，一个是rank group（pp 并行的stage），如果type为stage，则后面D-K列信息为rank group下的最大值。
+B列： Type，主要分两种，rank和stage，和后面的Index强相关，可以理解为一个是单卡rank，一个是rank group（pp 并行的stage），如果type为stage，则后面D-K列信息为rank group下的最大值（**Level0场景下没有stage类型**）。
 
 C列：Index，与type相关，表示卡号。
 

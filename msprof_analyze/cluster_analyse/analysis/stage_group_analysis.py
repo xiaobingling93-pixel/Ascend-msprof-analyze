@@ -70,11 +70,17 @@ class StageInfoAnalysis:
             return None
         # read comm_group_parallel_info from communication_group.json
         group_data = FileManager.read_json_file(communication_group_json)
-        if Constant.KEY_COMM_GROUP_PARALLEL_INFO not in group_data:
+        if (Constant.KEY_COMM_GROUP_PARALLEL_INFO not in group_data or not
+                group_data.get(Constant.KEY_COMM_GROUP_PARALLEL_INFO)):
             logger.warning(f"{Constant.KEY_COMM_GROUP_PARALLEL_INFO} not in {Constant.COMMUNICATION_GROUP_JSON}")
             return None
         # convert to dataframe
         comm_group_df = pd.DataFrame(group_data.get(Constant.KEY_COMM_GROUP_PARALLEL_INFO))
+        expected_columns = [TableConstant.TYPE, TableConstant.RANK_SET, TableConstant.GROUP_NAME,
+                            TableConstant.GROUP_ID, TableConstant.PG_NAME]
+        if list(comm_group_df.columns) != expected_columns:
+            logger.error(f"{Constant.COMMUNICATION_GROUP_JSON} has unexpected columns: {comm_group_df.columns}")
+            return None
         comm_group_df[TableConstant.RANK_SET] = comm_group_df[TableConstant.RANK_SET].apply(set)
         return comm_group_df
 
@@ -95,7 +101,11 @@ class StageInfoAnalysis:
         if comm_group_df is None or comm_group_df.empty:
             logger.error(f"There is no {table_communication_group} data in {cluster_analysis_db}.")
             return None
-
+        expected_columns = [TableConstant.TYPE, TableConstant.RANK_SET, TableConstant.GROUP_NAME,
+                            TableConstant.GROUP_ID, TableConstant.PG_NAME]
+        if list(comm_group_df.columns) != expected_columns:
+            logger.error(f"{Constant.COMMUNICATION_GROUP_JSON} has unexpected columns: {comm_group_df.columns}")
+            return None
         # process rank_set
         comm_group_df[TableConstant.RANK_SET] = comm_group_df[TableConstant.RANK_SET].apply(
             lambda s: set(map(int, s.strip('()').split(','))))
