@@ -26,7 +26,7 @@ WITH
             PYTORCH_API
         LEFT JOIN
             CONNECTION_IDS
-            ON PYTORCH_API.connectionId == CONNECTION_IDS.id
+            ON PYTORCH_API.connectionId = CONNECTION_IDS.id
         {}
     )
 SELECT
@@ -39,15 +39,15 @@ FROM
     MSTX_EVENTS
 LEFT JOIN
     TASK
-    ON MSTX_EVENTS.connectionId == TASK.connectionId
+    ON MSTX_EVENTS.connectionId = TASK.connectionId
 LEFT JOIN
     FRAMEWORK_API
-    ON MSTX_EVENTS.connectionId == FRAMEWORK_API.connectionId
+    ON MSTX_EVENTS.connectionId = FRAMEWORK_API.connectionId
 LEFT JOIN
     STRING_IDS AS MSG_IDS
-    ON MSTX_EVENTS.message == MSG_IDS.id
+    ON MSTX_EVENTS.message = MSG_IDS.id
 WHERE 
-    MSTX_EVENTS.eventType == 3 {}
+    MSTX_EVENTS.eventType = 3 {}
 ORDER BY
     MSTX_EVENTS.startNs
     """
@@ -83,12 +83,12 @@ FROM
     MSTX_EVENTS
 LEFT JOIN
     TASK
-    ON MSTX_EVENTS.connectionId == TASK.connectionId
+    ON MSTX_EVENTS.connectionId = TASK.connectionId
 LEFT JOIN
     STRING_IDS AS MSG_IDS
-    ON MSTX_EVENTS.message == MSG_IDS.id
+    ON MSTX_EVENTS.message = MSG_IDS.id
 WHERE
-    MSTX_EVENTS.eventType == 2 {}
+    MSTX_EVENTS.eventType = 2 {}
 AND
     MSTX_EVENTS.connectionId != 4294967295
 ORDER BY

@@ -55,7 +55,7 @@ FROM
     summary
 LEFT JOIN
     STRING_IDS AS ids
-    ON ids.id == summary.name
+    ON ids.id = summary.name
 ORDER BY 2 DESC;
     """
 
