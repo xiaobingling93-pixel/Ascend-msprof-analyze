@@ -36,11 +36,10 @@ class FileManager:
         if file_size <= 0:
             return result_data
         if not AdditionalArgsManager().force and file_size > Constant.MAX_FILE_SIZE:
-            check_msg = input(
-                f"The file({file_path}) size exceeds the preset max value. Continue reading the file? [y/n]")
-            if check_msg.lower() != "y":
-                logger.warning("The user choose not to read the file: %s", file_path)
-                return result_data
+            logger.warning(f"The file({file_path}) size is {file_size} Byte, exceeds the preset max value. You can add "
+                           f"the '--force' parameter and retry. This parameter will ignore the file owner and "
+                           f"file size!")
+            return result_data
         try:
             with open(file_path, "r") as json_file:
                 result_data = json.loads(json_file.read())
@@ -57,11 +56,10 @@ class FileManager:
         if file_size <= 0:
             return []
         if not AdditionalArgsManager().force and file_size > Constant.MAX_FILE_SIZE:
-            check_msg = input(
-                f"The file({file_path}) size exceeds the preset max value. Continue reading the file? [y/n]")
-            if check_msg.lower() != "y":
-                logger.warning(f"The user choose not to read the file: {file_path}")
-                return []
+            logger.warning(f"The file({file_path}) size is {file_size} Byte, exceeds the preset max value. You can add "
+                           f"the '--force' parameter and retry. This parameter will ignore the file owner and "
+                           f"file size!")
+            return []
         result_data = []
         try:
             with open(file_path, newline="") as csv_file:
