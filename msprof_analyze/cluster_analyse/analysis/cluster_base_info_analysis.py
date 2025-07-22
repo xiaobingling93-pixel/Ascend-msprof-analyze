@@ -82,7 +82,7 @@ class ClusterBaseInfoAnalysis(BaseAnalysis):
 
     def get_profiler_metadata_file(self):
         meta_file_list = []
-        for root, _, files in os.walk(self.collection_path):
+        for root, _, files in PathManager.limited_depth_walk(self.collection_path):
             for file_name in files:
                 if file_name == Constant.PROFILER_METADATA:
                     meta_file_list.append(os.path.join(root, file_name))

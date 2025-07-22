@@ -221,3 +221,12 @@ class PathManager:
     def expanduser_for_argumentparser(cls, str_name: str):
         # None 对应 参数未赋值的场景
         return str_name if str_name is None else os.path.expanduser(str_name.lstrip('='))
+
+    @classmethod
+    def limited_depth_walk(cls, path, max_depth=10, *args, **kwargs):
+        base_depth = path.count(os.sep)
+        for root, dirs, files in os.walk(path, *args, **kwargs):
+            if root.count(os.sep) - base_depth > max_depth:
+                dirs.clear()
+                continue
+            yield root, dirs, files

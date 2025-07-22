@@ -27,6 +27,7 @@ from msprof_analyze.advisor.display.html.render import HTMLRender
 from msprof_analyze.advisor.display.html.priority_background_color import PriorityBackgroundColor
 from msprof_analyze.advisor.utils.utils import safe_division
 from msprof_analyze.prof_common.file_manager import FileManager
+from msprof_analyze.prof_common.path_manager import PathManager
 
 logger = logging.getLogger()
 
@@ -114,7 +115,7 @@ class BaseAnalyzer(VersionControl, metaclass=ABCMeta):
         elif self.collection_path.endswith(ASCEND_PT):
             profiling_type = [elem for elem in profiling_type_list if Constant.PYTORCH in elem][0]
         else:
-            for _, dirs, __ in os.walk(self.collection_path):
+            for _, dirs, __ in PathManager.limited_depth_walk(self.collection_path):
                 is_found_type = False
                 for direction in dirs:
                     if direction.endswith(ASCEND_MS):
@@ -143,7 +144,7 @@ class BaseAnalyzer(VersionControl, metaclass=ABCMeta):
             if self.collection_path.endswith(ASCEND_MS):
                 ascend_dirs.append(self.collection_path)
             else:
-                for root, dirs, _ in os.walk(self.collection_path):
+                for root, dirs, _ in PathManager.limited_depth_walk(self.collection_path):
                     for direction in dirs:
                         if direction.endswith(ASCEND_MS):
                             ascend_dirs.append(os.path.join(root, direction))

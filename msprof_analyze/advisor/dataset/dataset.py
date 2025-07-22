@@ -22,6 +22,7 @@ import re
 
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.file_manager import FileManager
+from msprof_analyze.prof_common.path_manager import PathManager
 from msprof_analyze.advisor.config.config import Config
 
 logger = logging.getLogger()
@@ -64,7 +65,7 @@ class Dataset:
 
     def get_data_type(self):
         # 递归搜索ASCEND_PROFILER_PATH文件夹
-        for root, dirs, _ in os.walk(self.collection_path):
+        for root, dirs, _ in PathManager.limited_depth_walk(self.collection_path):
             if Constant.ASCEND_PROFILER_OUTPUT in dirs:
                 profiler_dir = os.path.join(root, Constant.ASCEND_PROFILER_OUTPUT)
 

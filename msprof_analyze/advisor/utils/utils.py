@@ -33,6 +33,7 @@ from tqdm import tqdm
 from msprof_analyze.advisor.utils.log import init_logger, get_log_level
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.singleton import singleton
+from msprof_analyze.prof_common.path_manager import PathManager
 
 logger = logging.getLogger()
 logger.setLevel(get_log_level())
@@ -109,7 +110,7 @@ def get_file_path_from_directory(path: str, check_func: Any) -> list:
     get file from directory
     """
     file_list = []
-    for root, _, files in os.walk(path, onerror=walk_error_handler):
+    for root, _, files in PathManager.limited_depth_walk(path, onerror=walk_error_handler):
         for filename in files:
             filepath = os.path.join(root, filename)
             if check_func(filename):
@@ -267,7 +268,7 @@ def get_file_path_from_directory(path, check_func):
     if not os.path.isdir(path):
         logger.warning("Expected existed directory, but got %s", path)
 
-    for root, _, files in os.walk(path):
+    for root, _, files in PathManager.limited_depth_walk(path):
         for filename in files:
             filepath = os.path.join(root, filename)
             if check_func(filename):
@@ -288,7 +289,7 @@ def join_prof_path(root_dir: str, sub_dir: str) -> str:
     regular expression matching method for path concatenation
     """
     if is_regex_pattern(sub_dir):
-        for root, _, _ in os.walk(root_dir, onerror=walk_error_handler):
+        for root, _, _ in PathManager.limited_depth_walk(root_dir, onerror=walk_error_handler):
             if re.match(sub_dir, os.path.basename(root)):
                 return root
         logger.debug("Fail to get profiling path %s from local path %s by regular expression matching", sub_dir,
@@ -351,7 +352,7 @@ class SafeOpen:
 
 def get_file_path_by_walk(root, filename):
     file_path = ""
-    for root, _, files in os.walk(root, topdown=True):
+    for root, _, files in PathManager.limited_depth_walk(root):
         for name in files:
             if name == filename:
                 file_path = os.path.join(root, name)

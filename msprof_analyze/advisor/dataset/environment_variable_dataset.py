@@ -17,6 +17,7 @@ import logging
 
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.file_manager import FileManager
+from msprof_analyze.prof_common.path_manager import PathManager
 
 
 class EnvironmentVariableDataset:
@@ -27,7 +28,7 @@ class EnvironmentVariableDataset:
 
     @staticmethod
     def get_env_data_file(collection_path: str) -> str:
-        for root, _, files in os.walk(collection_path):
+        for root, _, files in PathManager.limited_depth_walk(collection_path):
             for file_name in files:
                 if file_name == Constant.PROFILER_METADATA:
                     return os.path.join(root, file_name)

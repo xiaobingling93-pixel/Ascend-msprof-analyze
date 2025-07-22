@@ -23,6 +23,7 @@ from msprof_analyze.advisor.result.result import OptimizeResult
 from msprof_analyze.compare_tools.compare_interface.comparison_interface import ComparisonInterface
 from msprof_analyze.prof_common.additional_args_manager import AdditionalArgsManager
 from msprof_analyze.prof_common.constant import Constant
+from msprof_analyze.prof_common.path_manager import PathManager
 
 
 class OverallSummaryAnalyzer(BaseAnalyzer):
@@ -237,7 +238,7 @@ class OverallSummaryAnalyzer(BaseAnalyzer):
 
 
 def get_profile_path(collection_path):
-    for root, _, files in os.walk(collection_path):
+    for root, _, files in PathManager.limited_depth_walk(collection_path):
         for file in files:
             if file.startswith("profiler_info"):
                 return root

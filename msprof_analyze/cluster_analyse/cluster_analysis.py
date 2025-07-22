@@ -73,7 +73,7 @@ class Interface:
         ascend_pt_dirs = []
         ascend_ms_dirs = []
         prof_dirs = []
-        for root, dirs, _ in os.walk(self.collection_path):
+        for root, dirs, _ in PathManager.limited_depth_walk(self.collection_path):
             for dir_name in dirs:
                 if dir_name.endswith(self.ASCEND_PT):
                     ascend_pt_dirs.append(os.path.join(root, dir_name))

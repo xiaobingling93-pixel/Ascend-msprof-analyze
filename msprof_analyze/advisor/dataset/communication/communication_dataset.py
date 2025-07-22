@@ -24,6 +24,7 @@ from msprof_analyze.cluster_analyse.common_func.table_constant import TableConst
 from msprof_analyze.prof_common.singleton import singleton
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.file_manager import FileManager
+from msprof_analyze.prof_common.path_manager import PathManager
 from msprof_analyze.advisor.dataset.cluster.hccl_collection import HcclInfo
 from msprof_analyze.advisor.utils.utils import CheckPathAccess
 from msprof_analyze.advisor.dataset.dataset import Dataset
@@ -69,7 +70,7 @@ class CommunicationDataset(Dataset):
         if not os.path.isdir(path):
             logger.warning("Expected existed directory, but got %s", path)
 
-        for root, _, files in os.walk(path):
+        for root, _, files in PathManager.limited_depth_walk(path):
             if os.path.basename(root) != "ASCEND_PROFILER_OUTPUT":
                 continue
             for filename in files:
