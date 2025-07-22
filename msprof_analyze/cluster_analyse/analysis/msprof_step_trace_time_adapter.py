@@ -121,7 +121,7 @@ class MsprofStepTraceTimeDBAdapter(MsprofStepTraceTimeAdapter):
             self.string_id_map = {data[0]: data[1] for data in string_id_data}
         if DBManager.judge_table_exists(curs, TableConstant.TABLE_COMPUTE_TASK_INFO):
             sql = f"select TASK.startNs, TASK.endNs from {TableConstant.TABLE_COMPUTE_TASK_INFO} JOIN " \
-                  f"{TableConstant.TABLE_TASK} on {TableConstant.TABLE_TASK}.globalTaskId == " \
+                  f"{TableConstant.TABLE_TASK} on {TableConstant.TABLE_TASK}.globalTaskId = " \
                   f"{TableConstant.TABLE_COMPUTE_TASK_INFO}.globalTaskId"
             self.compute_task_info = DBManager.fetch_all_data(curs, sql, is_dict=False)
         if DBManager.judge_table_exists(curs, TableConstant.TABLE_COMMUNICATION_OP):

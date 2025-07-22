@@ -151,7 +151,7 @@ class BindCoreManager():
                 logging.info('Succeed to bind process %s on NPU %d with cpu cores list %s', pid, npu, affinity_cpu)
 
     def args_parse(self):
-        parser = argparse.ArgumentParser(description='This is a affinity cpu core bind script.')
+        parser = argparse.ArgumentParser(description='This is an affinity cpu core bind script.')
         parser.add_argument('-t', '--time', type=int, metavar='',
                             help='Wait time before bind cores that you want to set. The unit is \'s\'.')
         parser.add_argument('-app', '--application', metavar='', nargs='+',

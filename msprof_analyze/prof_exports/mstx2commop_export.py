@@ -25,10 +25,10 @@ FROM
     MSTX_EVENTS ms
 JOIN
     TASK ta
-    ON ms.connectionId == ta.connectionId
+    ON ms.connectionId = ta.connectionId
 JOIN
     STRING_IDS si
-    ON ms.message == si.id
+    ON ms.message = si.id
 WHERE
     si.value LIKE '%"streamId":%'
     AND si.value LIKE '%"count":%'
