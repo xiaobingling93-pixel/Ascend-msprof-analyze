@@ -267,7 +267,7 @@ class AnalyzerController:
 
         try:
             if output_path:
-
+                output_path = PathManager.get_realpath(output_path)
                 PathManager.check_input_directory_path(output_path)
                 if os.path.exists(output_path):
                     PathManager.check_path_owner_consistent([output_path])
