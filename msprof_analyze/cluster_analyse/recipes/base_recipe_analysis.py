@@ -218,6 +218,7 @@ class BaseRecipeAnalysis(ABC):
             step_time = DBManager.fetch_all_data(cursor, sql)
         except Exception as err:
             logger.error(err)
+            return step_range
         finally:
             DBManager.destroy_db_connect(conn, cursor)
 

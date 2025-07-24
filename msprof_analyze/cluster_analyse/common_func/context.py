@@ -16,6 +16,7 @@
 import os
 from functools import partial
 from concurrent import futures
+from collections import defaultdict
 
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.logger import get_logger
@@ -68,6 +69,7 @@ class ConcurrentContext(Context):
         super().__init__()
         self._custom = executor is None
         self._executor = executor or futures.ProcessPoolExecutor(max_workers=os.cpu_count())
+        self.future_dict = defaultdict(list)
 
     def __enter__(self):
         if self._executor is None:
@@ -93,3 +95,11 @@ class ConcurrentContext(Context):
 
     def wait(self, waitable):
         return waitable
+
+    def submit(self, name, func, *args, **kwargs):
+        self.future_dict[name].append(self._executor.submit(func, *args, **kwargs))
+
+    def wait_all_futures(self):
+        for _, future_list in self.future_dict.items():
+            for future in future_list:
+                future.result()
