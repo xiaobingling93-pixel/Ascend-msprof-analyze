@@ -40,4 +40,5 @@ def get_class_from_name(analysis_name: str):
     specific_analysis = inspect.getmembers(module, is_analysis_class)
     if not specific_analysis:
         logger.error(f"{analysis_name} not found.")
+        return None
     return specific_analysis[0]
