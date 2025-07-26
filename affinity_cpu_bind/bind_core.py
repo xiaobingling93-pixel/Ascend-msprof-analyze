@@ -18,6 +18,7 @@ import argparse
 import os
 import time
 import logging
+from logging.handlers import RotatingFileHandler
 from datetime import datetime
 from datetime import timezone
 
@@ -185,10 +186,16 @@ class BindCoreManager():
         except RuntimeError as err:
             raise RuntimeError(msg) from err
         self.log_file = log_file_name
-        logging.basicConfig(filename=self.log_file,
-                            level=logging.INFO,
-                            filemode='w',
-                            format='%(asctime)s-%(name)s-%(levelname)s-%(message)s')
+        file_handler = RotatingFileHandler(
+            filename=log_file_name,
+            maxBytes=10 * 1024 * 1024,
+            backupCount=3,
+            encoding='utf-8'
+        )
+        file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+        file_handler.setLevel(logging.INFO)
+        logger.setLevel(logging.INFO)
+        logger.addHandler(file_handler)
 
     def _get_all_npu_id(self) -> None:
         get_npu_info_cmd = 'npu-smi info -l'
