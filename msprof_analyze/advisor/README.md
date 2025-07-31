@@ -1,8 +1,8 @@
 # advisor
 
-msprof-analyze的advisor功能是将Ascend PyTorch Profiler、msprof或者MindSpore Profiler采集的性能数据进行分析，并输出性能调优建议。
+msprof-analyze的advisor功能是将Ascend PyTorch Profiler或者MindSpore Profiler采集的性能数据进行分析，并输出性能调优建议。
 
-Ascend PyTorch Profiler、msprof采集方法请参见《[性能调优工具](https://www.hiascend.com/document/detail/zh/mindstudio/70RC3/T&ITools/Profiling/atlasprofiling_16_0001.html)》，MindSpore Profiler采集方法请参见《[性能调试](https://www.mindspore.cn/mindinsight/docs/zh-CN/r2.3/performance_profiling_ascend.html)》。
+Ascend PyTorch Profilerf采集方法请参见《[性能调优工具](https://www.hiascend.com/document/detail/zh/mindstudio/81RC1/T&ITools/Profiling/atlasprofiling_16_0090.html)》，MindSpore Profiler采集方法请参见《[性能调试](https://www.mindspore.cn/mindinsight/docs/zh-CN/r2.3/performance_profiling_ascend.html)》。
 
 ## 工具使用（命令行方式方式）
 

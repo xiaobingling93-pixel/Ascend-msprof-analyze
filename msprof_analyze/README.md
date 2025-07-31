@@ -243,12 +243,12 @@ msprof-analyze auto-completion [-h]
 msprof-analyze [-h] [-v]
 ```
 
-| 参数                 | 说明                                                         |
-| -------------------- | ------------------------------------------------------------ |
-| advisor              | [advisor](./advisor/README.md)。将Ascend PyTorch Profiler或者msprof采集的PyThon场景性能数据进行分析，并输出性能调优建议。 |
-| compare              | [compare_tools（性能比对工具）](./compare_tools/README.md)。提供NPU与GPU性能拆解功能以及算子、通信、内存性能的比对功能。 |
+| 参数                 | 说明                                                                                                                      |
+| -------------------- |-------------------------------------------------------------------------------------------------------------------------|
+| advisor              | [advisor](./advisor/README.md)。将Ascend PyTorch Profiler或者MindSpore采集的PyThon场景性能数据进行分析，并输出性能调优建议。                        |
+| compare              | [compare_tools（性能比对工具）](./compare_tools/README.md)。提供NPU与GPU性能拆解功能以及算子、通信、内存性能的比对功能。                                    |
 | cluster              | [cluster_analyse（集群分析工具）](./cluster_analyse/README.md)。提供多机多卡的集群分析能力（基于通信域的通信分析和迭代耗时分析）, 当前需要配合Ascend Insight的集群分析功能使用。 |
-| auto-completion      | 自动补全。配置后在当前视图下配置msprof-analyze工具所有的子参数时，可以使用Tab将所有子参数自动补全。 |
-| -v，-V<br/>--version | 查看版本号。                                                 |
-| -h，-H<br>--help     | 命令行参数帮助信息。                                         |
+| auto-completion      | 自动补全。配置后在当前视图下配置msprof-analyze工具所有的子参数时，可以使用Tab将所有子参数自动补全。                                                              |
+| -v，-V<br/>--version | 查看版本号。                                                                                                                  |
+| -h，-H<br>--help     | 命令行参数帮助信息。                                                                                                              |
 
