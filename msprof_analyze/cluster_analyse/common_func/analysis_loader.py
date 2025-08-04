@@ -37,7 +37,11 @@ def get_class_from_name(analysis_name: str):
         logger.error(f"{analysis_path} not find:{e}")
         return module
 
-    specific_analysis = inspect.getmembers(module, is_analysis_class)
+    specific_analysis = [
+        (name, cls)
+        for name, cls in inspect.getmembers(module, is_analysis_class)
+        if cls.__module__ == analysis_path
+    ]
     if not specific_analysis:
         logger.error(f"{analysis_name} not found.")
         return None

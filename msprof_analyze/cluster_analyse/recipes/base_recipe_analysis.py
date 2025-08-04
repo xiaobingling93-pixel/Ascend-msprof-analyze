@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import argparse
+import json
 import os
 import shutil
 import sys
@@ -24,6 +25,7 @@ import pandas as pd
 from msprof_analyze.prof_common.db_manager import DBManager
 from msprof_analyze.cluster_analyse.common_func.utils import convert_unit
 from msprof_analyze.prof_common.constant import Constant
+from msprof_analyze.prof_common.database_service import DatabaseService
 from msprof_analyze.prof_common.logger import get_logger
 from msprof_analyze.prof_common.path_manager import PathManager
 from msprof_analyze.cluster_analyse.cluster_data_preprocess.msprof_data_preprocessor import MsprofDataPreprocessor
@@ -36,8 +38,10 @@ logger = get_logger()
 class BaseRecipeAnalysis(ABC):
     UNIT = "Us"
     DB_UNIT = "Ns"
-
     RANK_LIST = "rank_list"
+    TP_SIZE = "tensor_model_parallel_size"
+    PP_SIZE = "pipeline_model_parallel_size"
+    DP_SIZE = "data_parallel_size"
 
     def __init__(self, params):
         self._collection_dir = params.get(Constant.COLLECTION_PATH, "")
@@ -151,6 +155,67 @@ class BaseRecipeAnalysis(ABC):
         if helper_file_path is not None:
             shutil.copy(helper_file_path, helper_output_path)
             os.chmod(helper_output_path, Constant.FILE_AUTHORITY)
+
+    def map_rank_pp_stage(self, distributed_args):
+        tp_size = distributed_args.get(self.TP_SIZE, 1)
+        pp_size = distributed_args.get(self.PP_SIZE, 1)
+        dp_size = distributed_args.get(self.DP_SIZE, 1)
+        rank_pp_stage_map = {}
+        rank = 0
+        for i in range(pp_size):
+            for _ in range(tp_size * dp_size):
+                rank_pp_stage_map[rank] = i
+                rank += 1
+        return rank_pp_stage_map
+
+    def load_distributed_args(self):
+        tp_size = self._extra_args.get("tp", None)
+        pp_size = self._extra_args.get("pp", None)
+        dp_size = self._extra_args.get("dp", None)
+        if tp_size and pp_size and dp_size:
+            if tp_size <= 0 or pp_size <= 0 or dp_size <= 0:
+                logger.error("Invalid distributed_args, tp pp dp < 0.")
+                return None
+            return {
+                self.TP_SIZE: tp_size,
+                self.DP_SIZE: dp_size,
+                self.PP_SIZE: pp_size,
+            }
+        else:
+            rank_id = list(self._data_map.keys())[0]
+            profiler_db_path = self._data_map[rank_id]
+            db_path = os.path.join(profiler_db_path, Constant.SINGLE_OUTPUT, f"ascend_pytorch_profiler_{rank_id}.db")
+            if os.path.exists(db_path):
+                try:
+                    service = DatabaseService(db_path, {})
+                    service.add_table_for_query("META_DATA", ["name", "value"])
+                    df = service.query_data().get("META_DATA", None)
+                    distributed_args = df.loc[df["name"] == "distributed_args", "value"]
+                    if distributed_args.empty:
+                        distributed_args = {}
+                        logger.error("Distributed args not in profiling files, please input manually.")
+                    else:
+                        distributed_args = json.loads(distributed_args.values[0])
+                except Exception as err:
+                    logger.error(err)
+                    logger.error("Distributed args not in profiling files, please input manually.")
+                    return None
+                tp_size = distributed_args.get(self.TP_SIZE, 1)
+                pp_size = distributed_args.get(self.PP_SIZE, 1)
+                dp_size = distributed_args.get(self.DP_SIZE, 1)
+                if not isinstance(tp_size, int) or not isinstance(pp_size, int) or not isinstance(dp_size, int):
+                    logger.error("Invalid distributed_args in profiling files, please input manually.")
+                    return None
+                if tp_size <= 0 or pp_size <= 0 or dp_size <= 0:
+                    logger.error("Invalid distributed_args in profiling files, please input manually.")
+                    return None
+                return {
+                    self.TP_SIZE: tp_size,
+                    self.PP_SIZE: pp_size,
+                    self.DP_SIZE: dp_size,
+                }
+            logger.error(f"Db_file: {db_path} not exist.")
+            return None
 
     def _get_rank_db(self):
         invalid_rank_id = []
