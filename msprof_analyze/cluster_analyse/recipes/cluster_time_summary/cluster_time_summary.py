@@ -198,7 +198,7 @@ class ClusterTimeSummary(BaseRecipeAnalysis):
             return pd.DataFrame(columns=columns)
 
         memory_df = ClusterTimeSummary.calculate_memory_time(df)
-        memory_not_overlap_df = (df.groupby(["step"]).apply(ClusterTimeSummary.get_memory_not_overlap).
+        memory_not_overlap_df = (df.groupby(["step"])[["start", "end", "type"]].apply(self.get_memory_not_overlap).
                                  reset_index(name="memoryNotOverlapComputationCommunication"))
         result_df = pd.merge(memory_df, memory_not_overlap_df, on='step', how='inner')
         result_df.insert(0, "rank", rank_id)
@@ -226,6 +226,10 @@ class ClusterTimeSummary(BaseRecipeAnalysis):
 
         # 通信时间细粒度拆解
         transmit_and_wait_df = self.calculate_transmit_and_wait_df(communication_df)
+        if transmit_and_wait_df.empty:
+            logger.error(f"No valid transmit and wait time in cluster data, skipping analysis")
+            return pd.DataFrame()
+
         # 合并所有信息
         all_dfs = [step_time_df, step_trace_df, transmit_and_wait_df, memory_df]
         merged_df = all_dfs[0]
