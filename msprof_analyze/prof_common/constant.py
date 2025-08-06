@@ -452,6 +452,8 @@ class Constant(object):
     UINT32_BITS = 32
     UINT32_MASK = 0xffffffff
 
+    INVALID_RANK_NUM = 4294967295
+
     # slow rank
     MAX_DIXON_NUM = 100
     DIXON_THRESHOLD_1 = 7
@@ -484,3 +486,27 @@ class Constant(object):
     TABLE_MEMORY_RECORD = "MEMORY_RECORD"
     TABLE_STEP_TIME = "STEP_TIME"
 
+    # communication task type
+    NOTIFY_RECORD = "Notify_Record"
+    NOTIFY_WAIT = "Notify_Wait"
+
+    # group name value
+    PP = "pp"
+
+
+class ProfilerTableConstant:
+
+    # COMMUNICATION OP
+    OP_ID = "opId"
+    OP_NAME = "opName"
+    START_NS = "startNS"
+    END_NS = "endNS"
+    CONNECTION_ID = "connectionId"
+    GROUP_NAME = "groupName"
+    RELAY = "relay"
+    RETRY = "retry"
+    DATA_TYPE = "dataType"
+    ALG_TYPE = "algType"
+    COUNT = "count"
+    OP_TYPE = "opType"
+    WAIT_NS = "waitNS"

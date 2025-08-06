@@ -43,5 +43,5 @@ class Mstx2CommopExport(BaseStatsExport):
 
     def __init__(self, db_path, recipe_name, step_range):
         super().__init__(db_path, recipe_name, step_range)
-        filter_stat = "AND ta.startNs >= ? and ta.startNs <= ?" if step_range else ""
+        filter_stat = "AND ms.startNs >= ? and ms.startNs <= ?" if step_range else ""
         self._query = QUERY.format(filter_stat)

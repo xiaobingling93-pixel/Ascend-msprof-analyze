@@ -51,6 +51,7 @@ class Mstx2Commop(BaseRecipeAnalysis):
     def __init__(self, params):
         super().__init__(params)
         logger.info("Mstx2Commop init.")
+        self.copy_db = True
         self.communication_op = None
         self.string_ids_insert = None
         self.set_output = Constant.CLUSTER_ANALYSIS_OUTPUT_PATH in params  # 是否设置了output_path参数
@@ -59,11 +60,14 @@ class Mstx2Commop(BaseRecipeAnalysis):
     def base_dir(self):
         return os.path.basename(os.path.dirname(__file__))
 
-    def run(self, context):
+    def run(self, context, copy_db=True):
+        self.copy_db = copy_db
         self.mapper_func(context)
 
     def _mapper_func(self, data_map, analysis_class):
         profiler_db_path = data_map.get(Constant.PROFILER_DB_PATH)
+        if DBManager.check_tables_in_db(profiler_db_path, TABLE_COMMUNICATION_OP):
+            return None
         step_range = data_map.get(Constant.STEP_RANGE)
         data_service = DatabaseService(profiler_db_path, step_range)
         data_service.add_table_for_query("ENUM_HCCL_DATA_TYPE", ["id", "name"])
@@ -175,7 +179,8 @@ class Mstx2Commop(BaseRecipeAnalysis):
         communication_op.set_index('opId', inplace=True)
         string_ids_insert = list(map(list, zip(special_id_list, special_primal_list)))
 
-        new_profiler_db = self._prepare_output_profiler_db(data_map.get(Constant.PROFILER_DB_PATH))
+        new_profiler_db = self._prepare_output_profiler_db(data_map.get(Constant.PROFILER_DB_PATH)) if self.copy_db \
+            else data_map.get(Constant.PROFILER_DB_PATH)
 
         DBManager.insert_data_into_db(new_profiler_db, TABLE_STRING_IDS, string_ids_insert)
 

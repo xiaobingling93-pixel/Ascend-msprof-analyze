@@ -261,6 +261,21 @@ class DBManager:
         cls.insert_data_into_table(conn, table_name, data)
         cls.destroy_db_connect(conn, curs)
 
+    @classmethod
+    def check_columns_exist(cls, curs: any, table_name: str, columns: set) -> any:
+        """
+        check columns exist in table, return empty set if none of them exist, else return the set of existing columns
+        """
+        if not isinstance(curs, sqlite3.Cursor):
+            return None
+        try:
+            curs.execute(f"PRAGMA table_info({table_name})")
+            table_columns = {col[1] for col in curs.fetchall()}
+            return columns & table_columns
+        except sqlite3.Error as err:
+            logger.error(err)
+            return None
+
 
 class CustomizedDictFactory:
     @staticmethod
