@@ -27,11 +27,14 @@ logger = get_logger()
 class MsprofDataPreprocessor(DataPreprocessor):
     DEVICE_PATTERN = r"device_\d{1,2}$"
     INFO_JSON_PATTERN = r"^info\.json\.\d{1,2}$"
-    DB_PATTERN = r"^msprof_\d{1,20}\.db$"
 
     def __init__(self, path_list: list):
         super().__init__(path_list)
         self.data_type = set()
+
+    @property
+    def db_pattern(self):
+        return r"^msprof_\d{1,20}\.db$"
 
     @classmethod
     def get_msprof_profiler_db_path(cls, data_path):
@@ -113,8 +116,4 @@ class MsprofDataPreprocessor(DataPreprocessor):
                     return os.path.join(dir_name, file_name, device_file)
         return None
 
-    def _check_db_type(self, dir_name):
-        for file_name in os.listdir(dir_name):
-            if re.match(self.DB_PATTERN, file_name):
-                return True
-        return False
+
