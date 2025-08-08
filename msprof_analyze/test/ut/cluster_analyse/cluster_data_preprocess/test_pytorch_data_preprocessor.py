@@ -19,6 +19,7 @@ import shutil
 import unittest
 from unittest import mock
 
+from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.cluster_analyse.cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
 
 
@@ -28,17 +29,26 @@ class TestPytorchDataPreprocessor(unittest.TestCase):
     def setUp(self) -> None:
         if os.path.exists(self.DIR_PATH):
             shutil.rmtree(self.DIR_PATH)
-        os.makedirs(os.path.join(self.DIR_PATH, 'worker1_11111111_ascend_pt'))
-        open(os.path.join(self.DIR_PATH, 'worker1_11111111_ascend_pt', 'profiler_info_1.json'), 'w')
-        os.makedirs(os.path.join(self.DIR_PATH, 'worker2_11111112_ascend_pt'))
-        open(os.path.join(self.DIR_PATH, 'worker2_11111112_ascend_pt', 'profiler_info_2.json'), 'w')
-        os.makedirs(os.path.join(self.DIR_PATH, 'single_worker_11111111_ascend_pt'))
-        open(os.path.join(self.DIR_PATH, 'single_worker_11111111_ascend_pt', 'profiler_info.json'), 'w')
-        os.makedirs(os.path.join(self.DIR_PATH, 'worker1_11111112_ascend_pt'))
-        open(os.path.join(self.DIR_PATH, 'worker1_11111112_ascend_pt', 'profiler_info_1.json'), 'w')
-        os.makedirs(os.path.join(self.DIR_PATH, 'worker2_11111113_ascend_pt'))
-        open(os.path.join(self.DIR_PATH, 'worker2_11111113_ascend_pt', 'profiler_info_2.json'), 'w')
+
+        def create_worker_dir(worker_name, rank_id):
+            worker_path = os.path.join(self.DIR_PATH, worker_name)
+            profiler_info_name = f"profiler_info_{rank_id}.json" if rank_id else "profiler_info.json"
+            os.makedirs(worker_path)
+            open(os.path.join(worker_path, profiler_info_name), 'w')
+            output_dir = os.path.join(worker_path, Constant.ASCEND_PROFILER_OUTPUT)
+            os.makedirs(output_dir)
+            db_filename = f"ascend_pytorch_profiler_{rank_id}.db" if rank_id else "ascend_pytorch_profiler.db"
+            open(os.path.join(output_dir, db_filename), 'w')
+
+        # Create all worker directories with their respective files
+        create_worker_dir('worker1_11111111_ascend_pt', rank_id=1)
+        create_worker_dir('worker2_11111112_ascend_pt', rank_id=2)
+        create_worker_dir('single_worker_11111111_ascend_pt', rank_id=None)
+        create_worker_dir('worker1_11111112_ascend_pt', rank_id=1)
+        create_worker_dir('worker2_11111113_ascend_pt', rank_id=2)
+
         self.dirs = [os.path.join(self.DIR_PATH, filename) for filename in os.listdir(self.DIR_PATH)]
+
 
     def tearDown(self) -> None:
         shutil.rmtree(self.DIR_PATH)
@@ -62,6 +72,7 @@ class TestPytorchDataPreprocessor(unittest.TestCase):
         with mock.patch("msprof_analyze.prof_common.file_manager.FileManager.read_json_file",
                         return_value={}):
             ret = check.get_data_map()
+            self.assertEqual(len(ret), 2)
             self.assertIn(1, ret.keys())
             self.assertIn(2, ret.keys())
             self.assertIn(os.path.join(self.DIR_PATH, 'worker1_11111111_ascend_pt'), ret.values())

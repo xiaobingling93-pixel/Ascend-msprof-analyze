@@ -30,11 +30,15 @@ class MindsporeDataPreprocessor(DataPreprocessor):
         super().__init__(path_list)
         self.data_type = set()
 
+    @property
+    def db_pattern(self):
+        return r'^ascend_mindspore_profiler(?:_\d+)?\.db$'
+
     @classmethod
     def get_msprof_dir(cls, profiling_path):
-        prof_pattren = r"^PROF_\d+_\d+_[0-9a-zA-Z]+"
+        prof_pattern = r"^PROF_\d+_\d+_[0-9a-zA-Z]+"
         for file_name in os.listdir(profiling_path):
-            if re.match(prof_pattren, file_name):
+            if re.match(prof_pattern, file_name):
                 return os.path.join(profiling_path, file_name)
         return ""
 
@@ -45,17 +49,12 @@ class MindsporeDataPreprocessor(DataPreprocessor):
             if rank_id < 0:
                 logger.error("fail to get rankid or rankid invalid.")
                 continue
-            for file_name in os.listdir(dir_name):
-                if file_name.startswith(self.PROFILER_INFO_HEAD) and file_name.endswith(self.PROFILER_INFO_EXTENSION):
-                    file_path = os.path.join(dir_name, file_name)
-                    config = FileManager.read_json_file(file_path)
-                    export_type = (config.get(Constant.PROFILER_PARAMETER, {}).get(Constant.EXPORT_TYPE, Constant.TEXT))
-                    if isinstance(export_type, list):
-                        self.data_type.add(Constant.DB if Constant.DB in export_type else Constant.TEXT)
-                    else:
-                        self.data_type.add(export_type)
-            rank_id_map[rank_id].append(dir_name)
-
+            ascend_profiler_output = os.path.join(dir_name, Constant.ASCEND_PROFILER_OUTPUT)
+            if os.path.exists(ascend_profiler_output) and os.path.isdir(ascend_profiler_output):
+                data_type = Constant.DB if self._check_db_type(ascend_profiler_output) else Constant.TEXT
+                self.data_type.add(data_type)
+                rank_id_map[rank_id].append(dir_name)
+                logger.debug(f"rank_id: {rank_id}, data_type: {data_type}, directory: {dir_name}")
         try:
             for (rank_id, dir_list) in rank_id_map.items():
                 dir_list.sort(key=lambda x: x.split('_')[-3])

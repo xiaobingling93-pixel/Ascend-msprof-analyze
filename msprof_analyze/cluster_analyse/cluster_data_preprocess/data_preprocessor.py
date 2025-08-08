@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
+import re
 from abc import abstractmethod
 
 
@@ -23,6 +24,11 @@ class DataPreprocessor:
     def __init__(self, path_list: list):
         self.path_list = path_list
         self.data_map = {}
+
+    @property
+    @abstractmethod
+    def db_pattern(self):
+        pass
 
     @abstractmethod
     def get_data_map(self):
@@ -39,3 +45,9 @@ class DataPreprocessor:
                     rank_id = -1
                 return rank_id
         return -1
+
+    def _check_db_type(self, dir_name):
+        for file_name in os.listdir(dir_name):
+            if re.match(self.db_pattern, file_name):
+                return True
+        return False
