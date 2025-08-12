@@ -131,6 +131,6 @@ class TestTimelineDBHelper(unittest.TestCase):
         self.db_helper.init = True
         self.db_helper.conn = MagicMock()
         self.db_helper.curs = MagicMock()
-        self.db_helper.destory_db_connection()
+        self.db_helper.destroy_db_connection()
 
         self.assertFalse(self.db_helper.init)

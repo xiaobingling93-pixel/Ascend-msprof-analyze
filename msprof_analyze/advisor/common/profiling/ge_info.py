@@ -18,8 +18,7 @@ import logging
 import os
 from typing import Any, List
 
-from sqlalchemy import text
-from sqlalchemy.exc import SQLAlchemyError
+from msprof_analyze.prof_common.db_manager import DBManager
 
 from msprof_analyze.advisor.dataset.profiling.db_manager import ConnectionManager
 from msprof_analyze.advisor.dataset.profiling.profiling_parser import ProfilingParser
@@ -51,14 +50,11 @@ class GeInfo(ProfilingParser):
         check_path_valid(db_path)
         if not ConnectionManager.check_db_exists(db_path, [db_file]):
             return False
-        try:
-            conn = ConnectionManager(db_path, db_file)
-        except SQLAlchemyError as e:
-            logger.error("Database error: %s", e)
-            return False
-        if conn.check_table_exists(['TaskInfo']):
-            with conn().connect() as sql_conn:
-                self.op_state_info_list = sql_conn.execute(text("select op_name, op_state from TaskInfo")).fetchall()
+        conn, cursor = DBManager.create_connect_db(db_path)
+        if DBManager.judge_table_exists(cursor, 'TaskInfo'):
+            sql = "select op_name, op_state from TaskInfo"
+            self.op_state_info_list = DBManager.fetch_all_data(cursor, sql)
+        DBManager.destroy_db_connect(conn, cursor)
         return True
 
     def get_static_shape_operators(self) -> List[Any]:

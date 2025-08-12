@@ -34,3 +34,4 @@ class ExcelView(BaseView):
             WorkSheetCreator(workbook, sheet_name, data, self._args).create_sheet()
         workbook.close()
         os.chmod(self._file_path, Constant.FILE_AUTHORITY)
+

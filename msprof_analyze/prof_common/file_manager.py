@@ -118,7 +118,7 @@ class FileManager:
         PathManager.check_path_writeable(os.path.dirname(file_path))
         try:
             with os.fdopen(
-                    os.open(file_path, os.O_WRONLY | os.O_CREAT, Constant.FILE_AUTHORITY),
+                    os.open(file_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, Constant.FILE_AUTHORITY),
                     'w') as file:
                 file.write(content)
         except Exception as e:
