@@ -56,7 +56,7 @@ import torch_npu
 def step_wrapper(func, msg: str):
     def wrapper(*args, **kwargs):
         new_msg = {"name": msg}
-        if msg = "forward_step_with_model_graph" and kwargs.get("extra_block_kwargs") is not None:
+        if msg == "forward_step_with_model_graph" and kwargs.get("extra_block_kwargs") is not None:
             new_msg["name"] = "forward_backward_overlaping"
         if "current_microbatch" in kwargs:
             new_msg["current_microbatch"] = kwargs["current_microbatch"]
@@ -80,7 +80,7 @@ WeightGradStore.pop = step_wrapper(WeightGradStore.pop, "WeightGradStore.pop")
 
 同时，采集profiling数据时，如果使用的是MindSpeed，未使用MindSpeed-LLM，需要在prof定义（```prof = torch_npu.profiler.profile(...)```）的后面添加metadata代码：
 ```
-prof.add_metadata('pp_info', json.dumps(
+prof.add_metadata_json('pp_info', json.dumps(
     {
         'pp_type': 'dualpipev',
         'microbatch_num': 10,
@@ -90,7 +90,7 @@ prof.add_metadata('pp_info', json.dumps(
 ```
 如果使用MindSpeed-LLM，在```mindspeed-llm/training/training.py```中```prof.add_metadata_json('distributed_args'...)```的后面添加metadata代码：
 ```
-prof.add_metadata('pp_info', json.dumps(
+prof.add_metadata_json('pp_info', json.dumps(
     {
         'pp_type': args.schedules_method,
         'microbatch_num': args.global_batch_size // args.micro_batch_size // args.data_parallel_size
