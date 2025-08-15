@@ -37,12 +37,11 @@ class NpuSlowAdvice(ComputeAdviceBase, ABC):
     @staticmethod
     def save_to_excel(data: pd.DataFrame, file_path: str) -> None:
         PathManager.check_path_writeable(os.path.dirname(file_path))
-        writer = pd.ExcelWriter(file_path, engine="xlsxwriter", mode="w")
-        data.index.name = Constant.TITLE.INDEX
-        data.to_excel(writer, index=True, sheet_name=NpuSlowAdvice.OP_PERF_SHEET)
-        NpuSlowAdvice.color_sheet(data, writer.book, writer.sheets[NpuSlowAdvice.OP_PERF_SHEET])
-        writer.sheets[NpuSlowAdvice.OP_PERF_SHEET].freeze_panes = "A2"
-        writer.close()
+        with pd.ExcelWriter(file_path, engine="xlsxwriter", mode="w") as writer:
+            data.index.name = Constant.TITLE.INDEX
+            data.to_excel(writer, index=True, sheet_name=NpuSlowAdvice.OP_PERF_SHEET)
+            NpuSlowAdvice.color_sheet(data, writer.book, writer.sheets[NpuSlowAdvice.OP_PERF_SHEET])
+            writer.sheets[NpuSlowAdvice.OP_PERF_SHEET].freeze_panes = "A2"
 
     @staticmethod
     def color_sheet(data: pd.DataFrame, workbook, worksheet):
@@ -80,7 +79,6 @@ class NpuSlowAdvice(ComputeAdviceBase, ABC):
         self.data = pd.read_csv(self.kernel_details_path, dtype={"Start Time(us)": str})
         # 去除末尾的\t分隔符
         self.data["Start Time(us)"] = self.data["Start Time(us)"].apply(lambda x: x[:-1])
-        pool = multiprocessing.Pool(multiprocessing.cpu_count())
-        result = pool.map(self.update_op_row, self.data.iterrows())
-        pool.close()
+        with multiprocessing.Pool(multiprocessing.cpu_count()) as pool:
+            result = pool.map(self.update_op_row, self.data.iterrows())
         self.data = pd.DataFrame(result)

@@ -243,7 +243,7 @@ class TimelineDBHelper:
         self.init = bool(self.conn and self.curs)
         return self.init
 
-    def destory_db_connection(self):
+    def destroy_db_connection(self):
         DBManager.destroy_db_connect(self.conn, self.curs)
         self.init = False
 

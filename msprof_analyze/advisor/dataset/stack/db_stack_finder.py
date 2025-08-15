@@ -144,13 +144,13 @@ class DBStackFinder:
         if not self._is_db_contains_stack():
             self.stack_map[name] = None
             return False
+        conn, cursor = None, None
         try:
             conn, cursor = DBManager.create_connect_db(self._db_path)
             if params:
                 df = pd.read_sql(sql, conn, params=params)
             else:
                 df = pd.read_sql(sql, conn)
-            DBManager.destroy_db_connect(conn, cursor)
             if df is None or df.empty:
                 self.stack_map[name] = None
                 return False
@@ -160,3 +160,7 @@ class DBStackFinder:
             logger.error(f"Error loading API stack data: {e}")
             self.stack_map[name] = None
             return False
+        finally:
+            if conn and cursor:
+                DBManager.destroy_db_connect(conn, cursor)
+

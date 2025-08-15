@@ -156,7 +156,7 @@ class BaseTimelineEventDataset(Dataset):
             for event_type in collector.get_event_type():
                 df = db_helper.query_timeline_event(event_type)
                 collector.add_op_from_db(df)
-        db_helper.destory_db_connection()
+        db_helper.destroy_db_connection()
         return True
 
     def parse_data_with_generator(self, func):

@@ -40,9 +40,6 @@ class CommunicationDataset(Dataset):
 
     def __init__(self, collection_path, data: dict, **kwargs) -> None:
         self.collection_path = collection_path
-        if not collection_path.endswith("ascend_pt") and not collection_path.endswith("ascend_ms"):
-            return
-        self.is_pta = collection_path.endswith("ascend_pt")
         self.communication_file = ""
         self.hccl_dict = defaultdict(list)
         self.step = kwargs.get("step")
@@ -138,7 +135,8 @@ class CommunicationDataset(Dataset):
         if not DBManager.check_tables_in_db(self.communication_file, *expected_tables):
             logger.warning(f"Communication tables: {expected_tables} not found in {self.communication_file}")
             return False
-        export = CommunicationInfoExport(self.communication_file, self.is_pta)
+        is_pta = self.collection_path.endswith("ascend_pt")
+        export = CommunicationInfoExport(self.communication_file, is_pta)
         df = export.read_export_db()
         if TableConstant.STEP not in df.columns:
             df[TableConstant.STEP] = 'step'

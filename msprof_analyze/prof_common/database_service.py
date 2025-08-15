@@ -98,10 +98,6 @@ class DatabaseService:
                 result_data[table_name] = data
             except Exception as err:
                 logger.error(err)
-                return result_data
-        try:
-            DBManager.destroy_db_connect(conn, cursor)
-        except Exception as err:
-            logger.error(err)
-            return result_data
+                break
+        DBManager.destroy_db_connect(conn, cursor)
         return result_data
