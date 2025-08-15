@@ -44,7 +44,7 @@ class WorkSheetCreator:
         com_header_format = self._work_book.add_format(CellFormatType.YELLOW_BOLD)
         com_index_range = [-1, -1]
         overhead = self._data.get("overhead", [])
-        if overhead:
+        if len(overhead) >= 2:
             base_path = f"Base Profiling: {self._args.base_profiling_path}"
             self._work_sheet.merge_range(overhead[0], base_path, base_header_format)
             com_index_range = [self._col_ids.index(overhead[1].split(":")[0][0]),

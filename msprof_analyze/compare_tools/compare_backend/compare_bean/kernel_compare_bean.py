@@ -27,7 +27,7 @@ class KernelCompareInfo:
         self._number = None
         self._max_dur = None
         self._min_dur = None
-        if not data_list:
+        if len(data_list) < 6:
             return
         self._kernel_type = data_list[0]
         self._input_shapes = data_list[1]
