@@ -164,37 +164,6 @@ class P2PPairing(BaseRecipeAnalysis):
                            f" profiler database in communication task info.")
         return filtered_df.reset_index()
 
-    def extract_pp_group_from_metadata(self, profiler_parent_path) -> any:
-        """
-        从profiler_metadata.json的文件中获取pp通信域的信息
-        """
-        metadata_path = os.path.join(profiler_parent_path, Constant.PROFILER_METADATA)
-        try:
-            if os.path.exists(metadata_path):
-                metadata = FileManager.read_json_file(metadata_path)
-                parallel_group_info: dict = metadata.get(Constant.PARALLEL_GROUP_INFO, None) if metadata else None
-            else:
-                raise FileNotFoundError(f"No `{Constant.PROFILER_METADATA}` found in {profiler_parent_path}.")
-        except (FileNotFoundError, JSONDecodeError) as e:
-            logger.error(f"Failed to load profiler metadata: {e}")
-            return None
-
-        if parallel_group_info is None:
-            logger.error(f"No key name `{Constant.PARALLEL_GROUP_INFO}` found in {metadata_path}")
-            return None
-
-        pp_group_info = []
-        for name in parallel_group_info:
-            each_group_info: dict = parallel_group_info[name]
-            if each_group_info[Constant.GROUP_NAME] == Constant.PP:
-                pp_group_info.append(parallel_group_info[name])
-        if not pp_group_info:
-            logger.error(f"No pipeline parallel info found in {metadata_path}")
-            return None
-
-        return pp_group_info
-
-
     def _mapper_func(self, data_map, analysis_class):
         profiler_db_path: str = data_map.get(Constant.PROFILER_DB_PATH)
         profiler_parent_path: str = os.path.dirname(os.path.dirname(profiler_db_path))
@@ -208,11 +177,6 @@ class P2PPairing(BaseRecipeAnalysis):
         if df is None or df.empty:
             logger.warning(f"There is no stats data in {profiler_db_path}.")
             return None
-
-        pp_group_info = self.extract_pp_group_from_metadata(profiler_parent_path) # 暂时没用到，预留给后续确认用全局rank
-        if pp_group_info is None:
-            logger.error(f"Cannot obtain pipeline parallel info from the metadata. "
-                         f"Please check the corresponding {Constant.PROFILER_METADATA}")
 
         df = self.filter_data_by_group_name(df)
         if df.empty:
