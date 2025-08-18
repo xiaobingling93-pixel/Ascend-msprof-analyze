@@ -239,7 +239,7 @@ class PPChart(BaseRecipeAnalysis):
         logger.info(f"Run Mstx2Commop recipe.")
         try:
             group_map_recipe = Mstx2Commop(self.params)
-            group_map_recipe.run(context)
+            group_map_recipe.run(context, copy_db=False)
         except Exception as e:
             logger.error(f"Run Mstx2Commop recipe failed: {e}!")
             return False
