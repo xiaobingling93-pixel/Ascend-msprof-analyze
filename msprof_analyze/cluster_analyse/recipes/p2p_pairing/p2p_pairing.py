@@ -122,6 +122,8 @@ class P2PPairing(BaseRecipeAnalysis):
         3、步骤1得到数据中本端卡号是否一致，如果不一致则会报出error返回空值
         """
         df = df[df[P2PPairingExport.TASK_TYPE].isin(self.VALID_DST_RANK_TASK_TYPE)]
+        if df.empty:
+            return df
 
         def check_src_dst_rank_unique(group):
             return group[P2PPairingExport.DST_RANK].nunique() == 1 and group[P2PPairingExport.SRC_RANK].nunique() == 1
@@ -183,8 +185,9 @@ class P2PPairing(BaseRecipeAnalysis):
             return None
 
         df_filtered = self.fine_filtering_src_dst_ranks(df.copy())
-        if df_filtered is None:
-            logger.error("Got error when trying to match rank numbers!")
+        if df_filtered.empty:
+            logger.warning("The result of fine_filtering_src_dst_ranks is empty!"
+                           "Please check whether the data level is at level1 or above.")
             return None
 
         df_result = df_filtered.groupby([P2PPairingExport.OP_NAME, P2PPairingExport.CO_OP_NAME]).agg(
