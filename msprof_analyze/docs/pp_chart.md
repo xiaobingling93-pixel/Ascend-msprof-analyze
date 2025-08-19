@@ -78,7 +78,9 @@ backward_step = step_wrapper(backward_step, "backward_step")
 WeightGradStore.pop = step_wrapper(WeightGradStore.pop, "WeightGradStore.pop")
 ```
 
-同时，采集profiling数据时，如果使用的是MindSpeed，未使用MindSpeed-LLM，需要在prof定义（```prof = torch_npu.profiler.profile(...)```）的后面添加metadata代码：
+若 DualPipeV 未开启 dw 分离，添加以下代码后，可完整呈现模型运行前反向的各个阶段（[理论效果图](#简介)）；若未添加，则仅呈现当前阶段是否为前向或反向。
+
+采集profiling数据时，如果使用的是MindSpeed，未使用MindSpeed-LLM，可以在prof定义（```prof = torch_npu.profiler.profile(...)```）的后面添加metadata代码：
 ```
 prof.add_metadata_json('pp_info', json.dumps(
     {
@@ -128,7 +130,7 @@ msprof-analyze cluster -m pp_chart -d ./cluster_data
 ### 3. MindStudio Insight呈现
 MindStudio Insight工具的详细安装和操作请参见[《MindStudio Insight工具用户指南》](https://www.hiascend.com/document/detail/zh/mindstudio/81RC1/GUI_baseddevelopmenttool/msascendinsightug/Insight_userguide_0002.html)。
 
-在MindStudio Insight工具导入mstt工具分析后的性能数据，在Summary页面点击generate后按照如下截图配置：
+在MindStudio Insight工具导入mstt工具分析后的性能数据，在Summary页面点击Generate后按照如下截图配置：
 
 ![操作步骤](img/pp_chart_operation_steps.png)
 
