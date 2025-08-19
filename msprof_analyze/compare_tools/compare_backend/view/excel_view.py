@@ -29,9 +29,8 @@ class ExcelView(BaseView):
         self._args = args
 
     def generate_view(self):
-        workbook = Workbook(self._file_path)
-        for sheet_name, data in self._data_dict.items():
-            WorkSheetCreator(workbook, sheet_name, data, self._args).create_sheet()
-        workbook.close()
+        with Workbook(self._file_path) as workbook:
+            for sheet_name, data in self._data_dict.items():
+                WorkSheetCreator(workbook, sheet_name, data, self._args).create_sheet()
         os.chmod(self._file_path, Constant.FILE_AUTHORITY)
 
