@@ -15,10 +15,7 @@
 
 import json
 import os
-import shutil
-
 import pandas as pd
-from msprof_analyze.prof_common.path_manager import PathManager
 
 from msprof_analyze.cluster_analyse.recipes.base_recipe_analysis import BaseRecipeAnalysis
 from msprof_analyze.prof_common.db_manager import DBManager
@@ -51,30 +48,24 @@ class Mstx2Commop(BaseRecipeAnalysis):
     def __init__(self, params):
         super().__init__(params)
         logger.info("Mstx2Commop init.")
-        self.copy_db = True
         self.communication_op = None
         self.string_ids_insert = None
-        self.set_output = Constant.CLUSTER_ANALYSIS_OUTPUT_PATH in params  # 是否设置了output_path参数
 
     @property
     def base_dir(self):
         return os.path.basename(os.path.dirname(__file__))
 
-    def run(self, context, copy_db=True):
-        self.copy_db = copy_db
+    def run(self, context):
         self.mapper_func(context)
 
     def _mapper_func(self, data_map, analysis_class):
         profiler_db_path = data_map.get(Constant.PROFILER_DB_PATH)
-        if DBManager.check_tables_in_db(profiler_db_path, TABLE_COMMUNICATION_OP):
-            return None
-        step_range = data_map.get(Constant.STEP_RANGE)
-        data_service = DatabaseService(profiler_db_path, step_range)
+        data_service = DatabaseService(profiler_db_path)
         data_service.add_table_for_query("ENUM_HCCL_DATA_TYPE", ["id", "name"])
         data_service.add_table_for_query("STRING_IDS", ["id", "value"])
         df_dict = data_service.query_data()
 
-        df = Mstx2CommopExport(profiler_db_path, analysis_class, step_range).read_export_db()
+        df = Mstx2CommopExport(profiler_db_path, analysis_class).read_export_db()
 
         if df is None or df.empty:
             logger.warning(f"There is no stats data in {profiler_db_path}.")
@@ -179,27 +170,9 @@ class Mstx2Commop(BaseRecipeAnalysis):
         communication_op.set_index('opId', inplace=True)
         string_ids_insert = list(map(list, zip(special_id_list, special_primal_list)))
 
-        new_profiler_db = self._prepare_output_profiler_db(data_map.get(Constant.PROFILER_DB_PATH)) if self.copy_db \
-            else data_map.get(Constant.PROFILER_DB_PATH)
+        DBManager.insert_data_into_db(data_map.get(Constant.PROFILER_DB_PATH), TABLE_STRING_IDS, string_ids_insert)
 
-        DBManager.insert_data_into_db(new_profiler_db, TABLE_STRING_IDS, string_ids_insert)
-
-        self.dump_data(data=communication_op, file_name="", table_name=TABLE_COMMUNICATION_OP,
-                       custom_db_path=new_profiler_db)
+        self.dump_data(data=communication_op, file_name=data_map.get(Constant.PROFILER_DB_PATH),
+                       table_name=TABLE_COMMUNICATION_OP, custom_db_path=data_map.get(Constant.PROFILER_DB_PATH))
 
         return data_map.get(Constant.RANK_ID)
-
-    def _prepare_output_profiler_db(self, profiler_db_path):
-        """
-        copy profiler_db to output if not exist
-        """
-        output_dir = os.path.join(self._cluster_analysis_output_path, self._recipe_name)
-        relative_db_path = os.path.relpath(profiler_db_path, start=self._collection_dir)
-        relative_dir = os.path.dirname(relative_db_path)
-
-        new_path = os.path.join(output_dir, relative_dir)
-        new_db_path = os.path.join(output_dir, relative_db_path)
-        PathManager.make_dir_safety(new_path)
-        shutil.copyfile(profiler_db_path, new_db_path)
-        return new_db_path
-
