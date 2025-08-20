@@ -54,14 +54,29 @@ class SpecialHelpOrder(click.Group):
         self.list_commands = self.list_commands_for_help
         return super(SpecialHelpOrder, self).get_help(ctx)
 
+    def parse_args(self, ctx, args):
+        # 检查是否有已知的子命令
+        has_subcommand = any(arg in self.list_commands(ctx) for arg in args if not arg.startswith('-'))
 
-@click.group(context_settings=CONTEXT_SETTINGS, cls=SpecialHelpOrder)
+        # 如果没有子命令但有参数，自动添加 cluster 子命令
+        if not has_subcommand and args:
+            args = ['cluster'] + args
+        # 如果没有子命令也没有参数，执行--help
+        elif not has_subcommand and not args:
+            args = ['--help']
+
+        return super(SpecialHelpOrder, self).parse_args(ctx, args)
+
+
+@click.group(context_settings=CONTEXT_SETTINGS, cls=SpecialHelpOrder, invoke_without_command=True)
 @click.option('--version', '-V', '-v', is_flag=True,
               callback=print_version_callback, expose_value=False,
               is_eager=True, help=cli_version())
-def msprof_analyze_cli(**kwargs):
-    pass
-
+@click.pass_context
+def msprof_analyze_cli(ctx, **kwargs):
+    """如果没有子命令，默认执行 cluster"""
+    if ctx.invoked_subcommand is None:
+        ctx.invoke(cluster_cli)
 
 msprof_analyze_cli.add_command(analyze_cli, name="advisor")
 msprof_analyze_cli.add_command(compare_cli, name="compare")
