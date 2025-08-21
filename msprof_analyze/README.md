@@ -116,7 +116,7 @@ msprof-analzye性能分析工具通过命令行方式启动性能分析。命名
 ```
 msprof-analyze -m [feature_option] -d <profiling_path> [global_option] [analyze_option]
 ```
-`-m`指定分析能力，`[feature_option]`可指定对应特性，详见[分析特性介绍](#-分析特性介绍)章节，必选。  
+`-m`指定分析能力，`[feature_option]`可指定对应特性，详见[分析特性介绍](#分析特性介绍)章节，必选。  
 `<profiling_path>`为profiling性能数据文件夹，必选。  
 `[global_option]`为全局参数，详见[全局参数说明](#全局参数)章节，可选。  
 `[analyze_option]`为分析能力参数，详见[分析能力参数说明](#分析能力参数)章节，可选。  
@@ -131,7 +131,7 @@ msprof-analyze -m [feature_option] -d <profiling_path> [global_option] [analyze_
    | --------------------- | ------------------------------------------------------------ | -------- |
    | --profiling_path或-d  | 性能数据汇集目录。未配置-o参数时，运行分析脚本之后会在该目录下自动创建cluster_analysis_output文件夹，保存分析数据。 | 是       |
    | --output_path或-o     | 自定义输出路径，运行分析脚本之后会在该目录下自动创建cluster_analysis_output文件夹，保存分析数据。 | 否       |
-   | --mode或-m            | 分析能力选项，取值详见[分析能力特性说明](#-分析特性介绍)表。  默认参数为all，all会执行step_trace_time和communication_matrix通信矩阵和communication_time通信耗时分析能力              | 否       |
+   | --mode或-m            | 分析能力选项，取值详见[分析能力特性说明](#分析特性介绍)表。  默认参数为all，all会执行step_trace_time和communication_matrix通信矩阵和communication_time通信耗时分析能力              | 否       |
    | --export_type         | 设置导出的数据形式。取值为db（.db格式文件）和notebook（Jupyter Notebook文件），默认值为db。       | 否       |
    | --force               | 强制执行，配置后可强制跳过如下情况：<br/>        指定的目录、文件的用户属主不属于当前用户，忽略属主判断直接执行。<br/>        csv文件大于5G、json文件大于10G、db文件大于8G，忽略文件过大判断直接执行。<br/>配置该参数表示开启强制执行，默认未配置表示关闭。 | 否       |
    | --parallel_mode       | 设置收集多卡、多节点db数据时的并发方式。取值为concurrent（使用concurrent.feature进程池实现并发）。| 否       |
