@@ -113,24 +113,24 @@ msprof-analzye需要传入采集的性能数据文件夹，如何采集性能数
 msprof-analzye性能分析工具通过命令行方式启动性能分析。命名格式如下：
 
 ```
-msprof_analyze -m [feature_option] -d <profiling_path> [global_option] [analyze_option]
+msprof-analyze -m [feature_option] -d <profiling_path> [global_option] [analyze_option]
 ```
--m指定分析能力，[feature_option]可指定对应特性，详见[分析能力特性介绍](#-特性介绍)章节，必选。
-<profiling_path>为profiling性能数据文件夹，必选。
-[global_option]为全局参数，详见[全局参数说明](#全局参数)章节，可选。
-[analyze_option]为分析能力参数，详见[分析能力参数说明](#分析能力参数)章节，可选。
+-m指定分析能力，[feature_option]可指定对应特性，详见[分析特性介绍](#-分析特性介绍)章节，必选。  
+<profiling_path>为profiling性能数据文件夹，必选。  
+[global_option]为全局参数，详见[全局参数说明](#全局参数)章节，可选。  
+[analyze_option]为分析能力参数，详见[分析能力参数说明](#分析能力参数)章节，可选。  
 
 详细使用样例请参考[使用样例](#使用样例)章节。
 
 ### 参数说明
 #### 全局参数
-主要包括输入输出域格式、执行参数以及帮助信息等。
+主要包括输入输出与格式参数、执行参数以及帮助信息等。
 
    | 参数名                | 说明                                                         | 是否必选 |
    | --------------------- | ------------------------------------------------------------ | -------- |
    | --profiling_path或-d  | 性能数据汇集目录。未配置-o参数时，运行分析脚本之后会在该目录下自动创建cluster_analysis_output文件夹，保存分析数据。 | 是       |
    | --output_path或-o     | 自定义输出路径，运行分析脚本之后会在该目录下自动创建cluster_analysis_output文件夹，保存分析数据。 | 否       |
-   | --mode或-m            | 分析能力选项，取值详见[分析能力特性说明](#-特性介绍)表。  默认参数为all，all会执行step_trace_time和communication_matrix通信矩阵和communication_time通信耗时分析能力              | 否       |
+   | --mode或-m            | 分析能力选项，取值详见[分析能力特性说明](#-分析特性介绍)表。  默认参数为all，all会执行step_trace_time和communication_matrix通信矩阵和communication_time通信耗时分析能力              | 否       |
    | --export_type         | 设置导出的数据形式。取值为db（.db格式文件）和notebook（Jupyter Notebook文件），默认值为db。       | 否       |
    | --force               | 强制执行，配置后可强制跳过如下情况：<br/>        指定的目录、文件的用户属主不属于当前用户，忽略属主判断直接执行。<br/>        csv文件大于5G、json文件大于10G、db文件大于8G，忽略文件过大判断直接执行。<br/>配置该参数表示开启强制执行，默认未配置表示关闭。 | 否       |
    | --parallel_mode       | 设置收集多卡、多节点db数据时的并发方式。取值为concurrent（使用concurrent.feature进程池实现并发）。| 否       |
@@ -142,8 +142,8 @@ msprof_analyze -m [feature_option] -d <profiling_path> [global_option] [analyze_
 
    | 参数名                | 说明                                                         | 是否必选 |
    | --------------------- | ------------------------------------------------------------ | -------- |
-   | --rank_list           | 对特定Rank上的数据进行统计，默认值为all（表示对所有Rank进行统计），须根据实际卡的Rank ID配置。应配置为大于等于0的整数，若所配置的值大于实际训练所运行的卡的Rank ID，则仅解析合法的RankID的数据，比如当前环境Rank ID为0到7，实际训练运行0到3卡，此时若配置Rank ID为0， 3， 4或不存在的10等其他值，则仅解析0和3。配置示例：--rank_list 0， 1， 2。<br/>**需要对应分析能力适配才可使用， 只有分析能力设置cann_api_sum、compute_op_sum、hccl_sum、mstx_sum时可配置此参数。**       | 否       |
-   | --step_id             | 性能数据Step ID，配置后对该Step的性能数据进行分析。需配置性能数据中实际存在的Step ID，默认未配置，表示全量分析。配置示例：--step_id=1。<br/>**需要对应分析能力适配才可使用， 只有分析能力设置cann_api_sum、compute_op_sum、hccl_sum、mstx_sum时可配置此参数。**                                                 | 否 |
+   | --rank_list           | 对特定Rank上的数据进行统计，默认值为all（表示对所有Rank进行统计），须根据实际卡的Rank ID配置。应配置为大于等于0的整数，若所配置的值大于实际训练所运行的卡的Rank ID，则仅解析合法的RankID的数据，比如当前环境Rank ID为0到7，实际训练运行0到3卡，此时若配置Rank ID为0， 3， 4或不存在的10等其他值，则仅解析0和3。配置示例：--rank_list 0， 1， 2。<br/>**需要对应分析能力适配才可使用， 当前分析能力设置cann_api_sum、compute_op_sum、hccl_sum、mstx_sum时支持。**       | 否       |
+   | --step_id             | 性能数据Step ID，配置后对该Step的性能数据进行分析。需配置性能数据中实际存在的Step ID，默认未配置，表示全量分析。配置示例：--step_id=1。<br/>**需要对应分析能力适配才可使用， 当前只有分析能力设置cann_api_sum、compute_op_sum、hccl_sum、mstx_sum时支持。**                                                 | 否 |
    | --top_num             | 设置TopN耗时的通信算子的数量，默认值为15，配置示例：--top_num 20。<br/>**只有-m配置hccl_sum时可配置此参数。** | 否       |
    | --exclude_op_name    | 控制compute_op_name结果是否包含op_name，示例：--exclude_op_name，后面不需要跟参数。<br/>**只有-m配置compute_op_sum时可配置此参数。** | 否       |
    | --bp                 | 要对比的标杆集群数据，示例：--bp {bp_cluster_profiling_path}，表示profiling_path和bp_cluster_profiling_path的数据进行对比。<br/>**只有-m配置cluster_time_compare_summary时可配置此参数。** | 否       |
@@ -208,25 +208,25 @@ msprof_analyze -m [feature_option] -d <profiling_path> [global_option] [analyze_
 #### 最简使用
 ```bash
 # 只传入cluster_data性能数据文件夹，输入cluster_time_summary分析能力，在cluster_data输入文件夹下生成cluster_文件夹，保存分析结果信息
-msprof_analyze -m cluster_time_summary -d ./cluster_data
+msprof-analyze -m cluster_time_summary -d ./cluster_data
 ```
 
 #### 分析能力为all设置下使用
 ```bash
 # 可以输入-m参数=all 当前输出step_trace_time/通信矩阵/通信耗时交付件
-msprof_analyze -m all -d ./cluster_data
+msprof-analyze -m all -d ./cluster_data
 ```
 
 #### 指定输出路径
 ```bash
 # 设置-o参数，指定自定义输出路径
-msprof_analyze -m cluster_time_summary -d ./cluster_data -o ./cluster_output
+msprof-analyze -m cluster_time_summary -d ./cluster_data -o ./cluster_output
 ```
 
 #### 设置输出格式
 ```bash
 # 设置--export_type参数，设置输出格式
-msprof_analyze -m cluster_time_summary -d ./cluster_data --export_type db
+msprof-analyze -m cluster_time_summary -d ./cluster_data --export_type db
 ```
 
 #### 性能对比(compare)子功能
@@ -234,7 +234,7 @@ msprof_analyze -m cluster_time_summary -d ./cluster_data --export_type db
 
 ```bash
 # 基础用法：对比昇腾NPU与GPU性能数据
-msprof_analyze compare -d ./ascend_pt  # 昇腾NPU性能数据目录
+msprof-analyze compare -d ./ascend_pt  # 昇腾NPU性能数据目录
                        -bp ./gpu_trace.json  # GPU性能数据文件
                        -o ./compare_output  # 对比结果输出目录
 ```
@@ -250,7 +250,7 @@ msprof_analyze compare -d ./ascend_pt  # 昇腾NPU性能数据目录
 
 ```bash
 # 基础用法
-msprof_analyze advisor all -d ./prof_data -o ./advisor_output
+msprof-analyze advisor all -d ./prof_data -o ./advisor_output
 ```
 
 分析完成后，在执行终端打印关键问题与优化建议，并生成
