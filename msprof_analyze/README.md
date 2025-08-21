@@ -180,6 +180,7 @@ msprof_analyze -m [feature_option] -d <profiling_path> [global_option] [analyze_
 |---------|----------------------------------------|-----|
 | communication_matrix | 通信矩阵分析。 | -  |
 | communication_time| 通信耗时分析。  | -   |
+| all | 默认值，会执行communication_matrix通信矩阵和communication_time通信耗时分析能力，并导出cluster_step_trace_time交付件。 | -  |
 | communication_group_map | 集群场景通信域与并行策略呈现。 | -   |
 | communication_time_sum | 集群场景通信时间和带宽汇总分析。 | -   |
 | communication_matrix_sum | 集群场景通信时间和带宽汇总分析。 | -   |
