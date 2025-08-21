@@ -11,7 +11,7 @@
 **使用方法**
 
 ```
-msprof-analyze -m cluster_time_summary -d 。/cluster_data
+msprof-analyze -m cluster_time_summary -d ./cluster_data
 ```
 **参数说明：**  
 * `-m`设置为cluster_time_summary 使能集群耗时细粒度拆解能力
