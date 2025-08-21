@@ -175,9 +175,6 @@ msprof_analyze -m [option] -d ./profiling_data -o ./cluster_output
 | hccl_sum | 通信类算子信息汇总(包括hccl或者lccl等全部通信算子,是否改个名字,comm_op_sum)  | -   |
 | pp_chart | pp流水图:针对pp并行下各个阶段的耗时分析与可视化能力  | [link](./docs/pp_chart.md)             |
 | slow_rank | 根据当前的快慢卡统计算法,展示各个rank得出的快慢卡影响次数,识别嫌疑根因慢卡 | -  |
-| slow_link | 集群慢链路异常分析 | -  |
-| slow_rank_pp_stage | pp stage通信对比分析 | -  |
-
 
 ### Host类下发类
 
@@ -191,9 +188,8 @@ msprof_analyze -m [option] -d ./profiling_data -o ./cluster_output
 |---------|----| ------------------------------------|-----|
 | mstx2comm | 数据处理类 | 将通过MSTX内置通信打点的通信数据转换成通信算子表格 | -  |
 | p2p_pairing | 数据处理类 | P2P算子生成全局关联索引,输出的关联索引会作为一个新的字段`opConnectionId`附在`COMMUNICATION_OP`的表中 | -  |
-| filter_db | 数据处理类 | 提取通信类大算子数据，计算类关键函数和框架关键函数，节约90%+ 内存，促进快速全局分析 | -  |
 
-交付件详细内容请参见[recipe结果和cluster_analysis.db交付件表结构说明](#recipe结果和cluster_analysisdb交付件表结构说明)。
+交付件详细内容请参见[recipe结果交付件表文档](./docs/recipe_output_format.md)。
 
 ## 使用样例
 ### 最简使用

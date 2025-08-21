@@ -17,6 +17,7 @@ import click
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.cluster_analyse.cluster_analysis import ALL_FEATURE_LIST, Interface
 from msprof_analyze.prof_common.path_manager import PathManager
+from msprof_analyze.advisor.version import print_version_callback, cli_version
 
 context_settings = dict(Constant.CONTEXT_SETTINGS)
 context_settings['ignore_unknown_options'] = True
@@ -35,6 +36,9 @@ context_settings['ignore_unknown_options'] = True
 @click.option("--export_type", help="recipe export type", type=click.Choice(["db", "notebook"]), default="db")
 @click.option("--rank_list", type=str, help="Rank id list", default='all')
 @click.option("--step_id", type=int, help="Step id", default=Constant.VOID_STEP)
+@click.option('--version', '-V', '-v', is_flag=True,
+              callback=print_version_callback, expose_value=False,
+              is_eager=True, help=cli_version())
 @click.argument('args', nargs=-1)
 def cluster_cli(**kwargs) -> None:
     Interface(kwargs).run()
