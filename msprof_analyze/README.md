@@ -13,7 +13,7 @@ msprof-analyze的安装方式包括：**pip安装**、**下载whl包安装**和*
 pip install msprof-analyze
 ```
 
-使用`pip install msprof-analyze==版本号`可安装指定版本的包,使用采集性能数据对应的CANN版本号即可,如不清楚版本号可不指定,使用最新程序包
+使用`pip install msprof-analyze==版本号`可安装指定版本的包，使用采集性能数据对应的CANN版本号即可，如不清楚版本号可不指定，使用最新程序包
 
 pip命令会自动安装最新的包及其配套依赖。
 
@@ -26,7 +26,7 @@ Successfully installed msprof-analyze-{version}
 ### 下载whl包安装
 
 1. whl包获取。
-   请通过**[下载链接](#发布程序包下载链接)**链接下载whl包.
+   请通过[发布程序包下载链接](#发布程序包下载链接)下载whl包。
 
 2. whl包校验。
 
@@ -105,118 +105,130 @@ pip3 uninstall msprof-analyze
 pip3 install ./msprof_analyze-{version}-py3-none-any.whl
 ```
 
-## 🚀 使用方法
+## 🧰 使用方法
 ### 数据准备
-msprof-analzye需要传入采集的性能数据文件夹,如何采集性能数据请参见<[采集profiling性能数据指导](#采集profiling性能数据指导)>章节.
+msprof-analzye需要传入采集的性能数据文件夹，如何采集性能数据请参见[采集profiling性能数据指导](#采集profiling性能数据指导)章节。
 
-### 使用样例
-msprof-analzye性能分析工具通过命令行方式启动性能分析。使用样例如下：
+### 命令格式
+msprof-analzye性能分析工具通过命令行方式启动性能分析。命名格式如下：
 
 ```
-msprof_analyze -m [option] -d ./profiling_data -o ./cluster_output
+msprof_analyze -m [feature_option] -d <profiling_path> [global_option] [analyze_option]
 ```
+-m指定分析能力，[feature_option]可指定对应特性，详见[分析能力特性介绍](#-特性介绍)章节，必选。
+<profiling_path>为profiling性能数据文件夹，必选。
+[global_option]为全局参数，详见[全局参数说明](#全局参数)章节，可选。
+[analyze_option]为分析能力参数，详见[分析能力参数说明](#分析能力参数)章节，可选。
 
-其中，-m为指定的分析能力,profiling_data为profiling数据文件夹, cluster_output是分析结果输出文件夹,
+详细使用样例请参考[使用样例](#使用样例)章节。
 
 ### 参数说明
-#### 基础参数
+#### 全局参数
 主要包括输入输出域格式、执行参数以及帮助信息等。
 
    | 参数名                | 说明                                                         | 是否必选 |
    | --------------------- | ------------------------------------------------------------ | -------- |
    | --profiling_path或-d  | 性能数据汇集目录。未配置-o参数时，运行分析脚本之后会在该目录下自动创建cluster_analysis_output文件夹，保存分析数据。 | 是       |
    | --output_path或-o     | 自定义输出路径，运行分析脚本之后会在该目录下自动创建cluster_analysis_output文件夹，保存分析数据。 | 否       |
-   | --mode或-m            | 分析能力选项，取值详见“**[分析能力特性说明](#-特性介绍)**表。  默认参数为all,all会同时解析communication_matrix通信矩阵和communication_time通信耗时              | 否       |
+   | --mode或-m            | 分析能力选项，取值详见[分析能力特性说明](#-特性介绍)表。  默认参数为all，all会执行step_trace_time和communication_matrix通信矩阵和communication_time通信耗时分析能力              | 否       |
    | --export_type         | 设置导出的数据形式。取值为db（.db格式文件）和notebook（Jupyter Notebook文件），默认值为db。       | 否       |
-   | --force               | 强制执行,配置后可强制跳过如下情况：<br/>        指定的目录、文件的用户属主不属于当前用户，忽略属主判断直接执行。<br/>        csv文件大于5G、json文件大于10G、db文件大于8G，忽略文件过大判断直接执行。<br/>配置该参数表示开启强制执行，默认未配置表示关闭。 | 否       |
+   | --force               | 强制执行，配置后可强制跳过如下情况：<br/>        指定的目录、文件的用户属主不属于当前用户，忽略属主判断直接执行。<br/>        csv文件大于5G、json文件大于10G、db文件大于8G，忽略文件过大判断直接执行。<br/>配置该参数表示开启强制执行，默认未配置表示关闭。 | 否       |
    | --parallel_mode       | 设置收集多卡、多节点db数据时的并发方式。取值为concurrent（使用concurrent.feature进程池实现并发）。| 否       |
-   | --data_simplification | 数据精简模式。对于数据量过大的性能数据db文件，可以通过配置该参数将数据精简，并提高工具分析效率。配置该参数表示开启数据精简，默认未配置表示关闭,当前参数只针对communication_matrix/communication_time分析能力。 | 否       |
+   | --data_simplification | 数据精简模式。对于数据量过大的性能数据db文件，可以通过配置该参数将数据精简，并提高工具分析效率。配置该参数表示开启数据精简，默认未配置表示关闭，当前参数只针对all/communication_matrix/communication_time分析能力。 | 否       |
+   | -v，-V<br/>--version | 查看版本号。 | 否 |
+   | -h，-H<br>--help     | 命令行参数帮助信息。 | 否 |
 
-#### 分析能力参数:
+#### 分析能力参数
 
    | 参数名                | 说明                                                         | 是否必选 |
    | --------------------- | ------------------------------------------------------------ | -------- |
-   | --rank_list           | 对特定Rank上的数据进行统计，默认值为all（表示对所有Rank进行统计），须根据实际卡的Rank ID配置。应配置为大于等于0的整数，若所配置的值大于实际训练所运行的卡的Rank ID，则仅解析合法的RankID的数据，比如当前环境Rank ID为0到7，实际训练运行0到3卡，此时若配置Rank ID为0, 3, 4或不存在的10等其他值，则仅解析0和3。配置示例：--rank_list 0, 1, 2。<br/>**需要对应分析能力适配才可使用。** | 否       |
+   | --rank_list           | 对特定Rank上的数据进行统计，默认值为all（表示对所有Rank进行统计），须根据实际卡的Rank ID配置。应配置为大于等于0的整数，若所配置的值大于实际训练所运行的卡的Rank ID，则仅解析合法的RankID的数据，比如当前环境Rank ID为0到7，实际训练运行0到3卡，此时若配置Rank ID为0， 3， 4或不存在的10等其他值，则仅解析0和3。配置示例：--rank_list 0， 1， 2。<br/>**需要对应分析能力适配才可使用， 只有分析能力设置cann_api_sum、compute_op_sum、hccl_sum、mstx_sum时可配置此参数。**       | 否       |
+   | --step_id             | 性能数据Step ID，配置后对该Step的性能数据进行分析。需配置性能数据中实际存在的Step ID，默认未配置，表示全量分析。配置示例：--step_id=1。<br/>**需要对应分析能力适配才可使用， 只有分析能力设置cann_api_sum、compute_op_sum、hccl_sum、mstx_sum时可配置此参数。**                                                 | 否 |
    | --top_num             | 设置TopN耗时的通信算子的数量，默认值为15，配置示例：--top_num 20。<br/>**只有-m配置hccl_sum时可配置此参数。** | 否       |
-   | --exclude_op_name    | 控制compute_op_name结果是否包含op_name,示例：--exclude_op_name,后面不需要跟参数。<br/>**只有-m配置compute_op_sum时可配置此参数。** | 否       |
+   | --exclude_op_name    | 控制compute_op_name结果是否包含op_name，示例：--exclude_op_name，后面不需要跟参数。<br/>**只有-m配置compute_op_sum时可配置此参数。** | 否       |
    | --bp                 | 要对比的标杆集群数据，示例：--bp {bp_cluster_profiling_path}，表示profiling_path和bp_cluster_profiling_path的数据进行对比。<br/>**只有-m配置cluster_time_compare_summary时可配置此参数。** | 否       |
 
 #### 子功能命令参数
 | 参数   | 说明                                                                                                                      |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------|
-| compare             | [compare（性能比对子功能）](./compare_tools/README.md)。提供NPU与GPU性能拆解功能以及算子、通信、内存性能的比对功能.详细指导请点击自子功能链接|
+| compare             | [compare（性能比对子功能）](./compare_tools/README.md)。提供NPU与GPU性能拆解功能以及算子、通信、内存性能的比对功能。|
 | advisor             | [advisor(专家建议子功能)](./advisor/README.md)。基于性能数据进行分析，并输出性能调优建议。                        |
+| cluster              | [cluster_analyse（集群分析工具）](./cluster_analyse/README.md)。提供集群分析能力，已作为默认子命令,不设置即为cluster集群分析功能 |
 | auto-completion     | 自动补全。配置后在当前视图下配置msprof-analyze工具所有的子参数时，可以使用Tab将所有子参数自动补全。             |
 
 
-## 🌟 特性介绍
+### 🌟 分析特性介绍
 
-### 拆解对比类:
-
-| 分析能力    | 介绍                                     | 介绍链接 |
-|---------|----------------------------------------|-----|
-| cluster_time_summary | 数据细粒度拆解,替换step_trace_time.csv内容 | [link](./docs/cluster_time_summary.md)  |
-| cluster_time_compare_summary | 数据细粒度对比, | [link](./docs/cluster_time_compare_summary.md)   |
-
-### 计算类特性
+#### 拆解对比类
 
 | 分析能力    | 介绍                                     | 介绍链接 |
 |---------|----------------------------------------|-----|
-| compute_op_sum | device侧运行的计算类算子汇总 | -  |
-| freq_analysis | 识别是否aicore存在空闲（频率为800MHz）、异常（频率不为1800MHz或800MHz）的情况并给出分析结果 | -  |
-| ep_load_balance | moe负载信息汇总分析 |   |
+| cluster_time_summary | 性能数据细粒度拆解，替换step_trace_time.csv内容。 | [link](./docs/cluster_time_summary.md)  |
+| cluster_time_compare_summary | 性能数据细粒度对比。 | [link](./docs/cluster_time_compare_summary.md)   |
 
-### 通信类特性
-
-| 分析能力    | 介绍                                     | 介绍链接 |
-|---------|----------------------------------------|-----|
-| communication_matrix | 通信矩阵分析 | -  |
-| communication_time| 通信耗时分析  | -   |
-| hccl_sum | 通信类算子信息汇总(包括hccl或者lccl等全部通信算子,是否改个名字,comm_op_sum)  | -   |
-| pp_chart | pp流水图:针对pp并行下各个阶段的耗时分析与可视化能力  | [link](./docs/pp_chart.md)             |
-| slow_rank | 根据当前的快慢卡统计算法,展示各个rank得出的快慢卡影响次数,识别嫌疑根因慢卡 | -  |
-
-### Host类下发类
+#### 计算类特性
 
 | 分析能力    | 介绍                                     | 介绍链接 |
 |---------|----------------------------------------|-----|
-| cann_api_sum | CANN层API的汇总 | -  |
-| mstx_sum | MSTX自定义打点汇总 | -  |
+| compute_op_sum | device侧运行的计算类算子汇总。 | -  |
+| freq_analysis | 识别是否aicore存在空闲（频率为800MHz）、异常（频率不为1800MHz或800MHz）的情况并给出分析结果。 | -  |
+| ep_load_balance | moe负载信息汇总分析。 | - |
 
-### 其他特性
+#### 通信类特性
+
+| 分析能力    | 介绍                                     | 介绍链接 |
+|---------|----------------------------------------|-----|
+| communication_matrix | 通信矩阵分析。 | -  |
+| communication_time| 通信耗时分析。  | -   |
+| communication_group_map | 集群场景通信域与并行策略呈现。 | -   |
+| communication_time_sum | 集群场景通信时间和带宽汇总分析。 | -   |
+| communication_matrix_sum | 集群场景通信时间和带宽汇总分析。 | -   |
+| hccl_sum | 通信类算子信息汇总。  | -   |
+| pp_chart | pp流水图，针对pp并行下各个阶段的耗时分析与可视化能力。
+  | [link](./docs/pp_chart.md)             |
+| slow_rank | 根据当前的快慢卡统计算法，展示各个rank得出的快慢卡影响次数，识别慢卡出现的原因。 | -  |
+
+#### Host下发类特性
+
+| 分析能力    | 介绍                                     | 介绍链接 |
+|---------|----------------------------------------|-----|
+| cann_api_sum | CANN层API的汇总。 | -  |
+| mstx_sum | MSTX自定义打点汇总。 | -  |
+
+#### 其他特性
 | 分析能力   | 类别 | 介绍                                     | 介绍链接 |
 |---------|----| ------------------------------------|-----|
-| mstx2comm | 数据处理类 | 将通过MSTX内置通信打点的通信数据转换成通信算子表格 | -  |
-| p2p_pairing | 数据处理类 | P2P算子生成全局关联索引,输出的关联索引会作为一个新的字段`opConnectionId`附在`COMMUNICATION_OP`的表中 | -  |
+| mstx2commop | 数据处理类 | 将通过MSTX内置通信打点的通信信息转换成通信算子表格式。 | -  |
+| p2p_pairing | 数据处理类 | P2P算子生成全局关联索引，输出的关联索引会作为一个新的字段`opConnectionId`附在`COMMUNICATION_OP`的表中。 | -  |
 
-交付件详细内容请参见[recipe结果交付件表文档](./docs/recipe_output_format.md)。
+交付件详细内容请参见[recipe结果交付件表](./docs/recipe_output_format.md)文档。
 
-## 使用样例
-### 最简使用
+### 使用样例
+#### 最简使用
 ```bash
-# 只传入cluster_data性能数据文件夹,输入cluster_time_summary分析能力,在cluster_data输入文件夹下生成cluster_文件夹,保存分析结果信息
+# 只传入cluster_data性能数据文件夹，输入cluster_time_summary分析能力，在cluster_data输入文件夹下生成cluster_文件夹，保存分析结果信息
 msprof_analyze -m cluster_time_summary -d ./cluster_data
 ```
 
-### 分析能力=all模式下使用
+#### 分析能力为all设置下使用
 ```bash
-# 可以输入-m参数=all 当前输出通信矩阵/通信耗时/step_trace_time交付件
+# 可以输入-m参数=all 当前输出step_trace_time/通信矩阵/通信耗时交付件
 msprof_analyze -m all -d ./cluster_data
 ```
 
-### 自定义输出路径指定
+#### 指定输出路径
 ```bash
-# 设置-o参数,指定自定义输出路径
+# 设置-o参数，指定自定义输出路径
 msprof_analyze -m cluster_time_summary -d ./cluster_data -o ./cluster_output
 ```
 
-### 设置输出格式
+#### 设置输出格式
 ```bash
-# 设置-o参数,指定自定义输出路径
+# 设置--export_type参数，设置输出格式
 msprof_analyze -m cluster_time_summary -d ./cluster_data --export_type db
 ```
 
-### 性能对比(compare)子功能
+#### 性能对比(compare)子功能
 支持GPU与NPU之间、NPU与NPU之间两组性能数据的深度对比，通过多维度量化指标直观呈现性能差异。
 
 ```bash
@@ -230,9 +242,9 @@ msprof_analyze compare -d ./ascend_pt  # 昇腾NPU性能数据目录
 * 宏观性能拆分：按计算、通信、空闲三大维度统计耗时占比差异，快速识别性能损耗主要场景。
 * 细粒度对比：按算子（如 Conv、MatMul）、框架接口等粒度展示耗时差异，定位具体性能差距点。
 
-> 对比规则维度、参数说明及报告解读，请参考 [msprof-analyze compare 专项文档](./cluster_analyse/README.md)。
+> 对比规则维度、参数说明及报告解读，请参考 [msprof-analyze compare](./compare_tools/README.md)子功能介绍文档。
 
-### 专家建议(advisor)子功能
+#### 专家建议(advisor)子功能
 自动分析性能数据，识别算子执行效率、下发调度、集群通信等潜在瓶颈，并生成分级优化建议，助力快速定位问题。
 
 ```bash
@@ -244,11 +256,11 @@ msprof_analyze advisor all -d ./prof_data -o ./advisor_output
 * `mstt_advisor_{timestamp}.html`按重要程度标记的优化建议
 * `mstt_advisor_{timestamp}.xlsx`问题综述与详细的分析信息
 
-> 详细分析规则、参数配置及结果解读，请参考 [msprof-analyze advisor 专项文档](./advisor/README.md)。
+> 详细分析规则、参数配置及结果解读，请参考 [msprof-analyze advisor](./advisor/README.md)子功能介绍文档。
        
 ## 扩展功能
 ### 自定义开发指导
-用户可自定义一套性能数据的分析规则，需要详细了解性能分析的开发人员，具体开发指导请参见“[自定义分析规则开发指导](#自定义分析规则开发指导)”。
+用户可自定义一套性能数据的分析规则，需要详细了解性能分析的开发人员，具体开发指导请参见[自定义分析能力开发指导](#自定义开发指导)。
 
 
 ## 附录

@@ -1,6 +1,8 @@
-# cluster_time_summary 集群耗时细粒度拆解
+# cluster_time_summary 集群性能数据细粒度拆解
 
 ## 背景与挑战
+1。 大集群场景涉及多个计算节点，数据量大，单卡维度的性能数据统计与分析不能评估整体集群运行情况。
+2。 原有的cluster_step_trace_time。csv交付件没有单独的执行命令，导致用户使用不直观，且不能涵盖内存拷贝等指标项，需要增强。
 
 ## 功能介绍
 
@@ -9,7 +11,7 @@
 **使用方法**
 
 ```
-msprof-analyze -m cluster_time_summary -d ./cluster_data
+msprof-analyze -m cluster_time_summary -d 。/cluster_data
 ```
 **参数说明：**  
 * `-m`设置为cluster_time_summary 使能集群耗时细粒度拆解能力
@@ -17,7 +19,7 @@ msprof-analyze -m cluster_time_summary -d ./cluster_data
 * 其余参数：与msprof-analzye参数一致
 
 **输出数据：**  
-* 存储位置：cluster_analysis_output/cluster_analysis.db  
+* 存储位置：cluster_analysis_output/cluster_analysis。db  
 * 数据表名：ClusterTimeSummary  
 ![输出结果展示](img/clutser_time_summary.png)
 

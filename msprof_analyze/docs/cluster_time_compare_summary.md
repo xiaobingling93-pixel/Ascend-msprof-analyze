@@ -1,11 +1,12 @@
-### cluster_time_compare_sumary 集群耗时细粒度比对
+# cluster_time_compare_sumary 集群性能数据细粒度比对
 
 
 ## 背景与挑战
-
+大集群场景涉及多个计算节点，数据量大，原有的单卡性能数据对比不能评估整体集群运行情况。
+    
 ## 功能介绍
 
-* cluster_time_compare_sumary 提供了集群训练过程中迭代耗时拆解，包括计算、通信和内存拷贝等各部分的时间消耗，帮助用户找到性能瓶颈。
+  cluster_time_compare_sumary 提供了AI运行过程中集群维度的性能数据对比能力，包括计算、通信和内存拷贝等各部分的时间消耗，帮助用户找到性能瓶颈。
 
 ## 使用方法
 

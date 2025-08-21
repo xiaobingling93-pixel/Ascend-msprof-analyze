@@ -1,4 +1,4 @@
-### 自定义分析规则开发指导
+# 自定义分析规则开发指导
 自定义分析规则是基于对Profiling的analysis.db和ascend_pytorch_profiler_{rank_id}.db文件进行性能数据分析而开发。与cann_api_sum、compute_op_sum、hccl_sum等参数功能实现类似，可自定义一套性能数据的分析规则，方法如下：
 
 1. 在mstt工具代码仓profiler/msprof_analyze/cluster_analyse/recipes目录下创建xxx目录和xxx.py文件。
@@ -125,7 +125,7 @@
    msprof-analyze cluster -d {cluster profiling data path} --mode xxx --top_num 10
    ```
 
-### 开发和上库流程规范
+## 开发和上库流程规范
 
 开发要遵守以下流程规范。
 
