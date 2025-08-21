@@ -13,7 +13,8 @@ msprof-analyze的安装方式包括：**pip安装**、**下载whl包安装**和*
 pip install msprof-analyze
 ```
 
-使用`pip install msprof-analyze==版本号`可安装指定版本的包，使用采集性能数据对应的CANN版本号即可，如不清楚版本号可不指定，使用最新程序包
+使用`pip install msprof-analyze==版本号`可安装指定版本的包，使用采集性能数据对应的CANN版本号即可。  
+如不清楚版本号可不指定，使用最新程序包。
 
 pip命令会自动安装最新的包及其配套依赖。
 
@@ -115,10 +116,10 @@ msprof-analzye性能分析工具通过命令行方式启动性能分析。命名
 ```
 msprof-analyze -m [feature_option] -d <profiling_path> [global_option] [analyze_option]
 ```
--m指定分析能力，[feature_option]可指定对应特性，详见[分析特性介绍](#-分析特性介绍)章节，必选。  
-<profiling_path>为profiling性能数据文件夹，必选。  
-[global_option]为全局参数，详见[全局参数说明](#全局参数)章节，可选。  
-[analyze_option]为分析能力参数，详见[分析能力参数说明](#分析能力参数)章节，可选。  
+`-m`指定分析能力，`[feature_option]`可指定对应特性，详见[分析特性介绍](#-分析特性介绍)章节，必选。  
+`<profiling_path>`为profiling性能数据文件夹，必选。  
+`[global_option]`为全局参数，详见[全局参数说明](#全局参数)章节，可选。  
+`[analyze_option]`为分析能力参数，详见[分析能力参数说明](#分析能力参数)章节，可选。  
 
 详细使用样例请参考[使用样例](#使用样例)章节。
 
@@ -152,12 +153,12 @@ msprof-analyze -m [feature_option] -d <profiling_path> [global_option] [analyze_
 | 参数   | 说明                                                                                                                      |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------|
 | compare             | [compare（性能比对子功能）](./compare_tools/README.md)。提供NPU与GPU性能拆解功能以及算子、通信、内存性能的比对功能。|
-| advisor             | [advisor(专家建议子功能)](./advisor/README.md)。基于性能数据进行分析，并输出性能调优建议。                        |
+| advisor             | [advisor（专家建议子功能）](./advisor/README.md)。基于性能数据进行分析，并输出性能调优建议。                        |
 | cluster              | [cluster_analyse（集群分析工具）](./cluster_analyse/README.md)。提供集群分析能力，已作为默认子命令,不设置即为cluster集群分析功能 |
 | auto-completion     | 自动补全。配置后在当前视图下配置msprof-analyze工具所有的子参数时，可以使用Tab将所有子参数自动补全。             |
 
 
-### 🌟 分析特性介绍
+### 分析特性介绍
 
 #### 拆解对比类
 
@@ -185,8 +186,7 @@ msprof-analyze -m [feature_option] -d <profiling_path> [global_option] [analyze_
 | communication_time_sum | 集群场景通信时间和带宽汇总分析。 | -   |
 | communication_matrix_sum | 集群场景通信时间和带宽汇总分析。 | -   |
 | hccl_sum | 通信类算子信息汇总。  | -   |
-| pp_chart | pp流水图，针对pp并行下各个阶段的耗时分析与可视化能力。
-  | [link](./docs/pp_chart.md)             |
+| pp_chart | pp流水图，针对pp并行下各个阶段的耗时分析与可视化能力。| [link](./docs/pp_chart.md)             |
 | slow_rank | 根据当前的快慢卡统计算法，展示各个rank得出的快慢卡影响次数，识别慢卡出现的原因。 | -  |
 
 #### Host下发类特性
@@ -229,7 +229,7 @@ msprof-analyze -m cluster_time_summary -d ./cluster_data -o ./cluster_output
 msprof-analyze -m cluster_time_summary -d ./cluster_data --export_type db
 ```
 
-#### 性能对比(compare)子功能
+#### 性能对比（compare）子功能
 支持GPU与NPU之间、NPU与NPU之间两组性能数据的深度对比，通过多维度量化指标直观呈现性能差异。
 
 ```bash
@@ -245,7 +245,7 @@ msprof-analyze compare -d ./ascend_pt  # 昇腾NPU性能数据目录
 
 > 对比规则维度、参数说明及报告解读，请参考 [msprof-analyze compare](./compare_tools/README.md)子功能介绍文档。
 
-#### 专家建议(advisor)子功能
+#### 专家建议（advisor）子功能
 自动分析性能数据，识别算子执行效率、下发调度、集群通信等潜在瓶颈，并生成分级优化建议，助力快速定位问题。
 
 ```bash
