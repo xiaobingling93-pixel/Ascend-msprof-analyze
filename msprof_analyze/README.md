@@ -108,10 +108,10 @@ pip3 install ./msprof_analyze-{version}-py3-none-any.whl
 
 ## 🧰 使用方法
 ### 数据准备
-msprof-analzye需要传入采集的性能数据文件夹，如何采集性能数据请参见[采集profiling性能数据指导](#采集profiling性能数据指导)章节。
+msprof-analyze需要传入采集的性能数据文件夹，如何采集性能数据请参见[采集profiling性能数据指导](#采集profiling性能数据指导)章节。
 
 ### 命令格式
-msprof-analzye性能分析工具通过命令行方式启动性能分析。命名格式如下：
+msprof-analyze性能分析工具通过命令行方式启动性能分析。命名格式如下：
 
 ```
 msprof-analyze -m [feature_option] -d <profiling_path> [global_option] [analyze_option]
@@ -307,4 +307,4 @@ msprof-analyze advisor all -d ./prof_data -o ./advisor_output
 - 昇腾计算生态使能部
 - 2012网络实验室
 
-感谢来自社区的每一个PR，欢迎贡献 msprof-analzye！
+感谢来自社区的每一个PR，欢迎贡献 msprof-analyze！
