@@ -19,7 +19,7 @@ msprof-analyze -m cluster_time_summary -d ./cluster_data
 * 其余参数：与msprof-analzye参数一致
 
 **输出数据：**  
-* 存储位置：cluster_analysis_output/cluster_analysis。db  
+* 存储位置：cluster_analysis_output/cluster_analysis.db  
 * 数据表名：ClusterTimeSummary  
 ![输出结果展示](img/clutser_time_summary.png)
 
