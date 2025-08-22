@@ -43,8 +43,8 @@ context_settings['ignore_unknown_options'] = True
 def cluster_cli(**kwargs) -> None:
     """
     subcommand:\n
-        compare    Compare the performance differences between GPUs and NPUs. try 'msprof-analyze compare -h' for detail\n
-        advisor    Analyze profiling datasets and give performance optimization suggestion.try 'msprof-analyze advisor -h' for detail\n
+        compare    Compare the performance diffs between GPUs and NPUs. try 'msprof-analyze compare -h' for detail\n
+        advisor    Analyze and give performance optimization suggestion.try 'msprof-analyze advisor -h' for detail\n
         cluster    default run as cluster subcommand
     """
     Interface(kwargs).run()
