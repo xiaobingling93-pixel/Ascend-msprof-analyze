@@ -116,10 +116,10 @@ msprof-analyze性能分析工具通过命令行方式启动性能分析。命名
 ```
 msprof-analyze -m [feature_option] -d <profiling_path> [global_option] [analyze_option]
 ```
-`-m`指定分析能力，`[feature_option]`可指定对应特性，详见[分析特性介绍](#分析特性介绍)章节，必选。  
-`<profiling_path>`为profiling性能数据文件夹，必选。  
-`[global_option]`为全局参数，详见[全局参数说明](#全局参数)章节，可选。  
-`[analyze_option]`为分析能力参数，详见[分析能力参数说明](#分析能力参数)章节，可选。  
+* `-m`指定分析能力，`[feature_option]`可指定对应特性，详见[分析特性介绍](#分析特性介绍)章节，必选。  
+* `<profiling_path>`为profiling性能数据文件夹，必选。  
+* `[global_option]`为全局参数，详见[全局参数说明](#全局参数)章节，可选。  
+* `[analyze_option]`为分析能力参数，详见[分析能力参数说明](#分析能力参数)章节，可选。  
 
 详细使用样例请参考[使用样例](#使用样例)章节。
 
@@ -164,8 +164,8 @@ msprof-analyze -m [feature_option] -d <profiling_path> [global_option] [analyze_
 
 | 分析能力    | 介绍                                     | 介绍链接 |
 |---------|----------------------------------------|-----|
-| cluster_time_summary | 性能数据细粒度拆解，替换step_trace_time.csv内容。 | [link](./docs/cluster_time_summary.md)  |
-| cluster_time_compare_summary | 性能数据细粒度对比。 | [link](./docs/cluster_time_compare_summary.md)   |
+| cluster_time_summary | 性能数据细粒度拆解，替换step_trace_time.csv内容。 | [link](./docs/features/cluster_time_summary.md)  |
+| cluster_time_compare_summary | 性能数据细粒度对比。 | [link](./docs/features/cluster_time_compare_summary.md)   |
 
 #### 计算类特性
 
@@ -186,7 +186,7 @@ msprof-analyze -m [feature_option] -d <profiling_path> [global_option] [analyze_
 | communication_time_sum | 集群场景通信时间和带宽汇总分析。 | -   |
 | communication_matrix_sum | 集群场景通信时间和带宽汇总分析。 | -   |
 | hccl_sum | 通信类算子信息汇总。  | -   |
-| pp_chart | pp流水图，针对pp并行下各个阶段的耗时分析与可视化能力。| [link](./docs/pp_chart.md)             |
+| pp_chart | pp流水图，针对pp并行下各个阶段的耗时分析与可视化能力。| [link](./docs/features/pp_chart.md)             |
 | slow_rank | 根据当前的快慢卡统计算法，展示各个rank得出的快慢卡影响次数，识别慢卡出现的原因。 | -  |
 
 #### Host下发类特性
