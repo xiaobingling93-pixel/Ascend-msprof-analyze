@@ -63,7 +63,7 @@ class SpecialHelpOrder(click.Group):
             args = ['cluster'] + args
         # 如果没有子命令也没有参数，执行--help
         elif not has_subcommand and not args:
-            args = ['--help']
+            args = ['cluster'] + ['--help']
 
         return super(SpecialHelpOrder, self).parse_args(ctx, args)
 

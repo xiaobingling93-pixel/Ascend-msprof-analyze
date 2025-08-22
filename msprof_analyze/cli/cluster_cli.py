@@ -24,7 +24,7 @@ context_settings['ignore_unknown_options'] = True
 
 
 @click.command(context_settings=context_settings, name="cluster",
-               short_help='Analyze cluster data to locate slow nodes and slow links.')
+               short_help='Analyze cluster data to locate performance bottleneck')
 @click.option('--profiling_path', '-d', type=click.Path(), required=True, callback=PathManager.expanduser_for_cli,
               help='path of the profiling data')
 @click.option('--mode', '-m', type=click.Choice(ALL_FEATURE_LIST), default='all')
@@ -41,4 +41,11 @@ context_settings['ignore_unknown_options'] = True
               is_eager=True, help=cli_version())
 @click.argument('args', nargs=-1)
 def cluster_cli(**kwargs) -> None:
+    """
+    subcommand:\n
+        compare    Compare the performance differences between GPUs and NPUs. try 'msprof-analzye compare -h' for detail\n
+        advisor    Analyze profiling datasets and give performance optimization suggestion.try 'msprof-analzye advisor -h' for detail\n
+        cluster    default run as cluster subcommand
+    """
     Interface(kwargs).run()
+
