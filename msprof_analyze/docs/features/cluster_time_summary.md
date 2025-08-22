@@ -16,7 +16,7 @@ msprof-analyze -m cluster_time_summary -d ./cluster_data
 **参数说明：**  
 * `-m`设置为cluster_time_summary 使能集群耗时细粒度拆解能力
 * `-d`集群性能数据文件夹路径
-* 其余参数：与msprof-analyze参数一致
+* 其余参数：参考msprof-analyze调用参数指导,详见[参数说明](../../README.md#参数说明)
 
 **输出数据：**  
 * 存储位置：cluster_analysis_output/cluster_analysis.db  

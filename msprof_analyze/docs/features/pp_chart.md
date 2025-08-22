@@ -110,7 +110,7 @@ msprof-analyze cluster -m pp_chart -d ./cluster_data
 ```
 **参数说明：**  
 * `-d` 第一步打点后采集到的集群数据路径
-* 其余参数：与cluster集群分析功能支持的参数一致，详见[参数列表](../cluster_analyse/README.md)  
+* 其余参数：参考msprof-analyze调用参数指导,详见[参数说明](../../README.md#参数说明)
 
 **输出数据：**  
 * 存储位置：每个rank的数据ASCEND_PROFILER_OUTPUT/ascend_pytorch_profiler_{rank_id}.db里面新增一张表StepTaskInfo
