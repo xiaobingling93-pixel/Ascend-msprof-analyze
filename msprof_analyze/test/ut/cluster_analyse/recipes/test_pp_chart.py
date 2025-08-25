@@ -52,9 +52,9 @@ class TestClusterTimeCompareSummary(unittest.TestCase):
                 ['17F+3B', 3], ['8F+14B', 3], ['18F+4B', 3], ['9F+15B', 3], ['19F+5B', 3], ['16B', 5], ['6B', 5],
                 ['17B', 5], ['7B', 5], ['18B', 6], ['8B', 6], ['19B', 6], ['9B', 6]]
         }
-        with (mock.patch(NAMESPACE + ".base_recipe_analysis.BaseRecipeAnalysis.load_distributed_args",
-                        return_value={PPChart.PP_SIZE: 4}),
-              mock.patch(NAMESPACE + ".pp_chart.pp_chart.PPChart.load_pp_info")):
+        with mock.patch(NAMESPACE + ".base_recipe_analysis.BaseRecipeAnalysis.load_distributed_args",
+                        return_value={PPChart.PP_SIZE: 4}), \
+             mock.patch(NAMESPACE + ".pp_chart.pp_chart.PPChart.load_pp_info"):
             pp_chart_instance = PPChart({})
             pp_chart_instance.micro_batch_num = 10
             pp_chart_instance.calculate_micro_batch_id_for_dualpipev()
@@ -63,7 +63,7 @@ class TestClusterTimeCompareSummary(unittest.TestCase):
 
     def test_pp_chart_should_generate_table_when_pp_info_not_existed(self):
         df = pd.DataFrame({"step": [0, 0], "msg": ["forward_step", "backward_step"], "startNs": [1, 4],
-                          "endNs": [2, 5]})
+                           "endNs": [2, 5]})
         with mock.patch(NAMESPACE + ".base_recipe_analysis.BaseRecipeAnalysis.load_distributed_args",
                         return_value={}), \
              mock.patch(NAMESPACE + ".base_recipe_analysis.BaseRecipeAnalysis.dump_data"), \
