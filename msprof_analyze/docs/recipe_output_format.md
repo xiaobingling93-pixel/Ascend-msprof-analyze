@@ -49,7 +49,7 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 
 * 根据Communication（Not Overlapped and Exclude Receive）时间判断是否通信耗时占比过大。
 
-* 根据Bubble时间的占比和理论计算公式判断bubble设置是否合理，是否stage间有不均衡现象。
+* 根据Bubble时间的占比和理论计算公式判断bubble设置是否合理，stage间是否有不均衡现象。
 
 以上时间理论上都应该处于持平状态，即最大值小于最小值5%，否则就可能出现慢卡。
 
@@ -57,7 +57,7 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 
 数据解析模式为communication_matrix或all时生成。
 
-直接打开json（vscode或json查看器）, 搜索"Total", 会有多个搜索结果，一般来说链路带宽信息的结构：
+直接打开json（vscode或json查看器），搜索"Total"，会有多个搜索结果，一般来说链路带宽信息的结构：
 
 ```bash
 {src_rank}-{dst_rank}: {
@@ -469,7 +469,7 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 
 说明：
 
-对应第二种情况。
+对应第二种情况：当npu空闲时间较长时，设备会自动降频，会掉到800MHz。
 
 格式：
 
@@ -482,7 +482,7 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 
 说明：
 
-对应第三种情况。
+对应第三种情况：当npu因为各种原因，出现降频现象时，除了1800MHz，800MHz，还有出现其他异常频率。
 
 格式：
 
@@ -527,32 +527,6 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 | tokensDiff | INTEGER | 同一个ep内最大值与最小值之间的差值 |
 
 
-### filter_db
-
-设置-m filter_db时，不会生成cluster_analysis.db，会将原始db进行过滤，使得集群数据变小，有时候甚至能减少90%，将TB级数据过滤至GB级。过滤后的数据依旧可以在MindStudio Insight中呈现。
-
-**说明：最好指定-o 参数，指定提取后的集群数据的目录。**
-
-示例：msprof-analyze cluster -d {cluster_profiling_data_path} -m filter_db -o {output_dir}
-
-结果示例：
-```
-output_dir
-├── cluster_analysis_output
-├── ├── filter_db
-├── ├── ├── xxx_ascend_pt
-├── ├── ├── ├── ASCEND_PROFILER_OUTPUT
-├── ├── ├── ├── ├── ascend_pytorch_profiler_x.db
-├── ├── ├── xxx_ascend_pt
-├── ├── ├── ……
-```
-
-过滤逻辑：
-
-1. 删除COMMUNICATION_TASK_INFO和TASK_PMU_INFO
-2. 获取所有的COMMUNICATION_OP全保留，获取全部的connectionId集合
-3. 根据opType(TOP算子FA、MatMul、GroupedMatmul)筛选COMPUTE_TASK_INFO和TASK（通过globalTaskId进行关联）数据，同时获取筛选出来的connectionId集合。
-4. 逻辑2和逻辑3的connectionId集合取并集，CANN_API、Pytorch_API的connectionId相同的数据保留，其他去掉。
 
 ### mstx2commop
 

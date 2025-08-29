@@ -2,9 +2,9 @@
 
 msprof-analyze的advisor功能是将Ascend PyTorch Profiler或者MindSpore Profiler采集的性能数据进行分析，并输出性能调优建议。
 
-Ascend PyTorch Profilerf采集方法请参见《[性能调优工具](https://www.hiascend.com/document/detail/zh/mindstudio/81RC1/T&ITools/Profiling/atlasprofiling_16_0090.html)》，MindSpore Profiler采集方法请参见《[性能调试](https://www.mindspore.cn/mindinsight/docs/zh-CN/r2.3/performance_profiling_ascend.html)》。
+Ascend PyTorch Profiler采集方法请参见《[性能调优工具](https://www.hiascend.com/document/detail/zh/mindstudio/81RC1/T&ITools/Profiling/atlasprofiling_16_0090.html)》，MindSpore Profiler采集方法请参见《[性能调试](https://www.mindspore.cn/mindinsight/docs/zh-CN/r2.3/performance_profiling_ascend.html)》。
 
-## 工具使用（命令行方式方式）
+## 工具使用（命令行方式）
 
 ### 约束
 
@@ -12,7 +12,7 @@ CANN软件版本8.0RC1之前仅支持对text格式文件分析，8.0RC1及之后
 
 ### 操作步骤
 
-1. 参见《[性能工具](../README.md)》完成工具安装。建议安装最新版本。
+1. 参见《[性能工具](./../README.md)》完成工具安装。建议安装最新版本。
 
 2. 执行分析。
 
@@ -34,7 +34,7 @@ CANN软件版本8.0RC1之前仅支持对text格式文件分析，8.0RC1及之后
      msprof-analyze advisor schedule -d $HOME/profiling_data/
      ```
 
-   以上命令更多参数介绍请参见“**命令详解**”。
+   以上命令更多参数介绍请参见[命令详解](#命令详解)。
 
    单卡场景需要指定到性能数据文件`*_ascend_pt`或`*_ascend_ms`目录；多卡或集群场景需要指定到`*_ascend_pt`或`*_ascend_ms`目录的父目录层级。
 
@@ -44,7 +44,7 @@ CANN软件版本8.0RC1之前仅支持对text格式文件分析，8.0RC1及之后
    
    `mstt_advisor_{timestamp}.xlsx`文件内容与执行终端输出一致。
    
-   `mstt_advisor_{timestamp}.html`文件分析详见“**报告解析**”。
+   `mstt_advisor_{timestamp}.html`文件分析详见[报告解析](#报告解析无标杆)。
    
    执行终端输出示例如下：
    
@@ -74,41 +74,41 @@ msprof-analyze advisor命令行包含如下三个参数：
 
 - computation
 
-  计算瓶颈：包含下表中computing和Kernel compare功能。
+  计算瓶颈：包含下表中computation和Kernel compare功能。
 
 - schedule
 
-  调度瓶颈：包含下表中scheduling和API compare功能。
+  调度瓶颈：包含下表中schedule和API compare功能。
 
 下表中字段为advisor的完整功能点，由all、computation和schedule控制启动。
 
-| dimension  | mode                                  | 参数释义                             | 支持场景                         |
-| ---------- |---------------------------------------| ------------------------------------ | ------------------------------------ |
-| overall    | Overall Summary                       | 计算、通信、空闲等维度对性能数据进行拆解 | PyTorch、MindSpore |
-|            | Environment Variable Issues | 环境变量设置推荐             | PyTorch |
-|     | slow rank                             | 慢卡识别                             | PyTorch、MindSpore            |
-|            | slow link                             | 慢链路识别                           | PyTorch、MindSpore          |
-| computation | AICPU Issues              | AI CPU调优                           | PyTorch、MindSpore          |
-|            | Operator Dynamic Shape Issues | 识别动态Shape算子                    | PyTorch   |
-| | AI Core Performance Analysis | MatMul、FlashAttentionScore、AI_VECTOR_CORE和MIX_AIV类算子的性能分析 | PyTorch |
-|            | Block Dim Issues                   | Block Dim算子调优                    | PyTorch、MindSpore   |
-|            | Operator No Bound Issues     | 算子瓶颈分析                | PyTorch、MindSpore |
-|            | Fusion Issues                    | 融合算子图调优                        | PyTorch、MindSpore       |
-|            | AI Core Frequency Issues | AI Core算子降频分析                  | PyTorch、MindSpore |
-|communication| Packet Analysis                       |通信小包检测                          |PyTorch、MindSpore                          |
-|| Bandwidth Contention Analysis |通信计算带宽抢占检测 |PyTorch、MindSpore |
-|| Communication Retransmission Analysis |通信重传检测 |PyTorch、MindSpore |
-|| Byte Alignment Analysis |通信算子字节对齐检测，传输类型为SDMA的通信算子，数据量需要被512字节整除，保证传输带宽不会下降 |PyTorch、MindSpore |
-| schedule | Affinity API Issues     | 亲和API替换调优                      | PyTorch、MindSpore     |
-|            | Operator Dispatch Issues   | 识别算子下发问题(路径3/路径5)            | PyTorch |
-| | SyncBatchNorm Issues | BatchNorm同步检测 | PyTorch、MindSpore |
-| | Synchronize Stream Issues | 流同步检测 | PyTorch、MindSpore |
-| | GC Analysis | 识别异常垃圾回收事件。需要Ascend PyTorch Profiler采集时开启experimental_config下的gc_delect_threshold功能 | PyTorch |
-| | Fusible Operator Analysis | 检测具有Host瓶颈或者MTE瓶颈的算子序列，可用于代码优化或开发可融合算子 | PyTorch、MindSpore |
-| dataloader | Slow Dataloader Issues | 异常dataloader检测 | PyTorch、MindSpore |
-| memory | Memory Operator Issues | 识别异常的内存申请释放操作 | PyTorch、MindSpore |
-| comparison | Kernel compare of Rank\* Step\* and Rank\* Step\* | 识别标杆和待比对性能数据的Kernel数据（无标杆场景是集群内部快慢卡的性能数据对比，有标杆场景是两个集群之间存在明显耗时差异的相同卡之间的性能数据对比） | PyTorch、MindSpore |
-|  | Api compare of Rank\* Step\* and Rank\* Step\* | 识别标杆和待比对性能数据的API数据（无标杆场景是集群内部快慢卡的性能数据对比，有标杆场景是两个集群之间存在明显耗时差异的相同卡之间的性能数据对比） | PyTorch |
+| dimension  | mode                                  | 参数释义                                                                                | 支持场景                         |
+| ---------- |---------------------------------------|-------------------------------------------------------------------------------------| ------------------------------------ |
+| overall    | Overall Summary                       | 计算、通信、空闲等维度对性能数据进行拆解                                                                | PyTorch、MindSpore |
+|            | Environment Variable Issues | 环境变量设置推荐                                                                            | PyTorch |
+|     | slow rank                             | 慢卡识别                                                                                | PyTorch、MindSpore            |
+|            | slow link                             | 慢链路识别                                                                               | PyTorch、MindSpore          |
+| computation | AICPU Issues              | AI CPU调优                                                                            | PyTorch、MindSpore          |
+|            | Operator Dynamic Shape Issues | 识别动态Shape算子                                                                         | PyTorch   |
+| | AI Core Performance Analysis | MatMul、FlashAttentionScore、AI_VECTOR_CORE和MIX_AIV类算子的性能分析                           | PyTorch |
+|            | Block Dim Issues                   | Block Dim算子调优                                                                       | PyTorch、MindSpore   |
+|            | Operator No Bound Issues     | 算子瓶颈分析                                                                              | PyTorch、MindSpore |
+|            | Fusion Issues                    | 融合算子图调优                                                                             | PyTorch、MindSpore       |
+|            | AI Core Frequency Issues | AI Core算子降频分析                                                                       | PyTorch、MindSpore |
+|communication| Packet Analysis                       | 通信小包检测                                                                              |PyTorch、MindSpore                          |
+|| Bandwidth Contention Analysis | 通信计算带宽抢占检测                                                                          |PyTorch、MindSpore |
+|| Communication Retransmission Analysis | 通信重传检测                                                                              |PyTorch、MindSpore |
+|| Byte Alignment Analysis | 通信算子字节对齐检测，传输类型为SDMA的通信算子，数据量需要被512字节整除，保证传输带宽不会下降                                  |PyTorch、MindSpore |
+| schedule | Affinity API Issues     | 亲和API替换调优                                                                           | PyTorch、MindSpore     |
+|            | Operator Dispatch Issues   | 识别算子下发问题(路径3/路径5)                                                                   | PyTorch |
+| | SyncBatchNorm Issues | BatchNorm同步检测                                                                       | PyTorch、MindSpore |
+| | Synchronize Stream Issues | 流同步检测                                                                               | PyTorch、MindSpore |
+| | GC Analysis | 识别异常垃圾回收事件。需要Ascend PyTorch Profiler采集时开启experimental_config下的gc_detect_threshold功能 | PyTorch |
+| | Fusible Operator Analysis | 检测具有Host瓶颈或者MTE瓶颈的算子序列，可用于代码优化或开发可融合算子                                              | PyTorch、MindSpore |
+| dataloader | Slow Dataloader Issues | 异常dataloader检测                                                                      | PyTorch、MindSpore |
+| memory | Memory Operator Issues | 识别异常的内存申请释放操作                                                                       | PyTorch、MindSpore |
+| comparison | Kernel compare of Rank\* Step\* and Rank\* Step\* | 识别标杆和待比对性能数据的Kernel数据（无标杆场景是集群内部快慢卡的性能数据对比，有标杆场景是两个集群之间存在明显耗时差异的相同卡之间的性能数据对比）       | PyTorch、MindSpore |
+|  | Api compare of Rank\* Step\* and Rank\* Step\* | 识别标杆和待比对性能数据的API数据（无标杆场景是集群内部快慢卡的性能数据对比，有标杆场景是两个集群之间存在明显耗时差异的相同卡之间的性能数据对比）          | PyTorch |
 
 集群场景时自动进行cluster和overall的environment_variable_analysis解析，单卡时自动进行overall解析。
 
@@ -117,35 +117,35 @@ msprof-analyze advisor命令行包含如下三个参数：
 - 总体性能瓶颈
 
   ```bash
-  msprof-analyze advisor all -d {profiling_path} [-bp benchmark_profiling_path] [-o output_path] [-cv cann_version] [-tv torch_version] [-pt profiling_type] [--force] [--language language] [--debug] [-h]
+  msprof-analyze advisor all -d {profiling_path} [-bp benchmark_profiling_path] [-o output_path] [-cv cann_version] [-tv torch_version] [-pt profiling_type] [--force] [-l language] [--debug] [-h]
   ```
 
 - 计算瓶颈
 
   ```bash
-  msprof-analyze advisor computation -d {profiling_path} [-o output_path] [-cv cann_version] [-tv torch_version] [-pt profiling_type] [--force] [--language language] [--debug] [-h]
+  msprof-analyze advisor computation -d {profiling_path} [-o output_path] [-cv cann_version] [-tv torch_version] [-pt profiling_type] [--force] [-l language] [--debug] [-h]
   ```
 
 - 调度瓶颈
 
   ```bash
-  msprof-analyze advisor schedule -d {profiling_path} [-o output_path] [-cv cann_version] [-tv torch_version] [--force] [--language language] [--debug] [-h]
+  msprof-analyze advisor schedule -d {profiling_path} [-o output_path] [-cv cann_version] [-tv torch_version] [--force] [-l language] [--debug] [-h]
   ```
 
 #### 参数介绍
 
-| 参数                               | 说明                                                         | 是否必选 |
-| ---------------------------------- | ------------------------------------------------------------ | -------- |
-| -d<br>--profiling_path             | 性能数据文件或目录所在路径，Ascend PyTorch Profiler采集场景指定为`*_ascend_pt`性能数据结果目录，MindSpore Profiler采集场景指定为`*_ascend_ms`性能数据结果目录。集群数据需要指定到`*_ascend_pt`或`*_ascend_ms`的父目录。 | 是       |
-| -bp<br/>--benchmark_profiling_path | 基准性能数据所在目录，用于性能比对。性能数据通过Profiling工具采集获取。<br>**computation和schedule不支持该参数。** | 否       |
-| -o<br/>--output_path               | 分析结果输出路径，完成advisor分析操作后会在该目录下保存分析结果数据。默认未配置，为当前目录。 | 否       |
-| -cv<br/>--cann_version             | 使用Profiling工具采集时对应的CANN软件版本。目前配套的兼容版本为“6.3.RC2”，“7.0.RC1”、“7.0.0”、“8.0.RC1”，此字段不填默认按“8.0.RC1”版本数据进行处理，其余版本采集的Profiling数据在分析时可能会导致不可知问题。可通过在环境中执行如下命令获取其version字段：`cat /usr/local/Ascend/ascend-toolkit/latest/aarch64-linux/ascend_toolkit_install.info` | 否       |
-| -tv<br/>--torch_version            | 运行环境的torch版本，默认为1.11.0，支持torch1.11.0和torch2.1.0，当运行环境torch版本为其他版本如torch1.11.3时，可以忽略小版本号差异选择相近的torch版本如1.11.0。 | 否       |
-| -pt<br/>--profiling_type           | 配置性能数据采集使用的Profiling工具类型。可取值：<br>        pytorch：使用Ascend PyThon Profiler接口方式采集的性能数据时配置，默认值。<br/>        mindspore：使用MindSpore Profiler接口方式采集的性能数据时配置。<br/>        mslite：使用[Benchmark](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)工具采集的性能数据时配置。不建议使用。<br>**schedule不支持该参数。** | 否       |
-| --force                            | 强制执行advisor。配置后可强制跳过如下情况：<br/>        指定的目录、文件的用户属主不属于当前用户，忽略属主判断直接执行。<br/>        csv文件大于5G、json文件大于10G、db文件大于8G，忽略文件过大判断直接执行。<br/>配置该参数表示开启强制执行，默认未配置表示关闭。 | 否       |
-| -l<br/>--language                  | 设置分析结果输出的语言，可取值：<br/>        cn：输出中文，默认值。<br/>        en：输出英文。 | 否       |
-| --debug                            | 工具执行报错时可打开此开关，将会展示详细保存堆栈信息。配置该参数表示开启Debug，默认未配置表示关闭。 | 否       |
-| -h，-H<br/>--help                  | 在需要查询当前命令附属子命令或相关参数时，给出帮助建议。     | 否       |
+| 参数                               | 说明                                                                                                                                                                                                                                                                                                               | 是否必选 |
+| ---------------------------------- |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------| -------- |
+| -d<br>--profiling_path             | 性能数据文件或目录所在路径，Ascend PyTorch Profiler采集场景指定为`*_ascend_pt`性能数据结果目录，MindSpore Profiler采集场景指定为`*_ascend_ms`性能数据结果目录。集群数据需要指定到`*_ascend_pt`或`*_ascend_ms`的父目录。                                                                                                                                                       | 是       |
+| -bp<br/>--benchmark_profiling_path | 基准性能数据所在目录，用于性能比对。性能数据通过Profiling工具采集获取。<br>**computation和schedule不支持该参数。**                                                                                                                                                                                                                                      | 否       |
+| -o<br/>--output_path               | 分析结果输出路径，完成advisor分析操作后会在该目录下保存分析结果数据。默认未配置，为当前目录。                                                                                                                                                                                                                                                               | 否       |
+| -cv<br/>--cann_version             | 使用Profiling工具采集时对应的CANN软件版本。目前配套的兼容版本为“6.3.RC2”，“7.0.RC1”、“7.0.0”、“8.0.RC1”，此字段不填默认按“8.0.RC1”版本数据进行处理，其余版本采集的Profiling数据在分析时可能会导致不可知问题。可通过在环境中执行如下命令获取其version字段：`cat /usr/local/Ascend/ascend-toolkit/latest/aarch64-linux/ascend_toolkit_install.info`                                                         | 否       |
+| -tv<br/>--torch_version            | 运行环境的torch版本，默认为1.11.0，支持torch1.11.0和torch2.1.0，当运行环境torch版本为其他版本如torch1.11.3时，可以忽略小版本号差异选择相近的torch版本如1.11.0。                                                                                                                                                                                                    | 否       |
+| -pt<br/>--profiling_type           | 配置性能数据采集使用的Profiling工具类型。可取值：<br>        pytorch：使用Ascend Pytorch Profiler接口方式采集的性能数据时配置，默认值。<br/>        mindspore：使用MindSpore Profiler接口方式采集的性能数据时配置。<br/>        mslite：使用[Benchmark](https://gitee.com/ascend/tools/tree/master/ais-bench_workload/tool/ais_bench)工具采集的性能数据时配置。不建议使用。<br>**schedule不支持该参数。** | 否       |
+| --force                            | 强制执行advisor。配置后可强制跳过如下情况：<br/>        指定的目录、文件的用户属主不属于当前用户，忽略属主判断直接执行。<br/>        csv文件大于5G、json文件大于10G、db文件大于8G，忽略文件过大判断直接执行。<br/>配置该参数表示开启强制执行，默认未配置表示关闭。                                                                                                                                                     | 否       |
+| -l<br/>--language                  | 设置分析结果输出的语言，可取值：<br/>        cn：输出中文，默认值。<br/>        en：输出英文。                                                                                                                                                                                                                                                   | 否       |
+| --debug                            | 工具执行报错时可打开此开关，将会展示详细保存堆栈信息。配置该参数表示开启Debug，默认未配置表示关闭。                                                                                                                                                                                                                                                             | 否       |
+| -h，-H<br/>--help                  | 在需要查询当前命令附属子命令或相关参数时，给出帮助建议。                                                                                                                                                                                                                                                                                     | 否       |
 
 ### 报告解析（无标杆）
 
@@ -245,7 +245,7 @@ computation模块从device计算性能维度进行分析，能够识别AI CPU、
 
 ![AI_Core_Performance_Analysis](./img/AI_Core_Performance_analysis.png)
 
-上图中torch_npu.npu.set_compile_mode接口介绍请参见[torch_npu.npu.set_compile_mode](https://www.hiascend.com/document/detail/zh/Pytorch/60RC2/apiref/apilist/ptaoplist_000880.html)；AICPU算子替换样例可参考《[Samples of AI CPU Operator Replacement](https://gitee.com/ascend/mstt/blob/master/profiler/msprof_analyze/advisor/doc/Samples%20of%20AI%20CPU%20Operator%20Replacement.md)》。
+上图中torch_npu.npu.set_compile_mode接口介绍请参见[torch_npu.npu.set_compile_mode](https://www.hiascend.com/document/detail/zh/Pytorch/710/apiref/torchnpuCustomsapi/context/%EF%BC%88beta%EF%BC%89torch_npu-npu-set_compile_mode.md)；AICPU算子替换样例可参考《[Samples of AI CPU Operator Replacement](https://gitee.com/ascend/mstt/blob/master/profiler/msprof_analyze/advisor/doc/Samples%20of%20AI%20CPU%20Operator%20Replacement.md)》。
 
 当存在pp stage（流水线并行）时，computation会按stage分析，每个stage就是一个流水线切分，比如0\~7卡为stage-0、8\~15卡为stage-1。
 
@@ -255,7 +255,7 @@ dataloader模块包含Slow Dataloader Issues，主要检测异常高耗时的dat
 
 ![dataloader](./img/dataloader.png)
 
-上图中的`pin_memory`（内存锁定）和`num_workers`（数据加载是子流程数量）参数为[数据加载优化](https://www.hiascend.com/document/detail/zh/Pytorch/60RC2/ptmoddevg/trainingmigrguide/performance_tuning_0019.html)使用。
+上图中的`pin_memory`（内存锁定）和`num_workers`（数据加载是子流程数量）参数为[数据加载优化](https://www.hiascend.com/document/detail/zh/Pytorch/710/ptmoddevg/trainingmigrguide/performance_tuning_0026.html)使用。
 
 schedule模块包含GC Analysis、亲和API、aclOpCompile、SyncBatchNorm、SynchronizeStream和Fusible Operator Analysis等多项检测。
 
@@ -293,7 +293,7 @@ schedule模块包含GC Analysis、亲和API、aclOpCompile、SyncBatchNorm、Syn
 
 ![schedule_2](./img/schedule_2.png)
 
-上图中的ASCEND_LAUNCH_BLOCKING环境变量介绍请参见[ASCEND_LAUNCH_BLOCKING](https://www.hiascend.com/document/detail/zh/canncommercial/80RC22/apiref/envvar/envref_07_0050.html)。
+上图中的ASCEND_LAUNCH_BLOCKING环境变量介绍请参见[ASCEND_LAUNCH_BLOCKING](https://www.hiascend.com/document/detail/zh/Pytorch/710/comref/Envvariables/Envir_006.html)。
 
 如下图示例，Operator Dispatch Issues提示需要在运行脚本的最开头添加如下代码用于消除aclOpCompile：
 
@@ -302,11 +302,11 @@ torch_npu.npu.set_compile_mode(jit_compile=False);
 torch_npu.npu.config.allow_internal_format = False
 ```
 
-以上接口介绍请参见[torch_npu.npu.set_compile_mode](https://www.hiascend.com/document/detail/zh/Pytorch/60RC2/apiref/apilist/ptaoplist_000880.html)和[torch_npu.npu.config.allow_internal_format](https://www.hiascend.com/document/detail/zh/Pytorch/60RC2/apiref/apilist/ptaoplist_000216.html)。
+以上接口介绍请参见[torch_npu.npu.set_compile_mode](https://www.hiascend.com/document/detail/zh/Pytorch/710/apiref/torchnpuCustomsapi/context/%EF%BC%88beta%EF%BC%89torch_npu-npu-set_compile_mode.md)和[torch_npu.npu.config.allow_internal_format](https://www.hiascend.com/document/detail/zh/Pytorch/710/apiref/torchnpuCustomsapi/context/%EF%BC%88beta%EF%BC%89torch_npu-npu-config-allow_internal_format.md)。
 
 ![输入图片说明](./img/schedule_1.png)
 
-上图中aclopCompileAndExecute接口介绍请参见[aclopCompileAndExecute](https://www.hiascend.com/document/detail/zh/canncommercial/80RC22/apiref/appdevgapi/aclcppdevg_03_0243.html)。
+上图中aclopCompileAndExecute接口介绍请参见[aclopCompileAndExecute](https://www.hiascend.com/document/detail/zh/canncommercial/82RC1/API/appdevgapi/aclcppdevg_03_0251.html)。
 
 ### 报告解析（有标杆）
 
@@ -316,8 +316,8 @@ torch_npu.npu.config.allow_internal_format = False
 
 有标杆集群场景：
 
-- overall模块进行快慢卡和快慢链路分析，与无标杆集群场景一致，请参见“**报告解析（无标杆）** > **overall模块的分析**”。
-- 提供Environment Variable Issues，与无标杆单卡场景一致，请参见“**报告解析（无标杆）** > **overall模块的分析**”。
+- overall模块进行快慢卡和快慢链路分析，与无标杆集群场景一致，请参见“**报告解析（无标杆）** > [**overall模块的分析**](#overall模块的分析)”。
+- 提供Environment Variable Issues，与无标杆单卡场景一致，请参见“**报告解析（无标杆）** > [**overall模块的分析**](#overall模块的分析)”。
 - 有标杆集群场景同样提供comparison模块（无标杆场景是集群内部快慢卡的性能数据对比，有标杆场景是两个集群之间存在明显耗时差异的相同卡之间的性能数据对比）。
 
 comparison模块内容如下图示例，识别标杆和待比对性能数据的Kernel和API数据，包括：

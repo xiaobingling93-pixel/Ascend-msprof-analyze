@@ -174,25 +174,25 @@ msprof-analyze cluster -m [feature_option] -d <profiling_path> [global_option] [
 
 #### 计算类特性
 
-| 分析能力    | 介绍                                     | 介绍链接 |
-|---------|----------------------------------------|-----|
-| compute_op_sum | device侧运行的计算类算子汇总。 | -  |
-| freq_analysis | 识别是否aicore存在空闲（频率为800MHz）、异常（频率不为1800MHz或800MHz）的情况并给出分析结果。 | -  |
-| ep_load_balance | moe负载信息汇总分析。 | - |
+| 分析能力    | 介绍                                                          | 介绍链接 |
+|---------|-------------------------------------------------------------|-----|
+| compute_op_sum | device侧运行的计算类算子汇总。                                          | -  |
+| freq_analysis | 识别aicore是否存在空闲（频率为800MHz）、异常（频率不为1800MHz或800MHz）的情况并给出分析结果。 | -  |
+| ep_load_balance | moe负载信息汇总分析。                                                | - |
 
 #### 通信类特性
 
-| 分析能力    | 介绍                                     | 介绍链接 |
-|---------|----------------------------------------|-----|
-| communication_matrix | 通信矩阵分析。 | -  |
-| communication_time| 通信耗时分析。  | -   |
+| 分析能力    | 介绍                                                                                        | 介绍链接 |
+|---------|-------------------------------------------------------------------------------------------|-----|
+| communication_matrix | 通信矩阵分析。                                                                                   | -  |
+| communication_time| 通信耗时分析。                                                                                   | -   |
 | all | 默认值，会执行communication_matrix通信矩阵和communication_time通信耗时分析能力，并导出cluster_step_trace_time交付件。 | -  |
-| communication_group_map | 集群场景通信域与并行策略呈现。 | -   |
-| communication_time_sum | 集群场景通信时间和带宽汇总分析。 | -   |
-| communication_matrix_sum | 集群场景通信时间和带宽汇总分析。 | -   |
-| hccl_sum | 通信类算子信息汇总。  | -   |
-| pp_chart | pp流水图，针对pp并行下各个阶段的耗时分析与可视化能力。| [link](./docs/features/pp_chart.md)             |
-| slow_rank | 根据当前的快慢卡统计算法，展示各个rank得出的快慢卡影响次数，识别慢卡出现的原因。 | -  |
+| communication_group_map | 集群场景通信域与并行策略呈现。                                                                           | -   |
+| communication_time_sum | 集群场景通信时间和带宽汇总分析。                                                                          | -   |
+| communication_matrix_sum | 集群场景通信矩阵汇总分析。                                                                             | -   |
+| hccl_sum | 通信类算子信息汇总。                                                                                | -   |
+| pp_chart | pp流水图，针对pp并行下各个阶段的耗时分析与可视化能力。                                                             | [link](./docs/features/pp_chart.md)             |
+| slow_rank | 根据当前的快慢卡统计算法，展示各个rank得出的快慢卡影响次数，识别慢卡出现的原因。                                                | -  |
 
 #### Host下发类特性
 
@@ -212,13 +212,13 @@ msprof-analyze cluster -m [feature_option] -d <profiling_path> [global_option] [
 ### 使用样例
 #### 最简使用
 ```bash
-# 只传入cluster_data性能数据文件夹，输入cluster_time_summary分析能力，在cluster_data输入文件夹下生成cluster_文件夹，保存分析结果信息
+# 只传入cluster_data性能数据文件夹，输入cluster_time_summary分析能力，在cluster_data输入文件夹下生成cluster_analysis_output文件夹，保存分析结果信息
 msprof-analyze -m cluster_time_summary -d ./cluster_data
 ```
 
 #### 分析能力为all设置下使用
 ```bash
-# 可以输入-m参数=all 当前输出step_trace_time/通信矩阵/通信耗时交付件
+# 可以输入-m参数为all，当前输出step_trace_time/通信矩阵/通信耗时交付件
 msprof-analyze -m all -d ./cluster_data
 ```
 
