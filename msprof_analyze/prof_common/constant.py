@@ -409,6 +409,8 @@ class Constant(object):
     MINDSPORE_VERSION = "mindspore_version"
     PYTORCH = "pytorch"
     MINDSPORE = "mindspore"
+    MSPROF = "msprof"
+    MSMONITOR = "msmonitor"
 
     # node type
     MODULE_TYPE = 0

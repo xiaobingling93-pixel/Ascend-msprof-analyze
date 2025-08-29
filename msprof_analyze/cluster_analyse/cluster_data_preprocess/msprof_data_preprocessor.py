@@ -88,9 +88,7 @@ class MsprofDataPreprocessor(DataPreprocessor):
             prof_data_uid[(host_id, device_id)].append(dir_name)
 
         if prof_data_rank:
-            for rank_id, dir_list in prof_data_rank.items():
-                dir_list.sort(key=lambda x: x.split('_')[-2])
-                self.data_map[rank_id] = dir_list[0]
+            self.data_map = self.postprocess_data_map(prof_data_rank, Constant.MSPROF)
         else:
             ordered_keys = sorted(prof_data_uid.keys(), key=lambda x: (x[0], x[1]))
             rank_id = 0

@@ -43,27 +43,19 @@ class MindsporeDataPreprocessor(DataPreprocessor):
         return ""
 
     def get_data_map(self) -> dict:
+        unknown_rank_paths = []
         rank_id_map = defaultdict(list)
         for dir_name in self.path_list:
             rank_id = self.get_rank_id(dir_name)
             if rank_id < 0:
-                logger.error("fail to get rankid or rankid invalid.")
+                unknown_rank_paths.append(dir_name)
                 continue
             ascend_profiler_output = os.path.join(dir_name, Constant.ASCEND_PROFILER_OUTPUT)
             if os.path.exists(ascend_profiler_output) and os.path.isdir(ascend_profiler_output):
-                data_type = Constant.DB if self._check_db_type(ascend_profiler_output) else Constant.TEXT
-                self.data_type.add(data_type)
                 rank_id_map[rank_id].append(dir_name)
-                logger.debug(f"rank_id: {rank_id}, data_type: {data_type}, directory: {dir_name}")
-        try:
-            for (rank_id, dir_list) in rank_id_map.items():
-                dir_list.sort(key=lambda x: x.split('_')[-3])
-                self.data_map[rank_id] = dir_list[0]
-        except Exception as e:
-            raise RuntimeError("Found invalid directory name!") from e
+        self.data_map = self.postprocess_data_map(rank_id_map, Constant.MINDSPORE)
+        if unknown_rank_paths:
+            logger.warning(f"Failed to get rank_id for some paths."
+                           f"Affected paths: {unknown_rank_paths}\n"
+                           "Expected to get rank_id from profiler_info_{rank_id}.json")
         return self.data_map
-
-    def get_data_type(self):
-        if len(self.data_type) == 1:
-            return self.data_type.pop()
-        return Constant.INVALID

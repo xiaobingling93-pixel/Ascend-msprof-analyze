@@ -124,16 +124,25 @@ class ArgsManager:
     @classmethod
     def parse_profiling_path(cls, file_path: str):
         PathManager.input_path_common_check(file_path)
+        # 处理输入为单个文件的情况
         if os.path.isfile(file_path):
             (split_file_path, split_file_name) = os.path.split(file_path)
             (shot_name, extension) = os.path.splitext(split_file_name)
-            if extension != ".json":
+            if extension == ".json":
+                json_type = FileManager.check_json_type(file_path)
+                return {
+                    Constant.PROFILING_TYPE: json_type, Constant.PROFILING_PATH: file_path,
+                    Constant.TRACE_PATH: file_path
+                }
+            elif extension == ".db":
+                if shot_name.startswith(("ascend_pytorch_profiler", "ascend_mindspore_profiler", "msmonitor")):
+                    return {
+                        Constant.PROFILING_TYPE: Constant.NPU, Constant.PROFILING_PATH: file_path,
+                        Constant.PROFILER_DB_PATH: file_path
+                    }
+            else:
                 msg = f"Invalid profiling path suffix: {file_path}"
                 raise RuntimeError(msg)
-            json_type = FileManager.check_json_type(file_path)
-            return {
-                Constant.PROFILING_TYPE: json_type, Constant.PROFILING_PATH: file_path, Constant.TRACE_PATH: file_path
-            }
 
         path_dict = {}
         sub_dirs = os.listdir(file_path)
@@ -146,8 +155,8 @@ class ArgsManager:
         profiler_output = ascend_output if os.path.isdir(ascend_output) else file_path
         sub_dirs = os.listdir(profiler_output)
         for sub_dir in sub_dirs:
-            if sub_dir.startswith(("ascend_pytorch_profiler", "ascend_mindspore_profiler")) and sub_dir.endswith(
-                    ".db"):
+            if (sub_dir.startswith(("ascend_pytorch_profiler", "ascend_mindspore_profiler", "msmonitor"))
+                    and sub_dir.endswith(".db")):
                 db_path = os.path.join(profiler_output, sub_dir)
                 path_dict.update({Constant.PROFILING_TYPE: Constant.NPU, Constant.PROFILING_PATH: file_path,
                                   Constant.PROFILER_DB_PATH: db_path, Constant.ASCEND_OUTPUT_PATH: profiler_output})

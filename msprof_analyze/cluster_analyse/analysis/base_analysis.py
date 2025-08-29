@@ -30,6 +30,7 @@ class BaseAnalysis:
         self.cluster_analysis_output_path = param.get(Constant.CLUSTER_ANALYSIS_OUTPUT_PATH)
         self.data_map = param.get(Constant.DATA_MAP)
         self.data_type = param.get(Constant.DATA_TYPE)
+        self.prof_type = param.get(Constant.PROFILING_TYPE)
         self.communication_ops = []
         self.collective_group_dict = param.get(Constant.COMM_DATA_DICT, {}).get(Constant.COLLECTIVE_GROUP)
         self.comm_ops_struct = {}

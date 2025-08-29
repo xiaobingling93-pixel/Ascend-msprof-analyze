@@ -49,8 +49,7 @@ class BaseRecipeAnalysis(ABC):
         self._recipe_name = params.get(Constant.RECIPE_NAME, "")
         self._parallel_mode = params.get(Constant.PARALLEL_MODE, "")
         self._export_type = params.get(Constant.EXPORT_TYPE, "")
-        self._is_msprof = params.get(Constant.IS_MSPROF)
-        self._is_mindspore = params.get(Constant.IS_MINDSPORE)
+        self._prof_type = params.get(Constant.PROFILING_TYPE)
         self._cluster_analysis_output_path = os.path.join(
             params.get(Constant.CLUSTER_ANALYSIS_OUTPUT_PATH, self._collection_dir), Constant.CLUSTER_ANALYSIS_OUTPUT)
         self._output_path = self._cluster_analysis_output_path if self._export_type == "db" else os.path.join(
@@ -115,21 +114,23 @@ class BaseRecipeAnalysis(ABC):
         )
 
     def dump_data(self, data, file_name, table_name=None, index=True, custom_db_path=None):
+        if not isinstance(data, pd.DataFrame):
+            logger.error(f"Unknown dump data type: {type(data)}, expected pandas DataFrame")
+            return
+        if data.empty:
+            logger.warning(f"Empty DataFrame. Skip data dump!")
+            return
         if table_name:
             result_db = custom_db_path if custom_db_path else os.path.join(self.output_path, file_name)
+            logger.info(f"Exporting data to database: {result_db}, table: {table_name}")
             conn, cursor = DBManager.create_connect_db(result_db)
-            if isinstance(data, pd.DataFrame):
-                data.to_sql(table_name, conn, if_exists='replace', index=index)
-            else:
-                logger.error(f"Unknown dump data type: {type(data)}")
+            data.to_sql(table_name, conn, if_exists='replace', index=index)
             DBManager.destroy_db_connect(conn, cursor)
         else:
             result_csv = os.path.join(self.output_path, file_name)
-            if isinstance(data, pd.DataFrame):
-                data = convert_unit(data, self.DB_UNIT, self.UNIT)
-                FileManager.create_csv_from_dataframe(result_csv, data, index=index)
-            else:
-                logger.error(f"Unknown dump data type: {type(data)}")
+            logger.info(f"Exporting data to CSV file: {result_csv}")
+            data = convert_unit(data, self.DB_UNIT, self.UNIT)
+            FileManager.create_csv_from_dataframe(result_csv, data, index=index)
 
     def create_notebook(self, filename, notebook_template_dir=None, replace_dict=None):
         if notebook_template_dir is None:
@@ -241,10 +242,12 @@ class BaseRecipeAnalysis(ABC):
             else:
                 logger.warning(f"Profiler DB file not found, rank id: {rank_id}, db path: {profiler_db_path}.")
 
-            if os.path.exists(analysis_db_path):
-                db_path_dict[Constant.ANALYSIS_DB_PATH] = analysis_db_path
-            else:
-                logger.warning(f"Analysis DB file not found, rank id: {rank_id}, db path: {analysis_db_path}.")
+            if self._prof_type != Constant.MSMONITOR:
+                if os.path.exists(analysis_db_path):
+                    db_path_dict[Constant.ANALYSIS_DB_PATH] = analysis_db_path
+                else:
+                    logger.warning(f"Analysis DB file not found, rank id: {rank_id}, db path: {analysis_db_path}.")
+
             if db_path_dict.get(Constant.PROFILER_DB_PATH):
                 db_paths.append(db_path_dict)
         if invalid_rank_id:
@@ -252,19 +255,26 @@ class BaseRecipeAnalysis(ABC):
         return db_paths
 
     def _get_profiler_db_path(self, rank_id, data_path):
-        if self._is_msprof:
+        if self._prof_type == Constant.MSPROF:
             db_path = MsprofDataPreprocessor.get_msprof_profiler_db_path(data_path)
             return db_path if db_path else os.path.join(data_path, "msprof_xx.db")
-        if self._is_mindspore:
+        if self._prof_type == Constant.MINDSPORE:
             return os.path.join(data_path, Constant.SINGLE_OUTPUT, f"ascend_mindspore_profiler_{rank_id}.db")
-        return os.path.join(data_path, Constant.SINGLE_OUTPUT, f"ascend_pytorch_profiler_{rank_id}.db")
+        if self._prof_type == Constant.PYTORCH:
+            return os.path.join(data_path, Constant.SINGLE_OUTPUT, f"ascend_pytorch_profiler_{rank_id}.db")
+        if self._prof_type == Constant.MSMONITOR:
+            return data_path
+        return ""
 
     def _get_analysis_db_path(self, data_path):
-        if self._is_msprof:
+        if self._prof_type == Constant.MSPROF:
             return os.path.join(data_path, Constant.ANALYZE_DIR, "communication_analyzer.db")
-        if self._is_mindspore:
+        if self._prof_type == Constant.MINDSPORE:
             return os.path.join(data_path, Constant.SINGLE_OUTPUT, "communication_analyzer.db")
-        return os.path.join(data_path, Constant.SINGLE_OUTPUT, "analysis.db")
+        if self._prof_type == Constant.PYTORCH:
+            return os.path.join(data_path, Constant.SINGLE_OUTPUT, "analysis.db")
+        return ""
+
 
     def _get_step_range(self, db_path):
         step_range = {}
