@@ -49,7 +49,6 @@ class TestPytorchDataPreprocessor(unittest.TestCase):
 
         self.dirs = [os.path.join(self.DIR_PATH, filename) for filename in os.listdir(self.DIR_PATH)]
 
-
     def tearDown(self) -> None:
         shutil.rmtree(self.DIR_PATH)
 
@@ -75,5 +74,5 @@ class TestPytorchDataPreprocessor(unittest.TestCase):
             self.assertEqual(len(ret), 2)
             self.assertIn(1, ret.keys())
             self.assertIn(2, ret.keys())
-            self.assertIn(os.path.join(self.DIR_PATH, 'worker1_11111111_ascend_pt'), ret.values())
-            self.assertIn(os.path.join(self.DIR_PATH, 'worker2_11111112_ascend_pt'), ret.values())
+            self.assertIn(os.path.join(self.DIR_PATH, 'worker1_11111112_ascend_pt'), ret.values())
+            self.assertIn(os.path.join(self.DIR_PATH, 'worker2_11111113_ascend_pt'), ret.values())

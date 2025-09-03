@@ -40,7 +40,7 @@ class FreqAnalysis(BaseRecipeAnalysis):
         return os.path.basename(os.path.dirname(__file__))
 
     def reducer_func(self, mapper_res):
-        if self._is_msprof:
+        if self._prof_type == Constant.MSPROF:
             logger.warning("Freq analysis do not support msprof db now.")
             return
         mapper_res = list(filter(lambda res: res[0] is not None, mapper_res))

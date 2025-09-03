@@ -20,9 +20,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from msprof_analyze.cluster_analyse.analysis.analysis_facade import AnalysisFacade
-from msprof_analyze.cluster_analyse.cluster_data_preprocess.pytorch_data_preprocessor import PytorchDataPreprocessor
-from msprof_analyze.cluster_analyse.cluster_data_preprocess.mindspore_data_preprocessor import MindsporeDataPreprocessor
-from msprof_analyze.cluster_analyse.cluster_data_preprocess.msprof_data_preprocessor import MsprofDataPreprocessor
+from msprof_analyze.cluster_analyse.cluster_data_preprocess.prof_data_allocate import ProfDataAllocate
 from msprof_analyze.cluster_analyse.communication_group.communication_group_generator import CommunicationGroupGenerator
 from msprof_analyze.prof_common.additional_args_manager import AdditionalArgsManager
 from msprof_analyze.prof_common.constant import Constant
@@ -70,35 +68,11 @@ class Interface:
         return self.collection_path
 
     def allocate_prof_data(self):
-        ascend_pt_dirs = []
-        ascend_ms_dirs = []
-        prof_dirs = []
-        for root, dirs, _ in PathManager.limited_depth_walk(self.collection_path):
-            for dir_name in dirs:
-                if dir_name.endswith(self.ASCEND_PT):
-                    ascend_pt_dirs.append(os.path.join(root, dir_name))
-                if dir_name.endswith(self.ASCEND_MS):
-                    ascend_ms_dirs.append(os.path.join(root, dir_name))
-                if dir_name.startswith(self.PROF):
-                    prof_dirs.append(os.path.join(root, dir_name))
-        pytorch_processor = PytorchDataPreprocessor(ascend_pt_dirs)
-        pt_data_map = pytorch_processor.get_data_map()
-        pt_data_type = pytorch_processor.get_data_type()
-        ms_processor = MindsporeDataPreprocessor(ascend_ms_dirs)
-        ms_data_map = ms_processor.get_data_map()
-        ms_data_type = ms_processor.get_data_type()
-        if pt_data_map and ms_data_map:
-            logger.error("Can not analyze pytorch and mindspore meantime.")
+        allocator = ProfDataAllocate(self.collection_path)
+        if not allocator.allocate_prof_data():
             return {}
-        if pt_data_map:
-            return {Constant.DATA_MAP: pt_data_map, Constant.DATA_TYPE: pt_data_type, Constant.IS_MSPROF: False}
-        if ms_data_map:
-            return {Constant.DATA_MAP: ms_data_map, Constant.DATA_TYPE: ms_data_type, Constant.IS_MSPROF: False,
-                    Constant.IS_MINDSPORE: True}
-        msprof_processor = MsprofDataPreprocessor(prof_dirs)
-        prof_data_map = msprof_processor.get_data_map()
-        prof_data_type = msprof_processor.get_data_type()
-        return {Constant.DATA_MAP: prof_data_map, Constant.DATA_TYPE: prof_data_type, Constant.IS_MSPROF: True}
+        return {Constant.DATA_MAP: allocator.data_map, Constant.DATA_TYPE: allocator.data_type,
+                Constant.PROFILING_TYPE: allocator.prof_type}
 
     def run(self):
         PathManager.check_input_directory_path(self.collection_path)
@@ -106,7 +80,8 @@ class Interface:
         PathManager.check_path_owner_consistent([self.collection_path, self.cluster_analysis_output_path])
 
         data_dict = self.allocate_prof_data()
-        data_map, data_type = data_dict.get(Constant.DATA_MAP), data_dict.get(Constant.DATA_TYPE)
+        data_map, data_type, prof_type = (data_dict.get(Constant.DATA_MAP), data_dict.get(Constant.DATA_TYPE),
+                                          data_dict.get(Constant.PROFILING_TYPE))
         if not data_map:
             logger.warning("Can not get rank info or profiling data.")
             return
@@ -120,8 +95,9 @@ class Interface:
             Constant.ANALYSIS_MODE: self.analysis_mode,
             Constant.DATA_MAP: data_map,
             Constant.DATA_TYPE: data_type,
-            Constant.IS_MSPROF: data_dict.get(Constant.IS_MSPROF, False),
-            Constant.IS_MINDSPORE: data_dict.get(Constant.IS_MINDSPORE, False),
+            Constant.PROFILING_TYPE: data_dict.get(Constant.PROFILING_TYPE),
+            Constant.IS_MSPROF: prof_type == Constant.MSPROF,
+            Constant.IS_MINDSPORE: prof_type == Constant.MINDSPORE,
             Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: self.cluster_analysis_output_path
         })
         if self.analysis_mode in COMM_FEATURE_LIST:

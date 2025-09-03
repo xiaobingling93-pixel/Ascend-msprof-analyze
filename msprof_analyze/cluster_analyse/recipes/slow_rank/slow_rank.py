@@ -103,7 +103,7 @@ class SlowRankAnalysis(BaseRecipeAnalysis):
         return concated_df
 
     def run(self, context):
-        if self._is_msprof:
+        if self._prof_type == Constant.MSPROF:
             logger.warning("Slow rank analysis do not support msprof db now.")
             return
 

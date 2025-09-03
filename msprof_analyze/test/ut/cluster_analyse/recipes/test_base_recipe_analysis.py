@@ -34,6 +34,7 @@ class TestBaseRecipeAnalysis(unittest.TestCase):
             Constant.RECIPE_NAME: 'test_recipe',
             Constant.PARALLEL_MODE: 'parallel',
             Constant.EXPORT_TYPE: 'csv',
+            Constant.PROFILING_TYPE: Constant.PYTORCH,
             Constant.IS_MSPROF: False,
             Constant.IS_MINDSPORE: False,
             Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: '/tmp/to/output',
@@ -215,7 +216,7 @@ class TestBaseRecipeAnalysis(unittest.TestCase):
         self.assertEqual(result, os.path.join('test_path', Constant.SINGLE_OUTPUT, 'ascend_pytorch_profiler_0.db'))
 
         # 测试 MindSpore 情况
-        self.analysis._is_mindspore = True
+        self.analysis._prof_type = Constant.MINDSPORE
         result = self.analysis._get_profiler_db_path(0, 'test_path')
         self.assertEqual(result, os.path.join('test_path', Constant.SINGLE_OUTPUT, 'ascend_mindspore_profiler_0.db'))
 
@@ -226,7 +227,7 @@ class TestBaseRecipeAnalysis(unittest.TestCase):
         self.assertEqual(result, os.path.join('test_path', Constant.SINGLE_OUTPUT, 'analysis.db'))
 
         # 测试 MindSpore 情况
-        self.analysis._is_mindspore = True
+        self.analysis._prof_type = Constant.MINDSPORE
         result = self.analysis._get_analysis_db_path('test_path')
         self.assertEqual(result, os.path.join('test_path', Constant.SINGLE_OUTPUT, 'communication_analyzer.db'))
 
