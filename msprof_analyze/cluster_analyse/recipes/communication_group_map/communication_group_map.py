@@ -57,6 +57,8 @@ class CommunicationGroupMap(BaseRecipeAnalysis):
         # concat and process all comm group
         comm_group_df_list = [df for df, _ in mapper_res]
         comm_group_combined_df = pd.concat(comm_group_df_list).drop_duplicates()
+        if comm_group_combined_df.empty:
+            return
         comm_group_combined_df = (comm_group_combined_df.groupby([TableConstant.TYPE, TableConstant.GROUP_NAME])
                                   [TableConstant.RANK_ID].apply(lambda x: sorted(set(x))).reset_index())
         comm_group_combined_df[TableConstant.RANK_SET] = (comm_group_combined_df[TableConstant.RANK_ID].
@@ -92,8 +94,10 @@ class CommunicationGroupMap(BaseRecipeAnalysis):
         analysis_data_service.add_table_for_query(Constant.TABLE_COMM_ANALYZER_TIME,
                                                   [TableConstant.HCCL_OP_NAME, TableConstant.GROUP_NAME])
         comm_time_res = analysis_data_service.query_data()
-        # process comm_time_df: group_name, type, rank_id
         comm_time_df = comm_time_res.get(Constant.TABLE_COMM_ANALYZER_TIME)
+        if comm_time_df is None or comm_time_df.empty:
+            return pd.DataFrame(), pd.DataFrame()
+        # process comm_time_df: group_name, type, rank_id
         comm_time_df[TableConstant.RANK_ID] = rank_id
         comm_time_df[TableConstant.TYPE] = (comm_time_df[TableConstant.HCCL_OP_NAME].
                                             apply(lambda x: self.get_comm_type_from_op_name(x)))
@@ -110,7 +114,8 @@ class CommunicationGroupMap(BaseRecipeAnalysis):
         # process parallel_info_df
         parallel_info_df = pd.DataFrame(columns=[TableConstant.GROUP_NAME, TableConstant.GROUP_ID,
                                                  TableConstant.PG_NAME, self.GLOBAL_RANKS])
-        if Constant.PARALLEL_GROUP_INFO not in meta_data_df[TableConstant.NAME].values:
+        if (meta_data_df is None or meta_data_df.empty or
+                Constant.PARALLEL_GROUP_INFO not in meta_data_df[TableConstant.NAME].values):
             return comm_time_df, parallel_info_df
         info_str = meta_data_df.loc[meta_data_df[TableConstant.NAME] == Constant.PARALLEL_GROUP_INFO,
                                     TableConstant.VALUE].values[0]

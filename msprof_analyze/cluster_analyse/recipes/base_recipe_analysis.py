@@ -114,6 +114,9 @@ class BaseRecipeAnalysis(ABC):
         )
 
     def dump_data(self, data, file_name, table_name=None, index=True, custom_db_path=None):
+        if data is None:
+            logger.warning(f"No data to dump, skipping.")
+            return
         if not isinstance(data, pd.DataFrame):
             logger.error(f"Unknown dump data type: {type(data)}, expected pandas DataFrame")
             return
@@ -274,7 +277,6 @@ class BaseRecipeAnalysis(ABC):
         if self._prof_type == Constant.PYTORCH:
             return os.path.join(data_path, Constant.SINGLE_OUTPUT, "analysis.db")
         return ""
-
 
     def _get_step_range(self, db_path):
         step_range = {}

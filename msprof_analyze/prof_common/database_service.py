@@ -64,7 +64,7 @@ class DatabaseService:
 
     def query_data(self):
         result_data = {}
-        if not self._table_info:
+        if not self._table_info or not self._db_path:
             return result_data
         try:
             conn, cursor = DBManager.create_connect_db(self._db_path)

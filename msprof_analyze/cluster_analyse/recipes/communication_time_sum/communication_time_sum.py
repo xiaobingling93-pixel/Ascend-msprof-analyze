@@ -49,7 +49,7 @@ class CommunicationTimeSum(BaseRecipeAnalysis):
     def run(self, context):
         if not self.check_table_exist(self.TABLE_COMMUNICATION_GROUP_MAPPING):
             if not self.run_communication_group_map_recipe(context):
-                logger.error("Create CommunicationGroupMap table failed!")
+                logger.error("Create CommunicationGroupMap table failed! Skip CommunicationTimeSum.")
                 return
         mapper_res = self.mapper_func(context)
         self.reducer_func(mapper_res)

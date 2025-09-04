@@ -173,6 +173,8 @@ class CommMatrixSum(BaseRecipeAnalysis):
         for rank_data in mapper_res:
             rank_map.update(rank_data.get(self.RANK_MAP))
             matrix_df = rank_data.get(self.MATRIX_DATA)
+            if matrix_df is None or matrix_df.empty:
+                continue
             filter_matrix_df = matrix_df[matrix_df["src_rank"] == matrix_df["dst_rank"]]
             grouped_matrix_df = filter_matrix_df[['group_name', 'src_rank']].drop_duplicates()
             grouped_matrix_df[Constant.RANK_ID] = rank_data.get(Constant.RANK_ID)
