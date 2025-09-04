@@ -14,6 +14,7 @@
 # limitations under the License.
 import os
 import re
+import shlex
 from collections import defaultdict
 
 from msprof_analyze.cluster_analyse.cluster_data_preprocess.data_preprocessor import DataPreprocessor
@@ -59,6 +60,8 @@ class MsprofDataPreprocessor(DataPreprocessor):
         prof_data_uid = defaultdict(list)
         prof_data_rank = defaultdict(list)
         for dir_name in self.path_list:
+            # 对dir_name进行转义处理，防止命令注入
+            escaped_dir = shlex.quote(dir_name)
             info_json_file = self._find_info_json_file(dir_name)
             if not info_json_file:
                 logger.error(f"Profiling data in not completed, please check the info.json file in the path {dir_name}")
@@ -71,12 +74,12 @@ class MsprofDataPreprocessor(DataPreprocessor):
                     self.data_type.add(Constant.TEXT)
                 else:
                     logger.error(f"The profiling data has not been fully parsed.  You can parse it by executing "
-                                 f"the following command: msprof --analyze=on --output={dir_name}")
+                                 f"the following command: msprof --analyze=on --output={escaped_dir}")
                     continue
             else:
                 logger.error(f"The profiling data has not been fully parsed.  You can parse it by executing "
-                             f"the following command: msprof --export=on --output={dir_name}; "
-                             f"msprof --analyze=on --output={dir_name}")
+                             f"the following command: msprof --export=on --output={escaped_dir}; "
+                             f"msprof --analyze=on --output={escaped_dir}")
                 continue
             info_json = FileManager.read_json_file(info_json_file)
             rank_id = info_json.get("rank_id")

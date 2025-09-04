@@ -22,10 +22,10 @@ class OperatorPrompt(object):
                                       "converter_lite --fmk=ONNX --optimize=ascend_oriented --saveType=MINDIR " \
                                       "--modelFile=$user_model.onnx --outputFile=user_model " \
                                       "--configFile=./config.txt\n"
-    PYTORCH_RELEASE_SUGGESTION = "for details please refer to link : <a href={} target='_blank'>LINK</a>"
+    PYTORCH_RELEASE_SUGGESTION = "for details please refer to link : <a href=\"{}\" target='_blank'>LINK</a>"
     MSLITE_RELEASE_SUGGESTION = "\nThe config file for MSLite AOE usage is as follows:\n" \
                                 "[ascend_context]\n" \
                                 "aoe_mode=\"operator tuning\"\n" \
                                 "--tune_ops_file={}\n" \
                                 "\nFor details please refer to link : <a href=" \
-                                "{} target='_blank'>LINK</a>"
+                                "\"{}\" target='_blank'>LINK</a>"

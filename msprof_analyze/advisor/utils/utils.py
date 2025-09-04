@@ -347,7 +347,6 @@ class SafeOpen:
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.file:
             self.file.close()
-        return True
 
 
 def get_file_path_by_walk(root, filename):

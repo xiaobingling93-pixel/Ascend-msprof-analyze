@@ -538,7 +538,9 @@ class AICorePerformanceChecker:
         suggestion = ""
         if "varlen" in op.lower():
             # 处理变长算子 如果不亲和则affinity_flag为False
-            inner_axis = convert_to_int_with_exception(shape.split("-")[0].split(";")[0].split(",")[2])
+            inner_axis = 0
+            if len(shape.split("-")[0].split(";")[0].split(",")) >= 3:
+                inner_axis = convert_to_int_with_exception(shape.split("-")[0].split(";")[0].split(",")[2])
             if inner_axis % self.INNER_AXIS_128 != 0:
                 affinity_flag = True
                 suggestion = self._fa_affinity_desc_head_dim_128
@@ -550,7 +552,9 @@ class AICorePerformanceChecker:
         else:
             # 处理定长算子 如果不亲和则affinity_flag为False
             head_dim = 0
-            seq_len = convert_to_int_with_exception(shape.split("-")[1].split(";")[0].split(",")[2])
+            seq_len = 0
+            if len(shape.split("-")[1].split(";")[0].split(",")[2]) >= 3:
+                seq_len = convert_to_int_with_exception(shape.split("-")[1].split(";")[0].split(",")[2])
             input_first_tensor = shape.split("-")[0].split(";")[0].split(",")
             if len(input_first_tensor) == 3:
                 head_dim = safe_division(convert_to_int_with_exception(input_first_tensor[2]),

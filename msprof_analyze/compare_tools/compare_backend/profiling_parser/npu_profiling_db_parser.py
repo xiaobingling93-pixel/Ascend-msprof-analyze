@@ -75,6 +75,12 @@ class NPUProfilingDbParser:
         self.comm_task_data = []
         self.compute_op_data = []
 
+    def __del__(self):
+        try:
+            DBManager.destroy_db_connect(self.conn, self.cursor)
+        except Exception:
+            logger.warning(f"Failed to release database connection in NPUProfilingDbParser.")
+
     def load_data(self) -> ProfilingResult:
         self._prepare_data()
         if self._enable_communication_compare:

@@ -148,15 +148,23 @@ class BaseTimelineEventDataset(Dataset):
         return True
 
     def parse_from_db(self):
-        db_helper = TimelineDBHelper(self.timeline_file)
-        if not db_helper.init_timeline_db_helper():
+        db_helper = None
+        try:
+            db_helper = TimelineDBHelper(self.timeline_file)
+            if not db_helper.init_timeline_db_helper():
+                return False
+            for _, collector in tqdm(self.collector_map.items(), leave=False,
+                                    desc="Building dataset for timeline analysis"):
+                for event_type in collector.get_event_type():
+                    df = db_helper.query_timeline_event(event_type)
+                    collector.add_op_from_db(df)
+        except Exception:
+            logger.warning("Error %s while parsing from db, file %s", traceback.format_exc(),
+                           self.timeline_file)
             return False
-        for _, collector in tqdm(self.collector_map.items(), leave=False,
-                                 desc="Building dataset for timeline analysis"):
-            for event_type in collector.get_event_type():
-                df = db_helper.query_timeline_event(event_type)
-                collector.add_op_from_db(df)
-        db_helper.destroy_db_connection()
+        finally:
+            if db_helper:
+                db_helper.destroy_db_connection()
         return True
 
     def parse_data_with_generator(self, func):

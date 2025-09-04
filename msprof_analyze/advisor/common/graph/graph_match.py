@@ -297,6 +297,8 @@ def get_next_candidates(config: CandidateArgsConfig) -> List[Dict[Hashable, Hash
             # Find a longer backbone node
             nodes_with_maximum_backbone.append(query_node_id)
 
+    if nodes_with_maximum_backbone:
+        return []
     # next_node is connected to the current backbone.
     next_node = max(nodes_with_maximum_backbone, key=lambda x: node_priority.get(x, 0))
 

@@ -177,7 +177,7 @@ class PathManager:
         if os.path.exists(path):
             return
         try:
-            os.makedirs(path, mode=cls.DATA_DIR_AUTHORITY)
+            os.makedirs(path, mode=cls.DATA_DIR_AUTHORITY, exist_ok=True)
         except Exception as err:
             raise RuntimeError(msg) from err
 

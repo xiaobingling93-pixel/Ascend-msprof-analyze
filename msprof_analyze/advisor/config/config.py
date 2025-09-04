@@ -16,6 +16,7 @@
 
 import logging
 import os
+import html
 
 from msprof_analyze.advisor.utils.utils import Timer
 from msprof_analyze.prof_common.singleton import singleton
@@ -107,42 +108,42 @@ class Config:
     @property
     def timeline_api_doc_url(self) -> str:
         try:
-            return self.config.get("URL", "timeline_api_doc_url")
+            return html.escape(self.config.get("URL", "timeline_api_doc_url"))
         except Exception:
             return ""
 
     @property
     def timeline_with_stack_doc_url(self) -> str:
         try:
-            return self.config.get("URL", "timeline_with_stack_doc_url")
+            return html.escape(self.config.get("URL", "timeline_with_stack_doc_url"))
         except Exception:
             return ""
 
     @property
     def pytorch_aoe_operator_tune_url(self) -> str:
         try:
-            return self.config.get("URL", "pytorch_aoe_operator_tune_url")
+            return html.escape(self.config.get("URL", "pytorch_aoe_operator_tune_url"))
         except Exception:
             return ""
 
     @property
     def mslite_infer_aoe_operator_tune_url(self) -> str:
         try:
-            return self.config.get("URL", "mslite_infer_aoe_operator_tune_url")
+            return html.escape(self.config.get("URL", "mslite_infer_aoe_operator_tune_url"))
         except Exception:
             return ""
 
     @property
     def enable_compiled_tune_url(self) -> str:
         try:
-            return self.config.get("URL", "enable_compiled_tune_url")
+            return html.escape(self.config.get("URL", "enable_compiled_tune_url"))
         except Exception:
             return ""
 
     @property
     def ascend_profiler_url(self) -> str:
         try:
-            return self.config.get("URL", "ascend_profiler_url")
+            return html.escape(self.config.get("URL", "ascend_profiler_url"))
         except Exception:
             return ""
 
