@@ -77,7 +77,7 @@ class TestProfDataAllocate(unittest.TestCase):
         result = ProfDataAllocate.match_file_pattern_in_dir(test_dir, pattern)
         
         self.assertEqual(result, "")
-    
+
     def test_extract_rank_id_from_profiler_db_when_pytorch_file_then_return_rank_id(self):
         """Test extracting rank ID from PyTorch profiler DB filename"""
         file_name = "ascend_pytorch_profiler_1.db"
@@ -104,15 +104,24 @@ class TestProfDataAllocate(unittest.TestCase):
         result = ProfDataAllocate._extract_rank_id_from_profiler_db(file_name, prof_type)
         
         self.assertEqual(result, 1)
-    
+
     def test_extract_rank_id_from_profiler_db_when_invalid_format_then_return_none(self):
         """Test extracting rank ID from invalid filename format"""
         file_name = "invalid_filename.db"
         prof_type = Constant.PYTORCH
+
+        result = ProfDataAllocate._extract_rank_id_from_profiler_db(file_name, prof_type)
+
+        self.assertIsNone(result)
+
+    def test_extract_rank_id_from_profiler_db_when_no_rank_id_then_return_minus_one(self):
+        """Test extracting rank ID from invalid filename format"""
+        file_name = "ascend_pytorch_profiler.db"
+        prof_type = Constant.PYTORCH
         
         result = ProfDataAllocate._extract_rank_id_from_profiler_db(file_name, prof_type)
         
-        self.assertIsNone(result)
+        self.assertEqual(result, -1)
     
     def test_extract_rank_id_from_profiler_db_when_unsupported_prof_type_then_return_none(self):
         """Test extracting rank ID from unsupported profiler type"""
