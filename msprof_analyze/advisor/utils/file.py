@@ -73,7 +73,10 @@ class FdOpen:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.file_open:
-            self.file_open.close()
+            try:
+                self.file_open.close()
+            except Exception:
+                os.close(self.fd)
         elif self.fd:
             os.close(self.fd)
 

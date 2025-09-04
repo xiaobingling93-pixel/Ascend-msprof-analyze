@@ -68,9 +68,11 @@ class CommunicationAnalysis(BaseAnalysis):
         result_db = os.path.join(output_path, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER)
         DBManager.create_tables(result_db, self.COMMUNICATION_TIME_TABLE, self.COMMUNICATION_BANDWIDTH_TABLE)
         conn, cursor = DBManager.create_connect_db(result_db)
-        self.execute(conn, res_comm_time, self.COMMUNICATION_TIME_TABLE)
-        self.execute(conn, res_comm_bandwidth, self.COMMUNICATION_BANDWIDTH_TABLE)
-        DBManager.destroy_db_connect(conn, cursor)
+        try:
+            self.execute(conn, res_comm_time, self.COMMUNICATION_TIME_TABLE)
+            self.execute(conn, res_comm_bandwidth, self.COMMUNICATION_BANDWIDTH_TABLE)
+        finally:
+            DBManager.destroy_db_connect(conn, cursor)
 
     def compute_total_info(self, comm_ops: dict):
         if not comm_ops:

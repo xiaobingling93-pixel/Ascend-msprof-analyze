@@ -22,7 +22,7 @@ class OperatorMemoryBean:
     NA = "N/A"
 
     def __init__(self, data: dict):
-        self._data = data
+        self._data = data.copy()
         self._name = ""
         self._size = 0.0
         self._allocation_time = Decimal(0)

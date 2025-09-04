@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import os
+import threading
 from functools import partial
 from concurrent import futures
 from collections import defaultdict
@@ -31,6 +32,7 @@ class Context(object):
 
     def __init__(self):
         logger.info("context {} initialized.".format(self._mode))
+        self._lock = threading.RLock()
 
     def __enter__(self):
         return self
@@ -97,7 +99,8 @@ class ConcurrentContext(Context):
         return waitable
 
     def submit(self, name, func, *args, **kwargs):
-        self.future_dict[name].append(self._executor.submit(func, *args, **kwargs))
+        with self._lock:
+            self.future_dict[name].append(self._executor.submit(func, *args, **kwargs))
 
     def wait_all_futures(self):
         for _, future_list in self.future_dict.items():

@@ -66,29 +66,31 @@ class P2PPairing(BaseRecipeAnalysis):
         否则置空
         """
         conn, cursor = DBManager.create_connect_db(profiler_db_path)
-        ret = DBManager.check_columns_exist(cursor, self.TARGET_TABLE_NAME, {self.COL_NAME_P2P_CONNECTION_ID})
-        if ret is None:
-            logger.error("Failed to connect to the database. Please check the database configurations")
-            return
-        if self.COL_NAME_P2P_CONNECTION_ID not in ret:
+        try:
+            ret = DBManager.check_columns_exist(cursor, self.TARGET_TABLE_NAME, {self.COL_NAME_P2P_CONNECTION_ID})
+            if ret is None:
+                logger.error("Failed to connect to the database. Please check the database configurations")
+                return
+            if self.COL_NAME_P2P_CONNECTION_ID not in ret:
+                DBManager.execute_sql(
+                    conn,
+                    f"ALTER TABLE {self.TARGET_TABLE_NAME} ADD COLUMN {self.COL_NAME_P2P_CONNECTION_ID} TEXT"
+                )
             DBManager.execute_sql(
                 conn,
-                f"ALTER TABLE {self.TARGET_TABLE_NAME} ADD COLUMN {self.COL_NAME_P2P_CONNECTION_ID} TEXT"
+                f"UPDATE {self.TARGET_TABLE_NAME} SET {self.COL_NAME_P2P_CONNECTION_ID} = NULL"
             )
-        DBManager.execute_sql(
-            conn,
-            f"UPDATE {self.TARGET_TABLE_NAME} SET {self.COL_NAME_P2P_CONNECTION_ID} = NULL"
-        )
-        DBManager.executemany_sql(
-            conn,
-            f"""
-            UPDATE {self.TARGET_TABLE_NAME}
-            SET {self.COL_NAME_P2P_CONNECTION_ID} = ?
-            WHERE {ProfilerTableConstant.OP_NAME} = ?;""",
-            [(row[self.COL_NAME_P2P_CONNECTION_ID], row[P2PPairingExport.CO_OP_NAME])
-             for _, row in df_result.iterrows()]
-        )
-        DBManager.destroy_db_connect(conn, cursor)
+            DBManager.executemany_sql(
+                conn,
+                f"""
+                UPDATE {self.TARGET_TABLE_NAME}
+                SET {self.COL_NAME_P2P_CONNECTION_ID} = ?
+                WHERE {ProfilerTableConstant.OP_NAME} = ?;""",
+                [(row[self.COL_NAME_P2P_CONNECTION_ID], row[P2PPairingExport.CO_OP_NAME])
+                for _, row in df_result.iterrows()]
+            )
+        finally:
+            DBManager.destroy_db_connect(conn, cursor)
 
     def generate_p2p_connection_index(self, df):
         """
