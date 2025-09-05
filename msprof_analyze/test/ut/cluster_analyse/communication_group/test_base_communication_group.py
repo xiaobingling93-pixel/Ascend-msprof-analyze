@@ -134,12 +134,12 @@ class TestBaseCommunicationGroup(unittest.TestCase):
                 "world_size": 8
             },
             "parallel_group_info": {
-                "10.174.216.241%enp189s0f1_55000_0_1738895521183247": {
+                "100%enp189s0f1_55000_0_1738895521183247": {
                     "group_name": "dp",
                     "group_rank": 0,
                     "global_ranks": [0, 2]
                 },
-                "10.174.216.241%enp189s0f1_55000_0_1738895507756334": {
+                "100%enp189s0f1_55000_0_1738895507756334": {
                     "group_name": "pp",
                     "group_rank": 0,
                     "global_ranks": [0, 4]
@@ -150,12 +150,12 @@ class TestBaseCommunicationGroup(unittest.TestCase):
         self.comm_group.read_parallel_group_info()
 
         expected_info = {
-            "10.174.216.241%enp189s0f1_55000_0_1738895521183247": {
+            "100%enp189s0f1_55000_0_1738895521183247": {
                 "group_name": "dp",
                 "group_rank": 0,
                 "global_ranks": [0, 2]
             },
-            "10.174.216.241%enp189s0f1_55000_0_1738895507756334": {
+            "100%enp189s0f1_55000_0_1738895507756334": {
                 "group_name": "pp",
                 "group_rank": 0,
                 "global_ranks": [0, 4]
@@ -169,12 +169,12 @@ class TestBaseCommunicationGroup(unittest.TestCase):
         self.comm_group.collective_group_dict = {"12809826787724806246": {0, 2}}
         self.comm_group.p2p_group_dict = {"9609979115979062393": {0, 4}}
         self.comm_group.parallel_group_info = {
-            "10.174.216.241%enp189s0f1_55000_0_1738895521183247": {
+            "100%enp189s0f1_55000_0_1738895521183247": {
                 "group_name": "dp",
                 "group_rank": 0,
                 "global_ranks": [0, 2]
             },
-            "10.174.216.241%enp189s0f1_55000_0_1738895507756334": {
+            "100%enp189s0f1_55000_0_1738895507756334": {
                 "group_name": "pp",
                 "group_rank": 0,
                 "global_ranks": [0, 4]

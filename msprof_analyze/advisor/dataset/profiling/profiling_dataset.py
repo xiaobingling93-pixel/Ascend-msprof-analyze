@@ -35,6 +35,7 @@ logger = logging.getLogger()
 
 @singleton
 class ProfilingDataset(Dataset):
+    LEGAL_CLASS_NAME = ["OpSummary", "Msprof", "MsprofDB", "OpSummaryDB", "GeInfo", "TaskTime"]
     prof_type = ""
 
     def __init__(self, collection_path, data: dict, **kwargs) -> None:
@@ -60,7 +61,11 @@ class ProfilingDataset(Dataset):
                     # 避免重复构建kernel_details.csv, op_summary.csv的数据对象
                     continue
                 file_pattern_list = self.current_version_pattern.get('file_attr').get(item)
-                data_class = globals()[self.current_version_pattern.get('class_attr').get(item)]
+                class_name = self.current_version_pattern.get('class_attr').get(item)
+                if class_name not in self.LEGAL_CLASS_NAME:
+                    logger.error(f"Invalid class name for parse profiling data.")
+                    continue
+                data_class = globals()[class_name]
                 if not hasattr(data_class, "file_pattern_list"):
                     continue
                 setattr(data_class, "file_pattern_list", self.current_version_pattern.get('file_attr').get(item))

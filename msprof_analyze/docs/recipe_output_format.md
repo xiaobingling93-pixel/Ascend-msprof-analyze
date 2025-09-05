@@ -261,7 +261,7 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 
 | 字段名 | 类型 | 含义 |
 | ------ | ---- | ---- |
-| GroupName | TEXT | 通信域，例如：10.170.22.98%enp67s0f5_60000_0_1708156014257149 |
+| GroupName | TEXT | 通信域，例如：{ip_address}%enp67s0f5_60000_0_1708156014257149 |
 | GroupId   | TEXT | 通信域的hash值的后三位 |
 | Ranks     | TEXT | 该通信域的所有rank |
 
@@ -392,7 +392,7 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 | type       | TEXT | 算子类型，包含collective和p2p, 其中算子名包含"send"，"recv"，"receive"的算子被认为是p2p |
 | rank_set   | TEXT | 通信域内包含的rank（global rank）|
 | group_name | TEXT | 通信域的hash值，可映射成group_id |
-| group_id   | TEXT | hccl内部定义的通信域名字，例如：10.170.22.98%enp67s0f5_60000_0_1708156014257149 |
+| group_id   | TEXT | hccl内部定义的通信域名字，例如：{ip_address}%enp67s0f5_60000_0_1708156014257149 |
 | pg_name    | TEXT | 业务定义的通信域名字，例如："dp"，"dp_cp"，"mp"等等 |
 
 ### cluster_time_summary
