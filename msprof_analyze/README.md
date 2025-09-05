@@ -274,6 +274,7 @@ msprof-analyze advisor all -d ./prof_data -o ./advisor_output
   * msprof 场景：参见“性能数据采集 > [msprof采集通用命令](https://www.hiascend.com/document/detail/zh/mindstudio/81RC1/T&ITools/Profiling/atlasprofiling_16_0008.html)”。
   * PyTorch 场景：参见“性能数据采集 > [PyTorch](https://www.hiascend.com/document/detail/zh/mindstudio/81RC1/msquickstart/atlasquick_train_0018.html)”。
   * MindSpore 场景：参见“性能数据采集 > [MindSpore](https://www.hiascend.com/document/detail/zh/mindstudio/81RC1/msquickstart/atlasquick_train_0017.html)”。
+  * msMonitor 场景：参见“msmonitor > [npumonitor](../../msmonitor/docs/npumonitor.md)”。
 
 ### 发布程序包下载链接
 | profiler版本 | 发布日期       | 下载链接                                                                                                                                                   | 校验码                                                       |
