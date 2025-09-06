@@ -13,12 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import unittest
-
+from unittest.mock import patch
 import pandas as pd
 
-from msprof_analyze.cluster_analyse.recipes.slow_rank.slow_rank import judge_norm, judge_dixon, SlowRankVoteAnalysis
+from msprof_analyze.cluster_analyse.recipes.slow_rank.slow_rank import (judge_norm, judge_dixon,
+                                                                        SlowRankVoteAnalysis, SlowRankAnalysis)
+from msprof_analyze.prof_common.constant import Constant
 
 
 class TestJudgeNorm(unittest.TestCase):
@@ -47,6 +48,12 @@ class TestJudgeDixon(unittest.TestCase):
             data_with_outlier.append(0)
             res = judge_dixon(data_with_outlier)
             self.assertEqual(res, [i])
+
+    def test_judge_dixon_should_return_empty_list_when_time_list_length_less_than_3(self):
+        self.assertEqual(judge_dixon([1, 2]), [])
+
+    def test_judge_dixon_should_return_empty_list_when_the_denominator_maybe_zero(self):
+        self.assertEqual(judge_dixon([1, 2, 3, 3, 1]), [])
 
 
 class TestVoteAnalysis(unittest.TestCase):
@@ -99,3 +106,32 @@ class TestVoteAnalysis(unittest.TestCase):
             }
             }
         self.assertEqual(res, golden_res)
+
+
+class TestSlowRankAnalysis(unittest.TestCase):
+
+    @patch("msprof_analyze.cluster_analyse.recipes.base_recipe_analysis.BaseRecipeAnalysis.dump_data")
+    @patch("msprof_analyze.cluster_analyse.recipes.base_recipe_analysis.BaseRecipeAnalysis.add_helper_file")
+    @patch("msprof_analyze.cluster_analyse.recipes.base_recipe_analysis.BaseRecipeAnalysis.create_notebook")
+    @patch("msprof_analyze.cluster_analyse.recipes.base_recipe_analysis.BaseRecipeAnalysis.mapper_func")
+    def test_run_should_save_db_or_notebook(self, mock_mapper_func, mock_create_notebook,
+                                            mock_add_helper_file, mock_dump_data):
+        mock_mapper_func.return_value = [
+            pd.DataFrame({
+                "rankId": [0, 0],
+                "groupName": ["100%enp189s0f1_55000_0_1738895521183247", "100%enp189s0f1_55000_0_1738895521183247"],
+                "opName": ["hcom_broadcast__559_0_1", "hcom_broadcast__559_0_1"],
+                "communication_time": [16225.3, 555.7]
+            }),
+            pd.DataFrame({
+                "rankId": [1, 1],
+                "groupName": ["100%enp189s0f1_55000_0_1738895521183247", "100%enp189s0f1_55000_0_1738895521183247"],
+                "opName": ["hcom_broadcast__559_0_1", "hcom_broadcast__559_0_1"],
+                "communication_time": [24224.1, 555.6]
+            })
+        ]
+        params = {Constant.EXPORT_TYPE: Constant.DB}
+        recipe = SlowRankAnalysis(params)
+        recipe.run(context=None)
+        recipe._export_type = "notebook"
+        recipe.run(context=None)
