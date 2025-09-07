@@ -75,7 +75,7 @@ Successfully installed msprof-analyze-{version}
 2. 下载源码。
 
    ```bash
-   git clone https://gitee.com/ascend/mstt.git
+   git clone https://gitcode.com/Ascend/mstt.git
    ```
 
 3. 编译whl包。
