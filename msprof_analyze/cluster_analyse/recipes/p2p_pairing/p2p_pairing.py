@@ -108,6 +108,8 @@ class P2PPairing(BaseRecipeAnalysis):
         ] = df.loc[
             df[self.COL_NAME_IS_RECEIVE], [self.COL_NAME_OP_DST_RANK, P2PPairingExport.SRC_RANK]
         ].values
+        df[P2PPairingExport.SRC_RANK] = df[P2PPairingExport.SRC_RANK].astype(int)
+        df[self.COL_NAME_OP_DST_RANK] = df[self.COL_NAME_OP_DST_RANK].astype(int)
         df[self.COL_NAME_OP_NAMING_INDEX] = df.sort_values(by=[P2PPairingExport.START_TIME]). \
             groupby([P2PPairingExport.SRC_RANK, self.COL_NAME_OP_DST_RANK]).cumcount()
         df[self.COL_NAME_P2P_CONNECTION_ID] = (df[self.COL_NAME_DOMAIN_ID].astype(str) + "_"
