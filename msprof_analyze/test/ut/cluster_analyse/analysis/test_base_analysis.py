@@ -46,7 +46,10 @@ class TestBaseAnalysis(unittest.TestCase):
             Constant.DATA_TYPE: "text",
             Constant.COMM_DATA_DICT: {
                 Constant.COLLECTIVE_GROUP: {
-                    "group0": [0, 1, 2]
+                    "3985311255877281648": {0, 1, 2}
+                },
+                Constant.P2P_GROUP: {
+                    "3985311255877281649": {0, 1}
                 }
             },
             Constant.DATA_SIMPLIFICATION: False
@@ -71,11 +74,11 @@ class TestBaseAnalysis(unittest.TestCase):
                 Constant.STEP_ID: 1,
                 Constant.COMM_OP_NAME: "P2P_op",
                 Constant.COMM_OP_INFO: {"bytes": 100},
-                Constant.GROUP_NAME: "group0"
+                Constant.GROUP_NAME: "3985311255877281649"
             },
             {
                 Constant.COMM_OP_TYPE: "collective",
-                Constant.GROUP_NAME: "group0",
+                Constant.GROUP_NAME: "3985311255877281648",
                 Constant.RANK_ID: 0,
                 Constant.STEP_ID: 1,
                 Constant.COMM_OP_NAME: "AllReduce",
@@ -83,7 +86,7 @@ class TestBaseAnalysis(unittest.TestCase):
             },
             {
                 Constant.COMM_OP_TYPE: "collective",
-                Constant.GROUP_NAME: "group0",
+                Constant.GROUP_NAME: "3985311255877281648",
                 Constant.RANK_ID: 1,
                 Constant.STEP_ID: 1,
                 Constant.COMM_OP_NAME: "AllReduce",
@@ -92,11 +95,13 @@ class TestBaseAnalysis(unittest.TestCase):
         ]
         
         self.analysis.split_op_by_group()
-        p2p_group = self.analysis.comm_ops_struct[Constant.P2P]
+        p2p_group = tuple({0, 1})
+        self.assertIn(p2p_group, self.analysis.comm_ops_struct)
+        p2p_group = self.analysis.comm_ops_struct[p2p_group]
         self.assertIn(1, p2p_group)
         self.assertIn("P2P_op", p2p_group[1])
         self.assertIn(0, p2p_group[1]["P2P_op"])
-        group0 = tuple([0, 1, 2])
+        group0 = tuple({0, 1, 2})
         self.assertIn(group0, self.analysis.comm_ops_struct)
         collective_group = self.analysis.comm_ops_struct[group0]
         self.assertIn(1, collective_group)
@@ -106,7 +111,7 @@ class TestBaseAnalysis(unittest.TestCase):
 
     def test_combine_ops_total_info_when_ops_contain_allreduce_multi_rank(self):
         self.analysis.comm_ops_struct = {
-            tuple([0, 1, 2]): {
+            tuple({0, 1, 2}): {
                 1: {
                     "AllReduce": {
                         0: {"bytes": 200, "middle_bytes": 50},
@@ -117,7 +122,7 @@ class TestBaseAnalysis(unittest.TestCase):
         }
         
         self.analysis.combine_ops_total_info()
-        group_data = self.analysis.comm_ops_struct[tuple([0, 1, 2])][1]["AllReduce"]
+        group_data = self.analysis.comm_ops_struct[tuple({0, 1, 2})][1]["AllReduce"]
         self.assertIn("total", group_data)
         total_info = group_data["total"]
         self.assertEqual(total_info["bytes"], 500)

@@ -118,6 +118,7 @@ class BaseCommunicationGroup:
 
     def collect_comm_data(self):
         comm_data_dict = {
+            Constant.P2P_GROUP: self.p2p_group_dict,
             Constant.COLLECTIVE_GROUP: self.collective_group_dict,
             Constant.COMMUNICATION_OPS: self.communication_ops,
             Constant.MATRIX_OPS: self.matrix_ops,

@@ -183,7 +183,7 @@ class TestCommunicationAnalysis(unittest.TestCase):
     
     def test_compute_total_info_when_contains_communication_time_and_bandwidth(self):
         comm_ops = {
-            'op1': {
+            'hcom_broadcast__035_0_1@6960437680420871035': {
                 '0': {
                     Constant.COMMUNICATION_TIME_INFO: {
                         Constant.WAIT_TIME_MS: 10,
@@ -204,7 +204,7 @@ class TestCommunicationAnalysis(unittest.TestCase):
         with patch.object(self.analysis, 'compute_time_ratio') as mock_time_ratio, \
              patch.object(self.analysis, 'compute_bandwidth_ratio') as mock_bandwidth_ratio:
             self.analysis.compute_total_info(comm_ops)
-            total_info = comm_ops.get(Constant.TOTAL_OP_INFO)
+            total_info = comm_ops.get('Total Op Info@6960437680420871035')
             self.assertIsNotNone(total_info)
             rank_info = total_info.get('0')
             self.assertIsNotNone(rank_info)

@@ -73,6 +73,7 @@ class CommunicationTimeSum(BaseRecipeAnalysis):
         if rank_set_df is None or rank_set_df.empty:
             logger.error(f"There is no {self.TABLE_COMMUNICATION_GROUP_MAPPING} data in {cluster_db_path}.")
             return
+        rank_set_df = rank_set_df.drop_duplicates()
         communication_time = pd.concat(mapper_res_time)
         communication_bandwidth = pd.concat(mapper_res_bw)
         self._compute_time_info(communication_time, rank_set_df)
@@ -120,8 +121,7 @@ class CommunicationTimeSum(BaseRecipeAnalysis):
         "synchronization_time", "idle_time"等时间数据，新增汇总行插入communication_time
         """
         merged_df = pd.merge(communication_time, rank_set_df, on=TableConstant.GROUP_NAME, how='left')
-        summed_df = merged_df.groupby([TableConstant.STEP, TableConstant.RANK_ID, TableConstant.RANK_SET]).agg({
-            TableConstant.GROUP_NAME: "first",
+        summed_df = merged_df.groupby([TableConstant.STEP, TableConstant.RANK_ID, TableConstant.GROUP_NAME]).agg({
             TableConstant.ELAPSED_TIME: "sum",
             TableConstant.TRANSIT_TIME: "sum",
             TableConstant.WAIT_TIME: "sum",
@@ -170,23 +170,22 @@ class CommunicationTimeSum(BaseRecipeAnalysis):
         sum_transit_size = 'sum_transit_size'
         sum_transit_time = 'sum_transit_time'
         sum_transit = merged_df.groupby(
-            [TableConstant.RANK_SET, TableConstant.STEP, TableConstant.RANK_ID, TableConstant.TRANSPORT_TYPE]).apply(
+            [TableConstant.GROUP_NAME, TableConstant.STEP, TableConstant.RANK_ID, TableConstant.TRANSPORT_TYPE]).apply(
             self._get_sum_distinct_op).reset_index().rename(columns={
                 TableConstant.TRANSIT_SIZE: sum_transit_size,
                 TableConstant.TRANSIT_TIME: sum_transit_time
             })
         joined_df = pd.merge(merged_df, sum_transit,
-                             on=[TableConstant.RANK_SET, TableConstant.STEP, TableConstant.RANK_ID,
+                             on=[TableConstant.GROUP_NAME, TableConstant.STEP, TableConstant.RANK_ID,
                                  TableConstant.TRANSPORT_TYPE])
         # 按'rank_set', 'step', 'rank_id', 'transport_type', 'package_size'进行聚合
         agg_result = joined_df.groupby(
-            [TableConstant.RANK_SET, TableConstant.STEP, TableConstant.RANK_ID, TableConstant.TRANSPORT_TYPE,
+            [TableConstant.GROUP_NAME, TableConstant.STEP, TableConstant.RANK_ID, TableConstant.TRANSPORT_TYPE,
              TableConstant.PACKAGE_SIZE]
         ).agg({
             TableConstant.COUNT: 'sum',
             TableConstant.TOTAL_DURATION: 'sum',
             TableConstant.HCCL_OP_NAME: 'first',
-            TableConstant.GROUP_NAME: 'first',
             sum_transit_size: 'first',
             sum_transit_time: 'first'
         }).reset_index()

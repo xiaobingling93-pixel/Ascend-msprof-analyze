@@ -82,17 +82,20 @@ class CommunicationAnalysis(BaseAnalysis):
             Constant.COMMUNICATION_BANDWIDTH_INFO: {}
         }
         total_rank_dict = defaultdict(lambda: copy.deepcopy(default_value))
-        for _, rank_dict in comm_ops.items():
+        total_group_rank_dict = defaultdict(lambda: copy.deepcopy(total_rank_dict))
+        for op_name, rank_dict in comm_ops.items():
+            group_name = op_name.split("@")[-1]
             for rank_id, communication_op_info in rank_dict.items():
                 for com_info, com_info_dict in communication_op_info.items():
                     if com_info == Constant.COMMUNICATION_TIME_INFO:
-                        self.combine_time_info(com_info_dict, total_rank_dict[rank_id][com_info])
+                        self.combine_time_info(com_info_dict, total_group_rank_dict[group_name][rank_id][com_info])
                     if com_info == Constant.COMMUNICATION_BANDWIDTH_INFO:
-                        self.combine_bandwidth_info(com_info_dict, total_rank_dict[rank_id][com_info])
-        for rank_id in total_rank_dict:
-            self.compute_time_ratio(total_rank_dict[rank_id][Constant.COMMUNICATION_TIME_INFO])
-            self.compute_bandwidth_ratio(total_rank_dict[rank_id][Constant.COMMUNICATION_BANDWIDTH_INFO])
-        comm_ops[Constant.TOTAL_OP_INFO] = total_rank_dict
+                        self.combine_bandwidth_info(com_info_dict, total_group_rank_dict[group_name][rank_id][com_info])
+        for group_name, total_rank_dict in total_group_rank_dict.items():
+            for rank_id in total_rank_dict:
+                self.compute_time_ratio(total_rank_dict[rank_id][Constant.COMMUNICATION_TIME_INFO])
+                self.compute_bandwidth_ratio(total_rank_dict[rank_id][Constant.COMMUNICATION_BANDWIDTH_INFO])
+            comm_ops[f"{Constant.TOTAL_OP_INFO}@{group_name}"] = total_rank_dict
 
     def combine_time_info(self, com_info_dict: dict, total_time_info_dict: dict):
         ratio_list = [Constant.WAIT_TIME_RATIO, Constant.SYNCHRONIZATION_TIME_RATIO]

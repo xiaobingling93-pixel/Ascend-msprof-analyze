@@ -136,9 +136,8 @@ class TestCommMatrixAnalysis(unittest.TestCase):
     @patch.object(CommMatrixAnalysis, 'compute_ratio')
     def test_combine_link_info_when_multiple_ops_share_same_link_and_group(self, mock_compute_ratio):
         mock_compute_ratio.return_value = 4.0888888888888895
-        
         step_dict = {
-            'op1@group1': {
+            'allgather-top1@6960437680420871035': {
                 '0-1': {
                     Constant.TRANSPORT_TYPE: 'nccl',
                     Constant.TRANSIT_TIME_MS: 25,
@@ -146,7 +145,7 @@ class TestCommMatrixAnalysis(unittest.TestCase):
                     Constant.OP_NAME: 'op1'
                 }
             },
-            'op2@group1': {
+            'allreduce-top1@6960437680420871035': {
                 '0-1': {
                     Constant.TRANSPORT_TYPE: 'nccl',
                     Constant.TRANSIT_TIME_MS: 20,
@@ -158,8 +157,9 @@ class TestCommMatrixAnalysis(unittest.TestCase):
         with patch.object(self.analysis, 'check_add_op') as mock_check:
             mock_check.return_value = True
             self.analysis.combine_link_info(step_dict)
-            self.assertIn(Constant.TOTAL_OP_INFO, step_dict)
-            total_info = step_dict.get(Constant.TOTAL_OP_INFO)
+            total_op_info_key = 'Total Op Info@6960437680420871035'
+            self.assertIn(total_op_info_key, step_dict)
+            total_info = step_dict.get(total_op_info_key)
             self.assertIsNotNone(total_info)
             self.assertIn('0-1', total_info)
             link_info = total_info.get('0-1')
