@@ -32,6 +32,7 @@ class BaseAnalysis:
         self.data_type = param.get(Constant.DATA_TYPE)
         self.prof_type = param.get(Constant.PROFILING_TYPE)
         self.communication_ops = []
+        self.p2p_group_dict = param.get(Constant.COMM_DATA_DICT, {}).get(Constant.P2P_GROUP)
         self.collective_group_dict = param.get(Constant.COMM_DATA_DICT, {}).get(Constant.COLLECTIVE_GROUP)
         self.comm_ops_struct = {}
         self.adapter = DataTransferAdapter()
@@ -87,7 +88,7 @@ class BaseAnalysis:
     def split_op_by_group(self):
         for single_op in self.communication_ops:
             if single_op.get(Constant.COMM_OP_TYPE) == Constant.P2P:
-                rank_tup = Constant.P2P
+                rank_tup = tuple(self.p2p_group_dict.get(single_op.get(Constant.GROUP_NAME), []))
             else:
                 rank_tup = tuple(self.collective_group_dict.get(single_op.get(Constant.GROUP_NAME), []))
             rank_id = single_op.get(Constant.RANK_ID, 'N/A')

@@ -110,10 +110,10 @@ class TestClusterAnalysePytorchDb(TestCase):
         communication_matrix_json = FileManager.read_json_file(self.COMMUNICATION_MATRIX_PATH)
         self.assertEqual(select_count(self.db_path, query_count),
                          len(communication_matrix_json.get('(4, 5, 6, 7)')
-                             .get('step').get('Total Op Info')),
+                             .get('step').get('Total Op Info@15244899533746605158')),
                          "Cluster communication matrix db vs text count wrong.")
         text_cluster_communication_matrix = (communication_matrix_json.get('(4, 5, 6, 7)').get('step')
-                                             .get('Total Op Info').get('7-4'))
+                                             .get('Total Op Info@15244899533746605158').get('7-4'))
         self.assertEqual(text_cluster_communication_matrix.get('Transport Type'),
                          db_cluster_communication_analyzer_matrix.transport_type,
                          "Cluster communication matrix db vs text 'Transport Type' property wrong.")
@@ -132,19 +132,23 @@ class TestClusterAnalysePytorchDb(TestCase):
         Test case to compare the cluster bandWidth from text file and database.
         """
         query = ("SELECT * FROM ClusterCommAnalyzerBandwidth WHERE hccl_op_name = 'Total Op Info' and rank_id = 7 "
-                 "and step = 'step' and band_type = 'HCCS' and package_size = '3.372891' and rank_set = '(4, 5, 6, 7)'")
+                 "and group_name = '15244899533746605158' and step = 'step' and band_type = 'HCCS' and "
+                 "package_size = '3.372891' and rank_set = '(4, 5, 6, 7)'")
         db_cluster_communication_analyzer_band_width = select_by_query(self.db_path, query,
                                                                        ClusterCommunicationAnalyzerBandwidthDb)
         query_count = ("SELECT count(*) FROM ClusterCommAnalyzerBandwidth WHERE hccl_op_name = 'Total Op Info' and "
-                       "rank_set = '(4, 5, 6, 7)' and rank_id = 7 and band_type = 'HCCS'")
+                       "group_name = '15244899533746605158' and rank_set = '(4, 5, 6, 7)' "
+                       "and rank_id = 7 and band_type = 'HCCS'")
         communication_json = FileManager.read_json_file(self.COMMUNICATION_PATH)
         self.assertEqual(select_count(self.db_path, query_count),
                          len(communication_json.get('(4, 5, 6, 7)')
-                             .get('step').get('Total Op Info').get('7').get('Communication Bandwidth Info')
+                             .get('step').get('Total Op Info@15244899533746605158')
+                             .get('7').get('Communication Bandwidth Info')
                              .get('HCCS').get('Size Distribution')),
                          "Cluster communication bandWidth db vs text count wrong.")
         text_cluster_communication_band_width = (communication_json.get('(4, 5, 6, 7)').get('step')
-                                                 .get('Total Op Info').get('7').get('Communication Bandwidth Info')
+                                                 .get('Total Op Info@15244899533746605158')
+                                                 .get('7').get('Communication Bandwidth Info')
                                                  .get('HCCS'))
         self.assertEqual(round(text_cluster_communication_band_width.get('Transit Time(ms)')),
                          round(db_cluster_communication_analyzer_band_width.transit_time),
@@ -168,18 +172,19 @@ class TestClusterAnalysePytorchDb(TestCase):
         Test case to compare the cluster time from text file and database.
         """
         query = ("SELECT * FROM ClusterCommAnalyzerTime WHERE hccl_op_name = 'Total Op Info' and rank_id = 0 "
-                 "and step = 'step' and rank_set = '(0, 1, 2, 3)'")
+                 "and group_name = '6902614901354803568' and step = 'step' and rank_set = '(0, 1, 2, 3)'")
         db_cluster_communication_analyzer_time = select_by_query(self.db_path, query,
                                                                  ClusterCommunicationAnalyzerTime)
-        query_count = ("SELECT count(*) FROM ClusterCommAnalyzerTime WHERE hccl_op_name = 'Total Op Info' and "
-                       "rank_set = '(0, 1, 2, 3)'")
+        query_count = ("SELECT count(*) FROM ClusterCommAnalyzerTime WHERE hccl_op_name = 'Total Op Info' "
+                       "and group_name = '6902614901354803568' and rank_set = '(0, 1, 2, 3)'")
         communication_json = FileManager.read_json_file(self.COMMUNICATION_PATH)
         self.assertEqual(select_count(self.db_path, query_count),
                          len(communication_json.get('(0, 1, 2, 3)')
-                             .get('step').get('Total Op Info')),
+                             .get('step').get('Total Op Info@6902614901354803568')),
                          "Cluster communication time db vs text count wrong.")
         text_cluster_communication_analyzer_time = (communication_json.get('(0, 1, 2, 3)').get('step')
-                                                    .get('Total Op Info').get('0').get('Communication Time Info'))
+                                                    .get('Total Op Info@6902614901354803568')
+                                                    .get('0').get('Communication Time Info'))
         self.assertEqual(round(text_cluster_communication_analyzer_time.get('Elapse Time(ms)')),
                          round(db_cluster_communication_analyzer_time.elapsed_time),
                          "Cluster communication time db vs text 'Elapse Time(ms)' property wrong.")

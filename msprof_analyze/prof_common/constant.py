@@ -92,6 +92,7 @@ class Constant(object):
 
     # params
     DATA_MAP = "data_map"
+    P2P_GROUP = "p2p_group"
     COLLECTIVE_GROUP = "collective_group"
     COMMUNICATION_OPS = "communication_ops"
     MATRIX_OPS = "matrix_ops"

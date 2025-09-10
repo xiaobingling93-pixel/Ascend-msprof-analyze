@@ -141,15 +141,18 @@ class CommMatrixAnalysis(BaseAnalysis):
             Constant.OP_NAME: ''
         }
         total_op_info = defaultdict(lambda: copy.deepcopy(default_value))
+        total_group_op_info = defaultdict(lambda: copy.deepcopy(total_op_info))
         for op_name, op_dict in step_dict.items():
+            group_name = op_name.split("@")[-1]
             if self.check_add_op(op_name):
                 for link_key, link_dict in op_dict.items():
-                    self.combine_link(total_op_info[link_key], link_dict)
-        for _, link_dict in total_op_info.items():
-            link_dict[Constant.BANDWIDTH_GB_S] = \
-                self.compute_ratio(link_dict.get(Constant.TRANSIT_SIZE_MB, 0),
-                                   link_dict.get(Constant.TRANSIT_TIME_MS, 0))
-        step_dict[Constant.TOTAL_OP_INFO] = total_op_info
+                    self.combine_link(total_group_op_info[group_name][link_key], link_dict)
+        for group_name, total_op_info in total_group_op_info.items():
+            for _, link_dict in total_op_info.items():
+                link_dict[Constant.BANDWIDTH_GB_S] = \
+                    self.compute_ratio(link_dict.get(Constant.TRANSIT_SIZE_MB, 0),
+                                       link_dict.get(Constant.TRANSIT_TIME_MS, 0))
+            step_dict[f"{Constant.TOTAL_OP_INFO}@{group_name}"] = total_op_info
 
     def get_parallel_group_info(self):
         parallel_group_info = {}

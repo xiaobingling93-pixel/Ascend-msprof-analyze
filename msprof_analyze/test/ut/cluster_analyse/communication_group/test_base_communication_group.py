@@ -193,6 +193,7 @@ class TestBaseCommunicationGroup(unittest.TestCase):
         self.comm_group.communication_ops = [{"op": {}}]
         self.comm_group.matrix_ops = [{"matrix": {}}]
         self.comm_group.communication_group = {"collective": [[0, 1]]}
+        self.comm_group.p2p_group_dict = {"6960437680420871035": {2, 3}}
 
         result = self.comm_group.collect_comm_data()
 
@@ -200,6 +201,7 @@ class TestBaseCommunicationGroup(unittest.TestCase):
             Constant.COLLECTIVE_GROUP: {"group1": {0, 1}},
             Constant.COMMUNICATION_OPS: [{"op": {}}],
             Constant.MATRIX_OPS: [{"matrix": {}}],
-            Constant.COMMUNICATION_GROUP: {"collective": [[0, 1]]}
+            Constant.COMMUNICATION_GROUP: {"collective": [[0, 1]]},
+            Constant.P2P_GROUP: {"6960437680420871035": {2, 3}}
         }
         self.assertEqual(result, expected)

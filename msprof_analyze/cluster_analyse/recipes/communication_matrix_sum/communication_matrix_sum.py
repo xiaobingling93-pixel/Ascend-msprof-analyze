@@ -153,8 +153,8 @@ class CommMatrixSum(BaseRecipeAnalysis):
             grouped_df.at[index, 'bandwidth'] = row["transit_size"] / row["transit_time"] if row["transit_time"] else 0
         filtered_df = grouped_df[grouped_df["is_mapped"]].drop(columns="is_mapped")
         total_op_info = filtered_df[filtered_df['hccl_op_name'].str.contains('total', na=False)].groupby(
-            [self.RANK_SET, 'step', "src_rank", "dst_rank"]).agg(
-            {"group_name": "first", 'transport_type': 'first', 'op_name': 'first', "transit_size": "sum",
+            [TableConstant.GROUP_NAME, 'step', "src_rank", "dst_rank"]).agg(
+            {'transport_type': 'first', 'op_name': 'first', "transit_size": "sum",
              "transit_time": "sum"}
         )
         total_op_info = total_op_info.reset_index()

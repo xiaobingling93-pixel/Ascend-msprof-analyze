@@ -71,20 +71,20 @@ class TestClusterAnalysePytorchDbSimplification(TestCase):
         self.assertEqual(data["rank_set"].tolist(), ["(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15)"])
 
     def test_comm_matrix_data(self):
-        query = "SELECT * FROM ClusterCommunicationMatrix WHERE hccl_op_name = 'Total Op Info' "
+        query = "SELECT * FROM ClusterCommunicationMatrix WHERE hccl_op_name = 'Total Op Info'"
         data = pd.read_sql(query, self.conn)
-        self.assertEqual(len(data), 232)
+        self.assertEqual(len(data), 312)
         query = "SELECT transport_type, transit_size, transit_time, bandwidth FROM ClusterCommunicationMatrix WHERE " \
                 "hccl_op_name='Total Op Info'  and group_name='1046397798680881114' and src_rank=12 and dst_rank=4"
         data = pd.read_sql(query, self.conn)
-        self.assertEqual(data.iloc[0].tolist(), ['RDMA', 59341.69862400028, 17684.277734, 3.3556190146182354])
+        self.assertEqual(data.iloc[0].tolist(), ['RDMA', 58681.19654400028, 17642.966488, 3.326039109347782])
 
     def test_comm_time_data(self):
         query = "select rank_id, count(0) cnt from ClusterCommunicationTime where hccl_op_name = " \
                 "'Total Op Info' group by rank_id"
         data = pd.read_sql(query, self.conn)
         self.assertEqual(len(data), 16)
-        self.assertEqual(data["cnt"].tolist(), [4 for _ in range(16)])
+        self.assertEqual(data["cnt"].tolist(), [6 for _ in range(16)])
 
     def test_comm_bandwidth_data(self):
         query = "select * from ClusterCommunicationBandwidth where hccl_op_name = 'Total Op Info' and " \
