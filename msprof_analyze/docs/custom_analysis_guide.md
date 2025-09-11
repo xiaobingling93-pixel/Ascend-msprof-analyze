@@ -56,7 +56,7 @@
 
    1. 使用DatabaseService可配置单表的查询。
 
-      可参考：https://gitee.com/ascend/mstt/blob/pre-research/profiler/msprof_analyze/cluster_analyse/recipes/mstx2commop/mstx2commop.py
+      可参考：https://gitcode.com/Ascend/mstt/blob/pre-research/profiler/msprof_analyze/cluster_analyse/recipes/mstx2commop/mstx2commop.py
 
       使用样例：
 
