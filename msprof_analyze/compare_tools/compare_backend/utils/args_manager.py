@@ -53,7 +53,7 @@ class ArgsManager:
 
     @property
     def comparison_profiling_path(self):
-        return self._args.comparison_profiling_path_dict
+        return self._args.comparison_profiling_path
 
     @property
     def base_path_dict(self):
