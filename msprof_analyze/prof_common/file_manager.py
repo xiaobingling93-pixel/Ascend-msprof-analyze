@@ -190,7 +190,7 @@ class FileManager:
     def check_file_size(cls, file_path):
         suffix = os.path.splitext(file_path)
         base_name = os.path.join(file_path)
-        if suffix == Constant.CSV_SUFFIX:
+        if suffix[1] == Constant.CSV_SUFFIX:
             limit_size = Constant.MAX_CSV_SIZE
         else:
             limit_size = Constant.MAX_JSON_SIZE
