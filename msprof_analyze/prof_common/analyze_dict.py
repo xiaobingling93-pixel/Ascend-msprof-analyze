@@ -19,11 +19,16 @@ class AnalyzeDict(dict):
     def __setstate__(self, d):
         self.__dict__.update(d)
 
+    def __setattr__(self, key: str, value):
+        if isinstance(value, dict) and not isinstance(value, AnalyzeDict):
+            value = AnalyzeDict(value)
+        self[key] = value
+
     def __getattr__(self, key: str):
         if key not in self:
             return {}
-
         value = self[key]
-        if isinstance(value, dict):
+        if isinstance(value, dict) and not isinstance(value, AnalyzeDict):
             value = AnalyzeDict(value)
+            self[key] = value
         return value
