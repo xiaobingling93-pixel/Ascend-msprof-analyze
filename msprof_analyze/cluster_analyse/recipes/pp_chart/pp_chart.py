@@ -196,9 +196,9 @@ class PPChart(BaseRecipeAnalysis):
 
     def load_pp_info(self):
         rank_id = list(self._data_map.keys())[0]
-        profiler_db_path = self._data_map[rank_id]
-        db_path = os.path.join(profiler_db_path, Constant.SINGLE_OUTPUT, f"ascend_pytorch_profiler_{rank_id}.db")
-        if not os.path.exists(profiler_db_path):
+        rank_path = self._data_map[rank_id]
+        db_path = self._get_profiler_db_path(rank_id, rank_path)
+        if not os.path.exists(db_path):
             logger.error(f"Db_file: {db_path} not exist.")
             return
         try:
