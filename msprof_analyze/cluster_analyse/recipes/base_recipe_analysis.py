@@ -187,8 +187,8 @@ class BaseRecipeAnalysis(ABC):
             }
         else:
             rank_id = list(self._data_map.keys())[0]
-            profiler_db_path = self._data_map[rank_id]
-            db_path = os.path.join(profiler_db_path, Constant.SINGLE_OUTPUT, f"ascend_pytorch_profiler_{rank_id}.db")
+            rank_path = self._data_map[rank_id]
+            db_path = self._get_profiler_db_path(rank_id, rank_path)
             if os.path.exists(db_path):
                 try:
                     service = DatabaseService(db_path, {})
