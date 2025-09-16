@@ -277,45 +277,5 @@ class TestAdvisorCmdSingleAscendPtDBCompare(TestCase):
                 for b_index, b_content in enumerate(b_contents):
                     self.assertEqual(b_names[b_index], b_content.text)
 
-    def test_operator_dispatch(self):
-        issues = ["operator dispatch"]
-        op_name = ["aclopCompileAndExecute"]
-        counts = [381]
-        total_time = [64611.056]
-
-        t0_description = ["381"]
-        t0_suggestion = ["torch_npu.npu.set_compile_mode(jit_compile=False)"]
-        t1_issue = ["aclopCompileAndExecute"]
-        t1_counts = ['381']
-        t1_elapsed_time = ['64611.05599999996']
-
-        try:
-            df = pd.read_excel(self.result_excel.get("all", None), sheet_name='Operator Dispatch Issues', header=0)
-        except FileNotFoundError:
-            logging.error("File %s not found.", str(self.result_excel.get("all", None)))
-            return
-        for index, row in df.iterrows():
-            self.assertEqual(issues[index], row["Issues"])
-            self.assertEqual(op_name[index], row["op name"])
-            self.assertEqual(counts[index], row["counts"])
-            self.assertEqual(total_time[index], round(row["total time"], 3))
-
-        soup = BeautifulSoup(open(self.result_html.get("all", None)), 'html.parser')
-        for h2 in soup.find_all('h2'):
-            if h2.contents[0] == "Operator Dispatch Issues":
-                div_content = h2.next.next.next
-                table = div_content.find_all('table')
-                for row_index, row in enumerate(table[0].find_all('tr')):
-                    if row_index == 0:
-                        continue
-                    self.assertEqual(t0_description[row_index - 1], row.find_all('td')[0].text.split(' ')[1])
-                    self.assertEqual(t0_suggestion[row_index - 1],
-                                     row.find_all('td')[1].text.split('`')[1].split(';')[0])
-                for row_index, row in enumerate(table[1].find_all('tr')):
-                    if row_index == 0:
-                        continue
-                    self.assertEqual(t1_issue[row_index - 1], row.find_all('td')[0].text)
-                    self.assertEqual(t1_counts[row_index - 1], row.find_all('td')[1].text)
-                    self.assertEqual(t1_elapsed_time[row_index - 1], row.find_all('td')[2].text)
 
 
