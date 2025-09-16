@@ -115,21 +115,6 @@ class GPUProfilingParser(BaseProfilingParser):
             for timestep in range(int(event.start_time + 1), int(event.end_time + 1)):
                 self._marks[str(timestep)] += -100  # mark this timestep in compute stream
 
-    def __check_is_conv(self, event: TraceEventBean, aten_events: list, flow_dict_new: dict) -> str:
-        flow_start_time = flow_dict_new.get(event.start_time)
-        if not flow_start_time:
-            return ""
-        aten_len = len(aten_events)
-        while self._aten_index < aten_len:
-            cur_aten = aten_events[self._aten_index]
-            if cur_aten.end_time < flow_start_time:
-                self._aten_index += 1
-                continue
-            if cur_aten.start_time < flow_start_time:
-                if cur_aten.is_conv():
-                    return "conv_bwd" if cur_aten.is_backward() else "conv_fwd"
-            return ""
-
     def _picking_memory_event(self, event: TraceEventBean):
         if event.is_memory_event():
             self._memory_events.append(event)

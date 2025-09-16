@@ -5,6 +5,7 @@ from unittest.mock import patch
 from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.trace_event_bean import TraceEventBean
 from msprof_analyze.compare_tools.compare_backend.profiling_parser.base_profiling_parser import ProfilingResult
 from msprof_analyze.compare_tools.compare_backend.profiling_parser.gpu_profiling_parser import GPUProfilingParser
+from .test_base_profiling_parser import TestBaseProfilingParser
 
 
 class TestGpuProfilingParser(unittest.TestCase):
@@ -50,6 +51,8 @@ class TestGpuProfilingParser(unittest.TestCase):
     cube_event = {"ph": "X", "name": "gemm", "pid": 1, "tid": 1, "ts": 6, "dur": 1, "cat": "kernel",
                   "args": {"stream": 3}}
     other_event = {"ph": "X", "name": "other", "pid": 1, "tid": 1, "ts": 6, "dur": 1}
+    args = TestBaseProfilingParser.args
+    path_dict = TestBaseProfilingParser.path_dict
 
     def test_update_memory_list_when_valid_input(self):
         with patch("msprof_analyze.compare_tools.compare_backend.profiling_parser."
@@ -146,3 +149,23 @@ class TestGpuProfilingParser(unittest.TestCase):
             res._flow_cat = ("async_gpu",)
             result = res._is_flow_event(TraceEventBean({"cat": "async_gpu"}))
             self.assertTrue(result)
+
+    @patch("msprof_analyze.compare_tools.compare_backend.profiling_parser."
+           "gpu_profiling_parser.GPUProfilingParser._trace_event_generator")
+    def test_infer_compute_stream_id_should_return_compute_stream_id(self, mock_trace_event_generator):
+        event = TraceEventBean({})
+        event._cat = "kernel"
+        event._args = {"stream": 3}
+        mock_trace_event_generator.return_value = [event]
+        parser = GPUProfilingParser(self.args, self.path_dict)
+        self.assertEqual(parser._compute_stream_id, 3)
+
+    @patch("msprof_analyze.compare_tools.compare_backend.profiling_parser."
+           "gpu_profiling_parser.GPUProfilingParser._find_bwd_tid")
+    @patch("msprof_analyze.compare_tools.compare_backend.profiling_parser."
+           "gpu_profiling_parser.GPUProfilingParser._infer_compute_stream_id")
+    def test_get_dispatch_func_when_given_different_switches_then_return_func_list(self,
+        mock_infer_compute_stream_id, mock_find_bwd_tid):
+        mock_infer_compute_stream_id.return_value = 0
+        parser = GPUProfilingParser(self.args, self.path_dict)
+        self.assertEqual(len(parser._get_dispatch_func()), 6)

@@ -34,21 +34,13 @@ class TestNPUProfilingDbParser(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.db_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "profiler.db")
+        cls.db_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "ascend_pytorch_profiler_0.db")
         cls.conn, cls.cursor = DBManager.create_connect_db(cls.db_path)
 
         cls._create_test_tables()
         cls._insert_test_data()
 
         cls.args = MagicMock()
-        cls.args.enable_profiling_compare = True
-        cls.args.enable_operator_compare = True
-        cls.args.enable_memory_compare = True
-        cls.args.enable_communication_compare = True
-        cls.args.enable_api_compare = True
-        cls.args.enable_kernel_compare = True
-        cls.args.use_kernel_type = False
-        cls.args.max_kernel_num = 100
         cls.path_dict = {Constant.PROFILER_DB_PATH: cls.db_path}
 
     @classmethod
@@ -131,7 +123,6 @@ class TestNPUProfilingDbParser(unittest.TestCase):
 
         cls.cursor.execute("""
         CREATE TABLE OP_MEMORY (
-            id INTEGER PRIMARY KEY,
             name INTEGER,
             size INTEGER,
             allocationTime INTEGER,
@@ -158,7 +149,10 @@ class TestNPUProfilingDbParser(unittest.TestCase):
     @classmethod
     def _insert_test_data(cls):
         cls.cursor.execute("INSERT INTO STRING_IDS (id, value) VALUES (1, 'op')")
-        cls.cursor.execute("INSERT INTO STRING_IDS (id, value) VALUES (2, 'conv2d')")
+        cls.cursor.execute("INSERT INTO STRING_IDS (id, value) VALUES (2, 'hcom_allReduce_')")
+        cls.cursor.execute("INSERT INTO STRING_IDS (id, value) VALUES (3, 'hcom_allReduce__568_1_1')")
+        cls.cursor.execute("INSERT INTO STRING_IDS (id, value) VALUES (4, '1')")
+        cls.cursor.execute("INSERT INTO STRING_IDS (id, value) VALUES (536870915, 'aten::zeros')")
         cls.cursor.execute("INSERT INTO CONNECTION_IDS (id, connectionId) VALUES (1, 1)")
         cls.cursor.execute("INSERT INTO ENUM_API_TYPE (id, name) VALUES (1, 'op')")
         cls.cursor.execute("INSERT INTO STEP_TIME (id, startNs, endNs) VALUES (1, 1500, 1600)")
@@ -168,17 +162,35 @@ class TestNPUProfilingDbParser(unittest.TestCase):
         """)
         cls.cursor.execute("""
         INSERT INTO COMMUNICATION_OP (opId, startNs, endNs, opType, opName, groupName, connectionId)
-        VALUES (1, 1500, 1600, 2, 2, 3, 1)
+        VALUES (1, 1500, 1600, 2, 3, 3, 1)
         """)
         cls.cursor.execute("""
         INSERT INTO TASK (globalTaskId, startNs, endNs, streamId, connectionId, taskType)
-        VALUES (1, 1500, 1600, 2, 2, 3)
+        VALUES (1, 1500, 1600, 2, 2, 3), (2, 1700, 1800, 3, 3, 1)
         """)
         cls.cursor.execute("""
         INSERT INTO COMMUNICATION_TASK_INFO (opId, planeId, globalTaskId, taskType, groupName)
         VALUES (1, 1, 1, 2, 3)
         """)
+        cls.cursor.execute("""
+        INSERT INTO COMPUTE_TASK_INFO (globalTaskId, name, opType, taskType, inputShapes)
+        VALUES (2, 1, 1, 1, 4)
+        """)
+        cls.cursor.execute("""
+        INSERT INTO OP_MEMORY (name, size, allocationTime, releaseTime, duration)
+        VALUES (536870915, 512, 1756713554749777610, 1756713556949777610, 2223184720)
+        """)
         cls.conn.commit()
+
+    def setUp(self):
+        self.args.enable_profiling_compare = True
+        self.args.enable_operator_compare = True
+        self.args.enable_memory_compare = True
+        self.args.enable_communication_compare = True
+        self.args.enable_api_compare = True
+        self.args.enable_kernel_compare = True
+        self.args.use_kernel_type = False
+        self.args.max_kernel_num = 100
 
     def test_initialization(self):
         parser = NPUProfilingDbParser(self.args, self.path_dict)
@@ -186,6 +198,21 @@ class TestNPUProfilingDbParser(unittest.TestCase):
         self.assertTrue(parser._enable_profiling_compare)
         self.assertIsNotNone(parser.conn)
         self.assertIsNotNone(parser.cursor)
+
+    def test_load_data(self):
+        parser = NPUProfilingDbParser(self.args, self.path_dict)
+        result = parser.load_data()
+        self.assertEqual(1, len(result.communication_dict))
+        self.assertIn("allreduce", result.communication_dict)
+        self.assertEqual({"comm_list", "comm_task"}, set(result.communication_dict.get("allreduce").keys()))
+        self.assertEqual(1, len(result.torch_op_data))
+
+    def test_load_data_given_enable_profiling_compare_and_enable_communication_compare_false(self):
+        parser = NPUProfilingDbParser(self.args, self.path_dict)
+        parser._args.enable_profiling_compare = False
+        parser._args.enable_communication_compare = False
+        result = parser.load_data()
+        self.assertEqual(1, len(result.torch_op_data))
 
     def test_get_step_range(self):
         parser = NPUProfilingDbParser(self.args, self.path_dict, step_id=1)
@@ -213,6 +240,23 @@ class TestNPUProfilingDbParser(unittest.TestCase):
         if parser._enable_kernel_compare:
             self.assertTrue(hasattr(parser.result_data, 'kernel_details'))
 
+    def test_query_compute_op_data_given_enable_kernel_compare_and_enable_profiling_compare_false(self):
+        parser = NPUProfilingDbParser(self.args, self.path_dict)
+        parser._enable_kernel_compare = False
+        parser._enable_profiling_compare = False
+        parser._query_compute_op_data()
+        self.assertTrue(hasattr(parser.result_data, 'kernel_dict'))
+        if parser._enable_kernel_compare:
+            self.assertTrue(hasattr(parser.result_data, 'kernel_details'))
+
+    def test_query_compute_op_data_given_use_kernel_type_true(self):
+        parser = NPUProfilingDbParser(self.args, self.path_dict)
+        parser._args.use_kernel_type = True
+        parser._query_compute_op_data()
+        self.assertTrue(hasattr(parser.result_data, 'kernel_dict'))
+        if parser._enable_kernel_compare:
+            self.assertTrue(hasattr(parser.result_data, 'kernel_details'))
+
     def test_query_comm_data(self):
         parser = NPUProfilingDbParser(self.args, self.path_dict)
         parser._query_comm_op_data()
@@ -228,3 +272,16 @@ class TestNPUProfilingDbParser(unittest.TestCase):
         parser._query_memory_data()
 
         self.assertTrue(hasattr(parser.result_data, 'memory_list'))
+
+    def test_update_memory_data(self):
+        parser = NPUProfilingDbParser(self.args, self.path_dict)
+        memory_data = (
+            {"opName": "cann::add", "size": 512, "allocationTime": 3, "releaseTime": 6, "duration": 5},
+            {"opName": "cann::matmul", "size": 82, "allocationTime": 7, "releaseTime": 9, "duration": 5},
+        )
+        task_queue_data = [
+            {Constant.TS: 0, Constant.START_NS: 4, Constant.END_NS: 6},
+            {Constant.TS: 1, Constant.START_NS: 5, Constant.END_NS: 8}
+        ]
+        parser._update_memory_data(memory_data, task_queue_data)
+        self.assertEqual(1, len(parser.result_data.memory_list))
