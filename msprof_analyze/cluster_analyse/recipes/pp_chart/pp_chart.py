@@ -57,7 +57,7 @@ class PPChart(BaseRecipeAnalysis):
         self.pp_stage_mstx_num = defaultdict(int)
         self.micro_batch_num = None
         self.pp_type = None
-        self.distributed_args = self.load_distributed_args()
+        self.distributed_args = None
         self.load_pp_info()
 
     @property
@@ -264,11 +264,15 @@ class PPChart(BaseRecipeAnalysis):
             return
         if not self.run_mstx2commop_recipe(context) or not self.run_p2p_pairing_recipe(context):
             return
-        if self.distributed_args is None:
-            logger.warning("The parallel strategy is lost.")
-        if self.pp_type == "dualpipev":
-            self.calculate_micro_batch_id_for_dualpipev()
-            res = self.mapper_func_for_dualpipev(context)  # 忽略返回值
+
+        if self.pp_type == "dualpipev" and self._prof_type != Constant.MSMONITOR:
+            self.distributed_args = self.load_distributed_args()
+            if self.distributed_args:
+                self.calculate_micro_batch_id_for_dualpipev()
+                res = self.mapper_func_for_dualpipev(context)  # 忽略返回值
+            else:
+                logger.warning("The parallel strategy is lost.")
+                res = None
         else:
             res = self.mapper_func(context)  # 忽略返回值
         if res:
