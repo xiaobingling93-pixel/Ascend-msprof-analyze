@@ -94,7 +94,7 @@ class FrameworkApiBean:
         """
         这个类在cpu op和gpu中均有用到，这里是在cpu op阶段判断
         """
-        return any(bwd_mask in self.lower_name for bwd_mask in CompareConfig().mm_mask)
+        return any(mm_mask in self.lower_name for mm_mask in CompareConfig().mm_mask)
 
     def is_bwd_for_cpu_op(self) -> bool:
         """
