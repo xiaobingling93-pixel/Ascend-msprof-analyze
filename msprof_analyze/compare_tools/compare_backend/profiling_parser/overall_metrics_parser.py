@@ -240,7 +240,7 @@ class OverallMetricsParser:
                 else:
                     self.npu_db_parser.result_data.overall_metrics.update_fa_fwd_vector_info(kernel.dur)
         elif cpu_op.is_conv_for_cpu_op():
-            if self.npu_db_parser.is_backward(cpu_op):
+            if cpu_op.is_bwd_for_cpu_op():
                 if kernel.is_cube_kernel_cat(self.pmu_data):
                     self.npu_db_parser.result_data.overall_metrics.update_conv_bwd_cube_info(kernel.dur)
                 else:
