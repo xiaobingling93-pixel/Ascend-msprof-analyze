@@ -1,0 +1,86 @@
+# Copyright (c) 2025, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+import os
+import shutil
+import unittest
+from unittest import mock
+
+from msprof_analyze.prof_common.constant import Constant
+from msprof_analyze.cluster_analyse.cluster_data_preprocess.mindspore_data_preprocessor import MindsporeDataPreprocessor
+
+
+class TestMindsporeDataPreprocessor(unittest.TestCase):
+    DIR_PATH = os.path.join(os.path.dirname(__file__), 'DT_CLUSTER_PREPROCESS')
+
+    def setUp(self) -> None:
+        if os.path.exists(self.DIR_PATH):
+            shutil.rmtree(self.DIR_PATH)
+
+        def create_worker_dir(worker_name, rank_id):
+            worker_path = os.path.join(self.DIR_PATH, worker_name)
+            profiler_info_name = f"profiler_info_{rank_id}.json" if rank_id else "profiler_info.json"
+            os.makedirs(worker_path)
+            open(os.path.join(worker_path, profiler_info_name), 'w')
+            output_dir = os.path.join(worker_path, Constant.ASCEND_PROFILER_OUTPUT)
+            os.makedirs(output_dir)
+            db_filename = f"ascend_mindspore_profiler_{rank_id}.db" if rank_id else "ascend_mindspore_profiler.db"
+            open(os.path.join(output_dir, db_filename), 'w')
+
+        # Create all worker directories with their respective files
+        create_worker_dir('worker1_114514_ascend_ms', rank_id=1)
+        create_worker_dir('worker2_124500_ascend_ms', rank_id=2)
+        create_worker_dir('single_worker_114514_ascend_ms', rank_id=None)
+        create_worker_dir('worker1_114515_ascend_ms', rank_id=1)
+        create_worker_dir('worker2_114516_ascend_ms', rank_id=2)
+
+        self.dirs = [os.path.join(self.DIR_PATH, filename) for filename in os.listdir(self.DIR_PATH)]
+
+    def tearDown(self) -> None:
+        shutil.rmtree(self.DIR_PATH)
+
+    def test_get_data_map_when_given_normal_input_expect_dict(self):
+        res = MindsporeDataPreprocessor(self.dirs).get_data_map()
+        self.assertIsInstance(res, dict)
+
+    def test_get_rank_id_when_given_cluster_rank_1_dirs_expect_rank_1(self):
+        check = MindsporeDataPreprocessor(self.dirs)
+        ret = check.get_rank_id(os.path.join(self.DIR_PATH, 'worker1_114514_ascend_ms'))
+        self.assertEqual(ret, 1)
+
+    def test_get_rank_id_when_single_device_not_cluster_expect_rank_minus1(self):
+        check = MindsporeDataPreprocessor(self.dirs)
+        ret = check.get_rank_id(os.path.join(self.DIR_PATH, 'single_worker_114514_ascend_ms'))
+        self.assertEqual(ret, -1)
+
+    def test_get_data_map_given_cluster_files_expect_rank_12(self):
+        check = MindsporeDataPreprocessor(self.dirs)
+        with mock.patch("msprof_analyze.prof_common.file_manager.FileManager.read_json_file",
+                        return_value={}):
+            ret = check.get_data_map()
+            self.assertEqual(len(ret), 2)
+            self.assertIn(1, ret.keys())
+            self.assertIn(2, ret.keys())
+            self.assertIn(os.path.join(self.DIR_PATH, 'worker1_114515_ascend_ms'), ret.values())
+            self.assertIn(os.path.join(self.DIR_PATH, 'worker2_124500_ascend_ms'), ret.values())
+
+    def test_get_msprof_dir_should_return_(self):
+        res = MindsporeDataPreprocessor(self.dirs).get_msprof_dir(os.path.join(self.DIR_PATH,
+                                                                               'worker1_114514_ascend_ms'))
+        self.assertEqual(res, "")
+
+if __name__ == '__main__':
+    unittest.main()
