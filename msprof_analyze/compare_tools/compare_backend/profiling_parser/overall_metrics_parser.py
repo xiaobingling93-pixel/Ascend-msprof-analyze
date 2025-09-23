@@ -12,6 +12,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import copy
+
 from msprof_analyze.prof_common.db_manager import DBManager
 from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.db_data_bean.framework_api_bean import \
     FrameworkApiBean
@@ -76,7 +78,7 @@ class OverallMetricsParser:
             return []
 
         intervals.sort(key=lambda x: x[0])
-        merged = [intervals[0]]
+        merged = [copy.deepcopy(intervals[0])]
         for current in intervals[1:]:
             # 获取合并列表中最后一个区间的结束位置
             last_merged_end = merged[-1][1]
