@@ -29,18 +29,18 @@ from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.
 
 
 class TestOverallMetricsParser(unittest.TestCase):
-    mock_npu_parser, parser = None, None
+    def setUp(self):
+        self.mock_npu_parser = MagicMock()
+        self.mock_npu_parser.step_range = None
+        self.mock_npu_parser.cursor = MagicMock()
+        self.setup_mock_data()
+        self.parser = OverallMetricsParser(self.mock_npu_parser)
 
-    @classmethod
-    def setUpClass(cls):
-        cls.mock_npu_parser = MagicMock()
-        cls.mock_npu_parser.step_range = None
-        cls.mock_npu_parser.cursor = MagicMock()
-        cls.setup_mock_data()
-        cls.parser = OverallMetricsParser(cls.mock_npu_parser)
+    def tearDown(self):
+        self.mock_npu_parser = None
+        self.parser = None
 
-    @classmethod
-    def setup_mock_data(cls):
+    def setup_mock_data(self):
         mock_op1 = MagicMock(spec=FrameworkApiBean)
         mock_op1.is_cpu_cube_op.return_value = True
         mock_op1.start_time = 1000
@@ -54,7 +54,7 @@ class TestOverallMetricsParser(unittest.TestCase):
         mock_op2.end_time = 2500
         mock_op2.dur = 1000
 
-        cls.mock_npu_parser.result_data.torch_op_data = [mock_op1, mock_op2]
+        self.mock_npu_parser.result_data.torch_op_data = [mock_op1, mock_op2]
 
         mock_kernel1 = MagicMock(spec=KernelBean)
         mock_kernel1.start_time = 1000
@@ -65,7 +65,7 @@ class TestOverallMetricsParser(unittest.TestCase):
         mock_kernel1.is_sdma.return_value = False
         mock_kernel1.is_mc2.return_value = False
 
-        cls.mock_npu_parser.compute_op_data = [mock_kernel1]
+        self.mock_npu_parser.compute_op_data = [mock_kernel1]
 
         mock_comm_op = MagicMock(spec=HcclOpBean)
         mock_comm_op.start_time = 1500
@@ -74,7 +74,7 @@ class TestOverallMetricsParser(unittest.TestCase):
         mock_comm_op.group_name = "group1"
         mock_comm_op.is_lccl.return_value = False
 
-        cls.mock_npu_parser.comm_op_data = [mock_comm_op]
+        self.mock_npu_parser.comm_op_data = [mock_comm_op]
 
         mock_task = MagicMock()
         mock_task.task_id = "task1"
@@ -85,9 +85,9 @@ class TestOverallMetricsParser(unittest.TestCase):
         mock_task.end_time = 2500
         mock_task.dur = 1000
 
-        cls.mock_npu_parser.comm_task_data = [mock_task]
+        self.mock_npu_parser.comm_task_data = [mock_task]
 
-        cls.mock_npu_parser.cursor.fetch_all_data.return_value = [
+        self.mock_npu_parser.cursor.fetch_all_data.return_value = [
             {"totalReserved": 1024 ** 3},  # 1GB
             {"globalTaskId": "task1", "pmuName": "pmu1", "value": 100},
             {"task_type": "SDMA_SQE", "Duration": 1000000, "streamId": 1}
@@ -145,7 +145,7 @@ class TestOverallMetricsParser(unittest.TestCase):
         metrics.update_compute_time.assert_called()
         metrics.set_e2e_time.assert_called()
         metrics.update_comm_not_overlap.assert_called()
-        self.assertEqual(len(self.parser.not_overlapped_comm), 3)
+        self.assertEqual(len(self.parser.not_overlapped_comm), 2)
 
     def test_calculate_communication_wait_time(self):
         mock_task1 = MagicMock(spec=HcclTaskBean)
@@ -207,3 +207,427 @@ class TestOverallMetricsParser(unittest.TestCase):
             metrics.calculate_schedule_time.assert_called_once()
             metrics.trans_time_to_s.assert_called_once()
             metrics.calculate_other_time.assert_called_once()
+
+    def test_c_core_sqe_list_without_step_range(self):
+        """Test c_core_sqe_list property without step_range"""
+        # Setup no step_range
+        self.mock_npu_parser.step_range = None
+        self.parser._c_core_sqe_list = None
+
+        # Mock database response
+        mock_data = [
+            {"Duration": 1000000, "startNs": 1000, "endNs": 2000}
+        ]
+
+        # Verify database query was called without step_range
+        expected_sql = """
+        SELECT 
+            round(TASK.endNs - TASK.startNs) AS "Duration",
+            TASK.startNs AS "startNs",
+            TASK.endNs AS "endNs"
+        FROM 
+            TASK LEFT JOIN STRING_IDS ON TASK.taskType == STRING_IDS.id 
+        WHERE STRING_IDS.value == 'C_CORE_SQE' 
+        ORDER BY TASK.startNs
+        """
+
+        with patch("msprof_analyze.compare_tools.compare_backend.profiling_parser.overall_metrics_parser."
+                   "DBManager") as mock_db_manager:
+            mock_db_manager.fetch_all_data.return_value = mock_data
+            result = self.parser.c_core_sqe_list
+            mock_db_manager.fetch_all_data.assert_called_with(self.mock_npu_parser.cursor, expected_sql)
+
+            self.assertEqual(len(result), 1)
+            self.assertEqual(result[0]._data["Duration"], 1000000)
+
+    def test_categorize_computing_performance_data_page_attention(self):
+        """Test categorize_computing_performance_data for page attention kernel"""
+        mock_kernel = MagicMock(spec=KernelBean)
+        mock_kernel.is_page_attention.return_value = True
+        mock_kernel.dur = 500
+
+        self.parser.categorize_computing_performance_data(mock_kernel)
+
+        self.mock_npu_parser.result_data.overall_metrics.update_page_attention_info.assert_called_with(500)
+
+    def test_categorize_computing_performance_data_sdma(self):
+        """Test categorize_computing_performance_data for SDMA kernel"""
+        mock_kernel = MagicMock(spec=KernelBean)
+        mock_kernel.is_page_attention.return_value = False
+        mock_kernel.is_sdma.return_value = True
+        mock_kernel.dur = 300
+
+        self.parser.categorize_computing_performance_data(mock_kernel)
+
+        self.mock_npu_parser.result_data.overall_metrics.update_sdma_tensor_move_info.assert_called_with(300)
+
+    def test_categorize_computing_performance_data_mc2(self):
+        """Test categorize_computing_performance_data for MC2 kernel"""
+        mock_kernel = MagicMock(spec=KernelBean)
+        mock_kernel.is_page_attention.return_value = False
+        mock_kernel.is_sdma.return_value = False
+        mock_kernel.is_mc2.return_value = True
+        mock_kernel.name = "mc2_kernel"
+        mock_kernel.dur = 400
+        mock_kernel.mc2_computing_time.return_value = 200
+
+        with patch.object(self.parser, 'calculate_mc2_communication_time', return_value=200) as mock_comm_time:
+            self.parser.categorize_computing_performance_data(mock_kernel)
+
+            mock_comm_time.assert_called_with(mock_kernel)
+            mock_kernel.mc2_computing_time.assert_called_with(self.parser.pmu_data)
+            self.mock_npu_parser.result_data.overall_metrics.update_mc2_info.assert_called_with(
+                "mc2_kernel", 400, 200, 200)
+
+    def test_categorize_computing_performance_data_flash_attention_fwd(self):
+        """Test categorize_computing_performance_data for Flash Attention forward kernel"""
+        mock_kernel = MagicMock(spec=KernelBean)
+        mock_kernel.is_page_attention.return_value = False
+        mock_kernel.is_sdma.return_value = False
+        mock_kernel.is_mc2.return_value = False
+        mock_kernel.connection_id = "unknown_conn"
+        mock_kernel.is_flash_attention.return_value = True
+        mock_kernel.is_fa_bwd.return_value = False
+        mock_kernel.dur = 600
+
+        self.parser.categorize_computing_performance_data(mock_kernel)
+
+        self.mock_npu_parser.result_data.overall_metrics.update_fa_fwd_cube_info.assert_called_with(600)
+
+    def test_categorize_computing_performance_data_flash_attention_bwd(self):
+        """Test categorize_computing_performance_data for Flash Attention backward kernel"""
+        mock_kernel = MagicMock(spec=KernelBean)
+        mock_kernel.is_page_attention.return_value = False
+        mock_kernel.is_sdma.return_value = False
+        mock_kernel.is_mc2.return_value = False
+        mock_kernel.connection_id = "unknown_conn"
+        mock_kernel.is_flash_attention.return_value = True
+        mock_kernel.is_fa_bwd.return_value = True
+        mock_kernel.dur = 700
+
+        self.parser.categorize_computing_performance_data(mock_kernel)
+
+        self.mock_npu_parser.result_data.overall_metrics.update_fa_bwd_cube_info.assert_called_with(700)
+
+    def test_categorize_computing_performance_data_conv_fwd(self):
+        """Test categorize_computing_performance_data for Convolution forward kernel"""
+        mock_kernel = MagicMock(spec=KernelBean)
+        mock_kernel.is_page_attention.return_value = False
+        mock_kernel.is_sdma.return_value = False
+        mock_kernel.is_mc2.return_value = False
+        mock_kernel.connection_id = "unknown_conn"
+        mock_kernel.is_flash_attention.return_value = False
+        mock_kernel.is_conv.return_value = True
+        mock_kernel.is_conv_bwd.return_value = False
+        mock_kernel.dur = 800
+
+        self.parser.categorize_computing_performance_data(mock_kernel)
+
+        self.mock_npu_parser.result_data.overall_metrics.update_conv_fwd_cube_info.assert_called_with(800)
+
+    def test_categorize_computing_performance_data_conv_bwd(self):
+        """Test categorize_computing_performance_data for Convolution backward kernel"""
+        mock_kernel = MagicMock(spec=KernelBean)
+        mock_kernel.is_page_attention.return_value = False
+        mock_kernel.is_sdma.return_value = False
+        mock_kernel.is_mc2.return_value = False
+        mock_kernel.connection_id = "unknown_conn"
+        mock_kernel.is_flash_attention.return_value = False
+        mock_kernel.is_conv.return_value = True
+        mock_kernel.is_conv_bwd.return_value = True
+        mock_kernel.dur = 900
+
+        self.parser.categorize_computing_performance_data(mock_kernel)
+
+        self.mock_npu_parser.result_data.overall_metrics.update_conv_bwd_cube_info.assert_called_with(900)
+
+    def test_categorize_computing_performance_data_matmul(self):
+        """Test categorize_computing_performance_data for MatMul kernel"""
+        mock_kernel = MagicMock(spec=KernelBean)
+        mock_kernel.is_page_attention.return_value = False
+        mock_kernel.is_sdma.return_value = False
+        mock_kernel.is_mc2.return_value = False
+        mock_kernel.connection_id = "unknown_conn"
+        mock_kernel.is_flash_attention.return_value = False
+        mock_kernel.is_conv.return_value = False
+        mock_kernel.is_matmul.return_value = True
+        mock_kernel.dur = 1000
+
+        self.parser.categorize_computing_performance_data(mock_kernel)
+
+        self.mock_npu_parser.result_data.overall_metrics.update_matmul_cube_info.assert_called_with(1000)
+
+    def test_categorize_computing_performance_data_cube_kernel(self):
+        """Test categorize_computing_performance_data for cube kernel"""
+        mock_kernel = MagicMock(spec=KernelBean)
+        mock_kernel.is_page_attention.return_value = False
+        mock_kernel.is_sdma.return_value = False
+        mock_kernel.is_mc2.return_value = False
+        mock_kernel.connection_id = "unknown_conn"
+        mock_kernel.is_flash_attention.return_value = False
+        mock_kernel.is_conv.return_value = False
+        mock_kernel.is_matmul.return_value = False
+        mock_kernel.is_cube_kernel_cat.return_value = True
+        mock_kernel.dur = 1100
+
+        self.parser.categorize_computing_performance_data(mock_kernel)
+
+        self.mock_npu_parser.result_data.overall_metrics.update_other_cube_info.assert_called_with(1100)
+
+    def test_categorize_computing_performance_data_trans(self):
+        """Test categorize_computing_performance_data for trans kernel"""
+        mock_kernel = MagicMock(spec=KernelBean)
+        mock_kernel.is_page_attention.return_value = False
+        mock_kernel.is_sdma.return_value = False
+        mock_kernel.is_mc2.return_value = False
+        mock_kernel.connection_id = "unknown_conn"
+        mock_kernel.is_flash_attention.return_value = False
+        mock_kernel.is_conv.return_value = False
+        mock_kernel.is_matmul.return_value = False
+        mock_kernel.is_cube_kernel_cat.return_value = False
+        mock_kernel.is_trans.return_value = True
+        mock_kernel.dur = 1200
+
+        self.parser.categorize_computing_performance_data(mock_kernel)
+
+        self.mock_npu_parser.result_data.overall_metrics.update_vector_trans_info.assert_called_with(1200)
+
+    def test_categorize_computing_performance_data_vector_notrans(self):
+        """Test categorize_computing_performance_data for vector non-trans kernel"""
+        mock_kernel = MagicMock(spec=KernelBean)
+        mock_kernel.is_page_attention.return_value = False
+        mock_kernel.is_sdma.return_value = False
+        mock_kernel.is_mc2.return_value = False
+        mock_kernel.connection_id = "unknown_conn"
+        mock_kernel.is_flash_attention.return_value = False
+        mock_kernel.is_conv.return_value = False
+        mock_kernel.is_matmul.return_value = False
+        mock_kernel.is_cube_kernel_cat.return_value = False
+        mock_kernel.is_trans.return_value = False
+        mock_kernel.dur = 1300
+
+        self.parser.categorize_computing_performance_data(mock_kernel)
+
+        self.mock_npu_parser.result_data.overall_metrics.update_vector_notrans_info.assert_called_with(1300)
+
+    def test_categorize_computing_performance_data_with_connection(self):
+        """Test categorize_computing_performance_data with valid connection"""
+        # Setup connection map
+        self.parser.connect_map["conn1"] = 1000
+
+        # Setup CPU cube op that matches the flow
+        mock_cpu_op = MagicMock(spec=FrameworkApiBean)
+        mock_cpu_op.start_time = 1000
+        mock_cpu_op.end_time = 2000
+        self.parser.cpu_cube_op = [mock_cpu_op]
+
+        mock_kernel = MagicMock(spec=KernelBean)
+        mock_kernel.is_page_attention.return_value = False
+        mock_kernel.is_sdma.return_value = False
+        mock_kernel.is_mc2.return_value = False
+        mock_kernel.connection_id = "conn1"
+        mock_kernel.dur = 1400
+
+        with patch.object(self.parser, 'categorize_cube_performance_data') as mock_categorize:
+            self.parser.categorize_computing_performance_data(mock_kernel)
+            mock_categorize.assert_called_with(mock_cpu_op, mock_kernel)
+
+    def test_categorize_computing_performance_data_with_connection_no_match(self):
+        """Test categorize_computing_performance_data with connection but no matching CPU op"""
+        # Setup connection map
+        self.parser.connect_map["conn1"] = 1000
+
+        # Setup CPU cube op that doesn't match the flow
+        mock_cpu_op = MagicMock(spec=FrameworkApiBean)
+        mock_cpu_op.start_time = 2000  # After flow start time
+        mock_cpu_op.end_time = 3000
+        self.parser.cpu_cube_op = [mock_cpu_op]
+
+        mock_kernel = MagicMock(spec=KernelBean)
+        mock_kernel.is_page_attention.return_value = False
+        mock_kernel.is_sdma.return_value = False
+        mock_kernel.is_mc2.return_value = False
+        mock_kernel.connection_id = "conn1"
+        mock_kernel.is_flash_attention.return_value = False
+        mock_kernel.is_conv.return_value = False
+        mock_kernel.is_conv.return_value = False
+        mock_kernel.is_matmul.return_value = False
+        mock_kernel.is_cube_kernel_cat.return_value = False
+        mock_kernel.is_trans.return_value = False
+        mock_kernel.dur = 1500
+
+        with patch.object(self.parser, 'categorize_cube_performance_data') as mock_categorize:
+            self.parser.categorize_computing_performance_data(mock_kernel)
+            mock_categorize.assert_not_called()
+
+    def test_categorize_cube_performance_data_fa_fwd_cube(self):
+        """Test categorize_cube_performance_data for FA forward cube"""
+        mock_cpu_op = MagicMock(spec=FrameworkApiBean)
+        mock_cpu_op.is_fa_for_cpu_op.return_value = True
+        mock_cpu_op.is_bwd_for_cpu_op.return_value = False
+
+        mock_kernel = MagicMock(spec=KernelBean)
+        mock_kernel.is_cube_kernel_cat.return_value = True
+        mock_kernel.dur = 1600
+
+        self.parser.categorize_cube_performance_data(mock_cpu_op, mock_kernel)
+
+        self.mock_npu_parser.result_data.overall_metrics.update_fa_fwd_cube_info.assert_called_with(1600)
+
+    def test_categorize_cube_performance_data_fa_fwd_vector(self):
+        """Test categorize_cube_performance_data for FA forward vector"""
+        mock_cpu_op = MagicMock(spec=FrameworkApiBean)
+        mock_cpu_op.is_fa_for_cpu_op.return_value = True
+        mock_cpu_op.is_bwd_for_cpu_op.return_value = False
+
+        mock_kernel = MagicMock(spec=KernelBean)
+        mock_kernel.is_cube_kernel_cat.return_value = False
+        mock_kernel.dur = 1700
+
+        self.parser.categorize_cube_performance_data(mock_cpu_op, mock_kernel)
+
+        self.mock_npu_parser.result_data.overall_metrics.update_fa_fwd_vector_info.assert_called_with(1700)
+
+    def test_categorize_cube_performance_data_fa_bwd_cube(self):
+        """Test categorize_cube_performance_data for FA backward cube"""
+        mock_cpu_op = MagicMock(spec=FrameworkApiBean)
+        mock_cpu_op.is_fa_for_cpu_op.return_value = True
+        mock_cpu_op.is_bwd_for_cpu_op.return_value = True
+
+        mock_kernel = MagicMock(spec=KernelBean)
+        mock_kernel.is_cube_kernel_cat.return_value = True
+        mock_kernel.dur = 1800
+
+        self.parser.categorize_cube_performance_data(mock_cpu_op, mock_kernel)
+
+        self.mock_npu_parser.result_data.overall_metrics.update_fa_bwd_cube_info.assert_called_with(1800)
+
+    def test_categorize_cube_performance_data_fa_bwd_vector(self):
+        """Test categorize_cube_performance_data for FA backward vector"""
+        mock_cpu_op = MagicMock(spec=FrameworkApiBean)
+        mock_cpu_op.is_fa_for_cpu_op.return_value = True
+        mock_cpu_op.is_bwd_for_cpu_op.return_value = True
+
+        mock_kernel = MagicMock(spec=KernelBean)
+        mock_kernel.is_cube_kernel_cat.return_value = False
+        mock_kernel.dur = 1900
+
+        self.parser.categorize_cube_performance_data(mock_cpu_op, mock_kernel)
+
+        self.mock_npu_parser.result_data.overall_metrics.update_fa_bwd_vector_info.assert_called_with(1900)
+
+    def test_categorize_cube_performance_data_conv_fwd_cube(self):
+        """Test categorize_cube_performance_data for Conv forward cube"""
+        mock_cpu_op = MagicMock(spec=FrameworkApiBean)
+        mock_cpu_op.is_fa_for_cpu_op.return_value = False
+        mock_cpu_op.is_conv_for_cpu_op.return_value = True
+        mock_cpu_op.is_bwd_for_cpu_op.return_value = False
+
+        mock_kernel = MagicMock(spec=KernelBean)
+        mock_kernel.is_cube_kernel_cat.return_value = True
+        mock_kernel.dur = 2000
+
+        self.parser.categorize_cube_performance_data(mock_cpu_op, mock_kernel)
+
+        self.mock_npu_parser.result_data.overall_metrics.update_conv_fwd_cube_info.assert_called_with(2000)
+
+    def test_categorize_cube_performance_data_conv_fwd_vector(self):
+        """Test categorize_cube_performance_data for Conv forward vector"""
+        mock_cpu_op = MagicMock(spec=FrameworkApiBean)
+        mock_cpu_op.is_fa_for_cpu_op.return_value = False
+        mock_cpu_op.is_conv_for_cpu_op.return_value = True
+        mock_cpu_op.is_bwd_for_cpu_op.return_value = False
+
+        mock_kernel = MagicMock(spec=KernelBean)
+        mock_kernel.is_cube_kernel_cat.return_value = False
+        mock_kernel.dur = 2100
+
+        self.parser.categorize_cube_performance_data(mock_cpu_op, mock_kernel)
+
+        self.mock_npu_parser.result_data.overall_metrics.update_conv_fwd_vector_info.assert_called_with(2100)
+
+    def test_categorize_cube_performance_data_conv_bwd_cube(self):
+        """Test categorize_cube_performance_data for Conv backward cube"""
+        mock_cpu_op = MagicMock(spec=FrameworkApiBean)
+        mock_cpu_op.is_fa_for_cpu_op.return_value = False
+        mock_cpu_op.is_conv_for_cpu_op.return_value = True
+        mock_cpu_op.is_bwd_for_cpu_op.return_value = True
+
+        mock_kernel = MagicMock(spec=KernelBean)
+        mock_kernel.is_cube_kernel_cat.return_value = True
+        mock_kernel.dur = 2200
+
+        self.parser.categorize_cube_performance_data(mock_cpu_op, mock_kernel)
+
+        self.mock_npu_parser.result_data.overall_metrics.update_conv_bwd_cube_info.assert_called_with(2200)
+
+    def test_categorize_cube_performance_data_conv_bwd_vector(self):
+        """Test categorize_cube_performance_data for Conv backward vector"""
+        mock_cpu_op = MagicMock(spec=FrameworkApiBean)
+        mock_cpu_op.is_fa_for_cpu_op.return_value = False
+        mock_cpu_op.is_conv_for_cpu_op.return_value = True
+
+        self.mock_npu_parser.is_backward.return_value = True
+
+        mock_kernel = MagicMock(spec=KernelBean)
+        mock_kernel.is_cube_kernel_cat.return_value = False
+        mock_kernel.dur = 2300
+
+        self.parser.categorize_cube_performance_data(mock_cpu_op, mock_kernel)
+
+        self.mock_npu_parser.result_data.overall_metrics.update_conv_bwd_vector_info.assert_called_with(2300)
+
+    def test_categorize_cube_performance_data_matmul_cube(self):
+        """Test categorize_cube_performance_data for MatMul cube"""
+        mock_cpu_op = MagicMock(spec=FrameworkApiBean)
+        mock_cpu_op.is_fa_for_cpu_op.return_value = False
+        mock_cpu_op.is_conv_for_cpu_op.return_value = False
+        mock_cpu_op.is_matmul_for_cpu_op.return_value = True
+
+        mock_kernel = MagicMock(spec=KernelBean)
+        mock_kernel.is_cube_kernel_cat.return_value = True
+        mock_kernel.dur = 2400
+
+        self.parser.categorize_cube_performance_data(mock_cpu_op, mock_kernel)
+
+        self.mock_npu_parser.result_data.overall_metrics.update_matmul_cube_info.assert_called_with(2400)
+
+    def test_categorize_cube_performance_data_matmul_vector(self):
+        """Test categorize_cube_performance_data for MatMul vector"""
+        mock_cpu_op = MagicMock(spec=FrameworkApiBean)
+        mock_cpu_op.is_fa_for_cpu_op.return_value = False
+        mock_cpu_op.is_conv_for_cpu_op.return_value = False
+        mock_cpu_op.is_matmul_for_cpu_op.return_value = True
+
+        mock_kernel = MagicMock(spec=KernelBean)
+        mock_kernel.is_cube_kernel_cat.return_value = False
+        mock_kernel.dur = 2500
+
+        self.parser.categorize_cube_performance_data(mock_cpu_op, mock_kernel)
+
+        self.mock_npu_parser.result_data.overall_metrics.update_matmul_vector_info.assert_called_with(2500)
+
+    def test_calculate_mc2_communication_time(self):
+        """Test calculate_mc2_communication_time method"""
+        # Setup C_CORE_SQE data
+        mock_sqe1 = MagicMock()
+        mock_sqe1.end_time = 1000
+        mock_sqe2 = MagicMock()
+        mock_sqe2.end_time = 2000
+        mock_sqe3 = MagicMock()
+        mock_sqe3.end_time = 3000
+
+        self.parser._c_core_sqe_list = [mock_sqe1, mock_sqe2, mock_sqe3]
+        self.parser._c_core_sqe_index = 0
+
+        # Setup kernel
+        mock_kernel = MagicMock()
+        mock_kernel.start_time = 500
+        mock_kernel.end_time = 3500
+
+        result = self.parser.calculate_mc2_communication_time(mock_kernel)
+
+        # Communication time should be (2000 - 1000)
+        self.assertEqual(result, 1000.0)
+        self.assertEqual(self.parser._c_core_sqe_index, 3)
+
