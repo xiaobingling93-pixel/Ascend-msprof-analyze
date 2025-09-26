@@ -173,8 +173,8 @@ class OverallMetricsParser:
             all_data = DBManager.fetch_all_data(self.npu_db_parser.cursor, sql)
             for data in all_data:
                 self.pmu_data.setdefault(data.get("globalTaskId"), {})[data.get("pmuName")] = data.get("value")
-        self.npu_db_parser.compute_op_data.sort(key=lambda x: x.start_time)
-        for kernel in self.npu_db_parser.compute_op_data:
+        kernel_list = sorted(self.npu_db_parser.compute_op_data, key=lambda x: x.connection_id)
+        for kernel in kernel_list:
             self.categorize_computing_performance_data(kernel)
 
     def categorize_computing_performance_data(self, kernel: KernelBean):

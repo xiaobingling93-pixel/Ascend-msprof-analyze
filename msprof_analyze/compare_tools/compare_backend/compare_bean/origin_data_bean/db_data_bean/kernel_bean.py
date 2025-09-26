@@ -105,8 +105,8 @@ class KernelBean:
         if not pmu_data:
             return any((self.rts_task_type == "KERNEL_AICORE", self.rts_task_type == "KERNEL_MIX_AIC"))
         global_task_id = self._data.get("globalTaskId", "")
-        return any(
-            (pmu_data.get(global_task_id, {}).get("aicore_time"), pmu_data.get(global_task_id, {}).get("mac_time")))
+        return any((pmu_data.get(global_task_id, {}).get("aic_total_time"),
+                    pmu_data.get(global_task_id, {}).get("aic_mac_time")))
 
     def mc2_computing_time(self, pmu_data):
         task_pmu = pmu_data.get(self._data.get("globalTaskId", ""), {})
