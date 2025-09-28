@@ -139,12 +139,20 @@ class TestOverallMetricsParser(unittest.TestCase):
         self.mock_npu_parser.comm_op_data = [
             MagicMock(start_time=1800, end_time=2800, dur=1000)
         ]
-        self.parser.calculate_overlap_analysis_time()
+
+        # Patch DBManager so calculate_ascend_task_e2e_time executes and uses merged bounds
+        with (patch("msprof_analyze.compare_tools.compare_backend.profiling_parser.overall_metrics_parser.DBManager")
+              as mock_db):
+            mock_db.judge_table_exists.return_value = True
+            # Two queries (first start, last end) return empty -> fall back to merged_op bounds
+            mock_db.fetch_all_data.side_effect = [[], []]
+
+            self.parser.calculate_overlap_analysis_time()
 
         metrics = self.mock_npu_parser.result_data.overall_metrics
         metrics.update_compute_time.assert_called()
-        metrics.set_e2e_time.assert_called()
         metrics.update_comm_not_overlap.assert_called()
+        metrics.set_e2e_time.assert_called_with(1800.0) # merged overall bounds: [1000, 2800] -> duration 1800 us
         self.assertEqual(len(self.parser.not_overlapped_comm), 2)
 
     def test_calculate_communication_wait_time(self):
@@ -630,4 +638,23 @@ class TestOverallMetricsParser(unittest.TestCase):
         # Communication time should be (2000 - 1000)
         self.assertEqual(result, 1000.0)
         self.assertEqual(self.parser._c_core_sqe_index, 3)
+
+    def test_calculate_ascend_task_e2e_time(self):
+        """Test calculate_ascend_task_e2e_time computes E2E using TASK bounds when available"""
+        # Prepare DB responses: earliest start at 1,500,000 ns (1500 us), latest end at 9,000,000 ns (9000 us)
+        first_task_rows = [{"startNs": 1500000}]
+        last_task_rows = [{"endNs": 9000000}]
+
+        with (patch("msprof_analyze.compare_tools.compare_backend.profiling_parser.overall_metrics_parser.DBManager")
+              as mock_db):
+            # Table exists
+            mock_db.judge_table_exists.return_value = True
+            # fetch_all_data called twice: first for first task, then for last task
+            mock_db.fetch_all_data.side_effect = [first_task_rows, last_task_rows]
+
+            # Call with merged op bounds [2000us, 8000us]
+            self.parser.calculate_ascend_task_e2e_time(merged_op_earliest_start=2000, merged_op_latest_end=8000)
+
+            # Expect E2E = 9000 - 1500 = 7500 us
+            self.mock_npu_parser.result_data.overall_metrics.set_e2e_time.assert_called_with(7500.0)
 
