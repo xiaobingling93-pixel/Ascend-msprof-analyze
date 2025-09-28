@@ -517,6 +517,9 @@ class NPUProfilingParser(BaseProfilingParser):
                 self._result_data.overall_metrics.update_comm_not_overlap(event.dur)
                 min_ts = min(event.start_time, min_ts)
                 max_ts = max(event.end_time, max_ts)
+            else:
+                min_ts = min(event.start_time, min_ts)
+                max_ts = max(event.end_time, max_ts)
         self._result_data.overall_metrics.set_e2e_time(float(max_ts - min_ts))
 
     def __add_sdma_time(self) -> (float, int):

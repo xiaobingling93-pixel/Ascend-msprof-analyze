@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import copy
+from decimal import Decimal
 
 from msprof_analyze.prof_common.db_manager import DBManager
 from msprof_analyze.compare_tools.compare_backend.compare_bean.origin_data_bean.db_data_bean.framework_api_bean import \
@@ -31,6 +32,9 @@ class Event:
 
 
 class OverallMetricsParser:
+    FILTER_TASK_TYPE = ["KERNEL_AICORE", "KERNEL_AIVEC", "FFTS_PLUS", "KERNEL_MIX_AIC",
+                        "KERNEL_MIX_AIV", "PROFILING_ENABLE", "PROFILING_DISABLE"]
+
     def __init__(self, npu_db_parser):
         self.npu_db_parser = npu_db_parser
         self.cpu_cube_op = [op for op in self.npu_db_parser.result_data.torch_op_data if op.is_cpu_cube_op()]
@@ -409,9 +413,8 @@ class OverallMetricsParser:
 
         not_free_time = sum((convert_to_float(op[1] - op[0]) for op in merged_op))
         self.npu_db_parser.result_data.overall_metrics.update_compute_time(compute_time)
-        self.npu_db_parser.result_data.overall_metrics.set_e2e_time(
-            convert_to_float(merged_op[-1][1] - merged_op[0][0]))
         self.npu_db_parser.result_data.overall_metrics.update_comm_not_overlap(not_free_time - compute_time)
+        self.calculate_ascend_task_e2e_time(merged_op[0][0], merged_op[-1][1])
 
         compute_index = 0
         for op in merged_op:
@@ -426,3 +429,75 @@ class OverallMetricsParser:
                     continue
                 break
             self.not_overlapped_comm.append(Event(start_time, end_time))
+
+    def calculate_ascend_task_e2e_time(self, merged_op_earliest_start: float, merged_op_latest_end: float) -> None:
+        """
+        设备上的端到端(E2E)执行时间。
+
+        通过查询任务表中非计算类、Profiling Enable/Disable类Tasks的最早开始时间和最晚结束时间，结合传入的计算/通信大算子时间边界，
+        计算出真实的端到端执行时间并设置到结果数据中。
+
+        Args:
+            merged_op_earliest_start (float): 通信/计算算子的最早开始时间（微秒）
+            merged_op_latest_end (float): 通信/计算算子的最晚结束时间（微秒）
+        """
+        # 检查任务表是否存在
+        if not DBManager.judge_table_exists(self.npu_db_parser.cursor, Constant.TABLE_TASK):
+            return
+
+        # SQL查询模板
+        first_task_time_sql_template = """
+        SELECT 
+            TASK.startNs
+        FROM TASK
+        LEFT JOIN STRING_IDS as str_task ON str_task.id = TASK.taskType
+        WHERE {condition} 
+        ORDER BY TASK.startNs ASC
+        LIMIT 1
+        """
+
+        last_task_time_sql_template = """
+        SELECT 
+            TASK.endNs
+        FROM TASK
+        LEFT JOIN STRING_IDS as str_task ON str_task.id = TASK.taskType
+        WHERE {condition}
+        ORDER BY TASK.endNs DESC
+        LIMIT 1
+        """
+
+        quoted_task_types = [f"'{task_type}'" for task_type in self.FILTER_TASK_TYPE]
+        task_type_condition = f"str_task.value NOT IN ({','.join(quoted_task_types)})"
+
+        # 添加时间范围条件（如果存在step_range）
+        if self.npu_db_parser.step_range:
+            time_range_condition = "TASK.startNs >= ? AND TASK.startNs <= ?"
+            condition = task_type_condition + " AND " + time_range_condition
+            params = self.npu_db_parser.step_range
+        else:
+            condition = task_type_condition
+            params = None
+
+        first_task_sql = first_task_time_sql_template.format(condition=condition)
+        last_task_sql = last_task_time_sql_template.format(condition=condition)
+
+        first_task_result = DBManager.fetch_all_data(self.npu_db_parser.cursor, sql=first_task_sql, param=params)
+        last_task_result = DBManager.fetch_all_data(self.npu_db_parser.cursor, sql=last_task_sql, param=params)
+
+        e2e_start_time = merged_op_earliest_start
+        e2e_end_time = merged_op_latest_end
+
+        # 更新最早开始时间
+        if first_task_result and first_task_result[0].get("startNs"):
+            first_task_start = Decimal(first_task_result[0].get("startNs")) / Constant.NS_TO_US
+            e2e_start_time = min(first_task_start, e2e_start_time)
+
+        # 更新最晚结束时间
+        if last_task_result and last_task_result[0].get("endNs"):
+            last_task_end = Decimal(last_task_result[0].get("endNs")) / Constant.NS_TO_US
+            e2e_end_time = max(last_task_end, e2e_end_time)
+
+        # 计算并设置E2E时间
+        e2e_duration_us = e2e_end_time - e2e_start_time
+        self.npu_db_parser.result_data.overall_metrics.set_e2e_time(convert_to_float(e2e_duration_us))
+
