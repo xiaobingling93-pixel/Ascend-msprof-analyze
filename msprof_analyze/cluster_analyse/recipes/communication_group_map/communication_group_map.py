@@ -45,6 +45,24 @@ class CommunicationGroupMap(BaseRecipeAnalysis):
         return Constant.P2P if ("send" in op_name_lower or "receive" in op_name_lower or "recv" in op_name_lower) \
                else Constant.COLLECTIVE
 
+    @staticmethod
+    def update_rank_set(group_df):
+        """更新rank_set，优先使用global_ranks"""
+        rank_set_col = TableConstant.RANK_SET
+        global_ranks_col = CommunicationGroupMap.GLOBAL_RANKS
+        if rank_set_col not in group_df.columns or global_ranks_col not in group_df.columns:
+            logger.warning(f"Skip update rank_set, since {rank_set_col} or {global_ranks_col} column not in group_df.")
+            return group_df
+
+        mask = (group_df[global_ranks_col].notna() &
+                (group_df[global_ranks_col].astype(str) != "") &
+                (group_df[global_ranks_col].astype(str) != "[]") &
+                (group_df[global_ranks_col] != group_df[rank_set_col]))
+
+        updated_df = group_df.copy()
+        updated_df.loc[mask, rank_set_col] = updated_df.loc[mask, global_ranks_col]
+        return updated_df
+
     def run(self, context):
         mapper_res = self.mapper_func(context)
         self.reducer_func(mapper_res)
@@ -61,8 +79,9 @@ class CommunicationGroupMap(BaseRecipeAnalysis):
             return
         comm_group_combined_df = (comm_group_combined_df.groupby([TableConstant.TYPE, TableConstant.GROUP_NAME])
                                   [TableConstant.RANK_ID].apply(lambda x: sorted(set(x))).reset_index())
-        comm_group_combined_df[TableConstant.RANK_SET] = (comm_group_combined_df[TableConstant.RANK_ID].
-                                                          apply(lambda x: "(" + ",".join(str(i) for i in x) + ")"))
+        comm_group_combined_df[TableConstant.RANK_SET] = (
+            comm_group_combined_df[TableConstant.RANK_ID].
+            apply(lambda x: "(" + ",".join(str(i) for i in sorted(x)) + ")"))
 
         comm_group_combined_df = comm_group_combined_df.drop(columns=[TableConstant.RANK_ID])
         # concat all parallel group info
@@ -71,16 +90,13 @@ class CommunicationGroupMap(BaseRecipeAnalysis):
         # merge by group_name
         group_df = pd.merge(comm_group_combined_df, parallel_info_combined_df, on=TableConstant.GROUP_NAME, how="left")
         group_df.fillna("", inplace=True)
+        # update rank_set, use global_ranks or rank_set
+        if not parallel_info_combined_df.empty:
+            group_df = self.update_rank_set(group_df)
         # column order
-        if parallel_info_combined_df.empty:
-            column_order = [TableConstant.TYPE, TableConstant.RANK_SET, TableConstant.GROUP_NAME,
-                            TableConstant.GROUP_ID, TableConstant.PG_NAME]
-            self.group_df = group_df[column_order]
-        else:
-            column_order = [TableConstant.TYPE, self.GLOBAL_RANKS, TableConstant.GROUP_NAME,
-                            TableConstant.GROUP_ID, TableConstant.PG_NAME]
-            self.group_df = group_df[column_order].copy()
-            self.group_df.rename(columns={self.GLOBAL_RANKS: TableConstant.RANK_SET}, inplace=True)
+        column_order = [TableConstant.TYPE, TableConstant.RANK_SET, TableConstant.GROUP_NAME,
+                        TableConstant.GROUP_ID, TableConstant.PG_NAME]
+        self.group_df = group_df[column_order]
 
     def save_db(self):
         self.dump_data(self.group_df, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER,
@@ -123,7 +139,7 @@ class CommunicationGroupMap(BaseRecipeAnalysis):
         for group_id, parallel_info in info_dict.items():
             group_name = str(double_hash(group_id))  # group_name is hashed group_id
             pg_name = parallel_info.get(TableConstant.GROUP_NAME, "")
-            global_ranks = parallel_info.get(self.GLOBAL_RANKS, [])
+            global_ranks = sorted(parallel_info.get(self.GLOBAL_RANKS, []))
             parallel_info_df.loc[parallel_info_df.shape[0]] = [group_name, group_id, pg_name,
                                                                "(" + ",".join(str(i) for i in global_ranks) + ")"]
 
