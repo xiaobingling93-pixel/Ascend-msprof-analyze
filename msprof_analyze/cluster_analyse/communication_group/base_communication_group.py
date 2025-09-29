@@ -19,6 +19,7 @@ from collections import defaultdict
 from copy import deepcopy
 from multiprocessing import Pool
 import pandas as pd
+from msprof_analyze.cluster_analyse.recipes.communication_group_map.communication_group_map import CommunicationGroupMap
 
 from msprof_analyze.cluster_analyse.cluster_utils.data_transfer_adapter import DataTransferAdapter
 from msprof_analyze.cluster_analyse.common_func.utils import double_hash
@@ -186,9 +187,9 @@ class BaseCommunicationGroup:
         comm_group_cols = ["type", "rank_set", "group_name"]
         comm_group_df = pd.DataFrame(columns=comm_group_cols)
         for group_name, rank_set in self.collective_group_dict.items():
-            comm_group_df.loc[comm_group_df.shape[0]] = [Constant.COLLECTIVE, list(rank_set), group_name]
+            comm_group_df.loc[comm_group_df.shape[0]] = [Constant.COLLECTIVE, sorted(list(rank_set)), group_name]
         for group_name, rank_set in self.p2p_group_dict.items():
-            comm_group_df.loc[comm_group_df.shape[0]] = [Constant.P2P, list(rank_set), group_name]
+            comm_group_df.loc[comm_group_df.shape[0]] = [Constant.P2P, sorted(list(rank_set)), group_name]
 
         # create parallel group dataframe
         parallel_group_cols = ["group_name", "group_id", "pg_name", "global_ranks"]
@@ -196,15 +197,16 @@ class BaseCommunicationGroup:
         for group_id, parallel_info in self.parallel_group_info.items():
             group_name = str(double_hash(group_id))  # group_name is hashed group_id
             pg_name = parallel_info.get("group_name", "")
-            global_ranks = parallel_info.get("global_ranks", [])
+            global_ranks = sorted(parallel_info.get("global_ranks", []))
             parallel_group_df.loc[parallel_group_df.shape[0]] = [group_name, group_id, pg_name, global_ranks]
 
         # merge by group_name
         df = pd.merge(comm_group_df, parallel_group_df, on='group_name', how='left')
         df.fillna("", inplace=True)
-        if self.parallel_group_info:
-            df["rank_set"] = df["global_ranks"]
+        if not parallel_group_df.empty:
+            df = CommunicationGroupMap.update_rank_set(df)
 
         df = df.drop(columns=["global_ranks"])
         self.comm_group_parallel_info_df = df
+
 

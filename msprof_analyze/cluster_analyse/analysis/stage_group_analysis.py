@@ -87,7 +87,7 @@ class StageInfoAnalysis:
     def load_communication_group_df_for_db(self):
         # load data from cluster_analysis.db
         if not os.path.exists(self.cluster_analysis_output_dir):
-            logger.warning("rank %s db path %s does not exist.", self.cluster_analysis_output_path)
+            logger.warning(f"db path {self.cluster_analysis_output_path} does not exist.", )
         cluster_analysis_db = os.path.join(self.cluster_analysis_output_dir,
                                            Constant.DB_CLUSTER_COMMUNICATION_ANALYZER)
         data_service = DatabaseService(cluster_analysis_db, {})
@@ -107,8 +107,12 @@ class StageInfoAnalysis:
             logger.error(f"{Constant.COMMUNICATION_GROUP_JSON} has unexpected columns: {comm_group_df.columns}")
             return None
         # process rank_set
-        comm_group_df[TableConstant.RANK_SET] = comm_group_df[TableConstant.RANK_SET].apply(
-            lambda s: set(map(int, s.strip('()').split(','))))
+        try:
+            comm_group_df[TableConstant.RANK_SET] = comm_group_df[TableConstant.RANK_SET].apply(
+                lambda s: set(map(int, s.strip('()').split(','))))
+        except Exception as e:
+            logger.error(f"Process rank_set for communication group map with error: {e}")
+            return None
         return comm_group_df
 
     def extract_infos(self, comm_group_df):

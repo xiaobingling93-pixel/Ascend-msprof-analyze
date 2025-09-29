@@ -86,3 +86,17 @@ class TestCommunicationGroupMap(unittest.TestCase):
         recipe = CommunicationGroupMap(params)
         recipe.run(context=None)
         self.assertTrue(recipe.group_df.equals(expected_group_df))
+
+    def test_update_rank_set_mixed_conditions(self):
+        test_data = {
+            "type": ["type1", "type2", "type3", "type4", "type5", "type6"],
+            "rank_set": ["(1,2,3)", "(4,5,6)", "(7,8,9)", "(10,11)", "(12,13)", "(14,15,16)"],
+            "global_ranks": ["(1,2,3,4)", "", None, "(10,11,12)", "(12,13)", []],
+            "group_name": ["group1", "group2", "group3", "group4", "group5", "group6"]
+        }
+        input_df = pd.DataFrame(test_data)
+        recipe = CommunicationGroupMap(params={})
+        result_df = recipe.update_rank_set(input_df)
+
+        expected_rank_sets = ["(1,2,3,4)", "(4,5,6)", "(7,8,9)", "(10,11,12)", "(12,13)", "(14,15,16)"]
+        self.assertEqual(list(result_df["rank_set"]), expected_rank_sets)
