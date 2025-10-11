@@ -98,7 +98,8 @@ class Interface:
             Constant.PROFILING_TYPE: data_dict.get(Constant.PROFILING_TYPE),
             Constant.IS_MSPROF: prof_type == Constant.MSPROF,
             Constant.IS_MINDSPORE: prof_type == Constant.MINDSPORE,
-            Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: self.cluster_analysis_output_path
+            Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: self.cluster_analysis_output_path,
+            Constant.DATA_SIMPLIFICATION: True
         })
         if self.analysis_mode in COMM_FEATURE_LIST:
             FileManager.create_output_dir(self.cluster_analysis_output_path)
@@ -126,8 +127,6 @@ def cluster_analysis_main():
     parser.add_argument('-m', '--mode', choices=ALL_FEATURE_LIST, default='all', help="different analysis mode")
     parser.add_argument('-o', '--output_path', type=PathManager.expanduser_for_argumentparser,
                         help='Path of cluster analysis output')
-    parser.add_argument('--data_simplification', default=False, action='store_true',
-                        help='data simplification switch for db data')
     parser.add_argument('--force', action='store_true',
                         help="Indicates whether to skip file size verification and owner verification")
     parser.add_argument("--parallel_mode", type=str, help="context mode", default="concurrent")

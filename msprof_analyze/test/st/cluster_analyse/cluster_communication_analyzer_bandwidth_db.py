@@ -13,10 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 class ClusterCommunicationAnalyzerBandwidthDb:
-    def __init__(self, rank_set=None, step=None, rank_id=None, hccl_op_name=None, group_name=None,
+    def __init__(self, step=None, rank_id=None, hccl_op_name=None, group_name=None,
                  band_type=None, transit_size=None, transit_time=None, bandwidth=None, large_packet_ratio=None,
                  package_size=None, count=None, total_duration=None):
-        self._rank_set = rank_set
         self._step = step
         self._rank_id = rank_id
         self._hccl_op_name = hccl_op_name
@@ -29,14 +28,6 @@ class ClusterCommunicationAnalyzerBandwidthDb:
         self._package_size = package_size
         self._count = count
         self._total_duration = total_duration
-
-    @property
-    def rank_set(self):
-        return self._rank_set
-
-    @rank_set.setter
-    def rank_set(self, value):
-        self._rank_set = value
 
     @property
     def step(self):

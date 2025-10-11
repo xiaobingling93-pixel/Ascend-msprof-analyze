@@ -140,7 +140,6 @@ msprof-analyze cluster -m [feature_option] -d <profiling_path> [global_option] [
    | --export_type         | 设置导出的数据形式。取值为db（.db格式文件）和notebook（Jupyter Notebook文件），默认值为db。       | 否       |
    | --force               | 强制执行，配置后可强制跳过如下情况：<br/>        指定的目录、文件的用户属主不属于当前用户，忽略属主判断直接执行。<br/>        csv文件大于5G、json文件大于10G、db文件大于8G，忽略文件过大判断直接执行。<br/>配置该参数表示开启强制执行，默认未配置表示关闭。 | 否       |
    | --parallel_mode       | 设置收集多卡、多节点db数据时的并发方式。取值为concurrent（使用concurrent.feature进程池实现并发）。| 否       |
-   | --data_simplification | 数据精简模式。对于数据量过大的性能数据db文件，可以通过配置该参数将数据精简，并提高工具分析效率。配置该参数表示开启数据精简，默认未配置表示关闭，当前参数只针对all/communication_matrix/communication_time分析能力。 | 否       |
    | -v，-V<br/>--version | 查看版本号。 | 否 |
    | -h，-H<br>--help     | 命令行参数帮助信息。 | 否 |
 

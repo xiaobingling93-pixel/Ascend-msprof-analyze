@@ -92,7 +92,6 @@ class TestClusterAnalyseClusterAnalysis(unittest.TestCase):
                 "-d", "./tmp/prof",
                 "-o", "./tmp/out",
                 "-m", "all",
-                "--data_simplification",
                 "--force",
             ]
 
@@ -105,7 +104,6 @@ class TestClusterAnalyseClusterAnalysis(unittest.TestCase):
             self.assertEqual(kwargs["profiling_path"], "./tmp/prof")
             self.assertEqual(kwargs["mode"], "all")
             self.assertEqual(kwargs["output_path"], "./tmp/out")
-            self.assertTrue(kwargs["data_simplification"])
             self.assertTrue(kwargs["force"])
 
             # restore origin argv, avoiding argv pollution
@@ -126,7 +124,6 @@ class TestClusterAnalyseClusterAnalysis(unittest.TestCase):
                 "-d", self.profiling_path,
                 "-o", self.output_path,
                 "-m", "communication_time",
-                "--data_simplification",
                 "--force",
                 "--parallel_mode", "sequential",
                 "--export_type", "notebook",
@@ -144,7 +141,6 @@ class TestClusterAnalyseClusterAnalysis(unittest.TestCase):
             self.assertEqual(call_args["profiling_path"], self.profiling_path)
             self.assertEqual(call_args["output_path"], self.output_path)
             self.assertEqual(call_args["mode"], "communication_time")
-            self.assertTrue(call_args["data_simplification"])
             self.assertTrue(call_args["force"])
             self.assertEqual(call_args["parallel_mode"], "sequential")
             self.assertEqual(call_args["export_type"], "notebook")
@@ -399,16 +395,16 @@ class TestClusterAnalyseClusterAnalysis(unittest.TestCase):
             
             # Mock file manager
             mock_file_manager.create_output_dir.return_value = None
-            
+
             # Mock communication group generator
             mock_comm_generator_instance = MagicMock()
             mock_comm_generator_instance.generate.return_value = {"comm_data": "test"}
             mock_comm_generator.return_value = mock_comm_generator_instance
-            
+
             # Mock analysis facade
             mock_analysis_facade_instance = MagicMock()
             mock_analysis_facade.return_value = mock_analysis_facade_instance
-            
+
             params = {
                 Constant.PROFILING_PATH: self.profiling_path,
                 Constant.MODE: "all",
@@ -418,10 +414,9 @@ class TestClusterAnalyseClusterAnalysis(unittest.TestCase):
             interface = Interface(params)
             interface.run()
             
-            # Verify communication group generation for 'all' mode
-            mock_comm_generator.assert_called()
-            mock_comm_generator_instance.generate.assert_called()
-            
+            # Verify communication group generation not called for 'all' mode
+            mock_comm_generator.assert_not_called()
+
             # Verify analysis facade
             mock_analysis_facade.assert_called()
             mock_analysis_facade_instance.cluster_analyze.assert_called()
