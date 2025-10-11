@@ -100,12 +100,11 @@ class TestClusterAnalysePytorchDb(TestCase):
         """
         Test case to compare the cluster communication matrix from text file and database.
         """
-        query = ("SELECT * FROM ClusterCommAnalyzerMatrix WHERE hccl_op_name = 'Total Op Info' and src_rank = 7 "
-                 "and group_name = '15244899533746605158' and dst_rank = 4 and step = 'step' and "
-                 "rank_set = '(4, 5, 6, 7)'")
+        query = ("SELECT * FROM ClusterCommunicationMatrix WHERE hccl_op_name = 'Total Op Info' and src_rank = 7 "
+                 "and group_name = '15244899533746605158' and dst_rank = 4 and step = 'step'")
         db_cluster_communication_analyzer_matrix = select_by_query(self.db_path, query,
                                                                    ClusterCommunicationAnalyzerMatrixDb)
-        query_count = ("SELECT count(*) FROM ClusterCommAnalyzerMatrix WHERE hccl_op_name = 'Total Op Info' and "
+        query_count = ("SELECT count(*) FROM ClusterCommunicationMatrix WHERE hccl_op_name = 'Total Op Info' and "
                        "group_name = '15244899533746605158'")
         communication_matrix_json = FileManager.read_json_file(self.COMMUNICATION_MATRIX_PATH)
         self.assertEqual(select_count(self.db_path, query_count),
@@ -131,13 +130,13 @@ class TestClusterAnalysePytorchDb(TestCase):
         """
         Test case to compare the cluster bandWidth from text file and database.
         """
-        query = ("SELECT * FROM ClusterCommAnalyzerBandwidth WHERE hccl_op_name = 'Total Op Info' and rank_id = 7 "
+        query = ("SELECT * FROM ClusterCommunicationBandwidth WHERE hccl_op_name = 'Total Op Info' and rank_id = 7 "
                  "and group_name = '15244899533746605158' and step = 'step' and band_type = 'HCCS' and "
-                 "package_size = '3.372891' and rank_set = '(4, 5, 6, 7)'")
+                 "package_size = '3.372891'")
         db_cluster_communication_analyzer_band_width = select_by_query(self.db_path, query,
                                                                        ClusterCommunicationAnalyzerBandwidthDb)
-        query_count = ("SELECT count(*) FROM ClusterCommAnalyzerBandwidth WHERE hccl_op_name = 'Total Op Info' and "
-                       "group_name = '15244899533746605158' and rank_set = '(4, 5, 6, 7)' "
+        query_count = ("SELECT count(*) FROM ClusterCommunicationBandwidth WHERE hccl_op_name = 'Total Op Info' and "
+                       "group_name = '15244899533746605158'"
                        "and rank_id = 7 and band_type = 'HCCS'")
         communication_json = FileManager.read_json_file(self.COMMUNICATION_PATH)
         self.assertEqual(select_count(self.db_path, query_count),
@@ -171,12 +170,12 @@ class TestClusterAnalysePytorchDb(TestCase):
         """
         Test case to compare the cluster time from text file and database.
         """
-        query = ("SELECT * FROM ClusterCommAnalyzerTime WHERE hccl_op_name = 'Total Op Info' and rank_id = 0 "
-                 "and group_name = '6902614901354803568' and step = 'step' and rank_set = '(0, 1, 2, 3)'")
+        query = ("SELECT * FROM ClusterCommunicationTime WHERE hccl_op_name = 'Total Op Info' and rank_id = 0 "
+                 "and group_name = '6902614901354803568' and step = 'step'")
         db_cluster_communication_analyzer_time = select_by_query(self.db_path, query,
                                                                  ClusterCommunicationAnalyzerTime)
-        query_count = ("SELECT count(*) FROM ClusterCommAnalyzerTime WHERE hccl_op_name = 'Total Op Info' "
-                       "and group_name = '6902614901354803568' and rank_set = '(0, 1, 2, 3)'")
+        query_count = ("SELECT count(*) FROM ClusterCommunicationTime WHERE hccl_op_name = 'Total Op Info' "
+                       "and group_name = '6902614901354803568'")
         communication_json = FileManager.read_json_file(self.COMMUNICATION_PATH)
         self.assertEqual(select_count(self.db_path, query_count),
                          len(communication_json.get('(0, 1, 2, 3)')

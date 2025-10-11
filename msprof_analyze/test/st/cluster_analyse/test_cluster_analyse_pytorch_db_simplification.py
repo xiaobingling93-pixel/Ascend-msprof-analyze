@@ -35,7 +35,7 @@ class TestClusterAnalysePytorchDbSimplification(TestCase):
         # generate db data
         PathManager.make_dir_safety(self.OUTPUT_PATH)
         cmd = ["msprof-analyze", "cluster", "-d", self.CLUSTER_PATH, "-m", "all",
-               "--output_path", self.OUTPUT_PATH, "--force", "--data_simplification"]
+               "--output_path", self.OUTPUT_PATH, "--force"]
         if execute_cmd(cmd) != self.COMMAND_SUCCESS or not os.path.exists(self.OUTPUT_PATH):
             self.fail("pytorch db cluster analyse task failed.")
         self.db_path = os.path.join(self.OUTPUT_PATH, "cluster_analysis_output", "cluster_analysis.db")
