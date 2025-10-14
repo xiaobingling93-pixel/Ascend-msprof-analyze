@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import unittest
+from collections import OrderedDict
 from unittest.mock import MagicMock, patch
 
 from msprof_analyze.advisor.analyzer.schedule.fusible_ops.fusible_operator_checker import FusibleOperatorChecker
@@ -20,6 +21,22 @@ from msprof_analyze.advisor.result.result import OptimizeResult
 
 
 class TestFusibleOperatorChecker(unittest.TestCase):
+    @staticmethod
+    def get_mock_task():
+        task = MagicMock()
+        task.task_start_time = '1726054679556790.226'
+        task.task_duration = '120.0'
+        task.aicore_time = '50'
+        task.aic_mte2_time = '10'
+        task.aiv_mte2_time = '20'
+        task.aic_fixpipe_time = '30'
+        task.aiv_mte3_time = '40'
+        task.op_name = 'aclnnReduceSum_ReduceSumOpAiCore_ReduceSum'
+        task.task_type = 'MIX_AIC'
+        task.input_shapes = '"41;1"'
+        task.output_shapes = '""'
+        return task
+
     def setUp(self):
         self.checker = FusibleOperatorChecker()
 
@@ -106,6 +123,33 @@ class TestFusibleOperatorChecker(unittest.TestCase):
         self.checker.mte_details = [[3, 4, 200, 100, 60, 3, False, True]]
         self.checker.make_record(result)
         self.assertTrue(result.page_dict)
+
+
+    def test_check_fusible_operator_should_return_when_check_tasks_failed(self):
+        profiling_dataset = MagicMock()
+        self.checker.check_fusible_operator(profiling_dataset)
+
+    @patch("msprof_analyze.advisor.analyzer.schedule.fusible_ops.fusible_operator_checker."
+           "FusibleOperatorChecker.post_processing")
+    def test_check_fusible_operator_should_return_when_check_tasks_succeeded(self, mock_post_processing):
+        profiling_dataset = MagicMock()
+        task1 = self.get_mock_task()
+        task2 = self.get_mock_task()
+        task3 = self.get_mock_task()
+        task2.task_start_time = '1726054679557300.226'
+        task3.task_start_time = '1726054679557500.226'
+        profiling_dataset.op_summary.op_list = [task1, task2, task3]
+        self.checker.check_fusible_operator(profiling_dataset)
+        args, kwargs = mock_post_processing.call_args
+        self.assertEqual(len(args[0]), 1)
+
+    def test_post_processing_should_set_fusion_issues_to_true_when_result_not_empty(self):
+        result_dict = OrderedDict()
+        result_dict['test_task1'] = (100, 50, 30, 6, True, True)
+        result_dict['test_task2'] = (100, 50, 30, 6, False, True)
+        self.checker.step_duration = 150
+        self.checker.post_processing(result_dict)
+        self.assertTrue(self.checker.fusion_issues)
 
 
 if __name__ == '__main__':
