@@ -128,9 +128,7 @@ class TestGcAdvice(unittest.TestCase):
 
     def test_run_should_run_success_when_trace_view_contain_gc_events(self):
         self.create_trace_view_with_gc_events()
-        new_process = multiprocessing.Process(target=self.run_should_run_success_when_trace_view_contain_gc_events)
-        new_process.start()
-        new_process.join()
+        self.run_should_run_success_when_trace_view_contain_gc_events()
 
     def test_run_should_run_success_when_trace_view_not_contain_gc_events(self):
         self.create_trace_view_without_gc_events()
