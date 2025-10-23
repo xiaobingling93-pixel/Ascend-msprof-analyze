@@ -44,7 +44,7 @@ class FileManager:
             with open(file_path, "r") as json_file:
                 result_data = json.loads(json_file.read())
         except Exception as e:
-            raise RuntimeError(f"Failed to read the file: {base_name}") from e
+            raise RuntimeError(f"Failed to read the file: {base_name}, reason is {str(e)}") from e
         return result_data
 
     @classmethod
@@ -68,7 +68,7 @@ class FileManager:
                     row_data = class_bean(row) if class_bean else row
                     result_data.append(row_data)
         except Exception as e:
-            msg = f"Failed to read the file: {file_path}"
+            msg = f"Failed to read the file: {file_path}, reason is {str(e)}"
             raise RuntimeError(msg) from e
         return result_data
 
