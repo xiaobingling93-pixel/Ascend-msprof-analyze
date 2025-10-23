@@ -161,7 +161,7 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 
 说明：
 
-基于db格式的集群性能数据，针对全部rank的数据，对每一种api（名字不同）的耗时进行统计分析。
+基于db格式的集群性能数据，针对全部rank的数据，对每一种API（名字不同）的耗时进行统计分析。
 
 格式：
 
@@ -185,7 +185,7 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 
 说明：
 
-基于db格式的集群性能数据，针对每个rank的数据，对每一种api（名字不同）的耗时进行统计分析。
+基于db格式的集群性能数据，针对每个rank的数据，对每一种API（名字不同）的耗时进行统计分析。
 
 格式：
 
@@ -387,13 +387,13 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 
 格式：
 
-| 字段名 | 类型 | 含义 |
-| ------ | ---- | ---- |
-| type       | TEXT | 算子类型，包含collective和p2p, 其中算子名包含"send"，"recv"，"receive"的算子被认为是p2p |
-| rank_set   | TEXT | 通信域内包含的rank（global rank）|
-| group_name | TEXT | 通信域的hash值，可映射成group_id |
-| group_id   | TEXT | hccl内部定义的通信域名字，例如：{ip_address}%enp67s0f5_60000_0_1708156014257149 |
-| pg_name    | TEXT | 业务定义的通信域名字，例如："dp"，"dp_cp"，"mp"等等 |
+| 字段名 | 类型 | 含义                                                                |
+| ------ | ---- |-------------------------------------------------------------------|
+| type       | TEXT | 算子类型，包含collective和p2p, 其中算子名包含"send"，"recv"，"receive"的算子被认为是p2p   |
+| rank_set   | TEXT | 通信域内包含的rank（global rank）                                          |
+| group_name | TEXT | 通信域的hash值，可映射成group_id                                            |
+| group_id   | TEXT | HCCL内部定义的通信域名字，例如：{ip_address}%enp67s0f5_60000_0_1708156014257149 |
+| pg_name    | TEXT | 业务定义的通信域名字，例如："dp"，"dp_cp"，"mp"等等                                 |
 
 ### cluster_time_summary
 
@@ -461,7 +461,7 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 基于db格式的集群性能数据，分析aicore frequency，提供npu降频一键检测能力。频率分为三种情况：
 * 正常情况下，应当稳定在1800MHz；
 * 当npu空闲时间较长时，设备会自动降频，会掉到800MHz；
-* 当npu因为各种原因，出现降频现象时，除了1800MHz，800MHz，还有出现其他异常频率。
+* 当npu因为各种原因，出现降频现象时，除了1800MHz，800MHz，还会出现其他异常频率。
 
 设置-m freq_analysis时，如果发生降频，会生成以下表。
 
@@ -563,7 +563,7 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 
 结果：
 
-会在集群数据的ascend_pytorch_profiler_{rank_id}.db的Communication_OP表中新增一列opConnectionId。 根据这个opConnectionId可以把不同rank的P2P算子连线。
+会在集群数据的ascend_pytorch_profiler_{rank_id}.db的COMMUNICATION_OP表中新增一列opConnectionId。 根据这个opConnectionId可以把不同rank的P2P算子连线。
 
 
 ### pp_chart
@@ -572,7 +572,7 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 
 #### 打点
 
-以DualpipeV2为例，找到前反向代码，在dualpipev_schedules.py里面添加如下代码(仅为示例，需要注意这段代码添加的位置)：
+以DualpipeV2为例，找到前反向代码，在dualpipev_schedules.py里面添加如下代码（仅为示例，需要注意这段代码添加的位置）：
 ```
 import torch_npu
 def step_wrapper(func, msg: str):

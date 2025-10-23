@@ -46,13 +46,13 @@
           pass
       ```
 
-   2. `reducer_func`函数：对多卡结果分析处理。接收`mapper_func`函数的返回值，进行进一步的集群数据的汇总分析，数据结构采用dataframe。
+   2. `reducer_func`函数：对多卡结果分析处理。接收`mapper_func`函数的返回值，进行进一步的集群数据的汇总分析，数据结构采用DataFrame。
 
    3. `save_db`函数：分析结果保存在cluster_analysis.db中。
 
    4. `save_notebook`函数：分析结果以csv和stats.ipynb的形式保存。
 
-3. `self._mapper_fun`函数依赖单db数据查询，可通过可通过如下两种方式。
+3. `self._mapper_fun`函数依赖单db数据查询，可通过如下两种方式。
 
    1. 使用DatabaseService可配置单表的查询。
 

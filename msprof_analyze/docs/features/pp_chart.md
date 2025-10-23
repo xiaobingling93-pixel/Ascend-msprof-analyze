@@ -1,7 +1,7 @@
 # pp流水图采集和分析指导
 
 ## 简介
-pp流水图指的是将实际pp域内的流水排布进行可视化呈现，可以分析全局通信与前反向关键耗时信息。对于transformer的模型1f1b、dupipe等pp并行策略，当前无法可视化展示。本节介绍如何采集pp流水图数据、使用msprof-analyze工具分析pp流水图，以及使用MindStudio Insight工具呈现pp流水图。
+pp流水图指的是将实际pp域内的流水排布进行可视化呈现，可以分析全局通信与前反向关键耗时信息。对于transformer的模型1F1B、dupipe等pp并行策略，当前无法可视化展示。本节介绍如何采集pp流水图数据、使用msprof-analyze工具分析pp流水图，以及使用MindStudio Insight工具呈现pp流水图。
 
 下面是1F1B和DualPipeV的理论效果图
 
@@ -110,7 +110,7 @@ msprof-analyze cluster -m pp_chart -d ./cluster_data
 ```
 **参数说明：**  
 * `-d` 第一步打点后采集到的集群数据路径
-* 其余参数：参考msprof-analyze调用参数指导,详见[参数说明](../../README.md#参数说明)
+* 其余参数：参考msprof-analyze调用参数指导，详见[参数说明](../../README.md#参数说明)
 
 **输出数据：**  
 * 存储位置：每个rank的数据ASCEND_PROFILER_OUTPUT/ascend_pytorch_profiler_{rank_id}.db里面新增一张表StepTaskInfo
