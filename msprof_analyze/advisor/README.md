@@ -100,7 +100,7 @@ msprof-analyze advisor命令行包含如下三个参数：
 || Communication Retransmission Analysis | 通信重传检测                                                                              |PyTorch、MindSpore |
 || Byte Alignment Analysis | 通信算子字节对齐检测，传输类型为SDMA的通信算子，数据量需要被512字节整除，保证传输带宽不会下降                                  |PyTorch、MindSpore |
 | schedule | Affinity API Issues     | 亲和API替换调优                                                                           | PyTorch、MindSpore     |
-|            | Operator Dispatch Issues   | 识别算子下发问题(路径3/路径5)                                                                   | PyTorch |
+|            | Operator Dispatch Issues   | 识别算子下发问题（路径3/路径5）                                                                   | PyTorch |
 | | SyncBatchNorm Issues | BatchNorm同步检测                                                                       | PyTorch、MindSpore |
 | | Synchronize Stream Issues | 流同步检测                                                                               | PyTorch、MindSpore |
 | | GC Analysis | 识别异常垃圾回收事件。需要Ascend PyTorch Profiler采集时开启experimental_config下的gc_detect_threshold功能 | PyTorch |
@@ -282,8 +282,8 @@ schedule模块包含GC Analysis、亲和API、aclOpCompile、SyncBatchNorm、Syn
 
 在Python中，gc模块提供了对垃圾回收器的控制。
 
-- `gc.set_threshold(threshold0, thresholdl, threshold2)`：这个函数用于设置垃圾回收的阈值。垃圾回收器将所有对象分为三代（0代、1代和2代），每一代的对象在经历垃圾回收后会被移到下一代。`threshold0`控制第0代的垃圾回收频率，`threshold1`控制第1代的垃圾回收频率，`threshold2`控制第2代的垃圾回收频率。将`threshold0`设为0可以禁用垃圾回收。
-- `gc.disable ()`：这个函数用于禁用自动垃圾回收。调用`gc.disable ()`后，垃圾回收器将不会自动运行，直到手动调用`gc.enable（）`。
+- `gc.set_threshold(threshold0, threshold1, threshold2)`：这个函数用于设置垃圾回收的阈值。垃圾回收器将所有对象分为三代（0代、1代和2代），每一代的对象在经历垃圾回收后会被移到下一代。`threshold0`控制第0代的垃圾回收频率，`threshold1`控制第1代的垃圾回收频率，`threshold2`控制第2代的垃圾回收频率。将`threshold0`设为0可以禁用垃圾回收。
+- `gc.disable()`：这个函数用于禁用自动垃圾回收。调用`gc.disable()`后，垃圾回收器将不会自动运行，直到手动调用`gc.enable()`。
 
 如下图示例，Affinity API Issues提示存在可以替换的亲和API并给出对应的堆栈，用户可以根据堆栈找到需要修改的代码，并给出修改案例（[API instructions](https://gitcode.com/Ascend/mstt/blob/master/profiler/msprof_analyze/advisor/doc/Samples%20of%20Fused%20Operator%20API%20Replacement.md)）。
 

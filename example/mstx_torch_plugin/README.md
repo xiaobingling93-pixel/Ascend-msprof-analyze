@@ -1,6 +1,6 @@
 # mstx_torch_plugin
 
-Ascend Pytorch Profiler中的[采集并解析msprof_tx数据](https://www.hiascend.com/document/detail/zh/canncommercial/80RC3/devaids/devtools/profiling/atlasprofiling_16_0033.html#ZH-CN_TOPIC_0000002081898541__section5940122172516)功能已经内置了通信算子的打点。为了方便用户在不修改业务代码的基础上获取更多关键阶段的耗时数据，mstx_torch_plugin在Ascend Pytorch Profiler内置了**dataloader**、**forward**、**step**、**save_checkpoint**这四个关键阶段函数的打点。
+Ascend PyTorch Profiler中的[采集并解析msprof_tx数据](https://www.hiascend.com/document/detail/zh/canncommercial/80RC3/devaids/devtools/profiling/atlasprofiling_16_0033.html#ZH-CN_TOPIC_0000002081898541__section5940122172516)功能已经内置了通信算子的打点。为了方便用户在不修改业务代码的基础上获取更多关键阶段的耗时数据，mstx_torch_plugin在Ascend Pytorch Profiler内置了**dataloader**、**forward**、**step**、**save_checkpoint**这四个关键阶段函数的打点。
 
 ## 约束
 
