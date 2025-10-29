@@ -98,3 +98,7 @@ def compute_ratio(dividend: float, divisor: float):
         return 0
     else:
         return round(dividend / divisor, 4)
+
+
+def is_root():
+    return os.name != 'nt' and os.getuid() == 0
