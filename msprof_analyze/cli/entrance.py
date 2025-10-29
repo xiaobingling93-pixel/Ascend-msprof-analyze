@@ -14,7 +14,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import logging
 import click
 
 from msprof_analyze.cli.analyze_cli import analyze_cli
@@ -22,8 +21,10 @@ from msprof_analyze.cli.complete_cli import auto_complete_cli
 from msprof_analyze.cli.compare_cli import compare_cli
 from msprof_analyze.cli.cluster_cli import cluster_cli
 from msprof_analyze.advisor.version import print_version_callback, cli_version
+from msprof_analyze.prof_common.logger import get_logger
+from msprof_analyze.prof_common.utils import is_root
 
-logger = logging.getLogger()
+logger = get_logger()
 CONTEXT_SETTINGS = dict(help_option_names=['-H', '-h', '--help'],
                         max_content_width=160)
 
@@ -75,6 +76,12 @@ class SpecialHelpOrder(click.Group):
 @click.pass_context
 def msprof_analyze_cli(ctx, **kwargs):
     """如果没有子命令，默认执行 cluster"""
+    if is_root():
+        logger.warning(
+            "Security Warning: Do not run this tool as root. "
+            "Running with elevated privileges may compromise system security. "
+            "Use a regular user account."
+        )
     if ctx.invoked_subcommand is None:
         ctx.invoke(cluster_cli)
 
