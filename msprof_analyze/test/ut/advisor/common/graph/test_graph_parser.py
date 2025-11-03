@@ -97,9 +97,28 @@ class TestHostGraphParser(unittest.TestCase):
         self.assertEqual(value, "value")
 
     def test_parse_attr(self):
-        obj = HostGraphNode()
-        HostGraphParser._parse_attr("name", "test_node", obj)
-        self.assertEqual(obj.op_name, "test_node")
+        """测试_parse_attr方法处理不同属性"""
+        node = HostGraphNode()
+        HostGraphParser._parse_attr("name", "test_node", node)
+        self.assertEqual(node.op_name, "test_node")
+
+        HostGraphParser._parse_attr("type", "Conv2D", node)
+        self.assertEqual(node.op_type, "Conv2D")
+
+        HostGraphParser._parse_attr("input", "input1", node)
+        self.assertEqual(node.inputs, ["input1"])
+
+        tensor = Tensor()
+        HostGraphParser._parse_attr("dim", "4", tensor)
+        self.assertEqual(tensor.shape, ["4"])
+
+        HostGraphParser._parse_attr("dtype", "float32", tensor)
+        self.assertEqual(tensor.dtype, "float32")
+
+        attr_list = []
+        HostGraphParser._parse_attr("item", "value", attr_list)
+        self.assertEqual(attr_list, ["value"])
+        HostGraphParser._parse_attr("nonexistent_attr", "value", node)
 
     @patch.object(HostGraphParser, '_parse_line')
     def test_parse(self, mock_parse_line):
@@ -133,6 +152,32 @@ class TestHostGraphParser(unittest.TestCase):
             result = parser._read_line(file)
             self.assertEqual(result, 'test_line')
             self.assertEqual(parser.line_no, 1)
+
+    def test_get_edges_list(self):
+        """测试_get_edges_list方法"""
+        parser = HostGraphParser.__new__(HostGraphParser)
+        parser.edges = []
+        parser.graphs = []
+        parser._get_edges_list()
+        self.assertEqual(parser.edges, [])
+
+        # 创建节点和图
+        node1 = HostGraphNode()
+        node1.op_name = "node1"
+        node1.inputs = ["node2"]
+        node1.outputs = ["node3"]
+        node2 = HostGraphNode()
+        node2.op_name = "node2"
+        node3 = HostGraphNode()
+        node3.op_name = "node3"
+
+        parser.nodes = {"node1": node1, "node2": node2, "node3": node3}
+        parser.graphs = [HostGraph()]  # 非空图列表
+        parser._get_edges_list()
+        self.assertEqual(len(parser.edges), 2)
+        edge_nodes = [(e[0].op_name, e[1].op_name) for e in parser.edges]
+        self.assertIn(("node2", "node1"), edge_nodes)
+        self.assertIn(("node1", "node3"), edge_nodes)
 
 
 class TestQueryGraphNode(unittest.TestCase):
@@ -170,6 +215,22 @@ class TestQueryGraphParser(unittest.TestCase):
         edges_list = [["node1", "node2"]]
         graphs = QueryGraphParser.build_query_graph_v1("test_graph", nodes_list, edges_list)
         self.assertEqual(len(graphs), 1)
+
+    def test_parse_yaml(self):
+        """测试parse_yaml方法"""
+        parser = QueryGraphParser.__new__(QueryGraphParser)
+        parser._fusion_rules = {}
+        yaml_data = {
+            "GraphFusion": [
+                {"rule1": {"version": 0, "struct": ["op1", "op2"]}}
+            ],
+            "UBFusion": [
+                {"rule2": {"version": 1, "nodes": [{"n1": "op1"}, {"n2": "op2"}], "edges": [["n1", "n2"]]}}
+            ]
+        }
+        parser.parse_yaml(yaml_data)
+        self.assertIn("rule1", parser._fusion_rules)
+        self.assertIn("rule2", parser._fusion_rules)
 
 
 if __name__ == '__main__':
