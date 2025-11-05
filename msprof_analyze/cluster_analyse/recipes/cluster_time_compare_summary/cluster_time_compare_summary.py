@@ -81,7 +81,7 @@ class ClusterTimeCompareSummary(BaseRecipeAnalysis):
             return False
         try:
             PathManager.check_input_directory_path(base_path)  # 校验目录
-        except RuntimeError:
+        except (RuntimeError, FileNotFoundError):
             logger.error(f"{base_path} is not valid.")
             return False
         if not DBManager.check_tables_in_db(self.db_path, Constant.TABLE_CLUSTER_TIME_SUMMARY):

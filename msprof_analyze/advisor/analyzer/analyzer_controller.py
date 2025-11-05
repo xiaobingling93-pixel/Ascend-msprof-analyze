@@ -266,11 +266,10 @@ class AnalyzerController:
             AnalyzerController._init_async_analysis_env(kwargs)
 
         try:
-            if output_path:
+            if output_path is not None:
                 output_path = PathManager.get_realpath(output_path)
-                PathManager.check_input_directory_path(output_path)
                 if os.path.exists(output_path):
-                    PathManager.check_path_owner_consistent([output_path])
+                    PathManager.check_output_directory_path(output_path)
                 else:
                     PathManager.make_dir_safety(output_path)
 
@@ -614,10 +613,10 @@ class AnalyzerController:
         result_list = []
         profiling_path = PathManager.get_realpath(self.kwargs.get("profiling_path"))
         benchmark_profiling_path = self.kwargs.get("benchmark_profiling_path")
-        PathManager.check_path_owner_consistent([profiling_path])
-        if benchmark_profiling_path:
+        PathManager.check_input_directory_path(profiling_path)
+        if benchmark_profiling_path is not None:
             benchmark_profiling_path = PathManager.get_realpath(benchmark_profiling_path)
-            PathManager.check_path_owner_consistent([benchmark_profiling_path])
+            PathManager.check_input_directory_path(benchmark_profiling_path)
 
         if not self._check_profiling_path_valid(profiling_path):
             error_msg = f"Got invalid argument '-d/--profiling_path' {profiling_path}, skip analysis"

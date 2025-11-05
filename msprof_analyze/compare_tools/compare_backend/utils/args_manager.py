@@ -101,7 +101,6 @@ class ArgsManager:
 
     @classmethod
     def check_profiling_path(cls, path_dict: dict):
-        PathManager.input_path_common_check(path_dict.get(Constant.PROFILING_PATH))
         path_list = [path_dict.get(Constant.PROFILING_PATH, "")] if path_dict.get(
             Constant.PROFILING_TYPE) == Constant.GPU else [
             path_dict.get(Constant.PROFILING_PATH, ""),
@@ -113,19 +112,25 @@ class ArgsManager:
             os.path.join(path_dict.get(Constant.ASCEND_OUTPUT_PATH, ""), "kernel_details.csv"),
             os.path.join(path_dict.get(Constant.ASCEND_OUTPUT_PATH, ""), "communication.json")
         ]
-        PathManager.check_path_owner_consistent(path_list)
+        for path in path_list:
+            if path and os.path.exists(path):
+                if os.path.isfile(path):
+                    PathManager.check_input_file_path(path)
+                else:
+                    PathManager.check_input_directory_path(path)
 
     @classmethod
     def check_output_path(cls, output_path: str):
-        PathManager.check_input_directory_path(output_path)
-        PathManager.make_dir_safety(output_path)
-        PathManager.check_path_writeable(output_path)
+        if os.path.exists(output_path):
+            PathManager.check_output_directory_path(output_path)
+        else:
+            PathManager.make_dir_safety(output_path)
 
     @classmethod
     def parse_profiling_path(cls, file_path: str):
-        PathManager.input_path_common_check(file_path)
         # 处理输入为单个文件的情况
         if os.path.isfile(file_path):
+            PathManager.check_input_file_path(file_path)
             (split_file_path, split_file_name) = os.path.split(file_path)
             (shot_name, extension) = os.path.splitext(split_file_name)
             if extension == ".json":
@@ -143,7 +148,7 @@ class ArgsManager:
             else:
                 msg = f"Invalid profiling path suffix: {file_path}"
                 raise RuntimeError(msg)
-
+        PathManager.check_input_directory_path(file_path)
         path_dict = {}
         sub_dirs = os.listdir(file_path)
         for dir_name in sub_dirs:

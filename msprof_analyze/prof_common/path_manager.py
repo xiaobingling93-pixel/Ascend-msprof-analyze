@@ -21,6 +21,10 @@ from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.additional_args_manager import AdditionalArgsManager
 
 
+def is_root():
+    return os.name != 'nt' and os.getuid() == 0
+
+
 class PathManager:
     MAX_PATH_LENGTH = 4096
     MAX_FILE_NAME_LENGTH = 255
@@ -41,9 +45,15 @@ class PathManager:
         """
         cls.input_path_common_check(path)
         base_name = os.path.basename(path)
+        if not os.path.exists(path):
+            raise FileNotFoundError(f"The file {path} does not exists.")
         if os.path.isfile(path):
             msg = f"Invalid input path which is a file path: {base_name}"
             raise RuntimeError(msg)
+        cls.check_path_readable(path)
+        cls.check_path_executable(path)
+        cls.check_others_writable(path)
+        cls.check_path_owner_consistent([path])
 
     @classmethod
     def check_input_file_path(cls, path: str):
@@ -58,9 +68,28 @@ class PathManager:
         """
         cls.input_path_common_check(path)
         base_name = os.path.basename(path)
+        if not os.path.exists(path):
+            raise FileNotFoundError(f"The file {path} does not exists.")
         if os.path.isdir(path):
             msg = f"Invalid input path which is a directory path: {base_name}"
             raise RuntimeError(msg)
+        cls.check_path_readable(path)
+        cls.check_others_writable(path)
+        cls.check_path_owner_consistent([path])
+
+    @classmethod
+    def check_output_directory_path(cls, path: str):
+        cls.input_path_common_check(path)
+        base_name = os.path.basename(path)
+        if not os.path.exists(path):
+            raise FileNotFoundError(f"The file {path} does not exists.")
+        if os.path.isfile(path):
+            msg = f"Invalid input path which is a file path: {base_name}"
+            raise RuntimeError(msg)
+        cls.check_path_writeable(path)
+        cls.check_path_executable(path)
+        cls.check_others_writable(path)
+        cls.check_path_owner_consistent([path])
 
     @classmethod
     def check_path_length(cls, path: str):
@@ -110,8 +139,8 @@ class PathManager:
         for path in path_list:
             if not os.path.exists(path):
                 continue
-            if os.stat(path).st_uid != os.getuid():
-                raise RuntimeError("The path does not belong to you. You can add the '--force' parameter and "
+            if not is_root() and os.stat(path).st_uid != os.getuid():
+                raise RuntimeError(f"The path does not belong to you: {path}. You can add the '--force' parameter and "
                                    "retry. This parameter will ignore the file owner and file size!")
 
     @classmethod
@@ -127,16 +156,15 @@ class PathManager:
         if os.path.islink(path):
             msg = f"Invalid path which is a soft link."
             raise RuntimeError(msg)
-        base_name = os.path.basename(path)
-        if not os.access(path, os.W_OK):
-            msg = f"The path permission check failed: {base_name}"
+        if not is_root() and not os.access(path, os.W_OK):
+            msg = f"The path is not writable: {path}"
             raise RuntimeError(msg)
 
     @classmethod
     def check_path_readable(cls, path):
         """
         Function Description:
-            check whether the path is writable
+            check whether the path is readable
         Parameter:
             path: the path to check
         Exception Description:
@@ -148,10 +176,22 @@ class PathManager:
         if os.path.islink(path):
             msg = f"Invalid path which is a soft link."
             raise RuntimeError(msg)
-        base_name = os.path.basename(path)
-        if not os.access(path, os.R_OK):
-            msg = f"The path permission check failed: {base_name}"
+        if not is_root() and not os.access(path, os.R_OK):
+            msg = f"The path is not readable: {path}"
             raise RuntimeError(msg)
+
+    @classmethod
+    def check_path_executable(cls, path):
+        if not is_root() and not os.access(path, os.X_OK):
+            raise RuntimeError(f"The path is not executable: {path}")
+
+    @classmethod
+    def check_others_writable(cls, path):
+        if is_root():
+            return
+        st = os.stat(path)
+        if st.st_mode & 0o022:
+            raise RuntimeError(f"The path is writable by others: {path}")
 
     @classmethod
     def remove_path_safety(cls, path: str):
@@ -196,6 +236,8 @@ class PathManager:
 
     @classmethod
     def get_realpath(cls, path: str) -> str:
+        if not path:
+            raise RuntimeError("The path is empty. Please enter a valid path.")
         if os.path.islink(path):
             msg = f"Invalid input path which is a soft link."
             raise RuntimeError(msg)

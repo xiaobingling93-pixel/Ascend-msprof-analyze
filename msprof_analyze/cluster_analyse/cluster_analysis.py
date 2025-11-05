@@ -76,8 +76,7 @@ class Interface:
 
     def run(self):
         PathManager.check_input_directory_path(self.collection_path)
-        PathManager.check_input_directory_path(self.cluster_analysis_output_path)
-        PathManager.check_path_owner_consistent([self.collection_path, self.cluster_analysis_output_path])
+        PathManager.check_output_directory_path(self.cluster_analysis_output_path)
 
         data_dict = self.allocate_prof_data()
         data_map, data_type, prof_type = (data_dict.get(Constant.DATA_MAP), data_dict.get(Constant.DATA_TYPE),
@@ -116,7 +115,6 @@ class Interface:
             logger.error("The current analysis node only supports DB as input data. Please check.")
         else:
             FileManager.create_output_dir(self.cluster_analysis_output_path, is_overwrite=True)
-            PathManager.check_path_writeable(self.cluster_analysis_output_path)
             AnalysisFacade(params).recipe_analyze()
 
 

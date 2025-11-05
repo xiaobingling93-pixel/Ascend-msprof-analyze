@@ -36,11 +36,7 @@ class SafeConfigReader:
         self.read_config(config_file)
 
     def read_config(self, path):
-        if not os.path.exists(path):
-            msg = f"The config file {path} does not exists."
-            raise FileNotFoundError(msg)
         PathManager.check_input_file_path(path)
-        PathManager.check_path_readable(path)
         PathManager.check_file_size(path)
         self._config.read(path)
 
@@ -98,7 +94,3 @@ def compute_ratio(dividend: float, divisor: float):
         return 0
     else:
         return round(dividend / divisor, 4)
-
-
-def is_root():
-    return os.name != 'nt' and os.getuid() == 0
