@@ -52,7 +52,7 @@ class TestClusterTimeCompareSummary(unittest.TestCase):
     def test_check_params_is_valid_should_return_false_when_base_path_is_invalid(self):
         params = {Constant.EXTRA_ARGS: ["--bp", "/data2"]}
         params.update(self.PARAMS)
-        with mock.patch(NAMESPACE + ".path_manager.PathManager.check_input_file_path", side_effect=RuntimeError):
+        with mock.patch(NAMESPACE + ".path_manager.PathManager.check_input_directory_path", side_effect=RuntimeError):
             self.assertFalse(ClusterTimeCompareSummary(params).check_params_is_valid())
 
     def test_check_params_is_valid_should_return_false_when_table_cluster_time_summary_does_not_exist(self):
@@ -64,7 +64,7 @@ class TestClusterTimeCompareSummary(unittest.TestCase):
     def test_check_params_is_valid_should_return_false_when_base_table_cluster_time_summary_does_not_exist(self):
         params = {Constant.EXTRA_ARGS: ["--bp", "/data2"]}
         params.update(self.PARAMS)
-        with mock.patch(NAMESPACE + ".path_manager.PathManager.check_input_file_path"), \
+        with mock.patch(NAMESPACE + ".path_manager.PathManager.check_input_directory_path"), \
             mock.patch(NAMESPACE + ".db_manager.DBManager.check_tables_in_db", side_effect=[True, False]):
             self.assertFalse(ClusterTimeCompareSummary(params).check_params_is_valid())
 
@@ -146,7 +146,7 @@ class TestClusterTimeCompareSummary(unittest.TestCase):
             "memoryNotOverlapComputationCommunicationBase": data_base,
             "memoryNotOverlapComputationCommunicationDiff": data_diff,
         })
-        with mock.patch(NAMESPACE + ".path_manager.PathManager.check_input_file_path"), \
+        with mock.patch(NAMESPACE + ".path_manager.PathManager.check_input_directory_path"), \
             mock.patch(NAMESPACE + ".db_manager.DBManager.check_tables_in_db", side_effect=[True, True]), \
             mock.patch(NAMESPACE + ".database_service.DatabaseService.query_data",
                        side_effect=[cluster_time_summary_df_dict, base_cluster_time_summary_df_dict]):

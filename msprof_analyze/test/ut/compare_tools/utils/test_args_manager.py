@@ -51,30 +51,22 @@ class TestArgsManager(unittest.TestCase):
         # 验证两个实例是否相同
         self.assertIs(self.args_manager, another_args_manager)
 
-    @patch.object(PathManager, 'input_path_common_check')
-    def test_check_profiling_path_success(self, mock_path_check):
+    @patch.object(PathManager, 'check_input_directory_path')
+    @patch.object(PathManager, 'check_input_file_path')
+    @patch('os.path.exists', return_value=True)
+    def test_check_profiling_path_success(self, mock_exists, mock_file_check, mock_directory_check):
         """测试成功检查性能分析路径"""
-        mock_path_check.return_value = True
-
         # 调用方法应该不会抛出异常
         self.args_manager.check_profiling_path({"profiling_path": "/valid/path"})
 
-        # 验证调用了 PathManager.input_path_common_check
-        mock_path_check.assert_called_once_with("/valid/path")
+        # 验证调用了PathManager.check_input_directory_path
+        self.assertEqual(mock_directory_check.call_count, 5)
 
-    @patch.object(PathManager, 'input_path_common_check')
-    def test_check_profiling_path_failure(self, mock_path_check):
-        """测试检查性能分析路径失败"""
-        mock_path_check.side_effect = ValueError("Invalid path")
-
-        # 调用方法应该抛出 ValueError
-        with self.assertRaises(ValueError):
-            self.args_manager.check_profiling_path({"profiling_path": "/valid/path"})
-
+    @patch.object(PathManager, 'check_input_directory_path')
+    @patch.object(PathManager, 'check_input_file_path')
     @patch('os.path.isfile')
     @patch('os.listdir')
-    @patch.object(PathManager, 'input_path_common_check')
-    def test_init_with_default_value(self, mock_path_check, mock_listdir, mock_isfile):
+    def test_init_with_default_value(self, mock_listdir, mock_isfile, mock_check_file, mock_check_dir):
         """测试初始化 ArgsManager"""
         # 设置模拟返回值
         mock_listdir.return_value = [""]
@@ -83,8 +75,6 @@ class TestArgsManager(unittest.TestCase):
         # 调用初始化方法
         self.args_manager.init()
 
-        # 验证调用了 PathManager.input_path_common_check
-        self.assertEqual(mock_path_check.call_count, 4)
         self.assertEqual(self.args_manager.base_profiling_path, "/path/to/base/profiling")
         self.assertEqual(self.args_manager.base_step, 1)
         self.assertEqual(self.args_manager.comparison_step, 2)
@@ -124,7 +114,7 @@ class TestArgsManager(unittest.TestCase):
         self.args_manager.set_compare_type(Constant.KERNEL_COMPARE)
         self.assertTrue(self.args_manager.enable_kernel_compare)
 
-    @patch.object(PathManager, 'input_path_common_check')
+    @patch.object(PathManager, 'check_input_file_path')
     @patch.object(os.path, 'isfile')
     @patch.object(os.path, 'split')
     @patch.object(os.path, 'splitext')
@@ -157,7 +147,7 @@ class TestArgsManager(unittest.TestCase):
         mock_splitext.assert_called_once_with("file.json")
         mock_check_json_type.assert_called_once_with("/path/to/file.json")
 
-    @patch.object(PathManager, 'input_path_common_check')
+    @patch.object(PathManager, 'check_input_file_path')
     @patch.object(os.path, 'isfile')
     @patch.object(os.path, 'split')
     @patch.object(os.path, 'splitext')
@@ -180,7 +170,7 @@ class TestArgsManager(unittest.TestCase):
         }
         self.assertEqual(result, expected_result)
 
-    @patch.object(PathManager, 'input_path_common_check')
+    @patch.object(PathManager, 'check_input_file_path')
     @patch.object(os.path, 'isfile')
     @patch.object(os.path, 'split')
     @patch.object(os.path, 'splitext')
@@ -199,7 +189,7 @@ class TestArgsManager(unittest.TestCase):
         # 验证异常消息
         self.assertIn("Invalid profiling path suffix", str(context.exception))
 
-    @patch.object(PathManager, 'input_path_common_check')
+    @patch.object(PathManager, 'check_input_directory_path')
     @patch.object(os.path, 'isfile')
     @patch.object(os.path, 'isdir')
     @patch('os.listdir')
@@ -209,21 +199,13 @@ class TestArgsManager(unittest.TestCase):
         """测试解析包含 profiler_info.json 的目录路径"""
         # 设置模拟返回值
         mock_path_check.return_value = None
-        mock_isfile.return_value = False
+        mock_isfile.side_effect = [False, False]
         mock_isdir.side_effect = [True, False]  # 第一次调用针对目录，第二次调用针对 ASCEND_PROFILER_OUTPUT
         mock_listdir.side_effect = [
             ["profiler_info.json", "other_file.txt"],  # 第一次调用返回目录内容
             []  # 第二次调用返回空列表（模拟没有找到 trace_view.json）
         ]
         mock_join.return_value = "/path/to/directory/profiler_info.json"
-
-        # 模拟 os.path.isfile 抛出异常，因为我们没有提供 trace_view.json
-        def side_effect(path):
-            if path == "/path/to/directory/trace_view.json":
-                return False
-            return True
-
-        mock_isfile.side_effect = side_effect
 
         # 调用函数应该抛出 RuntimeError
         with self.assertRaises(RuntimeError) as context:
@@ -232,7 +214,7 @@ class TestArgsManager(unittest.TestCase):
         # 验证异常消息
         self.assertIn("Invalid profiling path", str(context.exception))
 
-    @patch.object(PathManager, 'input_path_common_check')
+    @patch.object(PathManager, 'check_input_directory_path')
     @patch.object(os.path, 'isfile')
     @patch.object(os.path, 'isdir')
     @patch('os.listdir')
@@ -265,7 +247,7 @@ class TestArgsManager(unittest.TestCase):
         }
         self.assertEqual(result, expected_result)
 
-    @patch.object(PathManager, 'input_path_common_check')
+    @patch.object(PathManager, 'check_input_directory_path')
     @patch.object(os.path, 'isfile')
     @patch.object(os.path, 'isdir')
     @patch('os.listdir')

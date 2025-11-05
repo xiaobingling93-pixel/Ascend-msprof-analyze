@@ -22,7 +22,7 @@ from msprof_analyze.cli.compare_cli import compare_cli
 from msprof_analyze.cli.cluster_cli import cluster_cli
 from msprof_analyze.advisor.version import print_version_callback, cli_version
 from msprof_analyze.prof_common.logger import get_logger
-from msprof_analyze.prof_common.utils import is_root
+from msprof_analyze.prof_common.path_manager import is_root
 
 logger = get_logger()
 CONTEXT_SETTINGS = dict(help_option_names=['-H', '-h', '--help'],
