@@ -60,7 +60,7 @@ def main():
     parser.add_argument("--comparison_step", type=str, default='',
                         help="Comparison step for benchmark performance data")
     parser.add_argument("--force", action='store_true',
-                        help="Indicates whether to skip file size verification and owner verification")
+                        help="Indicates whether to skip verification of the owner, size, and permissions.")
     parser.add_argument("--use_kernel_type", action='store_true',
                         help="Indicates whether kernel compare use op_statistic.csv")
     args = parser.parse_args()

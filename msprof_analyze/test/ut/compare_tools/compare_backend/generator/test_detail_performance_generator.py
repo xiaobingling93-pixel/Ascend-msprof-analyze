@@ -22,6 +22,7 @@ from collections import OrderedDict
 from msprof_analyze.compare_tools.compare_backend.generator.detail_performance_generator \
     import (DetailPerformanceGenerator)
 from msprof_analyze.prof_common.constant import Constant
+from msprof_analyze.prof_common.path_manager import PathManager
 
 NAMESPACE = 'msprof_analyze.compare_tools.compare_backend'
 
@@ -140,7 +141,8 @@ class TestDetailPerformanceGenerator(unittest.TestCase):
             mock_logger.info.assert_called_with("Start to compare performance detail data, please wait.")
 
 
-    def test_generate_view_should_create_excel_file_with_result_data(self):
+    @patch.object(PathManager, 'check_output_directory_path')
+    def test_generate_view_should_create_excel_file_with_result_data(self, mock_check_output):
         """
         Test generate_view with result data creates Excel file.
         """
@@ -150,13 +152,13 @@ class TestDetailPerformanceGenerator(unittest.TestCase):
              patch(NAMESPACE + '.generator.detail_performance_generator.ExcelView') as mock_excel_view:
             self.generator._result_data = {"test": "data"}
             mock_datetime.utcnow.return_value.strftime.return_value = "1145141919810"
-            mock_abspath.return_value = "/absolute/path/to/file.xlsx"
+            mock_abspath.return_value = "/absolute/path/to"
             mock_excel_instance = MagicMock()
             mock_excel_view.return_value = mock_excel_instance
 
             self.generator.generate_view()
 
-            expected_file_path = "/absolute/path/to/file.xlsx"
+            expected_file_path = os.path.join("/absolute/path/to", "performance_comparison_result_1145141919810.xlsx")
             mock_excel_view.assert_called_once_with(
                 {"test": "data"},
                 expected_file_path,

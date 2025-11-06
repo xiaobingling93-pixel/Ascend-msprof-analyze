@@ -44,6 +44,7 @@ from msprof_analyze.compare_tools.compare_backend.view.excel_view import ExcelVi
 from msprof_analyze.compare_tools.compare_backend.data_prepare.sequence_pre_matching import SequencePreMatching
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.logger import get_logger
+from msprof_analyze.prof_common.path_manager import PathManager
 
 logger = get_logger()
 
@@ -81,8 +82,10 @@ class DetailPerformanceGenerator:
         if not self._result_data:
             return
         dir_path = self._args.output_path if self._args.output_path else "./"
+        dir_path = os.path.abspath(dir_path)
+        PathManager.check_output_directory_path(dir_path)
         file_name = "performance_comparison_result_{}.xlsx".format(datetime.utcnow().strftime("%Y%m%d%H%M%S"))
-        result_file_path = os.path.abspath(os.path.join(dir_path, file_name))
+        result_file_path = os.path.join(dir_path, file_name)
         ExcelView(self._result_data, result_file_path, self._args).generate_view()
         logger.info("The comparison result file has been generated: %s", result_file_path)
 

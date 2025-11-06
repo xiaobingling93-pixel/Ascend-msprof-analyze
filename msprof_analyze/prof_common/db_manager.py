@@ -40,7 +40,7 @@ class DBManager:
         """
         create and connect database
         """
-        if check_db_path_valid(db_path, is_create=True):
+        if check_db_path_valid(db_path):
             try:
                 conn = sqlite3.connect(db_path)
             except sqlite3.Error as err:

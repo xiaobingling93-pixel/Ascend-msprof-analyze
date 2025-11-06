@@ -102,7 +102,7 @@ class Interface:
         })
         if self.analysis_mode in COMM_FEATURE_LIST:
             FileManager.create_output_dir(self.cluster_analysis_output_path)
-            PathManager.check_path_writeable(self.cluster_analysis_output_path)
+            PathManager.check_output_directory_path(self.cluster_analysis_output_path)
             logger.info("Begin generate communication data.")
             if data_type == Constant.TEXT or not params.get(Constant.DATA_SIMPLIFICATION):
                 comm_data_dict = CommunicationGroupGenerator(params).generate()
@@ -126,7 +126,7 @@ def cluster_analysis_main():
     parser.add_argument('-o', '--output_path', type=PathManager.expanduser_for_argumentparser,
                         help='Path of cluster analysis output')
     parser.add_argument('--force', action='store_true',
-                        help="Indicates whether to skip file size verification and owner verification")
+                        help="Indicates whether to skip verification of the owner, size, and permissions.")
     parser.add_argument("--parallel_mode", type=str, help="context mode", default="concurrent")
     parser.add_argument("--export_type", type=str, help="recipe export type", choices=["db", "notebook"], default="db")
     parser.add_argument("--rank_list", type=str, help="Rank id list", default='all')
