@@ -496,6 +496,10 @@ class Constant(object):
     # group name value
     PP = "pp"
 
+    # --force log
+    FORCE_BYPASSES_SECURITY = "You can add the '--force' parameter and retry. " \
+                              "This parameter will skip verification of the owner, size, and permissions."
+
 
 class ProfilerTableConstant:
 

@@ -51,7 +51,7 @@ class TestDBManager(unittest.TestCase):
         mock_connect.return_value = mock_conn
 
         conn, curs = DBManager.create_connect_db(self.temp_db_path)
-        mock_check_path.assert_called_once_with(self.temp_db_path, is_create=True)
+        mock_check_path.assert_called_once_with(self.temp_db_path)
         mock_connect.assert_called_once_with(self.temp_db_path)
         mock_conn.cursor.assert_called_once()
         mock_chmod.assert_called_once_with(self.temp_db_path, Constant.FILE_AUTHORITY)
@@ -63,7 +63,7 @@ class TestDBManager(unittest.TestCase):
         # 测试无效路径的情况
         mock_check_path.return_value = False
         conn, curs = DBManager.create_connect_db("invalid/path.db")
-        mock_check_path.assert_called_once_with("invalid/path.db", is_create=True)
+        mock_check_path.assert_called_once_with("invalid/path.db")
         self.assertIsInstance(conn, EmptyClass)
         self.assertIsInstance(curs, EmptyClass)
 

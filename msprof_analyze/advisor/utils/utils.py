@@ -225,7 +225,7 @@ def safe_division(numerator, denominator):
 
 def safe_write(content, save_path, encoding=None):
     if os.path.dirname(save_path) != "":
-        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        PathManager.make_dir_safety(os.path.dirname(save_path))
 
     with os.fdopen(os.open(save_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC,
                            stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP), "w", encoding=encoding) as f:

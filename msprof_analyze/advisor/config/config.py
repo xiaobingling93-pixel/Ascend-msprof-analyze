@@ -21,6 +21,7 @@ import html
 from msprof_analyze.advisor.utils.utils import Timer
 from msprof_analyze.prof_common.singleton import singleton
 from msprof_analyze.prof_common.utils import SafeConfigReader
+from msprof_analyze.prof_common.path_manager import PathManager
 
 logger = logging.getLogger()
 
@@ -168,7 +169,7 @@ class Config:
 
     def set_log_path(self, result_file: str, log_path: str = None):
         self.log_path = log_path if log_path is not None else os.path.join(self._work_path, "log")
-        os.makedirs(self.log_path, exist_ok=True)
+        PathManager.make_dir_safety(self.log_path)
         self.config.set("ANALYSE", "analysis_result_file", os.path.join(self.log_path, result_file))
         self._analysis_result_file = os.path.join(self.log_path, result_file)
 

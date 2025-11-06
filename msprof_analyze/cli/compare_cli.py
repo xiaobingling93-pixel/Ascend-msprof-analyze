@@ -46,8 +46,8 @@ from msprof_analyze.advisor.utils.utils import debug_option
 @click.option('--gpu_flow_cat', type=str, default='', help="Identifier of the GPU connection")
 @click.option('--base_step', type=str, default='', help="Comparison step for performance data to be compared")
 @click.option('--comparison_step', type=str, default='', help="Comparison step for benchmark performance data")
-@click.option('--force', is_flag=True, help="Indicates whether to skip file size verification and "
-                                            "owner verification")
+@click.option('--force', is_flag=True,
+              help="Indicates whether to skip verification of the owner, size, and permissions.")
 @click.option('--use_kernel_type', is_flag=True, help="Indicates whether kernel compare use op_statistic.csv")
 @debug_option
 def compare_cli(**kwargs) -> None:

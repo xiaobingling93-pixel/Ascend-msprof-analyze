@@ -36,7 +36,7 @@ class NpuSlowAdvice(ComputeAdviceBase, ABC):
     
     @staticmethod
     def save_to_excel(data: pd.DataFrame, file_path: str) -> None:
-        PathManager.check_path_writeable(os.path.dirname(file_path))
+        PathManager.check_output_directory_path(os.path.dirname(file_path))
         with pd.ExcelWriter(file_path, engine="xlsxwriter", mode="w") as writer:
             data.index.name = Constant.TITLE.INDEX
             data.to_excel(writer, index=True, sheet_name=NpuSlowAdvice.OP_PERF_SHEET)
@@ -75,7 +75,8 @@ class NpuSlowAdvice(ComputeAdviceBase, ABC):
         return self.data
     
     def process(self):
-        PathManager.check_path_readable(self.kernel_details_path)
+        PathManager.check_input_file_path(self.kernel_details_path)
+        PathManager.check_file_size(self.kernel_details_path)
         self.data = pd.read_csv(self.kernel_details_path, dtype={"Start Time(us)": str})
         # 去除末尾的\t分隔符
         self.data["Start Time(us)"] = self.data["Start Time(us)"].apply(lambda x: x[:-1])

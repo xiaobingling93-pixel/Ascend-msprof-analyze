@@ -49,7 +49,7 @@ class KernelClusterAdvice(ClusterAdviceBase):
             if kernel_file:
                 # 判断csv文件大小
                 FileManager.check_file_size(kernel_file)
-                PathManager.check_path_readable(kernel_file)
+                PathManager.check_input_file_path(kernel_file)
                 # 读取CSV文件
                 df_temp = pd.read_csv(kernel_file)
                 columns_to_keep = self.COLUMNS_TO_GROUP + self.COLUMNS_TO_CAL

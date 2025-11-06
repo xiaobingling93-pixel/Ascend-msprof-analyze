@@ -401,7 +401,7 @@ class BaseProfilingParser(ABC):
                                "aic_metrics=PipeUtilization.", self._profiling_path)
 
     def _trace_event_generator(self, profiling_type):
-        PathManager.check_path_readable(self._json_path)
+        PathManager.check_input_file_path(self._json_path)
         FileManager.check_file_size(self._json_path)
         item = self.trace_event_item.get(profiling_type)
         with open(self._json_path, 'r') as file:

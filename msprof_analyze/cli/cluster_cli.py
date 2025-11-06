@@ -30,7 +30,8 @@ context_settings['ignore_unknown_options'] = True
 @click.option('--mode', '-m', type=click.Choice(ALL_FEATURE_LIST), default='all')
 @click.option('--output_path', '-o', type=click.Path(), default='', callback=PathManager.expanduser_for_cli,
               help='Path of cluster analysis output')
-@click.option('--force', is_flag=True, help="Indicates whether to skip file size verification and owner verification")
+@click.option('--force', is_flag=True,
+              help="Indicates whether to skip verification of the owner, size, and permissions.")
 @click.option("--parallel_mode", type=str, help="context mode", default="concurrent")
 @click.option("--export_type", help="recipe export type", type=click.Choice(["db", "notebook"]), default="db")
 @click.option("--rank_list", type=str, help="Rank id list", default='all')

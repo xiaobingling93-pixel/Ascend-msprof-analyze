@@ -57,7 +57,7 @@ def analyze_cli(**kwargs):
               help="enter the profiling type, selectable range pytorch, mindspore, mslite ,msprof")
 @click.option("--force",
               is_flag=True,
-              help="Indicates whether to skip file size verification and owner verification")
+              help="Indicates whether to skip verification of the owner, size, and permissions.")
 @click.option("-l",
               "--language",
               type=click.Choice(["cn", "en"]),
@@ -96,7 +96,7 @@ def analyze_all(**kwargs) -> None:
               help="enter the profiling type, selectable range ascend_pytorch_profiler, mslite ,msprof")
 @click.option("--force",
               is_flag=True,
-              help="Indicates whether to skip file size verification and owner verification")
+              help="Indicates whether to skip verification of the owner, size, and permissions.")
 @click.option("-l",
               "--language",
               type=click.Choice(["cn", "en"]),
@@ -135,7 +135,7 @@ def analyze_schedule(**kwargs) -> None:
               help="enter the profiling type, selectable range ascend_pytorch_profiler, mslite ,msprof")
 @click.option("--force",
               is_flag=True,
-              help="Indicates whether to skip file size verification and owner verification")
+              help="Indicates whether to skip verification of the owner, size, and permissions.")
 @click.option("-l",
               "--language",
               type=click.Choice(["cn", "en"]),

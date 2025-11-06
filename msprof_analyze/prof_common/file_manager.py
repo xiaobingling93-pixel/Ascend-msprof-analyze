@@ -29,16 +29,15 @@ logger = get_logger()
 class FileManager:
     @classmethod
     def read_json_file(cls, file_path: str) -> dict:
-        PathManager.check_path_readable(file_path)
+        PathManager.check_input_file_path(file_path)
         base_name = os.path.basename(file_path)
         file_size = os.path.getsize(file_path)
         result_data = {}
         if file_size <= 0:
             return result_data
         if not AdditionalArgsManager().force and file_size > Constant.MAX_FILE_SIZE:
-            logger.warning(f"The file({file_path}) size is {file_size} Byte, exceeds the preset max value. You can add "
-                           f"the '--force' parameter and retry. This parameter will ignore the file owner and "
-                           f"file size!")
+            logger.warning(f"The file({file_path}) size is {file_size} Byte, exceeds the preset max value. "
+                           f"{Constant.FORCE_BYPASSES_SECURITY}")
             return result_data
         try:
             with open(file_path, "r") as json_file:
@@ -49,16 +48,13 @@ class FileManager:
 
     @classmethod
     def read_csv_file(cls, file_path: str, class_bean: any = None) -> list:
-        if not os.path.isfile(file_path):
-            raise FileNotFoundError("File not exists.")
-        PathManager.check_path_readable(file_path)
+        PathManager.check_input_file_path(file_path)
         file_size = os.path.getsize(file_path)
         if file_size <= 0:
             return []
         if not AdditionalArgsManager().force and file_size > Constant.MAX_FILE_SIZE:
-            logger.warning(f"The file({file_path}) size is {file_size} Byte, exceeds the preset max value. You can add "
-                           f"the '--force' parameter and retry. This parameter will ignore the file owner and "
-                           f"file size!")
+            logger.warning(f"The file({file_path}) size is {file_size} Byte, exceeds the preset max value. "
+                           f"{Constant.FORCE_BYPASSES_SECURITY}")
             return []
         result_data = []
         try:
@@ -81,13 +77,14 @@ class FileManager:
 
     @classmethod
     def read_yaml_file(cls, file_path: str) -> dict:
-        PathManager.check_path_readable(file_path)
+        PathManager.check_input_file_path(file_path)
         base_name = os.path.basename(file_path)
         file_size = os.path.getsize(file_path)
         if file_size <= 0:
             return {}
         if not AdditionalArgsManager().force and file_size > Constant.MAX_JSON_SIZE:
-            raise RuntimeError(f"The file({base_name}) size exceeds the preset max value.")
+            raise RuntimeError(f"The file({base_name}) size exceeds the preset max value. "
+                               f"{Constant.FORCE_BYPASSES_SECURITY}")
 
         try:
             with open(file_path, "r", encoding="utf-8") as yaml_file:
@@ -98,13 +95,14 @@ class FileManager:
 
     @classmethod
     def read_common_file(cls, file_path: str) -> str:
-        PathManager.check_path_readable(file_path)
+        PathManager.check_input_file_path(file_path)
         base_name = os.path.basename(file_path)
         file_size = os.path.getsize(file_path)
         if file_size <= 0:
             raise RuntimeError(f"The file({base_name}) size is less than or equal to 0.")
         if not AdditionalArgsManager().force and file_size > Constant.MAX_COMMON_SIZE:
-            raise RuntimeError(f"The file({base_name}) size exceeds the preset max value.")
+            raise RuntimeError(f"The file({base_name}) size exceeds the preset max value. "
+                               f"{Constant.FORCE_BYPASSES_SECURITY}")
         try:
             with open(file_path, 'r') as f:
                 content = f.read()
@@ -115,7 +113,7 @@ class FileManager:
     @classmethod
     def create_common_file(cls, file_path: str, content: str) -> None:
         base_name = os.path.basename(file_path)
-        PathManager.check_path_writeable(os.path.dirname(file_path))
+        PathManager.check_output_directory_path(os.path.dirname(file_path))
         try:
             with os.fdopen(
                     os.open(file_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, Constant.FILE_AUTHORITY),
@@ -127,7 +125,7 @@ class FileManager:
     @classmethod
     def create_csv_from_dataframe(cls, file_path: str, data, index) -> None:
         base_name = os.path.basename(file_path)
-        PathManager.check_path_writeable(os.path.dirname(file_path))
+        PathManager.check_output_directory_path(os.path.dirname(file_path))
         try:
             data.to_csv(file_path, index=index)
         except Exception as e:
@@ -142,7 +140,7 @@ class FileManager:
             profiler_path, Constant.CLUSTER_ANALYSIS_OUTPUT)
         output_file = os.path.join(output_path, file_name)
         base_name = os.path.basename(output_file)
-        PathManager.check_path_writeable(output_path)
+        PathManager.check_output_directory_path(output_path)
         try:
             with os.fdopen(
                     os.open(output_file, os.O_WRONLY | os.O_CREAT, Constant.FILE_AUTHORITY),
@@ -162,10 +160,10 @@ class FileManager:
         if not common_flag:
             output_path = os.path.join(profiler_path, Constant.CLUSTER_ANALYSIS_OUTPUT)
             output_file = os.path.join(output_path, file_name)
-            PathManager.check_path_writeable(output_path)
+            PathManager.check_output_directory_path(output_path)
         else:
             output_file = os.path.join(profiler_path, file_name)
-            PathManager.check_path_writeable(profiler_path)
+            PathManager.check_output_directory_path(profiler_path)
         base_name = os.path.basename(output_file)
         try:
             with os.fdopen(
@@ -196,7 +194,8 @@ class FileManager:
             limit_size = Constant.MAX_JSON_SIZE
         file_size = os.path.getsize(file_path)
         if not AdditionalArgsManager().force and file_size > limit_size:
-            raise RuntimeError(f"The file({base_name}) size exceeds the preset max value.")
+            raise RuntimeError(f"The file({base_name}) size exceeds the preset max value. "
+                               f"{Constant.FORCE_BYPASSES_SECURITY}")
 
 
 def check_db_path_valid(path: str, is_create: bool = False, max_size: int = Constant.MAX_READ_DB_FILE_BYTES) -> bool:

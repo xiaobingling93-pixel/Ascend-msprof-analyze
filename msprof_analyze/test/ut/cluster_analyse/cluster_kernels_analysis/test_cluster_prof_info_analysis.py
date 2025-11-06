@@ -49,9 +49,9 @@ class TestFormDataProcessor(unittest.TestCase):
 
     @patch('pandas.read_csv')
     @patch.object(PathManager, 'check_file_size')
-    @patch.object(PathManager, 'check_path_readable')
+    @patch.object(PathManager, 'check_input_file_path')
     @patch('pathlib.Path.rglob')
-    def test_read_summary_data_without_device_id(self, mock_rglob, mock_check_readable, mock_check_size, mock_read_csv):
+    def test_read_summary_data_without_device_id(self, mock_rglob, mock_check_file, mock_check_size, mock_read_csv):
         mock_rglob.return_value = [MagicMock()]
         mock_read_csv.return_value = pd.DataFrame({
             'Op Name': ['test_op'],
@@ -66,9 +66,9 @@ class TestFormDataProcessor(unittest.TestCase):
 
     @patch('pandas.read_csv')
     @patch.object(PathManager, 'check_file_size')
-    @patch.object(PathManager, 'check_path_readable')
+    @patch.object(PathManager, 'check_input_file_path')
     @patch('pathlib.Path.rglob')
-    def test_get_chip_type(self, mock_rglob, mock_check_readable, mock_check_size, mock_read_csv):
+    def test_get_chip_type(self, mock_rglob, mock_check_file, mock_check_size, mock_read_csv):
         mock_rglob.return_value = [MagicMock()]
         mock_read_csv.return_value = pd.DataFrame(columns=['aiv_time(us)'])
         processor = FormDataProcessor('test_path', 'test_form')
@@ -97,17 +97,17 @@ class TestViewInfoManager(unittest.TestCase):
 class TestOpSummaryAnalyzerBase(unittest.TestCase):
     @patch.object(PathManager, 'check_path_length')
     @patch.object(PathManager, 'remove_path_safety')
-    @patch.object(PathManager, 'check_path_writeable')
+    @patch.object(PathManager, 'check_output_directory_path')
     @patch.object(PathManager, 'make_dir_safety')
-    def test_init(self, mock_make_dir, mock_check_writeable, mock_remove_path, mock_check_length):
+    def test_init(self, mock_make_dir, mock_check_output, mock_remove_path, mock_check_length):
         analyzer = OpSummaryAnalyzerBase('ASCEND_NEW', 'TimeToCsvAnalyzer', 'test_dir')
         self.assertEqual(analyzer.chip_type, 'ASCEND_NEW')
 
     @patch.object(PathManager, 'check_path_length')
     @patch.object(PathManager, 'remove_path_safety')
-    @patch.object(PathManager, 'check_path_writeable')
+    @patch.object(PathManager, 'check_output_directory_path')
     @patch.object(PathManager, 'make_dir_safety')
-    def test_calculate_view_data(self, mock_make_dir, mock_check_writeable, mock_remove_path, mock_check_length):
+    def test_calculate_view_data(self, mock_make_dir, mock_check_output, mock_remove_path, mock_check_length):
         summary_data = pd.DataFrame({
             'Op Name': ['test_op'],
             "Input Shapes": "1",
@@ -128,9 +128,9 @@ class TestOpSummaryAnalyzerBase(unittest.TestCase):
 class TestTimeToCsvAnalyzer(unittest.TestCase):
     @patch.object(PathManager, 'check_path_length')
     @patch.object(PathManager, 'remove_path_safety')
-    @patch.object(PathManager, 'check_path_writeable')
+    @patch.object(PathManager, 'check_output_directory_path')
     @patch.object(PathManager, 'make_dir_safety')
-    def test_generate_deliverable(self, mock_make_dir, mock_check_writeable, mock_remove_path, mock_check_length):
+    def test_generate_deliverable(self, mock_make_dir, mock_check_output, mock_remove_path, mock_check_length):
         analyzer = TimeToCsvAnalyzer('ASCEND_NEW', 'test_dir')
         summary_data = pd.DataFrame({
             'Op Name': ['test_op'],
@@ -150,9 +150,9 @@ class TestTimeToCsvAnalyzer(unittest.TestCase):
 class TestStatisticalInfoToHtmlAnalyzer(unittest.TestCase):
     @patch.object(PathManager, 'check_path_length')
     @patch.object(PathManager, 'remove_path_safety')
-    @patch.object(PathManager, 'check_path_writeable')
+    @patch.object(PathManager, 'check_output_directory_path')
     @patch.object(PathManager, 'make_dir_safety')
-    def test_get_cal_num(self, mock_make_dir, mock_check_writeable, mock_remove_path, mock_check_length):
+    def test_get_cal_num(self, mock_make_dir, mock_check_output, mock_remove_path, mock_check_length):
         analyzer = StatisticalInfoToHtmlAnalyzer('ASCEND_NEW', 5, 'test_dir')
         result = analyzer.get_cal_num(10)
         self.assertEqual(result, 2)
@@ -163,10 +163,10 @@ class TestStatisticalInfoToHtmlAnalyzer(unittest.TestCase):
 class TestDeliverableGenerator(unittest.TestCase):
     @patch('pathlib.Path.rglob')
     @patch.object(PathManager, 'check_file_size')
-    @patch.object(PathManager, 'check_path_readable')
-    @patch.object(PathManager, 'check_path_writeable')
+    @patch.object(PathManager, 'check_input_file_path')
+    @patch.object(PathManager, 'check_output_directory_path')
     @patch('pandas.read_csv')
-    def test_init(self, mock_pand_read, mock_write, mock_read, mock_file_size, mock_rglob):
+    def test_init(self, mock_pand_read, mock_check_output, mock_check_file, mock_file_size, mock_rglob):
         mock_rglob.return_value = [MagicMock()]
         params = {
             'dir': 'test_dir',
@@ -179,10 +179,10 @@ class TestDeliverableGenerator(unittest.TestCase):
 
     @patch('pathlib.Path.rglob')
     @patch.object(PathManager, 'check_file_size')
-    @patch.object(PathManager, 'check_path_readable')
-    @patch.object(PathManager, 'check_path_writeable')
+    @patch.object(PathManager, 'check_input_file_path')
+    @patch.object(PathManager, 'check_output_directory_path')
     @patch('pandas.read_csv')
-    def test_run(self, mock_pand_read, mock_write, mock_read, mock_file_size, mock_rglob):
+    def test_run(self, mock_pand_read, mock_check_output, mock_check_file, mock_file_size, mock_rglob):
         mock_rglob.return_value = [MagicMock()]
         params = {
             'dir': 'test_dir',

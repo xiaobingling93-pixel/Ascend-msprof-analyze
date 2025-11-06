@@ -66,7 +66,7 @@ class FormDataProcessor:
                 continue
             # 判断csv文件大小
             PathManager.check_file_size(f)
-            PathManager.check_path_readable(f)
+            PathManager.check_input_file_path(f)
             # 读取CSV文件
             df = pd.read_csv(f)
             # 保留需要的列
@@ -97,7 +97,7 @@ class FormDataProcessor:
     def get_chip_type(self):
         file = self.files[0]
         PathManager.check_file_size(file)
-        PathManager.check_path_readable(file)
+        PathManager.check_input_file_path(file)
         df = pd.read_csv(file)
         if 'aiv_time(us)' in df.columns:
             return "ASCEND_NEW"
@@ -169,9 +169,9 @@ class OpSummaryAnalyzerBase:
         self.result_dir = os.path.join(dir_path, "result")
         PathManager.check_path_length(self.result_dir)
         PathManager.remove_path_safety(self.result_dir)
-        PathManager.check_path_writeable(dir_path)
+        PathManager.check_output_directory_path(dir_path)
         PathManager.make_dir_safety(self.result_dir)
-        PathManager.check_path_writeable(self.result_dir)
+        PathManager.check_output_directory_path(self.result_dir)
 
     @staticmethod
     def on_rm_error(func, path, exc_info):
@@ -325,7 +325,7 @@ def main():
     parser.add_argument("--top_n", "-n", default=10, help="how many operators to show", type=int)
     parser.add_argument("--type", "-t", default='html', help="compare ratio or aicore-time", type=str)
     parser.add_argument("--force", action='store_true',
-                        help="Indicates whether to skip file size verification and owner verification")
+                        help="Indicates whether to skip verification of the owner, size, and permissions.")
     args = parser.parse_args()
     params = {
         "dir": args.dir,

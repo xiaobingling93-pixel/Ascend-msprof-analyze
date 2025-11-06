@@ -242,12 +242,12 @@ class TestFileManager(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             FileManager.create_csv_from_dataframe(file_path, mock_data, index=True)
 
-    @patch('msprof_analyze.prof_common.path_manager.PathManager.check_path_writeable')
+    @patch('msprof_analyze.prof_common.path_manager.PathManager.check_output_directory_path')
     @patch('os.open')
     @patch('os.fdopen')
     @patch('csv.writer')
     @patch('os.chmod')
-    def test_create_csv_file(self, mock_chmod, mock_writer, mock_fdopen, mock_open_os, mock_check_writeable):
+    def test_create_csv_file(self, mock_chmod, mock_writer, mock_fdopen, mock_open_os, mock_check_output):
         # 测试创建CSV文件
         mock_file = mock.MagicMock()
         mock_fdopen.return_value.__enter__.return_value = mock_file
@@ -258,7 +258,7 @@ class TestFileManager(unittest.TestCase):
         headers = ["id", "name"]
         FileManager.create_csv_file(self.temp_dir, data, "test_output.csv", headers)
         output_path = os.path.join(self.temp_dir, Constant.CLUSTER_ANALYSIS_OUTPUT)
-        mock_check_writeable.assert_called_once_with(output_path)
+        mock_check_output.assert_called_once_with(output_path)
         mock_csv_writer.writerow.assert_called_once_with(headers)
         mock_csv_writer.writerows.assert_called_once_with(data)
 
@@ -268,12 +268,12 @@ class TestFileManager(unittest.TestCase):
             FileManager.create_csv_file(self.temp_dir, [], "test_output.csv")
             mock_check_writeable.assert_not_called()
 
-    @patch('msprof_analyze.prof_common.path_manager.PathManager.check_path_writeable')
+    @patch('msprof_analyze.prof_common.path_manager.PathManager.check_output_directory_path')
     @patch('os.open')
     @patch('os.fdopen')
     @patch('json.dumps')
     @patch('os.chmod')
-    def test_create_json_file(self, mock_chmod, mock_dumps, mock_fdopen, mock_open_os, mock_check_writeable):
+    def test_create_json_file(self, mock_chmod, mock_dumps, mock_fdopen, mock_open_os, mock_check_output):
         # 测试创建JSON文件
         mock_file = mock.MagicMock()
         mock_fdopen.return_value.__enter__.return_value = mock_file
@@ -281,7 +281,7 @@ class TestFileManager(unittest.TestCase):
         data = {"key": "value"}
         FileManager.create_json_file(self.temp_dir, data, "test_output.json")
         output_path = os.path.join(self.temp_dir, Constant.CLUSTER_ANALYSIS_OUTPUT)
-        mock_check_writeable.assert_called_once_with(output_path)
+        mock_check_output.assert_called_once_with(output_path)
         mock_file.write.assert_called_once_with("{\"key\": \"value\"}")
 
     @patch('msprof_analyze.prof_common.path_manager.PathManager.check_path_writeable')

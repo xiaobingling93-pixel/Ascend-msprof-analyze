@@ -62,7 +62,8 @@ class CSVAnalyzer:
         return repeated_sublists
 
     def process(self):
-        PathManager.check_path_readable(self._path)
+        PathManager.check_input_file_path(self._path)
+        PathManager.check_file_size(self._path)
         df = pd.read_csv(self._path, dtype={"Start Time(us)": str})
         # 分析是否存在可融合的算子
         op_type_list = df["Type"].tolist()
