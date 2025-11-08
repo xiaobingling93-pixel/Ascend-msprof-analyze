@@ -16,10 +16,14 @@
 
 import random
 import unittest
+from unittest.mock import patch
 
 import pandas as pd
 
 from msprof_analyze.cluster_analyse.recipes.freq_analysis.freq_analysis import FreqAnalysis
+from msprof_analyze.prof_common.constant import Constant
+
+NAMESPACE = "msprof_analyze.cluster_analyse.recipes"
 
 
 class TestFreqAnalysis(unittest.TestCase):
@@ -81,3 +85,37 @@ class TestFreqAnalysis(unittest.TestCase):
         recipe.reducer_func(mapper_res)
         self.assertEqual(recipe.free_freq_ranks, rank_case[1])
         self.assertEqual(recipe.abnormal_freq_ranks, rank_case[2])
+
+    @patch("msprof_analyze.prof_common.path_manager.PathManager.check_output_directory_path")
+    @patch("msprof_analyze.prof_common.database_service.DatabaseService.query_data")
+    def test__mapper_func_should_return_freq_and_rank_id(self, mock_query_data, mock_check_output_directory_path):
+        data_map = {
+            Constant.RANK_ID: 0,
+            Constant.PROFILER_DB_PATH: "",
+            Constant.ANALYSIS_DB_PATH: ""
+        }
+        df_dict = {
+            "AICORE_FREQ": pd.DataFrame({
+                "deviceId": [0, 0],
+                "freq": [1800, 1800],
+            }),
+            "RANK_DEVICE_MAP": pd.DataFrame({
+                "rankId": [0, 0],
+            })
+        }
+        mock_query_data.return_value = df_dict
+        recipe = FreqAnalysis({})
+        result = recipe._mapper_func(data_map, "FreqAnalysis")
+        self.assertEqual(result, ([1800], 0))
+
+    @patch("msprof_analyze.prof_common.path_manager.PathManager.check_output_directory_path")
+    @patch(NAMESPACE + ".base_recipe_analysis.BaseRecipeAnalysis.dump_data")
+    @patch(NAMESPACE + ".base_recipe_analysis.BaseRecipeAnalysis.mapper_func")
+    def test_run_should_save_db(self, mock_mapper_func, mock_dump_data, mock_check_output_directory_path):
+        mock_mapper_func.return_value = [
+            ([800, 1800], 0),
+            ([800, 1800, 1150], 1),
+        ]
+        params = {Constant.EXPORT_TYPE: Constant.DB}
+        recipe = FreqAnalysis(params)
+        recipe.run(context=None)
