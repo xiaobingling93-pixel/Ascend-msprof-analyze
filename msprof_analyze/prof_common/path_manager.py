@@ -22,7 +22,7 @@ from msprof_analyze.prof_common.additional_args_manager import AdditionalArgsMan
 
 
 def is_root():
-    return os.name != 'nt' and os.getuid() == 0
+    return os.name == 'nt' or os.getuid() == 0
 
 
 class PathManager:
