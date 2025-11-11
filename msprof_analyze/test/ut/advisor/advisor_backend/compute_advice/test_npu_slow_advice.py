@@ -18,6 +18,7 @@ import shutil
 import stat
 import csv
 import unittest
+from unittest.mock import patch
 
 from msprof_analyze.advisor.advisor_backend.interface import Interface
 from msprof_analyze.advisor.advisor_backend.compute_advice.npu_slow_advice import NpuSlowAdvice
@@ -204,7 +205,10 @@ class TestNpuSlowAdvice(unittest.TestCase):
         self.assertEqual(9, len(data))
         self.assertEqual("", call_stack)
 
-    def test_run_should_return_7_data_with_call_stack_when_new_trace_view_exists(self):
+    @patch('msprof_analyze.prof_common.path_manager.PathManager.check_output_directory_path')
+    @patch('msprof_analyze.prof_common.path_manager.PathManager.check_input_file_path')
+    def test_run_should_return_7_data_with_call_stack_when_new_trace_view_exists(self, mock_check_input_file_path,
+                                                                                 mock_check_output_directory_path):
         self.create_profiler_info_json()
         self.create_kernel_details()
         self.create_new_version_trace_view()
@@ -219,7 +223,10 @@ class TestNpuSlowAdvice(unittest.TestCase):
                          "/root/test/slice.py(116)"
         self.assertEqual(call_stack_res, call_stack)
 
-    def test_run_should_return_7_data_with_call_stack_when_old_trace_view_exists(self):
+    @patch('msprof_analyze.prof_common.path_manager.PathManager.check_output_directory_path')
+    @patch('msprof_analyze.prof_common.path_manager.PathManager.check_input_file_path')
+    def test_run_should_return_7_data_with_call_stack_when_old_trace_view_exists(self, mock_check_input_file_path,
+                                                                                 mock_check_output_directory_path):
         self.create_profiler_info_json()
         self.create_kernel_details()
         self.create_old_version_trace_view()
