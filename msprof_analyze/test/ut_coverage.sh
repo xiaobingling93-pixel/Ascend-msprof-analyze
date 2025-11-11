@@ -29,6 +29,7 @@ test_code="${script_dir}/ut"
 export PYTHONPATH="${profiler_path}:${test_code}:${PYTHONPATH}"
 
 # 创建输出目录
+umask 022
 mkdir -p "$output_dir"
 cd "$output_dir"
 

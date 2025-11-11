@@ -51,8 +51,9 @@ class TestBaseRecipeAnalysis(unittest.TestCase):
 
             def run(self, context):
                 pass
-
-        self.analysis = ConcreteRecipeAnalysis(self.params)
+        with (patch('msprof_analyze.prof_common.path_manager.PathManager.check_output_directory_path') as
+            mock_check_output_directory_path):
+            self.analysis = ConcreteRecipeAnalysis(self.params)
 
     def test_enter_exit(self):
         with self.analysis as instance:

@@ -151,8 +151,9 @@ class TestSafeWrite(unittest.TestCase):
     def tearDown(self):
         if os.path.exists(self.temp_dir):
             shutil.rmtree(self.temp_dir, ignore_errors=True)
-    
-    def test_safe_write_with_encoding(self):
+
+    @patch('msprof_analyze.prof_common.path_manager.PathManager.check_output_directory_path')
+    def test_safe_write_with_encoding(self, mock_check_output_directory_path):
         test_file = os.path.join(self.temp_dir, "test.txt")
         content = "test content with unicode: 测试"
         
@@ -160,8 +161,9 @@ class TestSafeWrite(unittest.TestCase):
         
         with open(test_file, 'r', encoding='utf-8') as f:
             self.assertEqual(f.read(), content)
-    
-    def test_safe_write_existing_directory(self):
+
+    @patch('msprof_analyze.prof_common.path_manager.PathManager.check_output_directory_path')
+    def test_safe_write_existing_directory(self, mock_check_output_directory_path):
         test_dir = os.path.join(self.temp_dir, "existing", "subdir")
         os.makedirs(test_dir)
         test_file = os.path.join(test_dir, "test.txt")
