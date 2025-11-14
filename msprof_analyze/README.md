@@ -3,6 +3,8 @@
 ## 📌 简介
 msprof-analyze（MindStudio Profiler Analyze）是MindStudio全流程工具链推出的性能分析工具，基于采集的性能数据进行分析，识别AI作业中的性能瓶颈。
 
+**本工具为开发调测工具，不应在生产环境使用**
+
 ## 🔧 安装
 
 msprof-analyze的安装方式包括：**pip安装**、**下载whl包安装**和**源代码编译安装**。
@@ -80,6 +82,7 @@ Successfully installed msprof-analyze-{version}
 
 3. 编译whl包。
 
+**在安装如下依赖时，请注意使用满足条件的较新版本软件包，关注并修补存在的漏洞，尤其是已公开的CVSS打分大于7分的高危漏洞。**
    ```bash
    cd mstt/profiler/msprof_analyze
    pip3 install -r requirements.txt && python3 setup.py bdist_wheel
