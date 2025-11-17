@@ -17,12 +17,11 @@ import logging
 import re
 import traceback
 from collections import OrderedDict
-
+from tqdm import tqdm
 import ijson
 
 from msprof_analyze.advisor.dataset.timeline_op_collector.timeline_op_sql import TimelineDBHelper
 from msprof_analyze.advisor.dataset.dataset import Dataset
-from tqdm import tqdm
 
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.advisor.common.timeline.event import TimelineEvent
@@ -56,6 +55,7 @@ class BaseTimelineEventDataset(Dataset):
     TRACE_VIEW_PATTERN = re.compile(r'trace_view\.json$')
 
     def __init__(self, collection_path, data: dict, build_dataset=True, **kwargs) -> None:
+        super().__init__(collection_path, data, **kwargs)
         self.collection_path = collection_path
         self.profiler_step = []
         self.timeline_file = ""
