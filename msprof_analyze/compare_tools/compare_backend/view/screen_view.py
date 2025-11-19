@@ -1,0 +1,33 @@
+# Copyright (c) 2024, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+from prettytable import PrettyTable
+
+from msprof_analyze.compare_tools.compare_backend.view.base_view import BaseView
+
+
+class ScreenView(BaseView):
+    def __init__(self, data_dict: dict):
+        super().__init__(data_dict)
+
+    def generate_view(self):
+        for sheet_name, data in self._data_dict.items():
+            if not data.get("rows", []):
+                return
+            table = PrettyTable()
+            table.title = sheet_name
+            table.field_names = data.get("headers", [])
+            for row in data.get("rows", []):
+                table.add_row(row)
+            print(table)

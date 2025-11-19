@@ -1,0 +1,12 @@
+gc_problem_with_free: "Nearly no host tasks within {free_duration_time} microseconds(us) of free time, which is likely caused by abnormal GC of Python"
+top_num: 10
+max_free_threshold: 200000 # us
+max_acl_event_num_ratio: 0.0001 # max 10 events per 100 ms
+max_acl_event_time_ratio: 0.01 # total time of acl events no larger than 0.01 * free duration
+solutions:
+  - memory management:
+      desc: "implement effective Python memory management; release memory promptly when not in use to avoid long-term retention; avoid circular references between objects."
+  - adjusting the GC threshold:
+      desc: "use gc.set_threshold() to adjust the garbage collection threshold can delay garbage collection, but this is a temporary solution."
+  - disable GC:
+      desc: "use gc.disable() to disable GC, note that this is a temporary solution."

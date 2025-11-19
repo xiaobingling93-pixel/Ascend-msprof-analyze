@@ -1,0 +1,39 @@
+{% if optimizers|length > 0 %}
+<div class="collapsible">
+    <h2 class="collapsible-header" style="background-color: {{ priority_background_color }};">Operator Dispatch Issues</h2>
+    <div class="collapsible-content">
+      {% if rank is not none %}
+      <a style="font-weight: bold" id="timeline_api_instruction">Analysis of rank {{ rank|safe }}. </a>
+      {% endif %}
+        <table>
+            <tr>
+                <th>Description</th>
+                <th>Suggestion</th>
+            </tr>
+            {% for optimizer in optimizers %}
+            <tr>
+                <td>{{ optimizer.description |safe }}</td>
+                <td>{{ optimizer.suggestion|safe }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+
+
+        <table>
+            <tr>
+                <th>Issue</th>
+                <th>Counts</th>
+                <th>Elapsed Time(us)</th>
+            </tr>
+            {% for issue in issues %}
+            <tr>
+                <td>{{ issue.op_name |safe }}</td>
+                <td>{{ issue.counts |safe }}</td>
+                <td>{{ issue.total_time |safe }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+</div>
+{% endif %}

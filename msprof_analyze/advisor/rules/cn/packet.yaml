@@ -1,0 +1,15 @@
+problem: "包分析"
+description: "过小的通信数据包可能会导致host传递瓶颈。\n"
+sdma_problem: "在SDMA通信中，通信数据量的{abnormal_ratio}小于{min_size}MB，总时间为{abnormal_time}ms。\n"
+rdma_problem: "在RDMA通信中，通信数据量的{abnormal_ratio}小于{min_size}MB，总时间为{abnormal_time}ms。\n"
+min_sdma_size: 16 #M
+min_rdma_size: 1 #M
+min_sdma_ratio: 0.2
+min_rdma_ratio: 0.2
+solutions:
+  - 数据并行建议:
+      desc: "如果异常通信集中在数据并行域，1.增加批量大小；2.增加梯度累积。"
+  - 检查内存优化策略:
+      desc: "如果内存优化策略为Zero3，建议在内存条件允许的情况下将其设置为Zero2/Zero1。"
+  - 适配亲和优化器或融合算子:
+      desc: "使用亲和优化器或融合算子可以减少通信算子的数量。"

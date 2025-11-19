@@ -1,0 +1,12 @@
+gc_problem_with_free: "在{free_duration_time}us的空闲时间内几乎没有主机任务，这可能是由Python的异常GC引起的"
+top_num: 10
+max_free_threshold: 200000 # us
+max_acl_event_num_ratio: 0.0001 # max 10 events per 100 ms
+max_acl_event_time_ratio: 0.01 # total time of acl events no larger than 0.01 * free duration
+solutions:
+  - 内存管理:
+      desc: "实现高效的Python内存管理；不使用时及时释放内存，避免长期占用；避免对象之间的循环引用。"
+  - adjusting the GC threshold:
+      desc: "使用 gc.set_threshold() 来调整垃圾回收阈值可以延迟垃圾收集，但这是一个临时解决方案。"
+  - disable GC:
+      desc: "使用 gc.disable() 来关闭GC，注意这是个临时解决方案。"

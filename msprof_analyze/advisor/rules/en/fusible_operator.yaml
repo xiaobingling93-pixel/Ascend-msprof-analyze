@@ -1,0 +1,28 @@
+problem: "Fusible Operator Analysis"
+mte_problem: "OPERATOR SEQUENCE ANALYSIS BASED ON MTE BOUND"
+host_problem: "OPERATOR SEQUENCE ANALYSIS BASED ON MTE BOUND"
+description: "Detected a total of {count} operator sequences with fusion value, with a total end-to-end duration of {wall_duration}ms, including {npu_time}ms for NPU time, {host_threshold} for host bottleneck duration percentage, 
+and {mte_threshold} for MTE duration percentage."
+table_description: "
+The index position of the sequence’s starting operator in kernel details.csv (op_summary.csv) (excluding the header, starting index is 0)\n
+The index position of the sequence’s ending operator in kernel details.csv (op_summary.csv) \n
+The total duration of the operator sequence (including gaps between operators)\n
+The total execution duration of operators in the sequence\n
+The total transfer duration of operators in the sequence\n
+The number of times the sequence appears\n
+Mte bound\n
+Host bound"
+mte_description: "The operator sequence obtained based on the MTE bound analysis is as follows:"
+host_description: "The operator sequence obtained based on the host bound analysis is as follows:"
+max_length: 10
+min_length: 2
+host_threshold: 0.4
+mte_threshold: 0.8
+sequence_duration_threshold: 0.01
+sequence_count_threshold: 5
+top_num: 5
+solutions:
+  - Evaluate host bound:
+      desc: "Discovered a large number of operator sequences with host dispatch bottlenecks, possibly due to non-affinity operations used in the code for NPU. Please first collect call stack data, determine the code location based on the operator index, and evaluate the algorithm’s affinity implementation. If there are no issues, proceed with the subsequent fusion feasibility evaluation."
+  - Evaluate the feasibility of fusion:
+      desc: "Based on the data of fuseable operator sequences, contact the developers to evaluate whether the operator sequences can be fused at the algorithm level."

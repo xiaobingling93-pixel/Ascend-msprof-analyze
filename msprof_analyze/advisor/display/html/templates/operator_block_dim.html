@@ -1,0 +1,41 @@
+<div class="collapsible">
+    <h2 class="collapsible-header" style="background-color: {{ priority_background_color }};">Block Dim Issues</h2>
+    <div class="collapsible-content">
+        {% if rank is not none %}
+        <a style="font-weight: bold" id="timeline_api_instruction">Analysis of rank {{ rank|safe }}. </a>
+        {% endif %}
+        <table>
+            <tr>
+                <th>Description</th>
+                <th>Suggestion</th>
+                <th>Elapsed Time(us)</th>
+                <th>Time Ratio</th>
+            </tr>
+            <tr>
+                <td style="width: auto;">{{ format_result.record.optimization_item.description|safe }}</td>
+                <td>{{ format_result.suggestion|safe }}</td>
+                <td>{{ format_result.task_duration|safe }}</td>
+                <td>{{ format_result.record.statistics_item.task_duration_ratio|safe }}</td>
+            </tr>
+        </table>
+        <div class="collapsible">
+            {% for op_type, op_info in format_result.statistic %}
+            <div class="collapsible-header">{{ op_type|safe }}</div>
+            <div class="collapsible-content">
+                <table>
+                    <tr>
+                        <th>Operator Type</th>
+                        <th>Counts</th>
+                        <th>Elapsed Time(us)</th>
+                    </tr>
+                    <tr>
+                        <td>{{ op_info.summary.op_type|safe }}</td>
+                        <td>{{ op_info.summary.counts|safe }}</td>
+                        <td>{{ op_info.summary.total_duration|safe }}</td>
+                    </tr>
+                </table>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>

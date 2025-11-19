@@ -1,0 +1,64 @@
+<div class="collapsible">
+    <h2 class="collapsible-header" style="background-color: {{ priority_background_color }};">AICPU Issues</h2>
+    <div class="collapsible-content">
+        {% if rank is not none %}
+        <a style="font-weight: bold" id="timeline_api_instruction">Analysis of rank {{ rank|safe }}. </a>
+        {% endif %}
+        <table>
+            <tr>
+                <th>Description</th>
+                <th>Suggestion</th>
+                <th>Elapsed Time(us)</th>
+                <th>Time Ratio</th>
+            </tr>
+            <tr>
+                <td>{{ format_result.record.optimization_item.description|safe }}</td>
+                <td>{{ format_result.suggestion|safe }}</td>
+                <td>{{ format_result.task_duration|safe }}</td>
+                <td>{{ format_result.record.statistics_item.task_duration_ratio|safe }}</td>
+            </tr>
+        </table>
+        <div class="collapsible">
+            {% for op_type, op_info in format_result.statistic %}
+            <div class="collapsible-header">{{ op_type|safe }}</div>
+            <div class="collapsible-content">
+                <table>
+                    <tr>
+                        <th>Operator Type</th>
+                        <th>Counts</th>
+                        <th>Elapsed Time(us)</th>
+                    </tr>
+                    <tr>
+                        <td>{{ op_info.summary.op_type|safe }}</td>
+                        <td>{{ op_info.summary.counts|safe }}</td>
+                        <td>{{ op_info.summary.total_duration|safe }}</td>
+                    </tr>
+                </table>
+                <div class="collapsible">
+                    {% for trace_stack, info in op_info.op_info_list %}
+                    <div class="collapsible-header">
+                        <b>{{ info.summary.op_type|safe }}</b> | Input DType:({{info.op_info_list[0].input_data_types|safe}}) | Output DType:({{info.op_info_list[0].output_data_types|safe}}) | Counts:{{ info.summary.counts|safe}} | Elapsed Time(us):{{
+                        info.summary.total_duration|safe}}
+                    </div>
+                    <div class="collapsible-content">
+                        {% if info.op_info_list[0].suggestions|length > 0 %}
+                        <div>
+                            {% for suggestion in info.op_info_list[0].suggestions %}
+                            <p>
+                                <b>Suggestion {{ loop.index|safe }}:</b> <u>{{suggestion|safe}}</u>
+                            </p>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p><b>Suggestion 1:</b> <u>Modify code to avoid AICPU operator</u></p>
+                        {% endif %}
+                        <div class="separator"></div>
+                        <a id="timeline_api_stack">{{ info.op_info_list[0].stack_info|safe }}</a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>

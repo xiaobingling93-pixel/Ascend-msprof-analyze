@@ -1,0 +1,8 @@
+problem: "通信重传分析"
+description: "发生RDMA通信重传。单次重传需要4秒以上。重传问题在{group_count}通信域中检测到。\n建议执行以下建议。"
+min_retransmission_time: 4000 #ms
+solutions:
+  - 检查RDMA传输时长:
+      desc: "检查怀疑要重新传输的RDMA算子的传输时间是否正确。"
+  - 检查网络配置:
+      desc: "检查交换机和计算节点服务器的网络配置。"

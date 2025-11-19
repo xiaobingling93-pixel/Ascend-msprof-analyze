@@ -1,0 +1,12 @@
+problem: GC分析
+gc_problem_with_count: "检测到异常垃圾收集（GC）事件{gc_count}次，总时间为{gc_total_time}毫秒。\n
+                        GC操作耗时且会阻塞整个过程。因此，模型训练过程中的某些步骤比其他步骤需要更长的时间。"
+gc_threshold: 1000 #us
+top_num: 10
+solutions:
+  - 内存管理:
+      desc: "实现有效的Python内存管理；不使用时及时释放内存，避免长期保留；避免对象之间的循环引用。"
+  - 调整GC阈值:
+      desc: "使用gc.set_threshold()调整垃圾收集阈值可能会延迟垃圾收集，但这是一个临时解决方案。"
+  - 关闭GC:
+      desc: "使用gc.disable()禁用gc，注意这是一个临时解决方案。"

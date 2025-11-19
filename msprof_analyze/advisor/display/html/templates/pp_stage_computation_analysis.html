@@ -1,0 +1,19 @@
+{% if stages_rendered_html|length > 0 %}
+<div class="collapsible">
+    <h2 class="collapsible-header">Pipeline Parallel Stages Issues</h2>
+    <div class="collapsible-content">
+      {% for stage_html in stages_rendered_html %}
+      <div class="collapsible">
+          <h2 class="collapsible-header">{{ stage_html['stage']|safe }}</h2>
+          <div class="collapsible-content">
+                <a style="font-weight: bold" id="timeline_api_instruction">Description: analysis for slow rank {{ stage_html['rank']|safe }} in current stage</a>
+                <br><br>
+                {% for html in stage_html['html_list'] %}
+                    {{ html|safe }}
+                {% endfor %}
+          </div>
+      </div>
+      {% endfor %}
+    </div>
+</div>
+{% endif %}

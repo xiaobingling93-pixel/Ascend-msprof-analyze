@@ -1,0 +1,42 @@
+
+<div class="collapsible">
+    <h2 class="collapsible-header" style="background-color: {{ priority_background_color }};">{{ title }}</h2>
+    <div class="collapsible-content">
+      {% if rank is not none %}
+      <a style="font-weight: bold" id="timeline_api_instruction">Analysis of rank {{ rank|safe }}. </a>
+      {% endif %}
+        <a style="font-weight: bold" id="gc_description">{{ desc }}</a>
+        <table>
+        <tr>
+            <th>Suggestions</th>
+        </tr>
+        {% for item in solutions %}
+            {% set rowloop = loop %}
+            {% for key, value in item.items() %}
+                <tr>
+                    <td>{{  rowloop.index }}. {{ value.desc }}</td>
+                </tr>
+            {% endfor %}
+        {% endfor %}
+        </table>
+        {% if datas|safe %}
+        <a style="font-weight: bold" id="detail_description">The details of top {{ num }} garbage collection events are as follows:</a>
+        <br><br>
+            <table>
+                <tr>
+                {% for header in headers %}
+                    <th> {{ header }} </th>
+                {% endfor %}
+                </tr>
+
+                {% for row in datas %}
+                <tr>
+                    {% for element in row %}
+                    <td>{{ element|safe }}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </table>
+        {% endif %}
+    </div>
+</div>

@@ -1,0 +1,47 @@
+{% if candidates|length > 0 %}
+<div class="collapsible">
+    <h2 class="collapsible-header">Fusion Issues</h2>
+    <div class="collapsible-content">
+        <div class="collapsible">
+            {% for node in candidates %}
+            <div class="collapsible-header"> {{node.op_pass|safe}}</div>
+            <div class="collapsible-content">
+                <table>
+                    <tr>
+                        <th>Structure</th>
+                        <th>Counts</th>
+                        <th>Elapsed Time(us)</th>
+                    </tr>
+                    <tr>
+                        <td>{{ node.fusion_pattern|safe }}</td>
+                        <td>{{ node.counts|safe }}</td>
+                        <td>{{ node.total_duration|safe }}</td>
+                    </tr>
+                </table>
+                <div class="collapsible">
+                    {% for match in node.matches %}
+                    <div class="collapsible-header">SubGraph {{ loop.index|safe }}</div>
+                    <div class="collapsible-content">
+                        <table>
+                            <tr>
+                                <th>OP Name</th>
+                                <th>OP Type</th>
+                                <th>Elapsed Time(us)</th>
+                            </tr>
+                            {% for node in match %}
+                            <tr>
+                                <td>{{ node.op_name|safe }}</td>
+                                <td>{{ node.dtype|safe }}</td>
+                                <td>{{ node.duration|safe }}</td>
+                            </tr>
+                            {% endfor %}
+                        </table>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}

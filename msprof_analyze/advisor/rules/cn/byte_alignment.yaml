@@ -1,0 +1,7 @@
+problem: "字节对齐分析"
+description: "{count}个通信算子的数据大小未对齐，这会降低通信性能。"
+min_size: 512 # byte
+top_num: 5
+solutions:
+  - 调整数据大小:
+      desc: "请调整数据大小，对齐通信算子的数据量，具体方法请联系相关HCCL研发。"

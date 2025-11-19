@@ -1,0 +1,48 @@
+cube_problem: "Cube Operator Perf Analysis"
+fa_problem: "FA Operator Perf Analysis"
+vector_problem: "Vector Operator Perf Analysis"
+description: "Provide some reference bottlenecks for the AICORE operators"
+bound_description: "set of bound operators"
+optimization_description: "set of performance optimization operators"
+affinity_description: "set of unaffine operators"
+cube_affinity_desc: "Then inner axis is not divisible by 256"
+fa_affinity_desc_head_dim_128: "D is not divisible by 128"
+fa_affinity_desc_seq_len_128: "S is not divisible by 128"
+fa_affinity_desc_head_dim_seq_len_128: "Neither D nor S is not divisible by 128"
+suggestion: "Please try to analyze the filtered operators based on affinity, bound type or optimization space"
+affinity_suggestion: "{op_name} Op shape: {shape} dtype: {dtype} with disaffection characteristics: {suggestion}\n"
+bound_suggestion: "{op_name} Op shape: {shape} dtype: {dtype} bound type: {bound} bound\n"
+optimization_suggestion: "{op_name} Op shape: {shape} dtype: {dtype} suspect there is room for performance optimization, refer to Performance Optimization Space: {optimization}%\n"
+
+cube_operators:
+  - target: aic_mac_ratio
+    bound: mac
+    threshold: 0.8
+  - target: aic_mte2_ratio
+    bound: mte2
+    threshold: 0.95
+
+fa_operators:
+  - target: aic_mte2_ratio
+    bound: mac
+    threshold: 0.8
+  - target: aic_fixpipe_ratio
+    bound: fixpipe
+    threshold: 0.75
+  - target: aiv_vec_ratio
+    bound: vec
+    threshold: 0.75
+
+vector_operators:
+  - target: total
+    bound: vec_mte2_mte3
+    threshold: 0.9
+  - target: aiv_vec_ratio
+    bound: vec
+    threshold: 0.7
+  - target: aiv_mte2_ratio
+    bound: mte2
+    threshold: 0.7
+  - target: aiv_mte3_ratio
+    bound: mte3
+    threshold: 0.7

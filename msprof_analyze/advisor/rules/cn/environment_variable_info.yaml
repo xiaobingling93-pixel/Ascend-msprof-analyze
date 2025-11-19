@@ -1,0 +1,44 @@
+ASCEND_GLOBAL_LOG_LEVEL:
+  desc: "日志级别: 0-调试，1-信息，2-警告，3-错误。\n
+         默认为错误级别。"
+  suggest: "调试或信息级别可能会导致训练性能下降，\n
+           建议通过执行命令'export ASCEND_GLOBAL_LOGLEVEL=3来设置错误级别。"
+HCCL_RDAM_TC:
+  desc: "配置网络端口发送的RoCE数据包的DSCP值。\n
+         在IP数据报头的DS字段中，最右侧的6位是DSCP，最左侧的2位是0。\n
+         应将其设置为DSCP*4。默认值为132，即DSCP为33（132=33*4）。"
+  suggest: "请参考 https://support.huawei.com/enterprise/zh/doc/EDOC1100371278/5eeeed85?idPath=23710424"
+  suggest_html: "请参考 <a href=https://support.huawei.com/enterprise/zh/doc/EDOC1100371278/5eeeed85?idPath=23710424 target='_blank'>链接</a>"
+HCCL_RDMA_SL:
+  desc: "指定RDMA NIC的优先级。\n
+        该值必须与NIC的PFC优先级相同。\n
+        否则，性能可能会恶化。\n
+        取值范围为[0,7]，默认值为4。"
+  suggest: "请参考 https://support.huawei.com/enterprise/zh/doc/EDOC1100371278/5eeeed85?idPath=23710424"
+  suggest_html: "请参考 <a href=https://support.huawei.com/enterprise/zh/doc/EDOC1100371278/5eeeed85?idPath=23710424 target='_blank'>链接</a>"
+ACLNN_CACHE_LIMIT:
+  desc: "缓存的aclnn算子的数量。"
+  suggest: "在alcnn和host耗时过长时，可以设置一个较大的数字，例如'export ACLNN_CACHE_LIMIT=100000'。"
+HOST_CACHE_CAPACITY:
+  desc: "启用动态shape缓存。\n
+        默认值为0，表示数据缓存已禁用。\n
+        如果设置为非零正整数，例如10，系统将缓存最近频繁出现的10个输入形状的执行数据。\n
+        当缓存的形状再次出现时，host执行性能将得到提高，但host内存使用量会增加。\n
+        具体的增加与HOST_CACHE_CAPACITY的值和模型的大小成正比。"
+  suggest: "设置一个非零数字，例如'export HOST_CACHE_CAPACITY=20'"
+PYTORCH_NPU_ALLOC_CONF:
+  desc: "控制缓存分配器的行为。\n
+       可选参数为max_split_size_mb、garbage_collection_threshold和expandable_segments。\n
+       1.max_split_size_mb：v —— 大于v的内存块不会被分割。\n
+       2.garbage_collection_threshold：t —— 设置阈值后，如果NPU内存使用量超过阈值，缓存分配器将开始回收内存块。t的取值范围为（0.0，1.0）。\n
+       3.expandable_segments:True/False —— 默认值为False。如果为True，则此设置指示缓存分配器创建特定的内存块，这些内存块可以在以后扩展，以更好地处理频繁更改的内存使用情况。"
+  suggest: "export PYTORCH_NPU_ALLOC_CONF=expandable_segments:True"
+ASCEND_LAUNCH_BLOCKING:
+  desc: "是否在操作执行期间启用同步模式。\n
+        当设置为1时，强制算子同步运行，从而更容易调试和跟踪代码中的问题。\n
+        如果设置为0，则任务将以异步模式执行。"
+  suggest: "export ASCEND_LAUNCH_BLOCKING=0"
+HCCL_ALGO:
+  desc: "用于配置集合通信Server间跨机通信算法，支持如下几种取值：ring, H-D_R, NHR, NHR_V1, NB, pipeline.\n
+         当不设置此环境变量时，会根据产品形态、节点数以及数据量自动选择算法。"
+  suggest: "建议通过执行命令'unset HCCL_ALGO'取消此环境变量的设置"

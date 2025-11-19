@@ -1,0 +1,8 @@
+problem: "带宽分析"
+description: "在执行计算和通信任务时，SDMA带宽低于 {threshold}GB/s。通常，并行计算和通信可以提高模型的运行效率。并发计算和通信任务可能会影响通信带宽。"
+sdma_baseline: 18 #M
+threshold: 0.8
+top_num: 10
+solutions:
+  - 基线数据对比:
+      desc: "比较启用融合功能之前和之后的性能数据，以评估是否带宽抢占的影响超过了融合的收益。"

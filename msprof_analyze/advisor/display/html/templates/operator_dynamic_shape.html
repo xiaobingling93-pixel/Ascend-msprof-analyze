@@ -1,0 +1,18 @@
+<div class="collapsible">
+    <h2 class="collapsible-header" style="background-color: {{ priority_background_color }};">Operator Dynamic Shape Issues</h2>
+    <div class="collapsible-content">
+        {% if rank is not none %}
+        <a style="font-weight: bold" id="timeline_api_instruction">Analysis of rank {{ rank|safe }}. </a>
+        {% endif %}
+        <table>
+            <tr>
+                <th>Description</th>
+                <th>Suggestion</th>
+            </tr>
+            <tr>
+                <td>{{ format_result.record.optimization_item.description|safe }}</td>
+                <td>{{ format_result.suggestion|safe }}</td>
+            </tr>
+        </table>
+    </div>
+</div>

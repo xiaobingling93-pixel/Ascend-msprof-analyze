@@ -1,0 +1,72 @@
+# Copyright (c) 2023, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import os
+from collections import defaultdict
+from msprof_analyze.advisor.advisor_backend.common_func_advisor.constant import Constant
+from msprof_analyze.advisor.advisor_backend.cluster_advice.cluster_advice_base import ClusterAdviceBase
+from msprof_analyze.advisor.advisor_backend.prof_bean_advisor.cluster_step_trace_time_bean \
+    import ClusterStepTraceTimeBean
+from msprof_analyze.prof_common.file_manager import FileManager
+
+
+class SlowRankAdvice(ClusterAdviceBase):
+    RANK = "rank"
+    RATIO_THRESHOLD = 0.05
+    BOTTLENECK_LIST = ['Computing', 'Communication', "Free"]
+
+    def __init__(self, collection_path: str, kwargs: dict = None):
+        super().__init__(collection_path)
+
+    def load_step_time(self):
+        csv_path = os.path.join(self.collection_path, Constant.CLUSTER_ANALYSIS_OUTPUT, Constant.CLUSTER_STEP_TIME_CSV)
+        if not os.path.exists(csv_path):
+            msg = "[ERROR] cluster_step_trace_time.csv doesn't exist, terminate analysis."
+            raise RuntimeError(msg)
+        step_time = FileManager.read_csv_file(csv_path, ClusterStepTraceTimeBean)
+        return step_time
+
+    def run(self):
+        self.path_check()
+        step_data = self.load_step_time()
+        step_dict = self.process(step_data)
+        self.output(step_dict)
+        return self.output_format_data
+
+    def process(self, step_data: list):
+        step_dict = defaultdict(lambda: [0, 0, 0, 0])
+        for step_bean in step_data:
+            if step_bean.type == self.RANK:
+                step_dict[step_bean.index][0] += step_bean.compute
+                step_dict[step_bean.index][1] += step_bean.communication
+                step_dict[step_bean.index][2] += step_bean.free
+        total_time_list = [sum(data_tuple) for rank_id, data_tuple in step_dict.items()]
+        if total_time_list:
+            mean_total_time = sum(total_time_list) / len(total_time_list)
+            for i in range(len(self.BOTTLENECK_LIST)):
+                self.produce_bottleneck(step_dict, i, mean_total_time)
+        return step_dict
+
+    def produce_bottleneck(self, step_dict: dict, produce_type: int, mean_total_time: float):
+        data_list = [data_tuple[produce_type] for rank_id, data_tuple in step_dict.items()]
+        max_ratio = self.compute_max_gap_ratio(data_list, mean_total_time)
+        if max_ratio > self.RATIO_THRESHOLD:
+            self.bottelneck += f'{self.BOTTLENECK_LIST[produce_type]} has some issues in the cluster, ' \
+                               f'because the max difference of {self.BOTTLENECK_LIST[produce_type]} time ' \
+                               f'has reached {round(max_ratio * mean_total_time / 1000, 3)}ms. \n'
+
+    def output(self, step_dict: dict):
+        self.output_format_data[self.DATA] = step_dict
+        self.output_format_data[self.BOTTLENECK] = self.bottelneck

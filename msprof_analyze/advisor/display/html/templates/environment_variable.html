@@ -1,0 +1,21 @@
+<div class="collapsible">
+    <h2 class="collapsible-header">Environment Variable Issues</h2>
+    <div class="collapsible-content">
+        <table>
+            <tr>
+                {% for header in result.get("headers") %}
+                <th>{{ header }}</th>
+                {% endfor %}
+            </tr>
+            <tr>
+                {% for row in result.get("data") %}
+                <tr>
+                    {% for value in row %}
+                    <td>{{ value|safe }}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tr>
+        </table>
+    </div>
+</div>

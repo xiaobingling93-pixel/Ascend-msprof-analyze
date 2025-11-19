@@ -1,0 +1,15 @@
+problem: "Packet Analysis"
+description: "Excessive small communication packets may cause host delivery bottlenecks.\n"
+sdma_problem: "In the SDMA communication, {abnormal_ratio} of the communication data volume is less than {min_size} MB, and the total time is {abnormal_time} ms.\n"
+rdma_problem: "In the RDMA communication, {abnormal_ratio} of the communication data volume is less than {min_size} MB, and the total time is {abnormal_time} ms."
+min_sdma_size: 16 #M
+min_rdma_size: 1 #M
+min_sdma_ratio: 0.2
+min_rdma_ratio: 0.2
+solutions:
+  - data parallelism suggestion:
+      desc: "If abnormal communication is centralized in data parallelism domain, please 1.increase batch size; 2.increase gradient accumulation"
+  - check the memory optimization policy:
+      desc: "If the memory optimization policy is Zero3, it is recommended to set it to Zero2/Zero1 if memory conditions allow."
+  - adopt fusion operators of affinity optimizers:
+      desc: "using the affinity optimizers or fusion operators may reduce the number of communication operators."

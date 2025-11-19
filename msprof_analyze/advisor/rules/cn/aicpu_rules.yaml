@@ -1,0 +1,107 @@
+problem: "AICPU算子"
+description: "一些算子和任务执行时间超过了{}us，比如：\n"
+suggestion: "修改代码避免使用aicpu类算子"
+double_suggestion: "尝试将double类型的算子转换成float，比如{}"
+DataTypeSuggeation: &DataTypeSuggeation "数据类型{}在{}算子中可能会造成AICpu问题, 如果可以，尝试转换成{}。"
+AICPU_DOC_URL: &AICPU_DOC_URL "https://gitcode.com/Ascend/mstt/blob/master/profiler/msprof_analyze/advisor/doc/Samples%20of%20AI%20CPU%20Operator%20Replacement.md"
+
+CommonChecker:
+  - DataTypeChecker:
+      cann_version: [7.0.RC1]
+      op_type: [ __ALL__ ]
+      ignore_type: [ cast, tensorequal, equal, nonzero, mul ]
+      input: [ float, float32, float16, bool, int32, uint32, int64, uint64, int8, uint8, int16, uint16, dt_bf16 ]
+      output: [ float, float32, float16, bool, int32, uint32, int64, uint64, int8, uint8, int16, uint16, dt_bf16 ]
+      suggestion: *DataTypeSuggeation
+
+  - DataTypeChecker:
+      cann_version: [7.0.RC1]
+      op_type: [ cast ]
+      input: [ float, float32, float16, bool, int32, uint32, int64, uint64, uint8, dt_bf16 ]
+      output: [ float, float32, float16, bool, int32, uint32, int64, uint64, uint8, dt_bf16 ]
+      suggestion: *DataTypeSuggeation
+
+  - DataTypeChecker:
+      cann_version: [7.0.RC1]
+      op_type: [ tensorequal ]
+      input: [ float, float32, float16, bool, int32, int8, uint8 ]
+      output: [ bool ]
+      suggestion: *DataTypeSuggeation
+
+  - DataTypeChecker:
+      cann_version: [7.0.RC1]
+      op_type: [ equal ]
+      input: [ float, float32, float16, bool, int32, int64, int8, uint8 ]
+      output: [ bool ]
+      suggestion: *DataTypeSuggeation
+
+  - DataTypeChecker:
+      cann_version: [7.0.RC1]
+      op_type: [ nonzero ]
+      input: [ float16, bool, dt_bf16 ]
+      output: [ int64 ]
+      suggestion: *DataTypeSuggeation
+
+  - DataTypeChecker:
+      cann_version: [7.0.RC1]
+      op_type: [ mul ]
+      input: [ float, float32, float16, bool, int32, uint32, int64, uint64, int8, uint8, dt_bf16 ]
+      output: [ float, float32, float16, bool, int32, uint32, int64, uint64, int8, uint8, dt_bf16 ]
+      suggestion: *DataTypeSuggeation
+
+  - DataTypeChecker:
+      cann_version: [8.0.RC1, 7.0.0]
+      op_type: [ __ALL__ ]
+      ignore_type: [ cast, tensorequal, equal, nonzero, mul ]
+      input: [ float, float32, float16, dt_bf16, float64, bool, int32, int64, int8, uint8, int16, complex64, complex128 ]
+      output: [ float, float32, float16, dt_bf16, float64, bool, int32, int64, int8, uint8, int16, complex64, complex128 ]
+      suggestion: *DataTypeSuggeation
+
+  - DataTypeChecker:
+      cann_version: [8.0.RC1, 7.0.0]
+      op_type: [ cast ]
+      input: [ float, float32, float16, bool, int32, uint32, int64, uint64, uint8, dt_bf16 ]
+      output: [ float, float32, float16, bool, int32, uint32, int64, uint64, uint8, dt_bf16 ]
+      suggestion: *DataTypeSuggeation
+
+  - DataTypeChecker:
+      cann_version: [8.0.RC1, 7.0.0]
+      op_type: [ tensorequal ]
+      input: [ float, float32, float16, dt_bf16, float64, bool, int32, int8, uint8 ]
+      output: [ bool ]
+      suggestion: *DataTypeSuggeation
+
+  - DataTypeChecker:
+      cann_version: [8.0.RC1, 7.0.0]
+      op_type: [ equal ]
+      input: [ float, float32, float16, dt_bf16, float64, bool, int32, int64, int8, uint8 ]
+      output: [ bool ]
+      suggestion: *DataTypeSuggeation
+
+  - DataTypeChecker:
+      cann_version: [8.0.RC1, 7.0.0]
+      op_type: [ mul ]
+      input: [ float, float32, float16, dt_bf16, float64, bool, int32, int64, int8, uint8, complex64 ]
+      output: [ float, float32, float16, dt_bf16, float64, bool, int32, int64, int8, uint8, complex64 ]
+      suggestion: *DataTypeSuggeation
+
+ExampleGuideChecker:
+  - IndexPutChecker:
+      op_type: [index]
+      url: *AICPU_DOC_URL
+      suggestion: "请参考<a href='{}' target='_blank'>链接</a>修改源码，尝试用等价的算子替换index算子。"
+
+  - NonzeroChecker:
+      op_type: [ indexput, indexputv2 ]
+      url: *AICPU_DOC_URL
+      suggestion: "请参考<a href='{}' target='_blank'>链接</a>修改源码，尝试用等价的算子替换indexput算子。"
+
+  - CastChecker:
+      op_type: [ argmin ]
+      url: *AICPU_DOC_URL
+      suggestion: "请参考<a href='{}' target='_blank'>链接</a>更新cann-tookit包到7.0.RC1及以上的版本。"
+
+  - CastChecker:
+      op_type: [ nonzero ]
+      url: *AICPU_DOC_URL
+      suggestion: "请参考<a href='{}' target='_blank'>链接</a>修改源码，尝试用等价的算子替换nonzero算子。"

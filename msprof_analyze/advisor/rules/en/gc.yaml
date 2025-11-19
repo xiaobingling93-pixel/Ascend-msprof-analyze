@@ -1,0 +1,12 @@
+problem: "GC Analysis"
+gc_problem_with_count: "Abnormal garbage collection (GC) event is detected for {gc_count} times, and the total time is {gc_total_time} ms\n.
+The GC operation is time-consuming and blocks the entire process.  As a result, some steps in the model training process take a longer time than other steps."
+gc_threshold: 1000 #us
+top_num: 10
+solutions:
+  - memory management:
+      desc: "implement effective Python memory management; release memory promptly when not in use to avoid long-term retention; avoid circular references between objects."
+  - adjusting the GC threshold:
+      desc: "use gc.set_threshold() to adjust the garbage collection threshold can delay garbage collection, but this is a temporary solution."
+  - disable GC:
+      desc: "use gc.disable() to disable GC, note that this is a temporary solution."

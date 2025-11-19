@@ -1,0 +1,204 @@
+{% if format_result|length > 0 %}
+<style>
+    .typecol {
+        width: 30%;
+    }
+</style>
+<div class="collapsible">
+    <h2 class="collapsible-header" style="background-color: {{ priority_background_color }};">AI Core Performance Analysis</h2>
+    <div class="collapsible-content">
+        {% if language == "cn" %}
+        {% set title_ns = namespace(type='类别', desc='描述及建议', opti_set='性能优化算子集合', bound_set='bound算子集合', affinity_set='不亲和算子集合',
+        opti_refer=' 参考性能优化空间', bound_refer=' bound类型为', affinity_refer=' 不亲和类型为', title_desc='算子相关分析，参考如下: ') %}
+        {% else %}
+        {% set title_ns = namespace(type='Type', desc='Description and Suggestion', opti_set='set of performance optimization operators', 
+        bound_set='set of bound operators', affinity_set='set of unaffine operators', opti_refer=' refer to Performance Optimization Space',
+         bound_refer=' bound type', affinity_refer=' type of disaffinity', title_desc=' Operator related analysis, referenced below: ') %}
+        {% endif %}
+        {% if format_result.cube[0]|length + format_result.cube[1]|length + format_result.cube[2]|length > 0 %}
+        <a style="font-weight: bold" id="cube_analyze">Cube{{ title_ns.title_desc }}</a>
+        <br>
+        <table>
+            <tr>
+                <th class="typecol">{{ title_ns.type }}</th>
+                <th>{{ title_ns.desc }}</th>
+            </tr>
+            {% set opti_ns = namespace(total_opti='') %}
+            {% for opti in format_result.cube[0] %}
+            {% if not loop.first %}
+            {% set opti_ns.total_opti = opti_ns.total_opti ~ "<tr><td>" ~ opti.op_name ~ "</td><td>" ~ opti.shape ~ "</td><td>" ~ opti.dtype ~ "</td><td>" ~ opti.optimization ~ "%</td></tr>" %}
+            {% else %}
+            {% set opti_ns.total_opti = "<tr><td>" ~ opti.op_name ~ "</td><td>" ~ opti.shape ~ "</td><td>" ~ opti.dtype ~ "</td><td>" ~ opti.optimization ~ "%</td></tr>" %}
+            {% endif %}
+            {% endfor %}
+            {% if opti_ns.total_opti|length > 0 %}
+            <tr>
+                <td>{{ title_ns.opti_set }}</td>
+                <td>
+                <table>
+                <tr><th>name</th><th>shape</th><th>dtype</th><th>{{ title_ns.opti_refer }}</th></tr>
+                    <tr>{{ opti_ns.total_opti | safe }}</tr>
+                </table>
+                </td>
+            </tr>
+            {% endif %}
+            {% set bound_ns = namespace(total_bound='') %}
+            {% for bound in format_result.cube[1] %}
+            {% if not loop.first %}
+            {% set bound_ns.total_bound = bound_ns.total_bound ~ "<tr><td>" ~ bound.op_name ~ "</td><td>" ~ bound.shape ~ "</td><td>" ~ bound.dtype ~ "</td><td>" ~ bound.bound ~ "</td></tr>" %}
+            {% else %}
+            {% set bound_ns.total_bound = "<tr><td>" ~ bound.op_name ~ "</td><td>" ~ bound.shape ~ "</td><td>" ~ bound.dtype ~ "</td><td>" ~ bound.bound ~ "</td></tr>" %}
+            {% endif %}
+            {% endfor %}
+            {% if bound_ns.total_bound|length > 0 %}
+            <tr>
+                <td>{{ title_ns.bound_set }}</td>
+                <td>
+                <table>
+                <tr><th>name</th><th>shape</th><th>dtype</th><th>{{ title_ns.bound_refer }}</th></tr>
+                    <tr>{{ bound_ns.total_bound | safe }}</tr>
+                </table>
+                </td>
+            </tr>
+            {% endif %}
+            {% set affinity_ns = namespace(total_affinity='') %}
+            {% for affinity in format_result.cube[2] %}
+            {% if not loop.first %}
+            {% set affinity_ns.total_affinity = affinity_ns.total_affinity ~ "<tr><td>" ~ affinity.op_name ~ "</td><td>" ~ affinity.shape ~ "</td><td>" ~ affinity.dtype ~ "</td><td>" ~ affinity.suggestion ~ "</td></tr>" %}
+            {% else %}
+            {% set affinity_ns.total_affinity = "<tr><td>" ~ affinity.op_name ~ "</td><td>" ~ affinity.shape ~ "</td><td>" ~ affinity.dtype ~ "</td><td>" ~ affinity.suggestion ~ "</td></tr>" %}
+            {% endif %}
+            {% endfor %}
+            {% if affinity_ns.total_affinity|length > 0 %}
+            <tr>
+                <td>{{ title_ns.affinity_set }}</td>
+                <td>
+                <table>
+                <tr><th>name</th><th>shape</th><th>dtype</th><th>{{ title_ns.affinity_refer }}</th></tr>
+                    <tr>{{ affinity_ns.total_affinity | safe }}</tr>
+                </table>
+                </td>
+            </tr>
+            {% endif %}
+        </table>
+        {% endif %}
+
+        {% if format_result.fa[0]|length + format_result.fa[1]|length + format_result.fa[2]|length > 0 %}
+        <a style="font-weight: bold" id="fa_analyze">FA{{ title_ns.title_desc }}</a>
+        <br>
+        <table>
+            <tr>
+                <th class="typecol">{{ title_ns.type }}</th>
+                <th>{{ title_ns.desc }}</th>
+            </tr>
+            {% set opti_ns = namespace(total_opti='') %}
+            {% for opti in format_result.fa[0] %}
+            {% if not loop.first %}
+            {% set opti_ns.total_opti = opti_ns.total_opti ~ "<tr><td>" ~ opti.op_name ~ "</td><td>" ~ opti.shape ~ "</td><td>" ~ opti.dtype ~ "</td><td>" ~ opti.optimization ~ "%</td></tr>" %}
+            {% else %}
+            {% set opti_ns.total_opti = "<tr><td>" ~ opti.op_name ~ "</td><td>" ~ opti.shape ~ "</td><td>" ~ opti.dtype ~ "</td><td>" ~ opti.optimization ~ "%</td></tr>" %}
+            {% endif %}
+            {% endfor %}
+            {% if opti_ns.total_opti|length > 0 %}
+            <tr>
+                <td>{{ title_ns.opti_set }}</td>
+                <td>
+                <table>
+                <tr><th>name</th><th>shape</th><th>dtype</th><th>{{ title_ns.opti_refer }}</th></tr>
+                    <tr>{{ opti_ns.total_opti | safe }}</tr>
+                </table>
+                </td>
+            </tr>
+            {% endif %}
+            {% set bound_ns = namespace(total_bound='') %}
+            {% for bound in format_result.fa[1] %}
+            {% if not loop.first %}
+            {% set bound_ns.total_bound = bound_ns.total_bound ~ "<tr><td>" ~ bound.op_name ~ "</td><td>" ~ bound.shape ~ "</td><td>" ~ bound.dtype ~ "</td><td>" ~ bound.bound ~ "</td></tr>" %}
+            {% else %}
+            {% set bound_ns.total_bound = "<tr><td>" ~ bound.op_name ~ "</td><td>" ~ bound.shape ~ "</td><td>" ~ bound.dtype ~ "</td><td>" ~ bound.bound ~ "</td></tr>" %}
+            {% endif %}
+            {% endfor %}
+            {% if bound_ns.total_bound|length > 0 %}
+            <tr>
+                <td>{{ title_ns.bound_set }}</td>
+                <td>
+                <table>
+                <tr><th>name</th><th>shape</th><th>dtype</th><th>{{ title_ns.bound_refer }}</th></tr>
+                    <tr>{{ bound_ns.total_bound | safe }}</tr>
+                </table>
+                </td>
+            </tr>
+            {% endif %}
+            {% set affinity_ns = namespace(total_affinity='') %}
+            {% for affinity in format_result.fa[2] %}
+            {% if not loop.first %}
+            {% set affinity_ns.total_affinity = affinity_ns.total_affinity ~ "<tr><td>" ~ affinity.op_name ~ "</td><td>" ~ affinity.shape ~ "</td><td>" ~ affinity.dtype ~ "</td><td>" ~ affinity.suggestion ~ "</td></tr>" %}
+            {% else %}
+            {% set affinity_ns.total_affinity = "<tr><td>" ~ affinity.op_name ~ "</td><td>" ~ affinity.shape ~ "</td><td>" ~ affinity.dtype ~ "</td><td>" ~ affinity.suggestion ~ "</td></tr>" %}
+            {% endif %}
+            {% endfor %}
+            {% if affinity_ns.total_affinity|length > 0 %}
+            <tr>
+                <td>{{ title_ns.affinity_set }}</td>
+                <td>
+                <table>
+                <tr><th>name</th><th>shape</th><th>dtype</th><th>{{ title_ns.affinity_refer }}</th></tr>
+                    <tr>{{ affinity_ns.total_affinity | safe }}</tr>
+                </table>
+                </td>
+            </tr>
+            {% endif %}
+        </table>
+        {% endif %}
+
+        {% if format_result.vector[0]|length + format_result.vector[1]|length > 0 %}
+        <a style="font-weight: bold" id="vector_analyze">Vector{{ title_ns.title_desc }}</a>
+        <br>
+        <table>
+            <tr>
+                <th class="typecol">{{ title_ns.type }}</th>
+                <th>{{ title_ns.desc }}</th>
+            </tr>
+            {% set opti_ns = namespace(total_opti='') %}
+            {% for opti in format_result.vector[0] %}
+            {% if not loop.first %}
+            {% set opti_ns.total_opti = opti_ns.total_opti ~ "<tr><td>" ~ opti.op_name ~ "</td><td>" ~ opti.shape ~ "</td><td>" ~ opti.dtype ~ "</td><td>" ~ opti.optimization ~ "%</td></tr>" %}
+            {% else %}
+            {% set opti_ns.total_opti = "<tr><td>" ~ opti.op_name ~ "</td><td>" ~ opti.shape ~ "</td><td>" ~ opti.dtype ~ "</td><td>" ~ opti.optimization ~ "%</td></tr>" %}
+            {% endif %}
+            {% endfor %}
+            {% if opti_ns.total_opti|length > 0 %}
+            <tr>
+                <td>{{ title_ns.opti_set }}</td>
+                <td>
+                <table>
+                <tr><th>name</th><th>shape</th><th>dtype</th><th>{{ title_ns.opti_refer }}</th></tr>
+                    <tr>{{ opti_ns.total_opti | safe }}</tr>
+                </table>
+                </td>
+            </tr>
+            {% endif %}
+            {% set bound_ns = namespace(total_bound='') %}
+            {% for bound in format_result.vector[1] %}
+            {% if not loop.first %}
+            {% set bound_ns.total_bound = bound_ns.total_bound ~ "<tr><td>" ~ bound.op_name ~ "</td><td>" ~ bound.shape ~ "</td><td>" ~ bound.dtype ~ "</td><td>" ~ bound.bound ~ "</td></tr>" %}
+            {% else %}
+            {% set bound_ns.total_bound = "<tr><td>" ~ bound.op_name ~ "</td><td>" ~ bound.shape ~ "</td><td>" ~ bound.dtype ~ "</td><td>" ~ bound.bound ~ "</td></tr>" %}
+            {% endif %}
+            {% endfor %}
+            {% if bound_ns.total_bound|length > 0 %}
+            <tr>
+                <td>{{ title_ns.bound_set }}</td>
+                <td>
+                <table>
+                <tr><th>name</th><th>shape</th><th>dtype</th><th>{{ title_ns.bound_refer }}</th></tr>
+                    <tr>{{ bound_ns.total_bound | safe }}</tr>
+                </table>
+                </td>
+            </tr>
+            {% endif %}
+        </table>
+        {% endif %}
+    </div>
+</div>
+{% endif %}

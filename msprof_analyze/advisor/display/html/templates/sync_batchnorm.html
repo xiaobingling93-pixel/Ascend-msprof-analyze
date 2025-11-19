@@ -1,0 +1,33 @@
+
+<div class="collapsible">
+    <h2 class="collapsible-header" style="background-color: {{ priority_background_color }};">SyncBatchNorm Issues</h2>
+    <div class="collapsible-content">
+      {% if rank is not none %}
+      <a style="font-weight: bold" id="timeline_api_instruction">Analysis of rank {{ rank|safe }}. </a>
+      {% endif %}
+        <a style="font-weight: bold" id="timeline_api_instruction">{{ desc }}</a>
+        <table>
+        <tr>
+            <th>Suggestions</th>
+        </tr>
+        {% for item in solutions %}
+            {% set rowloop = loop %}
+            {% for key, value in item.items() %}
+                <tr>
+                    <td>{{  rowloop.index }}. {{ value.desc }}</td>
+                </tr>
+            {% endfor %}
+        {% endfor %}
+        </table>
+
+        <a style="font-weight: bold" id="timeline_api_instruction"> More efficient code of syncbn forward as follows:</a>
+        {% for item in solutions %}
+            {% for key, value in item.items() %}
+                {% if 'efficient_code' in value %}
+                    <pre><code class="language-python">{{ value.efficient_code|safe }}</code></pre>
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
+
+    </div>
+</div>

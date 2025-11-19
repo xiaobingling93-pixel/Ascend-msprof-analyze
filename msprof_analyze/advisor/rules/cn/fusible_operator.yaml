@@ -1,0 +1,27 @@
+problem: "可融合算子分析"
+mte_problem: "基于mte瓶颈的算子序列分析"
+host_problem: "基于host瓶颈的算子序列分析"
+description: "共检测到{count}个有融合价值的算子序列，总计端到端耗时{wall_duration}ms， 其中npu时间共{npu_time}ms，host瓶颈耗时占比{host_threshold}，mte耗时占比{mte_threshold}."
+table_description: "
+序列起始算子在kernel details.csv(op_summary.csv)中索引位置（不包含表头，起始索引为0）\n
+序列末尾算子在kernel details.csv(op_summary.csv)中索引位置\n
+算子序列总耗时(包含算子间隙）\n
+序列中算子执行总耗时 \n
+序列中算子搬运总耗时 \n
+序列出现次数 \n
+是否为mte瓶颈 \n
+是否为host瓶颈"
+mte_description: "基于mte瓶颈的算子序列分析结果如下："
+host_description: "基于host瓶颈的算子序列分析结果如下:"
+max_length: 10
+min_length: 2
+host_threshold: 0.4
+mte_threshold: 0.8
+sequence_duration_threshold: 0.01
+sequence_count_threshold: 5
+top_num: 5
+solutions:
+  - 评估下发瓶颈:
+      desc: "发现大量存在host下发瓶颈的算子序列，可能原因是代码中使用了NPU非亲和操作。请先采集开启调用栈数据根据算子索引确定代码位置评估算法实现的亲和性，如无问题可进行后续可融合性评估"
+  - 评估融合可行性:
+      desc: "基于可融合算子序列数据，联系开发人员评估算法层面上算子序列是否可融合."

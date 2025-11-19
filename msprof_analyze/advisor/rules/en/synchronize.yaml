@@ -1,0 +1,5 @@
+problem: "SynchronizeStream will reduce training efficiency. Found {synchronize_num} SynchronizeStream and {node_launch_num} NodeLaunch, the co-occurrence ratio of SynchronizeStream and NodeLaunch is {co_occur_ratio}"
+min_co_occurrence_ratio: 0.5
+solutions:
+  - disable ascend launch blocking:
+      desc: "please check your env 'ASCEND_LAUNCH_BLOCKING', if ASCEND_LAUNCH_BLOCKING=1, please execute 'unset ASCEND_LAUNCH_BLOCKING' and then start your training job."

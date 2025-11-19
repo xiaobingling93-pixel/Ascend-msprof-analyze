@@ -1,0 +1,7 @@
+recursive-include msprof_analyze/advisor/ *
+recursive-include msprof_analyze/cli/ *
+recursive-include msprof_analyze/prof_common/ *
+recursive-include msprof_analyze/compare_tools/ *
+recursive-include msprof_analyze/cluster_analyse/ *
+global-exclude */__pycache__/*
+global-exclude *.pyc

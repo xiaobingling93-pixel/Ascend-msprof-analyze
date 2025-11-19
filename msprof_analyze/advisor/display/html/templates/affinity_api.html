@@ -1,0 +1,53 @@
+{% if result|length > 0 %}
+<div class="collapsible">
+  <h2 class="collapsible-header" style="background-color: {{ priority_background_color }};">Affinity API Issues</h2>
+  <div class="collapsible-content">
+      {% if rank is not none %}
+      <a style="font-weight: bold" id="timeline_api_instruction">Analysis of rank {{ rank|safe }}. </a>
+      {% endif %}
+      <a style="font-weight: bold" id="timeline_api_instruction">The analysis results of following affinity APIs are based on runtime env
+          <span style="font-weight:bold;">cann-{{ cann_version }}</span>
+          and
+          <span style="font-weight:bold;">{{profiling_type}}-{{ profiling_type }}</span>
+      </a>
+      <div class="collapsible">
+
+        {% if empty_stacks %}
+        <a style="font-weight: bold" id="timeline_api_instruction">Suggestion: </a>
+        <a>These APIs have no code stack. If parameter 'with_stack=False' was set while profiling, please refer to</a>
+        <a href="{{with_stack_doc_url|safe}}" target="_blank">Ascend Profiler</a> to set
+            <span style="font-weight:bold;">'with_stack=True'</span>. Otherwise, ignore following affinity APIs due to backward broadcast lack of stack.
+        {% endif %}
+
+      {% for api_name, stacks in result.items() %}
+
+        {% if empty_stacks %}
+        <div class="non-stack-api-box">{{api_name|safe}}</div>
+
+        {% else %}
+
+        <div class="collapsible-header">{{api_name|safe}}</div>
+        <div class="collapsible-content">
+          <div>
+            <a style="font-weight: bold" id="timeline_api_instruction">Suggestion: </a>
+            <a>Detailed information of affinity apis please refer to</a>
+            <a href="{{api_doc_url|safe}}#{{api_name|safe}}" target="_blank">API instructions</a>
+          </div>
+          <div class="collapsible">
+          {% for stack in stacks %}
+              <div class="collapsible-header">No.{{loop.index|safe}} code stack, called {{stack[1]|safe}} times</div>
+              <div class="collapsible-content">
+                <a id="timeline_api_stack">{{stack[0]|safe}}</a>
+              </div>
+          {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+      {% endfor %}
+
+      </div>
+
+  </div>
+</div>
+{% endif %}
