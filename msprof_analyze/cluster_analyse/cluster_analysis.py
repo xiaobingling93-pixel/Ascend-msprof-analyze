@@ -76,7 +76,11 @@ class Interface:
 
     def run(self):
         PathManager.check_input_directory_path(self.collection_path)
-        PathManager.check_output_directory_path(self.cluster_analysis_output_path)
+        if os.path.exists(self.cluster_analysis_output_path):
+            PathManager.check_output_directory_path(self.cluster_analysis_output_path)
+        else:
+            PathManager.input_path_common_check(self.cluster_analysis_output_path)
+            PathManager.make_dir_safety(self.cluster_analysis_output_path)
 
         data_dict = self.allocate_prof_data()
         data_map, data_type, prof_type = (data_dict.get(Constant.DATA_MAP), data_dict.get(Constant.DATA_TYPE),
