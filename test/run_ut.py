@@ -74,6 +74,7 @@ def run_ut():
     return ut_status
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
     set_python_path()
     ut_success = run_ut()
     if ut_success:
