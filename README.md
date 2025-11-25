@@ -1,9 +1,7 @@
 # MindStudio-Profiler-Analyze（msprof-analyze）
 
 ## 📌 简介
-MindStudio-Profiler-Analyze（msprof-analyze）是MindStudio全流程工具链推出的性能分析工具，基于采集的性能数据进行分析，识别AI作业中的性能瓶颈。
-
-**本工具为开发调测工具，不应在生产环境使用**
+MindStudio-Profiler-Analyze（简称msprof-analyze）是MindStudio全流程工具链推出的性能分析工具，基于采集的性能数据进行分析，识别AI作业中的性能瓶颈。
 
 ## 🔧 安装
 
@@ -159,9 +157,9 @@ msprof-analyze cluster -m [feature_option] -d <profiling_path> [global_option] [
 #### 子功能命令参数
 | 参数   | 说明                                                                                                               |
 |---------------------|------------------------------------------------------------------------------------------------------------------|
-| compare             | [compare（性能比对子功能）](./compare_tools/README.md)。提供NPU与GPU性能拆解功能以及算子、通信、内存性能的比对功能。                                  |
-| advisor             | [advisor（专家建议子功能）](./advisor/README.md)。基于性能数据进行分析，并输出性能调优建议。                                                    |
-| cluster              | [cluster_analyse（集群分析工具）](./cluster_analyse/README.md)。提供集群分析能力。8.2.0a1版本后，该参数可不配置，对应分析功能在msprof-analyze命令下直接执行。 |
+| compare             | [compare（性能比对子功能）](./docs/zh/compare_tool_instruct.md)。提供NPU与GPU性能拆解功能以及算子、通信、内存性能的比对功能。  |
+| advisor             | [advisor（专家建议子功能）](./docs/zh/advisor_instruct.md)。基于性能数据进行分析，并输出性能调优建议。 |
+| cluster              | [cluster_analyse（集群分析工具）](./docs/zh/cluster_analyse_introduct.md)。提供集群分析能力。8.2.0a1版本后，该参数可不配置，对应分析功能在msprof-analyze命令下直接执行。 |
 | auto-completion     | 自动补全。配置后在当前视图下配置msprof-analyze工具所有的子参数时，可以使用Tab将所有子参数自动补全。                                                       |
 
 
@@ -171,8 +169,8 @@ msprof-analyze cluster -m [feature_option] -d <profiling_path> [global_option] [
 
 | 分析能力    | 介绍                                     | 介绍链接 |
 |---------|----------------------------------------|-----|
-| cluster_time_summary | 性能数据细粒度拆解，替换step_trace_time.csv内容。 | [link](./docs/features/cluster_time_summary.md)  |
-| cluster_time_compare_summary | 性能数据细粒度对比。 | [link](./docs/features/cluster_time_compare_summary.md)   |
+| cluster_time_summary | 性能数据细粒度拆解，替换step_trace_time.csv内容。 | [link](./docs/zh/cluster_time_summary_instruct.md) |
+| cluster_time_compare_summary | 性能数据细粒度对比。 | [link](./docs/zh/cluster_time_compare_summary_instruct.md) |
 
 #### 计算类特性
 
@@ -193,7 +191,7 @@ msprof-analyze cluster -m [feature_option] -d <profiling_path> [global_option] [
 | communication_time_sum | 集群场景通信时间和带宽汇总分析。                                                                          | -   |
 | communication_matrix_sum | 集群场景通信矩阵汇总分析。                                                                             | -   |
 | hccl_sum | 通信类算子信息汇总。                                                                                | -   |
-| pp_chart | pp流水图，针对pp并行下各个阶段的耗时分析与可视化能力。                                                             | [link](./docs/features/pp_chart.md)             |
+| pp_chart | pp流水图，针对pp并行下各个阶段的耗时分析与可视化能力。                                                             | [link](./docs/zh/pp_chart_instruct.md) |
 | slow_rank | 根据当前的快慢卡统计算法，展示各个rank得出的快慢卡影响次数，识别慢卡出现的原因。                                                | -  |
 
 #### Host下发类特性
@@ -209,7 +207,7 @@ msprof-analyze cluster -m [feature_option] -d <profiling_path> [global_option] [
 | mstx2commop | 数据处理类 | 将通过MSTX内置通信打点的通信信息转换成通信算子表格式。 | -  |
 | p2p_pairing | 数据处理类 | P2P算子生成全局关联索引，输出的关联索引会作为一个新的字段`opConnectionId`附在`COMMUNICATION_OP`的表中。 | -  |
 
-交付件详细内容请参见[recipe结果交付件表](./docs/recipe_output_format.md)文档。
+交付件详细内容请参见[recipe结果交付件表](./docs/zh/recipe_output_format_introduct.md)文档。
 
 ### 使用样例
 #### 最简使用
@@ -250,7 +248,7 @@ msprof-analyze compare -d ./ascend_pt  # 昇腾NPU性能数据目录
 * 宏观性能拆分：按计算、通信、空闲三大维度统计耗时占比差异，快速识别性能损耗主要场景。
 * 细粒度对比：按算子（如 Conv、MatMul）、框架接口等粒度展示耗时差异，定位具体性能差距点。
 
-> 对比规则维度、参数说明及报告解读，请参考 [msprof-analyze compare](./compare_tools/README.md)子功能介绍文档。
+> 对比规则维度、参数说明及报告解读，请参考 [msprof-analyze compare](./docs/zh/compare_tool_instruct.md)子功能介绍文档。
 
 #### 专家建议（advisor）子功能
 自动分析性能数据，识别算子执行效率、下发调度、集群通信等潜在瓶颈，并生成分级优化建议，助力快速定位问题。
@@ -264,11 +262,11 @@ msprof-analyze advisor all -d ./prof_data -o ./advisor_output
 * `mstt_advisor_{timestamp}.html`按重要程度标记的优化建议
 * `mstt_advisor_{timestamp}.xlsx`问题综述与详细的分析信息
 
-> 详细分析规则、参数配置及结果解读，请参考 [msprof-analyze advisor](./advisor/README.md)子功能介绍文档。
-       
+> 详细分析规则、参数配置及结果解读，请参考 [msprof-analyze advisor](./docs/zh/advisor_instruct.md)子功能介绍文档。
+
 ## 扩展功能
 ### 自定义开发指导
-用户可自定义一套性能数据的分析规则，需要详细了解性能分析的开发人员，具体开发指导请参见[自定义分析能力开发指导](./docs/custom_analysis_guide.md)。
+用户可自定义一套性能数据的分析规则，需要详细了解性能分析的开发人员，具体开发指导请参见[自定义分析能力开发指导](./docs/zh/custom_analysis_guide.md)。
 
 
 ## 附录
@@ -306,6 +304,18 @@ msprof-analyze advisor all -d ./prof_data -o ./advisor_output
 
 ## FAQ
 暂无
+
+## License
+
+MindStudio-Profiler-Analyze工具使用许可证，详见[LICENSE](./LICENSE)文件。
+
+## ❗免责声明
+
+本工具为开发调测工具，不应在生产环境使用。
+
+## 建议与交流
+
+欢迎大家为社区做贡献。如果有任何疑问或建议，请提交issues，我们会尽快回复。感谢您的支持。
 
 ## 致谢
 

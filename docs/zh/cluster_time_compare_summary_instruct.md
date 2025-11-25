@@ -19,10 +19,10 @@ msprof-analyze -m cluster_time_summary -d ./base_cluster_data
 msprof-analyze -m cluster_time_compare_summary -d ./cluster_data --bp ./base_cluster_data
 ```
 **参数说明：**  
-* `-m`cluster_time_compare_summary 使能集群耗时细粒度对比能力
+* `-m`cluster_time_compare_summary 使能集群耗时细粒度对比能力。
 * `-d`集群性能数据文件夹路径
 * `-bp`标杆集群数据路径
-* 其余参数：参考msprof-analyze调用参数指导，详见[参数说明](../../README.md#参数说明)
+* 其余参数：参考msprof-analyze调用参数指导，详见[参数说明](../../README.md#参数说明)。
 
 **输出数据：**  
 * 存储位置：cluster_analysis_output/cluster_analysis.db
@@ -32,13 +32,13 @@ msprof-analyze -m cluster_time_compare_summary -d ./cluster_data --bp ./base_clu
 
 | 字段名称       | 类型     | 说明                               |
 |------------|----------|----------------------------------|
-| rank       | INTEGER  | 卡号                               |
-| step       | INTEGER  | 迭代编号                             |
-| {metrics}  | REAL     | 当前集群耗时指标，与ClusterTimeSummary字段一致 |
-| {metrics}Base | REAL     | 基准集群的对应耗时                        |
-| {metrics}Diff | REAL     | 耗时偏差值（当前集群-基准集群），正值表示当前集群更慢      |
+| rank       | INTEGER  | 卡号。                              |
+| step       | INTEGER  | 迭代编号。                            |
+| {metrics}  | REAL     | 当前集群耗时指标，与ClusterTimeSummary字段一致。 |
+| {metrics}Base | REAL     | 基准集群的对应耗时。                       |
+| {metrics}Diff | REAL     | 耗时偏差值（当前集群-基准集群），正值表示当前集群更慢。     |
 
-备注：表中时间相关字段，统一使用微秒（us）
+上表中时间相关字段，统一使用微秒（us）。
 
 **输出结果分析：**
 * 按*Diff字段排序找出最大差异项，找到劣化环节。
