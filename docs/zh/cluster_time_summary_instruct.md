@@ -1,33 +1,58 @@
-# cluster_time_summary 集群性能数据细粒度拆解
+# 集群性能数据细粒度拆解
 
-## 背景与挑战
+## 简介
+
 大集群场景涉及多个计算节点，数据量大，单卡维度的性能数据统计与分析不能评估整体集群运行情况。
 
-原有的cluster_step_trace_time。csv交付件没有单独的执行命令，导致用户使用不直观，且不能涵盖内存拷贝等指标项，需要增强。
-
-## 功能介绍
+原有的cluster_step_trace_time.csv交付件没有单独的执行命令，导致用户使用不直观，且不能涵盖内存拷贝等指标项，需要增强。
 
 cluster_time_summary 提供了集群训练过程中迭代耗时拆解，包括计算、通信和内存拷贝等各部分的时间消耗，帮助用户找到性能瓶颈。
 
-**使用方法**
+## 使用前准备
+
+**环境准备**
+
+安装msprof-analyze工具，详情请参见《[msprof-analyze安装指南](../../README.md#🔧-安装)》。
+
+**数据准备**
+
+msprof-analyze需要传入采集的性能数据文件夹，如何采集性能数据请参见[采集profiling性能数据指导](../../README.md#采集profiling性能数据指导)章节。
+
+## 集群性能数据细粒度拆解
+
+**功能说明**
+
+使用msprof-analyze工具的集群性能数据细粒度拆解功能，对采集到的集群数据进行分析。
+
+**命令格式**
 
 ```
-msprof-analyze -m cluster_time_summary -d ./cluster_data
+msprof-analyze -m cluster_time_summary -d <cluster_data> [-o <output_path>]
 ```
-**参数说明：**  
-* `-m`设置为cluster_time_summary 使能集群耗时细粒度拆解能力。
-* `-d`集群性能数据文件夹路径。
-* 其余参数：参考msprof-analyze调用参数指导，详见[参数说明](../../README.md#参数说明)。
 
-**输出数据：**  
+**参数说明**  
 
-* 存储位置：cluster_analysis_output/cluster_analysis.db  
+| 参数 | 可选/必选 | 说明                                              |
+| ---- | --------- | ------------------------------------------------- |
+| -m   | 必选      | 设置为cluster_time_summary 使能集群耗时细粒度拆解能力。 |
+| -d   | 必选      | 集群性能数据文件夹路径。 |
+| --bp | 必选      | 基础集群性能数据文件夹路径。 |
+| -o   | 可选      | 指定输出文件路径。          |
+
+更多参数详细介绍请参见msprof-analyze的[参数说明](../../README.md#参数说明)。
+
+
+**输出说明**  
+
+* 存储位置：输出路径下的cluster_analysis_output/cluster_analysis.db  
 
 * 数据表名：ClusterTimeSummary
 
   ![输出结果展示](./figures/cluster_time_summary.png)
 
-**字段说明：**
+## 输出结果文件说明
+
+ClusterTimeSummary表字段如下：
 
 | 字段名称                                 | 类型    | 说明                                           |
 | ---------------------------------------- | ------- | ---------------------------------------------- |
