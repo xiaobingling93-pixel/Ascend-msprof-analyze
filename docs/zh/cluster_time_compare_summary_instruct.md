@@ -1,34 +1,57 @@
-# cluster_time_compare_sumary 集群性能数据细粒度比对
+# 集群性能数据细粒度比对
 
+## 简介
 
-## 背景与挑战
-大集群场景涉及多个计算节点，数据量大，原有的单卡性能数据对比不能评估整体集群运行情况。
-    
-## 功能介绍
+大集群场景涉及多个计算节点，数据量大，原有的单卡性能数据对比不能评估整体集群运行情况。cluster_time_compare_sumary 提供了AI运行过程中集群维度的性能数据对比能力，包括计算、通信和内存拷贝等各部分的时间消耗，帮助用户找到性能瓶颈。
 
-  cluster_time_compare_sumary 提供了AI运行过程中集群维度的性能数据对比能力，包括计算、通信和内存拷贝等各部分的时间消耗，帮助用户找到性能瓶颈。
+## 使用前准备
 
-## 使用方法
+**环境准备**
+
+安装msprof-analyze工具，详情请参见《[msprof-analyze安装指南](../../README.md#🔧-安装)》。
+
+**数据准备**
+
+msprof-analyze需要传入采集的性能数据文件夹，如何采集性能数据请参见[采集profiling性能数据指导](../../README.md#采集profiling性能数据指导)章节。
+
+## 集群性能数据细粒度比对
+
+**功能说明**
+
+使用msprof-analyze工具的集群性能数据细粒度比对功能，对采集到的集群数据进行对比分析。
+
+**命令格式**
 
 ```bash
 # 首先执行cluster_time_summary分析能力,执行集群耗时细粒度拆解
-msprof-analyze -m cluster_time_summary -d ./cluster_data
-msprof-analyze -m cluster_time_summary -d ./base_cluster_data
+msprof-analyze -m cluster_time_summary -d <cluster_data>
+msprof-analyze -m cluster_time_summary -d <base_cluster_data>
 
 # 执行cluster_time_compare_summary,传入两个拆解分析后的文件夹路径
-msprof-analyze -m cluster_time_compare_summary -d ./cluster_data --bp ./base_cluster_data
+msprof-analyze -m cluster_time_compare_summary -d <cluster_data> --bp <base_cluster_data> [-o <output_path>]
 ```
-**参数说明：**  
-* `-m`cluster_time_compare_summary 使能集群耗时细粒度对比能力。
-* `-d`集群性能数据文件夹路径
-* `-bp`标杆集群数据路径
-* 其余参数：参考msprof-analyze调用参数指导，详见[参数说明](../../README.md#参数说明)。
 
-**输出数据：**  
-* 存储位置：cluster_analysis_output/cluster_analysis.db
+**参数说明**
+
+| 参数 | 可选/必选 | 说明                                              |
+| ---- | --------- | ------------------------------------------------- |
+| -m   | 必选      | 设置为cluster_time_compare_summary 使能集群耗时细粒度比对能力。|
+| -d   | 必选      | 集群性能数据文件夹路径。 |
+| --bp | 必选      | 基础集群性能数据文件夹路径。 |
+| -o   | 可选      | 指定输出文件路径。          |
+
+更多参数详细介绍请参见msprof-analyze的[参数说明](../../README.md#参数说明)。
+
+
+**输出说明**
+
+* 存储位置：输出路径下的cluster_analysis_output/cluster_analysis.db
 * 数据表名：ClusterTimeCompareSummary
 
-**字段说明：**
+
+## 输出结果文件说明
+
+ClusterTimeCompareSummary表字段如下：
 
 | 字段名称       | 类型     | 说明                               |
 |------------|----------|----------------------------------|

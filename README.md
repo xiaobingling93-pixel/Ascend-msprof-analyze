@@ -75,18 +75,17 @@ Successfully installed msprof-analyze-{version}
 2. 下载源码。
 
    ```bash
-   git clone https://gitcode.com/Ascend/mstt.git
+   git clone https://gitcode.com/Ascend/msprof-analyze
    ```
 
 3. 编译whl包。
 
 **在安装如下依赖时，请注意使用满足条件的较新版本软件包，关注并修补存在的漏洞，尤其是已公开的CVSS打分大于7分的高危漏洞。**
    ```bash
-   cd mstt/profiler/msprof_analyze
    pip3 install -r requirements.txt && python3 setup.py bdist_wheel
    ```
 
-   以上命令执行完成后在mstt/profiler/msprof_analyze/dist目录下生成性能工具whl安装包`msprof_analyze-{version}-py3-none-any.whl`。
+   以上命令执行完成后在dist目录下生成性能工具whl安装包`msprof_analyze-{version}-py3-none-any.whl`。
 
 4. 安装。
 
@@ -133,26 +132,26 @@ msprof-analyze cluster -m [feature_option] -d <profiling_path> [global_option] [
 #### 全局参数
 主要包括输入输出与格式参数、执行参数以及帮助信息等。
 
-   | 参数名                | 说明                                                         | 是否必选 |
-   | --------------------- | ------------------------------------------------------------ | -------- |
-   | --profiling_path或-d  | 性能数据汇集目录。未配置-o参数时，运行分析脚本之后会在该目录下自动创建cluster_analysis_output文件夹，保存分析数据。 | 是       |
-   | --output_path或-o     | 自定义输出路径，运行分析脚本之后会在该目录下自动创建cluster_analysis_output文件夹，保存分析数据。 | 否       |
-   | --mode或-m            | 分析能力选项，取值详见[分析能力特性说明](#分析特性介绍)表。  默认参数为all，all会执行step_trace_time和communication_matrix通信矩阵和communication_time通信耗时分析能力              | 否       |
-   | --export_type         | 设置导出的数据形式。取值为db（.db格式文件）和notebook（Jupyter Notebook文件），默认值为db。       | 否       |
+   | 参数名                | 说明                                                                                                                                                                                                       | 是否必选 |
+   | --------------------- |----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------| -------- |
+   | --profiling_path或-d  | 性能数据汇集目录。未配置-o参数时，运行分析脚本之后会在该目录下自动创建cluster_analysis_output文件夹，保存分析数据。                                                                                                                                   | 是       |
+   | --output_path或-o     | 自定义输出路径，运行分析脚本之后会在该目录下自动创建cluster_analysis_output文件夹，保存分析数据。                                                                                                                                             | 否       |
+   | --mode或-m            | 分析能力选项，取值详见[分析能力特性说明](#分析特性介绍)表。  默认参数为all，all会执行step_trace_time和communication_matrix通信矩阵和communication_time通信耗时分析能力。                                                                                    | 否       |
+   | --export_type         | 设置导出的数据形式。取值为db（.db格式文件）和notebook（Jupyter Notebook文件），默认值为db。                                                                                                                                            | 否       |
    | --force               | 强制执行，用户对force行为负责，配置后可强制跳过如下情况：<br/>        指定的目录、文件的用户属主不属于当前用户，忽略属主判断直接执行。<br/>        csv文件大于5G、json文件大于10G、db文件大于8G，忽略文件过大判断直接执行。<br/>        指定的目录、文件的读写权限，忽略权限判断直接执行。<br/>配置该参数表示开启强制执行，默认未配置表示关闭。 | 否       |
-   | --parallel_mode       | 设置收集多卡、多节点db数据时的并发方式。取值为concurrent（使用concurrent.feature进程池实现并发）。| 否       |
-   | -v，-V<br/>--version | 查看版本号。 | 否 |
-   | -h，-H<br>--help     | 命令行参数帮助信息。 | 否 |
+   | --parallel_mode       | 设置收集多卡、多节点db数据时的并发方式。取值为concurrent（使用concurrent.feature进程池实现并发）。                                                                                                                                         | 否       |
+   | -v，-V<br/>--version | 查看版本号。                                                                                                                                                                                                   | 否 |
+   | -h，-H<br>--help     | 命令行参数帮助信息。                                                                                                                                                                                               | 否 |
 
 #### 分析能力参数
 
-   | 参数名                | 说明                                                         | 是否必选 |
-   | --------------------- | ------------------------------------------------------------ | -------- |
-   | --rank_list           | 对特定Rank上的数据进行统计，默认值为all（表示对所有Rank进行统计），须根据实际卡的Rank ID配置。应配置为大于等于0的整数，若所配置的值大于实际训练所运行的卡的Rank ID，则仅解析合法的RankID的数据，比如当前环境Rank ID为0到7，实际训练运行0到3卡，此时若配置Rank ID为0， 3， 4或不存在的10等其他值，则仅解析0和3。配置示例：--rank_list 0， 1， 2。<br/>**需要对应分析能力适配才可使用， 当前分析能力设置cann_api_sum、compute_op_sum、hccl_sum、mstx_sum时支持。**       | 否       |
-   | --step_id             | 性能数据Step ID，配置后对该Step的性能数据进行分析。需配置性能数据中实际存在的Step ID，默认未配置，表示全量分析。配置示例：--step_id=1。<br/>**需要对应分析能力适配才可使用， 当前只有分析能力设置cann_api_sum、compute_op_sum、hccl_sum、mstx_sum时支持。**                                                 | 否 |
-   | --top_num             | 设置TopN耗时的通信算子的数量，默认值为15，配置示例：--top_num 20。<br/>**只有-m配置hccl_sum时可配置此参数。** | 否       |
-   | --exclude_op_name    | 控制compute_op_name结果是否包含op_name，示例：--exclude_op_name，后面不需要跟参数。<br/>**只有-m配置compute_op_sum时可配置此参数。** | 否       |
-   | --bp                 | 要对比的标杆集群数据，示例：--bp {bp_cluster_profiling_path}，表示profiling_path和bp_cluster_profiling_path的数据进行对比。<br/>**只有-m配置cluster_time_compare_summary时可配置此参数。** | 否       |
+   | 参数名                | 说明                                                                                                                                                                                                                                                                                             | 是否必选 |
+   | --------------------- |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------| -------- |
+   | --rank_list           | 对特定Rank上的数据进行统计，默认值为all（表示对所有Rank进行统计），须根据实际卡的Rank ID配置。应配置为大于等于0的整数，若所配置的值大于实际训练所运行的卡的Rank ID，则仅解析合法的RankID的数据，比如当前环境Rank ID为0到7，实际训练运行0到3卡，此时若配置Rank ID为0， 3， 4或不存在的10等其他值，则仅解析0和3。配置示例：--rank_list 0,1,2。<br/>**需要对应分析能力适配才可使用， 当前分析能力设置cann_api_sum、compute_op_sum、hccl_sum、mstx_sum时支持。** | 否       |
+   | --step_id             | 性能数据Step ID，配置后对该Step的性能数据进行分析。需配置性能数据中实际存在的Step ID，默认未配置，表示全量分析。配置示例：--step_id=1。<br/>**需要对应分析能力适配才可使用， 当前只有分析能力设置cann_api_sum、compute_op_sum、hccl_sum、mstx_sum时支持。**                                                                                                                         | 否 |
+   | --top_num             | 设置TopN耗时的通信算子的数量，默认值为15，配置示例：--top_num 20。<br/>**只有-m配置hccl_sum时可配置此参数。**                                                                                                                                                                                                                      | 否       |
+   | --exclude_op_name    | 控制compute_op_name结果是否包含op_name，示例：--exclude_op_name，后面不需要跟参数。<br/>**只有-m配置compute_op_sum时可配置此参数。**                                                                                                                                                                                             | 否       |
+   | --bp                 | 要对比的标杆集群数据，示例：--bp {bp_cluster_profiling_path}，表示profiling_path和bp_cluster_profiling_path的数据进行对比。<br/>**只有-m配置cluster_time_compare_summary时可配置此参数。**                                                                                                                                           | 否       |
 
 #### 子功能命令参数
 | 参数   | 说明                                                                                                               |
@@ -274,7 +273,7 @@ msprof-analyze advisor all -d ./prof_data -o ./advisor_output
   * msprof 场景：参见“性能数据采集 > [msprof采集通用命令](https://www.hiascend.com/document/detail/zh/mindstudio/81RC1/T&ITools/Profiling/atlasprofiling_16_0008.html)”。
   * PyTorch 场景：参见“性能数据采集 > [PyTorch](https://www.hiascend.com/document/detail/zh/mindstudio/81RC1/msquickstart/atlasquick_train_0018.html)”。
   * MindSpore 场景：参见“性能数据采集 > [MindSpore](https://www.hiascend.com/document/detail/zh/mindstudio/81RC1/msquickstart/atlasquick_train_0017.html)”。
-  * msMonitor 场景：参见“msmonitor > [npumonitor](../../msmonitor/docs/npumonitor.md)”。
+  * msMonitor 场景：参见“msmonitor > [msmonitor](https://gitcode.com/Ascend/msmonitor)”。
 
 ### 发布程序包下载链接
 | profiler版本 | 发布日期       | 下载链接                                                                                                                                                       | 校验码                                                       |
