@@ -17,9 +17,10 @@ import os
 from collections import defaultdict
 import pandas as pd
 
-from msprof_analyze.cluster_analyse.common_func.excel_utils import ExcelUtils
+from msprof_analyze.cluster_analyse.recipes.module_statistic.backward_module_create import BackwardModuleCreator
 from msprof_analyze.cluster_analyse.recipes.module_statistic.tree_build import (NodeType, TreeNode, ModuleNode,
                                                                                 TreeBuilder, ensure_numeric_columns)
+from msprof_analyze.cluster_analyse.common_func.excel_utils import ExcelUtils
 from msprof_analyze.cluster_analyse.recipes.base_recipe_analysis import BaseRecipeAnalysis
 from msprof_analyze.prof_exports.module_statistic_export import FrameworkOpToKernelExport, ModuleMstxRangeExport
 from msprof_analyze.prof_common.db_manager import DBManager
@@ -99,6 +100,12 @@ class ModuleStatistic(BaseRecipeAnalysis):
         module_df, kernel_df = self._query_all_data(profiler_db_path, rank_id)
         if module_df is None or module_df.empty:
             return rank_id, pd.DataFrame()
+
+        # 处理反向传播数据
+        backward_creator = BackwardModuleCreator(profiler_db_path)
+        bwd_module_df = backward_creator.run(module_df)
+        if not bwd_module_df.empty:
+            module_df = pd.concat([module_df, bwd_module_df])
 
         # 构建树并处理
         root = self._build_complete_tree(module_df, kernel_df)
@@ -206,6 +213,11 @@ class ModuleStatistic(BaseRecipeAnalysis):
             if not module and not module_parent:
                 return
 
+            # 判断是否为backward：检查当前节点或父节点链中是否有backward
+            is_backward = module_node.is_backward or any(
+                isinstance(parent, ModuleNode) and parent.is_backward
+                for parent in module_node_deque
+            )
 
             # 收集该op下的所有kernel信息
             kernel_names = []
@@ -218,7 +230,7 @@ class ModuleStatistic(BaseRecipeAnalysis):
 
             results.append({
                 'module_parent': module_parent,
-                'module': module,
+                'module': module if not is_backward else f"[{ModuleNode.BACKWARD}]{module}",
                 'module_start': module_node.start,
                 'module_end': module_node.end,
                 'op_name': op_node.name,
@@ -271,12 +283,36 @@ class ModuleStatistic(BaseRecipeAnalysis):
             ).reset_index()
         )
 
-        # 排序并删除后续不再使用的列
+        # 区分同一module_parent下，module名称相同，但实际算子执行不同的层级
+        stat_df = self._distinguish_contiguous_module(stat_df)
+
+        # 根据算子执行顺序排序，删除后续不再使用的列
         stat_df = (stat_df.sort_values(by=['op_start', 'op_order'])
                    .drop(columns=['module_start', 'module_end', 'seq_id', 'op_order', 'op_start'])
                    .reset_index(drop=True))
 
         return stat_df
+
+    def _distinguish_contiguous_module(self, stat_df):
+        stat_df = stat_df.sort_values('op_start').reset_index(drop=True)
+        stat_df['index'] = stat_df.index
+        result_dfs = []
+
+        for _, group in stat_df.groupby(['module_parent', 'module']):
+            group = group.copy().sort_values('index')
+            group['continuous_group'] = (group['index'].diff() != 1).cumsum()
+
+            for _, subgroup in group.groupby('continuous_group'):
+                unique_seq_ids = subgroup['seq_id'].unique()
+                if len(unique_seq_ids) > 1:
+                    seq_id_to_suffix = {seq_id: i for i, seq_id in enumerate(sorted(unique_seq_ids))}
+                    for idx in subgroup.index:
+                        suffix = seq_id_to_suffix[group.loc[idx, 'seq_id']]
+                        group.loc[idx, 'module'] = f"{group.loc[idx, 'module']}_{suffix}"
+
+            result_dfs.append(group)
+
+        return pd.concat(result_dfs, ignore_index=True).drop(columns=['index', 'continuous_group'])
 
     def _format_stat_df_columns(self, stat_df):
         try:
