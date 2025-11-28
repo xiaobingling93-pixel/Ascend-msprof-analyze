@@ -166,10 +166,11 @@ msprof-analyze cluster -m [feature_option] -d <profiling_path> [global_option] [
 
 #### 拆解对比类
 
-| 分析能力    | 介绍                                     | 介绍链接 |
-|---------|----------------------------------------|-----|
-| cluster_time_summary | 性能数据细粒度拆解，替换step_trace_time.csv内容。 | [link](./docs/zh/cluster_time_summary_instruct.md) |
-| cluster_time_compare_summary | 性能数据细粒度对比。 | [link](./docs/zh/cluster_time_compare_summary_instruct.md) |
+| 分析能力                         | 介绍                               | 介绍链接                                                       |
+|------------------------------|----------------------------------|------------------------------------------------------------|
+| cluster_time_summary         | 性能数据细粒度拆解，替换step_trace_time.csv内容。 | [link](./docs/zh/cluster_time_summary_instruct.md)         |
+| cluster_time_compare_summary | 性能数据细粒度对比。                       | [link](./docs/zh/cluster_time_compare_summary_instruct.md) |
+| module_statistic             | 性能数据模型拆解。                        | [link](./docs/zh/module_statistic_instruct.md)             |
 
 #### 计算类特性
 

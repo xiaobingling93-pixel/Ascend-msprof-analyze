@@ -1,0 +1,189 @@
+# 模型结构拆解指南
+
+## 简介
+
+msprof-analyze提供了针对PyTorch模型自动解析模型层级结构的分析能力（module_statistic），帮助精准定位性能瓶颈，为模型优化提供关键洞察。该分析能力提供：
+
+* 模型结构拆解：自动提取并展示模型的层次化结构，以及模型中的算子调用顺序。
+* 算子与Kernel映射：框架层算子下与NPU上执行Kernel的映射关系。
+* 性能分析：精确统计并输出Device侧Kernel的执行耗时。
+
+
+## 使用前准备
+
+**环境准备**
+
+安装msprof-analyze工具，详情请参见《[msprof-analyze安装指南](../../README.md#🔧-安装)》。
+
+**数据准备**
+
+1. 添加mstx打点
+
+    在模型代码中调用`torch_npu.npu.mstx.range_start/range_end`性能打点接口，需重写PyTorch中的nn.Module调用逻辑。
+
+2. 配置并采集 Profiling 数据
+
+   * 使用`torch_npu.profiler`接口采集性能数据。
+   * 在`torch_npu.profiler._ExperimentalConfig`设置`msprof_tx=True`，开启打点事件采集。
+   * 在`torch_npu.profiler._ExperimentalConfig`设置`export_type`导出类型，需要包含DB。
+   * 性能数据落盘在`torch_npu.profiler.tensorboard_trace_handler`接口指定的路径下，将该路径下的数据作为msprof-analyze cluster的输入数据。
+
+完整样例代码，详见[性能数据采集样例代码](#性能数据采集样例代码)。
+
+## 模型结构拆解
+
+**功能说明**  
+
+将采集到的带有模型结构mstx打点的数据，执行msprof-analyze工具分析操作。
+
+**命令格式**  
+
+```
+msprof-analyze -m module_statistic -d ./result --export_type excel
+```
+**参数说明**
+
+| 参数 | 可选/必选 | 说明                                              |
+| ---- | --------- | ------------------------------------------------- |
+| -m   | 必选      | 设置为module_statistic 使能模型结构拆解能力。|
+| -d   | 必选      | 集群性能数据文件夹路径。 |
+| --bp | 必选      | 基础集群性能数据文件夹路径。 |
+| -o   | 可选      | 指定输出文件路径。          |
+| --export_type   | 可选      | 指定输出文件类型，可选db或excel。          |
+
+更多参数详细介绍请参见msprof-analyze的[参数说明](../../README.md#参数说明)。
+
+**输出说明**  
+* 输出结果体现模型层级，算子调用顺序，NPU上执行的Kernel以及统计时间。
+* `export_type`设置为`excel`时，每张卡生成独立的module_statistic_{rank_id}.csv文件，如下图所示：  
+![vllm_module_statistic](./figures/vllm_module_statistic.png)
+
+* `export_type`设置为`db`时，结果统一保存到 cluster_analysis.db 的 ModuleAnalysisStatistic，字段说明如下：  
+  
+  | 字段名称                | 说明                                          |
+  |---------------------|---------------------------------------------|
+  | parentModule        | 上层Module名称, TEXT类型                          |
+  | module              | 最底层Module名称, TEXT类型                         |
+  | opName              | 框架侧算子名称，同一module下，算子按照调用顺序排列, TEXT类型        |
+  | kernelList        | 框架侧算子下发到Device侧执行Kernel的序列, TEXT类型          |
+  | totalKernelDuration | 框架侧算子对应Device侧Kernel运行总时间，单位纳秒（ns）, REAL类型  |
+  | avgKernelDuration   | 框架侧算子对应Device侧Kernel平均运行时间，单位纳秒（ns）, REAL类型 |
+  | opCount             | 框架侧算子在采集周期内运行的次数, INTEGER类型                 |
+  | rankID              | 集群场景的节点识别ID，集群场景下设备的唯一标识, INTEGER类型         |
+
+
+
+## 附录
+### 性能数据采集样例代码
+
+对于复杂模型结构，建议采用选择性打点策略以降低性能开销，核心性能打点实现代码如下：
+```
+module_list = ["Attention", "QKVParallelLinear"]
+def custom_call(self, *args, **kwargs):
+    module_name = self.__class__.__name__
+    if module_name not in module_list:
+        return original_call(self, *args, **kwargs)
+    mstx_id = torch_npu.npu.mstx.range_start(module_name, domain="Module")
+    tmp = original_call(self, *args, **kwargs)
+    torch_npu.npu.mstx.range_end(mstx_id, domain="Module")
+    return tmp
+```
+完整样例代码如下：
+```
+import random
+import torch
+import torch_npu
+import torch.nn as nn
+import torch.optim as optim
+
+
+original_call = nn.Module.__call__
+
+def custom_call(self, *args, **kwargs):
+    """自定义nn.Module调用方法，添加MSTX打点"""
+    module_name = self.__class__.__name__
+    mstx_id = torch_npu.npu.mstx.range_start(module_name, domain="Module")
+    tmp = original_call(self, *args, **kwargs)
+    torch_npu.npu.mstx.range_end(mstx_id, domain="Module")
+    return tmp
+
+
+class RMSNorm(nn.Module):
+    def __init__(self, dim: int, eps: float = 1e-6):
+        super().__init__()
+        self.eps = eps
+        self.weight = nn.Parameter(torch.ones(dim))
+
+    def _norm(self, x):
+        return x * torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + self.eps)
+
+    def forward(self, x):
+        output = self._norm(x.float()).type_as(x)
+        return output * self.weight
+
+
+class ToyModel(nn.Module):
+    def __init__(self, D_in, H, D_out):
+        super(ToyModel, self).__init__()
+        self.input_linear = torch.nn.Linear(D_in, H)
+        self.middle_linear = torch.nn.Linear(H, H)
+        self.output_linear = torch.nn.Linear(H, D_out)
+        self.rms_norm = RMSNorm(D_out)
+
+    def forward(self, x):
+        h_relu = self.input_linear(x).clamp(min=0)
+        for i in range(3):
+            h_relu = self.middle_linear(h_relu).clamp(min=random.random())
+        y_pred = self.output_linear(h_relu)
+        y_pred = self.rms_norm(y_pred)
+        return y_pred
+
+
+def train():
+    # 替换默认调用方法
+    nn.Module.__call__ = custom_call
+    N, D_in, H, D_out = 256, 1024, 4096, 64
+
+    torch.npu.set_device(6)
+    input_data = torch.randn(N, D_in).npu()
+    labels = torch.randn(N, D_out).npu()
+    model = ToyModel(D_in, H, D_out).npu()
+
+    loss_fn = nn.MSELoss()
+    optimizer = optim.SGD(model.parameters(), lr=0.001)
+
+    experimental_config = torch_npu.profiler._ExperimentalConfig(
+        aic_metrics=torch_npu.profiler.AiCMetrics.PipeUtilization,
+        profiler_level=torch_npu.profiler.ProfilerLevel.Level2,
+        l2_cache=False,
+        msprof_tx=True,  # 打开msprof_tx采集
+        data_simplification=False,
+    	export_type=['text', 'db']  # 导出类型中必须要包含db
+    )
+
+    prof = torch_npu.profiler.profile(
+        activities=[torch_npu.profiler.ProfilerActivity.CPU, torch_npu.profiler.ProfilerActivity.NPU],
+        schedule=torch_npu.profiler.schedule(wait=1, warmup=1, active=3, repeat=1, skip_first=5),
+        on_trace_ready=torch_npu.profiler.tensorboard_trace_handler("./result"),
+        record_shapes=True,
+        profile_memory=False,
+        with_stack=False,
+        with_flops=False,
+        with_modules=True,
+        experimental_config=experimental_config)
+    prof.start()
+
+    for i in range(12):
+        optimizer.zero_grad()
+        outputs = model(input_data)
+        loss = loss_fn(outputs, labels)
+        loss.backward()
+        optimizer.step()
+        prof.step()
+
+    prof.stop()
+
+
+if __name__ == "__main__":
+    train()
+```
