@@ -2,7 +2,7 @@
 
 ## 简介
 
-大集群场景涉及多个计算节点，数据量大，原有的单卡性能数据对比不能评估整体集群运行情况。cluster_time_compare_sumary 提供了AI运行过程中集群维度的性能数据对比能力，包括计算、通信和内存拷贝等各部分的时间消耗，帮助用户找到性能瓶颈。
+大集群场景涉及多个计算节点，数据量大，原有的单卡性能数据对比不能评估整体集群运行情况。cluster_time_compare_summary 提供了AI运行过程中集群维度的性能数据对比能力，包括计算、通信和内存拷贝等各部分的时间消耗，帮助用户找到性能瓶颈。
 
 ## 使用前准备
 
@@ -23,11 +23,11 @@ msprof-analyze需要传入采集的性能数据文件夹，如何采集性能数
 **命令格式**
 
 ```bash
-# 首先执行cluster_time_summary分析能力,执行集群耗时细粒度拆解
+# 首先执行cluster_time_summary分析能力，执行集群耗时细粒度拆解
 msprof-analyze -m cluster_time_summary -d <cluster_data>
 msprof-analyze -m cluster_time_summary -d <base_cluster_data>
 
-# 执行cluster_time_compare_summary,传入两个拆解分析后的文件夹路径
+# 执行cluster_time_compare_summary，传入两个拆解分析后的文件夹路径
 msprof-analyze -m cluster_time_compare_summary -d <cluster_data> --bp <base_cluster_data> [-o <output_path>]
 ```
 

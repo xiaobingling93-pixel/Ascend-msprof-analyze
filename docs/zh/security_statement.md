@@ -65,7 +65,7 @@
 | 开源软件 | msprof-analyze advisor | /msprof_analyze/advisor/config/config.ini           | 公网地址 | https://www.hiascend.com/document/detail/zh/canncommercial/700/modeldevpt/ptmigr/AImpug_000060.html | Advisor优化手段参考示例                    |
 | 开源软件 | msprof-analyze         | /config/config.ini                   | 公网地址 | https://gitcode.com/Ascend/msprof-analyze | msprof-analyze工具地址                     |
 | 开源软件 | msprof-analyze         | /LICENSE                             | 公网地址 | http://www.apache.org/licenses/LICENSE-2.0                   | 开源软件协议地址                           |
-| 开源软件 | msprof-analyze advisor | /msprof_analyze/advisor/rules/aicpu_rules.yaml      | 公网地址 | https://gitcode.com/Ascend/msprof-analyze/blob/master/docs/zh/aicpu_operator_replacement_example.md | AI CPU 算子替换样例                        |
+| 开源软件 | msprof-analyze advisor | /msprof_analyze/advisor/rules/aicpu_rules.yaml      | 公网地址 | https://gitcode.com/Ascend/msprof-analyze/blob/master/docs/zh/aicpu_operator_replacement_example.md | AICPU算子替换样例                        |
 | 开源软件 | msprof-analyze advisor | /msprof_analyze/advisor/rules/environment_variable_info.yaml | 公网地址 | https://support.huawei.com/enterprise/zh/doc/EDOC1100371278/5eeeed85?idPath=23710424 | 组网指南                                   |
 | 开源软件 | msprof-analyze         | /config/config.ini                   | 公网地址 | pmail_mindstudio@huawei.com                                  | 公网邮箱                                   |
 

@@ -36,8 +36,7 @@ msprof-analyze -m cluster_time_summary -d <cluster_data> [-o <output_path>]
 | ---- | --------- | ------------------------------------------------- |
 | -m   | 必选      | 设置为cluster_time_summary 使能集群耗时细粒度拆解能力。 |
 | -d   | 必选      | 集群性能数据文件夹路径。 |
-| --bp | 必选      | 基础集群性能数据文件夹路径。 |
-| -o   | 可选      | 指定输出文件路径。          |
+| -o   | 可选      | 指定输出文件路径。      |
 
 更多参数详细介绍请参见msprof-analyze的[参数说明](../../README.md#参数说明)。
 
