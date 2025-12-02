@@ -51,7 +51,7 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 
 * 根据Bubble时间的占比和理论计算公式判断bubble设置是否合理，stage间是否有不均衡现象。
 
-以上时间理论上都应该处于持平状态，即最大值小于最小值5%，否则就可能出现慢卡。
+以上时间理论上都应该保持相对持平，即最大值与最小值的差值不超过5%，否则就可能出现慢卡。
 
 ### cluster_communication_matrix.json
 
@@ -578,7 +578,7 @@ import torch_npu
 def step_wrapper(func, msg: str):
     def wrapper(*args, **kwargs):
         new_msg = {"name": msg}
-        if msg = "forward_step_with_model_graph" and kwargs.get("extra_block_kwargs") is not None:
+        if msg == "forward_step_with_model_graph" and kwargs.get("extra_block_kwargs") is not None:
             new_msg["name"] = "forward_backward_overlaping"
         if "current_microbatch" in kwargs:
             new_msg["current_microbatch"] = kwargs["current_microbatch"]

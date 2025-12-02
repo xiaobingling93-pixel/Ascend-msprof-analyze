@@ -1,6 +1,6 @@
-# AI CPU 算子替换样例
+# AICPU 算子替换样例
 
-部分算子因为数据输入类型问题或者算子实现问题，导致会在昇腾芯片的AI CPU上执行，没有充分利用AI CORE的资源，从而导致计算性能较差，影响训练速度。部分场景下，可以通过修改Python代码来减少这类AI CPU算子，从而提升训练性能。
+部分算子因为数据输入类型问题或者算子实现问题，导致会在昇腾芯片的AICPU上执行，没有充分利用AICORE的资源，从而导致计算性能较差，影响训练速度。部分场景下，可以通过修改Python代码来减少这类AICPU算子，从而提升训练性能。
 
 当前对 AICPU 算子识别到的调优方式主要包含两种：
 
@@ -62,7 +62,7 @@ int16, complex64, complex128
 AICORE支持的dtype。
 
 ```python
-float, float32, float16, dt_bf16, float64, bool, int32, int8, uint81 
+float, float32, float16, dt_bf16, float64, bool, int32, int8, uint8
 ```
 
 AICPU 类型的 dtype。
@@ -77,11 +77,11 @@ int16, int64
 
 - 情形一 ：index by index
 
-  这种操作会造成输出的shape和输入的shape不一致，我们可以直接用index\_select(gatherV2)操作替换该算子运行在aicore性能高上很多。
+  这种操作会造成输出和输入的shape不一致，我们可以直接用index\_select(gatherV2)替换，该算子在AICORE上运行性能会高很多。
 
   图5 index by index
 
-  <img src="./figures/index by index.png" alt="img" style="zoom:80%;" />
+  <img src="./figures/index_by_index.png" alt="img" style="zoom:80%;" />
 
 - 情形二：index\_put by index
 
@@ -96,7 +96,7 @@ int16, int64
 - 情形三：index\_put by mask
 
   ```python
-  tensor\_a[mask] = 3
+  tensor_a[mask] = 3
   ```
 
   index\_put by mask可以通过where (selectV2)算子来替代。这种方式与原先语义不同的是，会返回一个新的tensor。
@@ -129,7 +129,7 @@ masked_input *= ~input_mask
 
 ![img](./figures/替换前耗时.png)
 
-替换后，总体耗时226.131us。下发三个执行算子，均执行在AI CORE上。
+替换后，总体耗时226.131us。下发三个执行算子，均执行在AICORE上。
 
 图8 替换后耗时
 
@@ -161,9 +161,7 @@ CANN7.0 RC1上，单算子执行时间 223.516 us。
 shape = (1024, )
 mask= torch.randint(-1, 2, shape).npu()
 tensor_a = torch.ones(shape).float().npu()
-mask_inds = torch.nonzero(
-        gt_inds > 0, as_tuple=False).squeeze(1)
-
+mask_inds = torch.nonzero(gt_inds > 0, as_tuple=False).squeeze(1)
 tensor_sum = tensor_a[mask_inds].sum()
 ```
 
@@ -173,6 +171,6 @@ tensor_sum = tensor_a[mask_inds].sum()
 shape = (1024, ) 
 mask= torch.randint(-1, 2, shape).npu() 
 tensor_a = torch.ones(shape).float().npu() 
-mask_inds = torch.nonzero( gt_inds > 0, as_tuple=False).squeeze(1)
+mask_inds = torch.nonzero(gt_inds > 0, as_tuple=False).squeeze(1)
 tensor_sum2 = (tensor_a * mask_inds2).sum()
 ```
