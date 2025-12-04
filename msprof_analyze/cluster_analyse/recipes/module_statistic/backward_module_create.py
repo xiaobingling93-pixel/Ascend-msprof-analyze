@@ -15,9 +15,9 @@
 
 import pandas as pd
 
-from msprof_analyze.cluster_analyse.recipes.module_statistic.tree_build import (NodeType, ModuleNode, TreeBuilder,
-                                                                                ensure_numeric_columns)
+from msprof_analyze.cluster_analyse.recipes.module_statistic.tree_build import NodeType, ModuleNode, TreeBuilder
 from msprof_analyze.prof_exports.module_statistic_export import FwdBwdFlowExport
+from msprof_analyze.cluster_analyse.common_func.utils import ensure_numeric_columns
 from msprof_analyze.prof_common.logger import get_logger
 
 logger = get_logger()

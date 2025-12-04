@@ -501,6 +501,8 @@ class Constant(object):
     FORCE_BYPASSES_SECURITY = "You can add the '--force' parameter and retry. " \
                               "This parameter will skip verification of the owner, size, and permissions."
 
+    NA = "N/A"
+
 
 class ProfilerTableConstant:
 

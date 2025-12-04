@@ -21,15 +21,6 @@ from msprof_analyze.prof_common.logger import get_logger
 logger = get_logger()
 
 
-def ensure_numeric_columns(df, time_columns):
-    if df is None or df.empty:
-        return df
-    for col in time_columns:
-        if col in df.columns:
-            df[col] = pd.to_numeric(df[col], errors='coerce').astype('int64')
-    return df
-
-
 class NodeType(Enum):
     MODULE_EVENT_NODE = 0
     CPU_OP_EVENT = 1
@@ -82,6 +73,12 @@ class ModuleNode(TreeNode):
                 node.module_type = row[cls.MODULE_TYPE_COL_NAME]
             nodes.append(node)
         return nodes
+
+
+class KernelNode(TreeNode):
+    def __init__(self, start, end, name, mfu):
+        super().__init__(start, end, NodeType.KERNEL_EVENT, name)
+        self.mfu = mfu
 
 
 class TreeBuilder:
