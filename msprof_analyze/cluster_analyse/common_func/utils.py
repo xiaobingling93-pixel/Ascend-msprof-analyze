@@ -98,6 +98,15 @@ def double_hash(data):
     return ((hash_values[0] << uint32_bits) | hash_values[1])
 
 
+def ensure_numeric_columns(df, columns, target_type='int64'):
+    if df is None or df.empty:
+        return df
+    for col in columns:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors='coerce').astype(target_type)
+    return df
+
+
 class UnionFind(object):
     """Disjoint Set Union"""
 

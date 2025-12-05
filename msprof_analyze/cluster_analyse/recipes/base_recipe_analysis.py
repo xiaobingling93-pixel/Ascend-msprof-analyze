@@ -236,7 +236,7 @@ class BaseRecipeAnalysis(ABC):
         for rank_id in rank_ids:
             rank_path = self._data_map[rank_id]
             db_path_dict = {Constant.RANK_ID: rank_id, Constant.PROFILER_DB_PATH: "", Constant.ANALYSIS_DB_PATH: "",
-                            Constant.STEP_RANGE: {}}
+                            Constant.STEP_RANGE: {}, Constant.PROFILING_PATH: rank_path}
             profiler_db_path = self._get_profiler_db_path(rank_id, rank_path)
             analysis_db_path = self._get_analysis_db_path(rank_path)
             if os.path.exists(profiler_db_path):

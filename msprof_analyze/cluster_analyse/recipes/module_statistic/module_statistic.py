@@ -16,13 +16,16 @@
 import os
 from collections import defaultdict
 import pandas as pd
+import numpy as np
 
+from msprof_analyze.cluster_analyse.cluster_kernels_analysis.operator_mfu.mfu_calculator import MFUCalculator
 from msprof_analyze.cluster_analyse.recipes.module_statistic.backward_module_create import BackwardModuleCreator
 from msprof_analyze.cluster_analyse.recipes.module_statistic.tree_build import (NodeType, TreeNode, ModuleNode,
-                                                                                TreeBuilder, ensure_numeric_columns)
+                                                                                KernelNode, TreeBuilder)
 from msprof_analyze.cluster_analyse.common_func.excel_utils import ExcelUtils
 from msprof_analyze.cluster_analyse.recipes.base_recipe_analysis import BaseRecipeAnalysis
 from msprof_analyze.prof_exports.module_statistic_export import FrameworkOpToKernelExport, ModuleMstxRangeExport
+from msprof_analyze.cluster_analyse.common_func.utils import ensure_numeric_columns
 from msprof_analyze.prof_common.db_manager import DBManager
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.logger import get_logger
@@ -100,6 +103,9 @@ class ModuleStatistic(BaseRecipeAnalysis):
         module_df, kernel_df = self._query_all_data(profiler_db_path, rank_id)
         if module_df is None or module_df.empty:
             return rank_id, pd.DataFrame()
+
+        # 计算MFU
+        kernel_df = self._calculate_kernel_mfu(data_map, kernel_df)
 
         # 处理反向传播数据
         backward_creator = BackwardModuleCreator(profiler_db_path)
@@ -179,10 +185,8 @@ class ModuleStatistic(BaseRecipeAnalysis):
 
                 # 为每个op添加对应的kernel节点
                 for kernel in kernels:
-                    kernel_node = TreeNode(
-                        kernel['kernel_ts'], kernel['kernel_end'],
-                        NodeType.KERNEL_EVENT, kernel['kernel_name']
-                    )
+                    kernel_node = KernelNode(kernel['kernel_ts'], kernel['kernel_end'],
+                                             kernel['kernel_name'], kernel['mfu'])
                     op_node.add_child(kernel_node)
 
                 op_nodes.append(op_node)
@@ -222,11 +226,13 @@ class ModuleStatistic(BaseRecipeAnalysis):
             # 收集该op下的所有kernel信息
             kernel_names = []
             total_device_time = 0.0
+            mfu_list = []
             for kernel_child in op_node.children:
                 if kernel_child.node_type == NodeType.KERNEL_EVENT:
                     kernel_names.append(kernel_child.name)
                     duration = kernel_child.end - kernel_child.start
                     total_device_time += duration
+                    mfu_list.append(kernel_child.mfu)
 
             results.append({
                 'module_parent': module_parent,
@@ -237,7 +243,8 @@ class ModuleStatistic(BaseRecipeAnalysis):
                 'op_start': op_node.start,
                 'op_end': op_node.end,
                 'kernel_list': ', '.join(kernel_names),
-                'device_time': total_device_time
+                'device_time': total_device_time,
+                'mfu_list': mfu_list
             })
 
         # 使用通用的树遍历方法
@@ -270,6 +277,17 @@ class ModuleStatistic(BaseRecipeAnalysis):
         df['seq_id'] = pd.factorize(op_seq)[0]
         df.drop(columns=['seq_key'], inplace=True)
 
+        def compute_mfu_avg(series_of_lists):
+            arr = np.array(series_of_lists.tolist())
+            result_list = []
+            for pos in range(arr.shape[1]):
+                values_at_pos = arr[:, pos]
+                valid_vals = values_at_pos[values_at_pos > 0]
+                if len(valid_vals) > 0:
+                    avg_val = round(valid_vals.mean() * 100, 2)
+                    result_list.append(str(avg_val) + '%')
+            return ','.join(result_list)
+
         # 聚合统计
         stat_df = (
             df.groupby(['module_parent', 'module', 'op_name', 'op_order', 'kernel_list', 'seq_id'])
@@ -279,7 +297,8 @@ class ModuleStatistic(BaseRecipeAnalysis):
                 total_kernel_duration=('device_time', 'sum'),
                 avg_kernel_duration=('device_time', 'mean'),
                 op_count=('device_time', 'count'),
-                op_start=('op_start', 'min')
+                op_start=('op_start', 'min'),
+                avg_mfu=('mfu_list', compute_mfu_avg)
             ).reset_index()
         )
 
@@ -316,6 +335,11 @@ class ModuleStatistic(BaseRecipeAnalysis):
 
     def _format_stat_df_columns(self, stat_df):
         try:
+            # 如果没有任何MFU信息，不输出这一列
+            empty_mfu = stat_df['avg_mfu'].isna().all() or stat_df['avg_mfu'].eq('').all()
+            if empty_mfu:
+                stat_df = stat_df.drop(columns=['avg_mfu'])
+
             if self._export_type == Constant.DB:
                 column_mapping = {
                     'module_parent': 'parentModule',
@@ -323,7 +347,8 @@ class ModuleStatistic(BaseRecipeAnalysis):
                     'kernel_list': 'kernelList',
                     'op_count': 'opCount',
                     'total_kernel_duration': 'totalKernelDuration(ns)',
-                    'avg_kernel_duration': 'avgKernelDuration(ns)'
+                    'avg_kernel_duration': 'avgKernelDuration(ns)',
+                    'avg_mfu': 'avgMFU'
                 }
             elif self._export_type == Constant.EXCEL:
                 column_mapping = {
@@ -333,7 +358,8 @@ class ModuleStatistic(BaseRecipeAnalysis):
                     'kernel_list': 'Kernel List',
                     'op_count': 'Op Count',
                     'total_kernel_duration': 'Total Kernel Duration(ns)',
-                    'avg_kernel_duration': 'Avg Kernel Duration(ns)'
+                    'avg_kernel_duration': 'Avg Kernel Duration(ns)',
+                    'avg_mfu': 'Avg MFU'
                 }
             else:
                 return stat_df
@@ -342,3 +368,15 @@ class ModuleStatistic(BaseRecipeAnalysis):
         except Exception as e:
             logger.error(f"Failed to format statistic data's title, error message: {e}")
             return pd.DataFrame()
+
+    def _calculate_kernel_mfu(self, data_map, op_kernel_df):
+        mfu_worker = MFUCalculator(data_map, op_kernel_df)
+        mfu_df = mfu_worker.run()
+        if mfu_df.empty or 'mfu' not in mfu_df.columns:
+            logger.warning(f"No MFU calculated for kernels.")
+            op_kernel_df['mfu'] = -1.0
+            return op_kernel_df
+        else:
+            op_kernel_df = pd.merge(op_kernel_df, mfu_df, on=['kernel_name', 'kernel_ts', 'kernel_end'], how='left')
+            return op_kernel_df
+
