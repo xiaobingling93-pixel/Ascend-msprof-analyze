@@ -98,33 +98,34 @@ def custom_call(self, *args, **kwargs):
 
 nn.Module.__call__ = custom_call
 ```
-（可选）对FlashAttention算子的调用接口增加mstx打点功能，以便自动测算该算子的MFU，打点代码如下：
+（可选）对FlashAttention算子的调用接口增加mstx打点功能，以便自动测算该类型算子的MFU，打点代码如下：
 ```
+import json
 import torch
 import torch_npu
 
 # torch_npu.npu_fusion_attention接口调用前添加mark打点
-original_npu_fuison_attention = torch_npu.npu_fusion_attention
-def custom_npu_fuison_attention(*args, **kwargs):
+original_npu_fusion_attention = torch_npu.npu_fusion_attention
+def custom_npu_fusion_attention(*args, **kwargs):
     info = {
         "input_layout": kwargs.get('input_layout'),
-        "sparse_mode": kwargs.get('spare_mode', 0),
+        "sparse_mode": kwargs.get('sparse_mode', 0),
         "actual_seq_qlen": kwargs.get('actual_seq_qlen', []),
         "actual_seq_kvlen": kwargs.get('actual_seq_kvlen', []),
     }
     torch_npu.npu.mstx.mark(message=json.dumps(info), domain='flash_attn_args')
-    tmp = original_npu_fuison_attention(*args, **kwargs)
+    tmp = original_npu_fusion_attention(*args, **kwargs)
     return tmp
-torch_npu.npu_fusion_attention = original_npu_fuison_attention
+torch_npu.npu_fusion_attention = custom_npu_fusion_attention
 
 # torch.nn.functional.scaled_dot_product_attention接口调用前添加mark打点
-origin_scaled_dot_product_attention = torch.nn.functional.scaled_dot_product_attention
+original_scaled_dot_product_attention = torch.nn.functional.scaled_dot_product_attention
 def custom_origin_scaled_dot_product_attention(*args, **kwargs):
     info = {
         "is_causal": kwargs.get('is_causal', False)
     }
     torch_npu.npu.mstx.mark(message=json.dumps(info), domain='flash_attn_args')
-    tmp = origin_scaled_dot_product_attention(*args, **kwargs)
+    tmp = original_scaled_dot_product_attention(*args, **kwargs)
     return tmp
 torch.nn.functional.scaled_dot_product_attention = custom_origin_scaled_dot_product_attention
 ```
