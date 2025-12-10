@@ -555,6 +555,32 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 | rankId          | INTEGER | 慢卡    |
 | slowAffectCount | INTEGER | 该rank影响了多少次通信 |
 
+#### SlowOpStats
+
+说明：
+
+基于db格式的集群性能数据，慢卡瓶颈位置对应的通信算子统计信息。
+
+格式：
+
+| 字段名       | 类型 | 含义             |
+|-----------| ---- |----------------|
+| SlowRank  | TEXT    | 慢卡rankId       |
+| OpName    | TEXT    | 通信算子名          |
+| GroupName | TEXT    | 通信域名称          |
+| Timestamp | TEXT    | 通信算子时间戳        |
+| Count     | INTEGER | 数量             |
+| MeanNs    | REAL    | 耗时的平均值         |
+| StdNs     | REAL    | 耗时的标准差         |
+| MinNs     | REAL    | 耗时的最小值         |
+| Q1Ns      | REAL    | 耗时的25%分位数      |
+| MedianNs  | REAL    | 耗时的50%分位数      |
+| Q3Ns      | REAL    | 耗时的75%分位数      |
+| MaxNs     | REAL    | 耗时的最大值         | 
+| SumNs     | REAL    | 耗时的总和          |
+| MinRank   | INTEGER | 该通信算子耗时最小的rank |
+| MaxRank   | INTEGER | 该通信算子耗时最大的rank |
+
 ### p2p_pairing
 
 设置-m p2p_pairing时，不会生成cluster_analysis.db。

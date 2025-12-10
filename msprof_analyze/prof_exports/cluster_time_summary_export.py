@@ -23,6 +23,7 @@ class CommunicationTimeExport(BaseStatsExport):
             RANK_DEVICE_MAP.rankId,
             si_group.value AS groupName,
             si_op.value AS opName,
+            COMMUNICATION_OP.startNs as startNs,
             (COMMUNICATION_OP.endNs - COMMUNICATION_OP.startNs) / 1000.0 AS communication_time
         FROM COMMUNICATION_OP
         CROSS JOIN RANK_DEVICE_MAP

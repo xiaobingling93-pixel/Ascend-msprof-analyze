@@ -181,9 +181,9 @@ class MstxSum(BaseRecipeAnalysis):
         mapper_res = self.mapper_func(context)
         self.reducer_func(mapper_res)
 
-        if self._export_type == "db":
+        if self._export_type == Constant.DB:
             self.save_db()
-        elif self._export_type == "notebook":
+        elif self._export_type == Constant.NOTEBOOK:
             self.save_notebook()
         else:
             logger.error("Unknown export type.")
