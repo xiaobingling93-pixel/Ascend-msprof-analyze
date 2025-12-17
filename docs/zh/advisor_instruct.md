@@ -38,7 +38,7 @@ msprof-analyze需要传入采集的性能数据文件夹，如何采集性能数
 
 **功能说明**
 
-msprof-analyze advisor命令行包含如下三个参数：
+msprof-analyze advisor命令行包含如下三个子命令：
 
 - all
 
@@ -151,7 +151,7 @@ msprof-analyze advisor命令行包含如下三个参数：
 - `mstt_advisor_{timestamp}.xlsx`文件内容与执行终端输出一致。
 - `mstt_advisor_{timestamp}.html`文件分析详见[输出结果文件说明](#输出结果文件说明)。
 - 执行终端输出示例如下：
-   
+  
    总体性能瓶颈
    
    ![all](./figures/all.png)
@@ -299,7 +299,7 @@ dataloader模块包含Slow Dataloader Issues，主要检测异常高耗时的dat
 
 ![dataloader](./figures/dataloader.png)
 
-上图中的`pin_memory`（内存锁定）和`num_workers`（数据加载是子流程数量）参数为[数据加载优化](https://www.hiascend.com/document/detail/zh/Pytorch/710/ptmoddevg/trainingmigrguide/performance_tuning_0026.html)使用。
+上图中的`pin_memory`（内存锁定）和`num_workers`（数据加载子流程的数量）参数为[数据加载优化](https://www.hiascend.com/document/detail/zh/Pytorch/710/ptmoddevg/trainingmigrguide/performance_tuning_0026.html)使用。
 
 schedule模块包含GC Analysis、亲和API、aclOpCompile、SyncBatchNorm、SynchronizeStream和Fusible Operator Analysis等多项检测。
 

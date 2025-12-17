@@ -27,7 +27,7 @@
            logger.error("Unknown export type.")
    ```
 
-   1. `mapper_func`函数：多卡数据查询并合并返回结果。由于集群数据每张卡的数据处理是同样的，因此采用context并行处理集群数据并将结果按序拼装返回。开发只需要实现单卡数据处理的函数`self._mapper_fun`。
+   1. `mapper_func`函数：多卡数据查询并合并返回结果。由于集群数据每张卡的数据处理是同样的，因此采用context并行处理集群数据并将结果按序拼装返回。开发只需要实现单卡数据处理的函数`self._mapper_func`。
 
       ```python
       def mapper_func(self, context):
@@ -58,7 +58,7 @@
 
    4. `save_notebook`函数：分析结果以csv和stats.ipynb的形式保存。
 
-3. `self._mapper_fun`函数依赖单db数据查询，可通过如下两种方式。
+3. `self._mapper_func`函数依赖单db数据查询，可通过如下两种方式。
 
    1. 使用DatabaseService可配置单表的查询。
 
