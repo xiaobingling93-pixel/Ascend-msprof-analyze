@@ -302,12 +302,44 @@ msprof-analyze advisor all -d ./prof_data -o ./advisor_output
 | 1.0        | 2024-05-10 | [msprof_analyze-1.0-py3-none-any.whl](https://ptdbg.obs.myhuaweicloud.com/profiler/package/1.0/msprof_analyze-1.0-py3-none-any.whl)                        | 95b2f41c8c8e8afe4887b738c8cababcb4f412e1874483b6adae4a025fcbb7d4 |
 
 
+## 目录结构
+关键没目录如下，详细目录介绍参见[项目目录](docs/zh/dir_structure.md)
+```
+├── config                       # 配置文件目录
+├── docs                         # 文档目录
+├── msprof_analyze               # 主代码包目录
+│   ├── advisor                  # 性能分析建议器模块
+│   ├── cli                      # 命令行接口模块
+│   ├── cluster_analyse          # 集群分析核心模块
+│   ├── compare_tools            # 性能对比工具模块
+│   ├── prof_common              # 性能分析通用模块
+│   └── prof_exports             # 性能数据导出模块
+├── test                         # 测试文件目录
+└── requirements                 # 依赖管理目录
+```
+
 ## FAQ
 暂无
 
 ## License
 
-MindStudio-Profiler-Analyze工具使用许可证，详见[LICENSE](./LICENSE)文件。
+MindStudio-Profiler-Analyze工具使用许可证，详见[LICENSE](./LICENSE.md)文件。
+
+## 贡献声明
+1. 提交错误报告：如果您在msprof-analyze中发现了一个不存在安全问题的漏洞，请在msprof-analyze仓库中的Issues中搜索，以防该漏洞已被提交，如果找不到漏洞可以创建一个新的Issues。如果发现了一个安全问题请不要将其公开，请参阅安全问题处理方式。提交错误报告时应该包含完整信息。
+2. 安全问题处理：本项目中对安全问题处理的形式，请通过邮箱通知项目核心人员确认编辑.
+3. 解决现有问题：通过查看仓库的Issues列表可以发现需要处理的问题信息, 可以尝试解决其中的某个问题
+4. 如何提出新功能：请使用Issues的Feature标签进行标记，我们会定期处理和确认开发。
+5. 开始贡献：   
+   a. Fork本项目的仓库。  
+   b. Clone到本地。  
+   c. 创建开发分支。  
+   d. 本地自测，提交前请通过所有的已经单元测试，以及为您要解决的问题新增单元测试。  
+   e. 提交代码。  
+   f. 新建Pull Request。  
+   g. 代码检视，您需要根据评审意见修改代码，并再次推送更新。此过程可能会有多轮。  
+   h. 当您的PR获得足够数量的检视者批准后，Committer会进行最终审核。  
+   i. 审核和测试通过后，CI会将您的PR合并入到项目的主干分支。  
 
 ## ❗免责声明
 
