@@ -25,7 +25,7 @@ F列：Overlapped，统计计算与通信重叠的耗时。
 
 G列：Communication，通信时间的全部耗时。
 
-H列：Free，空闲时间，指device侧既不在通信也不在计算的耗时，可能在做sdma拷贝或者空等。
+H列：Free，空闲时间，指device侧既不在通信也不在计算的耗时，可能在做sdma拷贝或者空闲等待。
 
 I列：Stage时间，I、J、K列属于pp并行时有效的数值，stage时间代表除receive算子时间外的时间。
 
@@ -446,12 +446,10 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 | stepTime     | REAL    | 当前集群数据的迭代耗时 |
 | stepTimeBase | REAL    | 标杆集群数据的计算时间 |
 | stepTimeDiff | REAL    | 迭代耗时的差值 |
-……
+|……|-|此处省略部分字段，对于ClusterTimeSummary表，均展示当前集群数据、标杆集群数据以及二者的差值|
 | taskLaunchDelayAvgTime     | REAL | 当前集群数据的下发耗时 |
 | taskLaunchDelayAvgTimeBase   | REAL | 标杆集群数据的下发耗时 |
 | taskLaunchDelayAvgTimeDiff | REAL | 下发耗时的差值 |
-
-由于列过多，就不展示全部列了，对于ClusterTimeSummary的每一列，在这个表里面都会展示当前集群数据、标杆集群数据以及他们的差值。
 
 
 ### freq_analysis
@@ -532,11 +530,11 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 
 设置-m mstx2commop时，不会生成cluster_analysis.db，会将通信内置打点数据转换成通信算子。
 
-**说明：强烈建议在levelNone的情况下使用，会新生成COMMUNICATION_OP，否则会破坏原来的表结构。**
+**说明：强烈建议在Level_none的情况下使用，会新生成COMMUNICATION_OP，否则会破坏原来的表结构。**
 
 结果：
 
-设置levelNone时，统一db里面没有COMMUNICATION_OP，该分析能力会将通信内置打点数据转换成通信算子，并且可以在MindStudio Insight中呈现。
+设置Level_none时，统一db里面没有COMMUNICATION_OP，该分析能力会将通信内置打点数据转换成通信算子，并且可以在MindStudio Insight中呈现。
 
 ### slow_rank
 

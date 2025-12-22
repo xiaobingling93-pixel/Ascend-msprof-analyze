@@ -23,25 +23,36 @@ msprof-analyze需要传入采集的性能数据文件夹，如何采集性能数
 **命令格式**
 
 ```bash
-# 首先执行cluster_time_summary分析能力，执行集群耗时细粒度拆解
-msprof-analyze -m cluster_time_summary -d <cluster_data>
-msprof-analyze -m cluster_time_summary -d <base_cluster_data>
-
-# 执行cluster_time_compare_summary，传入两个拆解分析后的文件夹路径
 msprof-analyze -m cluster_time_compare_summary -d <cluster_data> --bp <base_cluster_data> [-o <output_path>]
 ```
 
 **参数说明**
 
-| 参数 | 可选/必选 | 说明                                              |
-| ---- | --------- | ------------------------------------------------- |
-| -m   | 必选      | 设置为cluster_time_compare_summary 使能集群耗时细粒度比对能力。|
-| -d   | 必选      | 集群性能数据文件夹路径。 |
-| --bp | 必选      | 基础集群性能数据文件夹路径。 |
-| -o   | 可选      | 指定输出文件路径。          |
+| 参数 | 可选/必选 | 说明                                                         |
+| ---- | --------- | ------------------------------------------------------------ |
+| -m   | 必选      | 设置为cluster_time_compare_summary，使能集群耗时细粒度比对能力。 |
+| -d   | 必选      | 集群性能数据文件夹路径。                                     |
+| --bp | 必选      | 基础集群性能数据文件夹路径。                                 |
+| -o   | 可选      | 指定输出文件路径，默认为-d参数指定的路径。                   |
 
 更多参数详细介绍请参见msprof-analyze的[参数说明](../../README.md#参数说明)。
 
+**使用示例**
+
+1. 执行cluster_time_summary分析能力，以进行集群耗时细粒度拆解。
+
+   cluster_time_summary分析能力详细介绍请参见《[集群性能数据细粒度拆解](cluster_time_summary_instruct.md)》。
+
+   ```bash
+   msprof-analyze -m cluster_time_summary -d ./xxx/cluster_data
+   msprof-analyze -m cluster_time_summary -d ./xxx/base_cluster_data
+   ```
+
+2. 执行cluster_time_compare_summary，传入两个拆解分析后的文件夹路径。
+
+   ```
+   msprof-analyze -m cluster_time_compare_summary -d ./xxx/cluster_data --bp ./xxx/base_cluster_data -o ./xxx/output_path
+   ```
 
 **输出说明**
 
@@ -64,4 +75,5 @@ ClusterTimeCompareSummary表字段如下：
 上表中时间相关字段，统一使用微秒（us）。
 
 **输出结果分析：**
-* 按*Diff字段排序找出最大差异项，找到劣化环节。
+
+* 按{metrics}Diff字段排序找出最大差异项，找到劣化环节。
