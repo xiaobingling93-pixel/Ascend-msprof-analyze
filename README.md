@@ -264,6 +264,22 @@ msprof-analyze advisor all -d ./prof_data -o ./advisor_output
 
 > 详细分析规则、参数配置及结果解读，请参考 [msprof-analyze advisor](./docs/zh/advisor_instruct.md)子功能介绍文档。
 
+#### 集群分析（cluster）子功能
+
+提供集群分析能力，例如对基于通信域的迭代内耗时分析、通信时间分析以及通信矩阵分析为主，从而定位慢卡、慢节点以及慢链路问题。
+```bash
+# 基础用法
+## 命令行方式
+msprof-analyze cluster -m all # 分析能力 
+                       -d ./cluster_data  # 昇腾NPU集群性能数据目录
+                       -o ./compare_output  # 集群分析结果输出目录
+## 脚本方式
+python3 cluster_analysis.py -m all  # 分析能力 
+                            -d ./cluster_data  # 昇腾NPU集群性能数据目录
+                            -o ./compare_output  # 集群分析结果输出目录
+```
+> 集群分析子功能已整合至msprof-analyze下，详细分析规则、参数配置，请参考[使用方法](#-使用方法)。
+
 ## 扩展功能
 ### 自定义开发指导
 用户可自定义一套性能数据的分析规则，需要详细了解性能分析的开发人员，具体开发指导请参见[自定义分析能力开发指导](./docs/zh/custom_analysis_guide.md)。
