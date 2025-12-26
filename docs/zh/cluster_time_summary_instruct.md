@@ -6,13 +6,13 @@
 
 原有的cluster_step_trace_time.csv交付件没有单独的执行命令，导致用户使用不便，且不能涵盖内存拷贝等指标项，需要增强。
 
-cluster_time_summary提供了集群训练过程中迭代耗时的拆解，包括计算、通信和内存拷贝等各部分的时间消耗，帮助用户找到性能瓶颈。
+集群性能数据细粒度拆解（cluster_time_summary）提供了集群训练过程中迭代耗时的拆解，包括计算、通信和内存拷贝等各部分的时间消耗，帮助用户找到性能瓶颈。
 
 ## 使用前准备
 
 **环境准备**
 
-安装msprof-analyze工具，详情请参见《[msprof-analyze安装指南](../../README.md#🔧-安装)》。
+完成msprof_analyze工具安装，具体请参见msprof-analyze的[工具安装](../../README.md#工具安装)。
 
 **数据准备**
 
