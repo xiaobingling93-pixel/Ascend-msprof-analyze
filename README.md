@@ -1,13 +1,51 @@
-# MindStudio-Profiler-Analyze（msprof-analyze）
+# MindStudio Profiler Analyze（msprof-analyze）
 
-## 📌 简介
-MindStudio-Profiler-Analyze（简称msprof-analyze）是MindStudio全流程工具链推出的性能分析工具，基于采集的性能数据进行分析，识别AI作业中的性能瓶颈。
+## 简介
+MindStudio Profiler Analyze（msprof-analyze，MindStudio性能分析工具）是MindStudio全流程工具链推出的性能分析工具，基于采集的性能数据进行分析，识别AI作业中的性能瓶颈。
 
-## 🔧 安装
+本工具为开发调测工具，不应在生产环境使用。
 
-msprof-analyze的安装方式包括：**pip安装**、**下载whl包安装**和**源代码编译安装**。
+## 目录结构
 
-### 下载whl包安装
+关键没目录如下，详细目录介绍参见[项目目录](docs/zh/dir_structure.md)。
+
+```
+├── config                       # 配置文件目录
+├── docs                         # 文档目录
+├── msprof_analyze               # 主代码包目录
+│   ├── advisor                  # 性能分析建议器模块
+│   ├── cli                      # 命令行接口模块
+│   ├── cluster_analyse          # 集群分析核心模块
+│   ├── compare_tools            # 性能对比工具模块
+│   ├── prof_common              # 性能分析通用模块
+│   └── prof_exports             # 性能数据导出模块
+├── test                         # 测试文件目录
+└── requirements                 # 依赖管理目录
+```
+
+## 工具安装
+
+msprof-analyze的安装方式包括：**pip安装**、**whl包安装**和**编译安装**。
+
+**pip安装**
+
+```shell
+pip install msprof-analyze
+```
+
+使用`pip install msprof-analyze==版本号`可安装指定版本的包，使用采集性能数据对应的CANN版本号即可。
+
+如不清楚版本号可不指定，使用最新程序包。
+
+**pip**命令会自动安装最新的包及其配套依赖。
+
+提示如下信息则表示安装成功。
+
+```bash
+Successfully installed msprof-analyze-{version}
+```
+
+**whl包安装**
 
 1. whl包获取。
    请通过[发布程序包下载链接](#发布程序包下载链接)下载whl包。
@@ -45,24 +83,7 @@ msprof-analyze的安装方式包括：**pip安装**、**下载whl包安装**和*
    Successfully installed msprof_analyze-{version}
    ```
 
-###  pip安装
-
-```shell
-pip install msprof-analyze
-```
-
-使用`pip install msprof-analyze==版本号`可安装指定版本的包，使用采集性能数据对应的CANN版本号即可。  
-如不清楚版本号可不指定，使用最新程序包。
-
-pip命令会自动安装最新的包及其配套依赖。
-
-提示如下信息则表示安装成功。
-
-```bash
-Successfully installed msprof-analyze-{version}
-```
-
-### 源代码编译安装
+**编译安装**
 
 1. 安装依赖。
 
@@ -80,12 +101,15 @@ Successfully installed msprof-analyze-{version}
 
 3. 编译whl包。
 
-**在安装如下依赖时，请注意使用满足条件的较新版本软件包，关注并修补存在的漏洞，尤其是已公开的CVSS打分大于7分的高危漏洞。**
+   > [!NOTE]
+   >
+   > 在安装如下依赖时，请注意使用满足条件的较新版本软件包，关注并修补存在的漏洞，尤其是已公开的CVSS打分大于7分的高危漏洞。
+
    ```bash
    pip3 install -r requirements.txt && python3 setup.py bdist_wheel
    ```
 
-   以上命令执行完成后在dist目录下生成性能工具whl安装包`msprof_analyze-{version}-py3-none-any.whl`。
+      以上命令执行完成后在dist目录下生成性能工具whl安装包`msprof_analyze-{version}-py3-none-any.whl`。
 
 4. 安装。
 
@@ -96,9 +120,9 @@ Successfully installed msprof-analyze-{version}
    pip3 install ./msprof_analyze-{version}-py3-none-any.whl
    ```
 
-### 卸载和更新
+## 卸载和升级
 
-若需要更新工具，请先卸载旧版本后再重新安装新版本，操作如下：
+若需要升级工具，请先卸载旧版本后再重新安装新版本，操作如下：
 ```bash
 # 卸载旧版本
 pip3 uninstall msprof-analyze
@@ -106,7 +130,7 @@ pip3 uninstall msprof-analyze
 pip3 install ./msprof_analyze-{version}-py3-none-any.whl
 ```
 
-## 🧰 使用方法
+## 工具使用
 ### 数据准备
 msprof-analyze需要传入采集的性能数据文件夹，如何采集性能数据请参见[采集profiling性能数据指导](#采集profiling性能数据指导)章节。
 
@@ -154,27 +178,27 @@ msprof-analyze cluster -m [feature_option] -d <profiling_path> [global_option] [
    | --bp                 | 要对比的标杆集群数据，示例：--bp {bp_cluster_profiling_path}，表示profiling_path和bp_cluster_profiling_path的数据进行对比。<br/>**只有-m配置cluster_time_compare_summary时可配置此参数。**                                                                                                                                           | 否       |
 
 #### 子功能命令参数
-| 参数   | 说明                                                                                                               |
-|---------------------|------------------------------------------------------------------------------------------------------------------|
-| compare             | [compare（性能比对子功能）](./docs/zh/compare_tool_instruct.md)。提供NPU与GPU性能拆解功能以及算子、通信、内存性能的比对功能。  |
-| advisor             | [advisor（专家建议子功能）](./docs/zh/advisor_instruct.md)。基于性能数据进行分析，并输出性能调优建议。 |
-| cluster              | [cluster_analyse（集群分析工具）](./docs/zh/cluster_analyse_instruct.md)。提供集群分析能力。8.2.0a1版本后，该参数可不配置，对应分析功能在msprof-analyze命令下直接执行。 |
-| auto-completion     | 自动补全。配置后在当前视图下配置msprof-analyze工具所有的子参数时，可以使用Tab将所有子参数自动补全。                                                       |
+| 参数   | 说明                                                                                                               | 文档链接                                                                                                       |
+|---------------------|------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|
+| compare             | 性能比对功能，提供NPU与GPU性能拆解功能以及算子、通信、内存性能的比对功能。 | [link](./docs/zh/compare_tool_instruct.md) |
+| advisor             | 专家建议功能，基于性能数据进行分析，并输出性能调优建议。 | [link](./docs/zh/advisor_instruct.md) |
+| cluster              | 集群分析功能，提供集群分析能力。8.2.0a1版本后，该参数可不配置，对应分析功能在msprof-analyze命令下直接执行。 | [link](./docs/zh/cluster_analyse_instruct.md) |
+| auto-completion     | 自动补全。配置后在当前视图下配置msprof-analyze工具所有的子参数时，可以使用Tab将所有子参数自动补全。                                                       | -                                                      |
 
 
 ### 分析特性介绍
 
 #### 拆解对比类
 
-| 分析能力                         | 介绍                               | 介绍链接                                                       |
+| 分析能力                         | 介绍                               | 文档链接                                                   |
 |------------------------------|----------------------------------|------------------------------------------------------------|
-| cluster_time_summary         | 性能数据细粒度拆解，替换step_trace_time.csv内容。 | [link](./docs/zh/cluster_time_summary_instruct.md)         |
-| cluster_time_compare_summary | 性能数据细粒度对比。                       | [link](./docs/zh/cluster_time_compare_summary_instruct.md) |
-| module_statistic             | 性能数据模型拆解。                        | [link](./docs/zh/module_statistic_instruct.md)             |
+| cluster_time_summary         | 集群性能数据细粒度拆解，替换step_trace_time.csv内容。 | [link](./docs/zh/cluster_time_summary_instruct.md)         |
+| cluster_time_compare_summary | 集群性能数据细粒度比对。                     | [link](./docs/zh/cluster_time_compare_summary_instruct.md) |
+| module_statistic             | 性能数据模型结构拆解。                      | [link](./docs/zh/module_statistic_instruct.md)             |
 
 #### 计算类特性
 
-| 分析能力    | 介绍                                                          | 介绍链接 |
+| 分析能力    | 介绍                                                          | 文档链接 |
 |---------|-------------------------------------------------------------|-----|
 | compute_op_sum | device侧运行的计算类算子汇总。                                          | -  |
 | freq_analysis | 识别aicore是否存在空闲（频率为800MHz）、异常（频率不为1800MHz或800MHz）的情况并给出分析结果。 | -  |
@@ -182,7 +206,7 @@ msprof-analyze cluster -m [feature_option] -d <profiling_path> [global_option] [
 
 #### 通信类特性
 
-| 分析能力    | 介绍                                                                                        | 介绍链接 |
+| 分析能力    | 介绍                                                                                        | 文档链接 |
 |---------|-------------------------------------------------------------------------------------------|-----|
 | communication_matrix | 通信矩阵分析。                                                                                   | -  |
 | communication_time| 通信耗时分析。                                                                                   | -   |
@@ -191,23 +215,25 @@ msprof-analyze cluster -m [feature_option] -d <profiling_path> [global_option] [
 | communication_time_sum | 集群场景通信时间和带宽汇总分析。                                                                          | -   |
 | communication_matrix_sum | 集群场景通信矩阵汇总分析。                                                                             | -   |
 | hccl_sum | 通信类算子信息汇总。                                                                                | -   |
-| pp_chart | pp流水图，针对pp并行下各个阶段的耗时分析与可视化能力。                                                             | [link](./docs/zh/pp_chart_instruct.md) |
+| pp_chart | pp流水图数据分析，针对pp并行下各个阶段的耗时分析与可视化能力。                                                         | [link](./docs/zh/pp_chart_instruct.md) |
 | slow_rank | 根据当前的快慢卡统计算法，展示各个rank得出的快慢卡影响次数，识别慢卡出现的原因。                                                | -  |
 
 #### Host下发类特性
 
-| 分析能力    | 介绍                                     | 介绍链接 |
+| 分析能力    | 介绍                                     | 文档链接 |
 |---------|----------------------------------------|-----|
 | cann_api_sum | CANN层API的汇总。 | -  |
 | mstx_sum | MSTX自定义打点汇总。 | -  |
 
 #### 其他特性
-| 分析能力   | 类别 | 介绍                                     | 介绍链接 |
+| 分析能力   | 类别 | 介绍                                     | 文档链接 |
 |---------|----| ------------------------------------|-----|
 | mstx2commop | 数据处理类 | 将通过MSTX内置通信打点的通信信息转换成通信算子表格式。 | -  |
 | p2p_pairing | 数据处理类 | P2P算子生成全局关联索引，输出的关联索引会作为一个新的字段`opConnectionId`附在`COMMUNICATION_OP`的表中。 | -  |
 
-交付件详细内容请参见[recipe结果交付件表](./docs/zh/recipe_output_format_introduct.md)文档。
+#### 输出结果文件说明
+
+msprof-analyze分析特性的输出交付件详细内容请参见[recipe结果交付件表](./docs/zh/recipe_output_format_introduct.md)文档。
 
 ### 使用样例
 #### 最简使用
@@ -278,11 +304,15 @@ python3 cluster_analysis.py -m all  # 分析能力
                             -d ./cluster_data  # 昇腾NPU集群性能数据目录
                             -o ./compare_output  # 集群分析结果输出目录
 ```
-> 集群分析子功能已整合至msprof-analyze下，详细分析规则、参数配置，请参考[使用方法](#-使用方法)。
+> 集群分析子功能已整合至msprof-analyze下，详细分析规则、参数配置，请参考[工具使用](#工具使用)。
 
 ## 扩展功能
 ### 自定义开发指导
 用户可自定义一套性能数据的分析规则，需要详细了解性能分析的开发人员，具体开发指导请参见[自定义分析能力开发指导](./docs/zh/custom_analysis_guide.md)。
+
+### 集群算子耗时分析
+
+集群场景下，基于多卡性能数据的op_summary信息，统计并展示各卡中执行最快、最慢、均值和方差的TopN算子。具体请参见[集群算子耗时分析](./docs/zh/cluster_kernels_analysis_instruct.md)。
 
 
 ## 附录
@@ -290,7 +320,7 @@ python3 cluster_analysis.py -m all  # 分析能力
   * msprof 场景：参见“性能数据采集 > [msprof采集通用命令](https://www.hiascend.com/document/detail/zh/mindstudio/81RC1/T&ITools/Profiling/atlasprofiling_16_0008.html)”。
   * PyTorch 场景：参见“性能数据采集 > [PyTorch](https://www.hiascend.com/document/detail/zh/mindstudio/81RC1/msquickstart/atlasquick_train_0018.html)”。
   * MindSpore 场景：参见“性能数据采集 > [MindSpore](https://www.hiascend.com/document/detail/zh/mindstudio/81RC1/msquickstart/atlasquick_train_0017.html)”。
-  * msMonitor 场景：参见“msmonitor > [msmonitor](https://gitcode.com/Ascend/msmonitor)”。
+  * msMonitor 场景：参见“msMonitor > [msMonitor](https://gitcode.com/Ascend/msmonitor)”。
 
 ### 发布程序包下载链接
 | profiler版本 | 发布日期       | 下载链接                                                                                                                                                       | 校验码                                                       |
@@ -317,57 +347,50 @@ python3 cluster_analysis.py -m all  # 分析能力
 | 1.1.0      | 2024-05-28 | [msprof_analyze-1.1.0-py3-none-any.whl](https://ptdbg.obs.myhuaweicloud.com/profiler/package/1.1.0/msprof_analyze-1.1.0-py3-none-any.whl)                  | b339f70e7d1e45e81f289332ca64990a744d0e7ce6fdd84a8d82e814fa400698 |
 | 1.0        | 2024-05-10 | [msprof_analyze-1.0-py3-none-any.whl](https://ptdbg.obs.myhuaweicloud.com/profiler/package/1.0/msprof_analyze-1.0-py3-none-any.whl)                        | 95b2f41c8c8e8afe4887b738c8cababcb4f412e1874483b6adae4a025fcbb7d4 |
 
+## 安全声明
 
-## 目录结构
-关键没目录如下，详细目录介绍参见[项目目录](docs/zh/dir_structure.md)
-```
-├── config                       # 配置文件目录
-├── docs                         # 文档目录
-├── msprof_analyze               # 主代码包目录
-│   ├── advisor                  # 性能分析建议器模块
-│   ├── cli                      # 命令行接口模块
-│   ├── cluster_analyse          # 集群分析核心模块
-│   ├── compare_tools            # 性能对比工具模块
-│   ├── prof_common              # 性能分析通用模块
-│   └── prof_exports             # 性能数据导出模块
-├── test                         # 测试文件目录
-└── requirements                 # 依赖管理目录
-```
+MindStudio Profiler Analyze产品的安全加固信息、公网地址信息等内容。详情请参见《[安全声明](./docs/zh/security_statement.md)》。
 
-## FAQ
-暂无
+## 免责声明
+
+- 本工具仅供调试和开发之用，使用者需自行承担使用风险，并理解以下内容：
+
+  - [x] 数据处理及删除：用户在使用本工具过程中产生的数据属于用户责任范畴。建议用户在使用完毕后及时删除相关数据，以防泄露或不必要的信息泄露。
+  - [x] 数据保密与传播：使用者了解并同意不得将通过本工具产生的数据随意外发或传播。对于由此产生的信息泄露、数据泄露或其他不良后果，本工具及其开发者概不负责。
+  - [x] 用户输入安全性：用户需自行保证输入的命令行的安全性，并承担因输入不当而导致的任何安全风险或损失。对于由于输入命令行不当所导致的问题，本工具及其开发者概不负责。
+- 免责声明范围：本免责声明适用于所有使用本工具的个人或实体。使用本工具即表示您同意并接受本声明的内容，并愿意承担因使用该功能而产生的风险和责任，如有异议请停止使用本工具。
+- 在使用本工具之前，请**谨慎阅读并理解以上免责声明的内容**。对于使用本工具所产生的任何问题或疑问，请及时联系开发者。
 
 ## License
 
-MindStudio-Profiler-Analyze工具使用许可证，详见[LICENSE](./LICENSE.md)文件。
+msprof-analyze工具的使用许可证，详见[LICENSE](./LICENSE.md)文件。
+
+介绍msprof-analyze工具docs目录下的文档适用CC-BY 4.0许可证，具体请参见[LICENSE](docs/LICENSE)文件。
 
 ## 贡献声明
 1. 提交错误报告：如果您在msprof-analyze中发现了一个不存在安全问题的漏洞，请在msprof-analyze仓库中的Issues中搜索，以防该漏洞已被提交，如果找不到漏洞可以创建一个新的Issues。如果发现了一个安全问题请不要将其公开，请参阅安全问题处理方式。提交错误报告时应该包含完整信息。
-2. 安全问题处理：本项目中对安全问题处理的形式，请通过邮箱通知项目核心人员确认编辑.
-3. 解决现有问题：通过查看仓库的Issues列表可以发现需要处理的问题信息, 可以尝试解决其中的某个问题
+2. 安全问题处理：本项目中对安全问题处理的形式，请通过邮箱通知项目核心人员确认编辑。
+3. 解决现有问题：通过查看仓库的Issues列表可以发现需要处理的问题信息，可以尝试解决其中的某个问题。
 4. 如何提出新功能：请使用Issues的Feature标签进行标记，我们会定期处理和确认开发。
-5. 开始贡献：   
-   a. Fork本项目的仓库。  
-   b. Clone到本地。  
-   c. 创建开发分支。  
-   d. 本地自测，提交前请通过所有的已经单元测试，以及为您要解决的问题新增单元测试。  
-   e. 提交代码。  
-   f. 新建Pull Request。  
-   g. 代码检视，您需要根据评审意见修改代码，并再次推送更新。此过程可能会有多轮。  
-   h. 当您的PR获得足够数量的检视者批准后，Committer会进行最终审核。  
-   i. 审核和测试通过后，CI会将您的PR合并入到项目的主干分支。  
+5. 开始贡献：
+   1. Fork本项目的仓库。
+   2. Clone到本地。
+   3. 创建开发分支。
+   4. 本地测试：提交前请通过所有的单元测试，包括新增的测试用例。
+   5. 提交代码。
+   6. 新建Pull Request。
+   7. 代码检视：您需要根据评审意见修改代码，并重新提交更新。此流程可能涉及多轮迭代。
+   8. 当您的PR获得足够数量的检视者批准后，Committer会进行最终审核。
+   9. 审核和测试通过后，CI会将您的PR合并入到项目的主干分支。  
 
-## ❗免责声明
-
-本工具为开发调测工具，不应在生产环境使用。
 
 ## 建议与交流
 
-欢迎大家为社区做贡献。如果有任何疑问或建议，请提交issues，我们会尽快回复。感谢您的支持。
+欢迎大家为社区做贡献。如果有任何疑问或建议，请提交[Issues](https://gitcode.com/Ascend/msprof-analyze/issues)，我们会尽快回复。感谢您的支持。
 
 ## 致谢
 
-🔎 msprof-analyze 由华为公司的下列部门联合贡献 ：
+msprof-analyze由华为公司的下列部门联合贡献 ：
 
 华为公司：
 

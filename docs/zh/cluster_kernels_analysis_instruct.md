@@ -1,14 +1,15 @@
 # 集群算子耗时分析
 
 ## 简介
-集群场景下，多卡间的算子情况，只能通过查看每张卡各自的性能数据来了解，不能直观对比各卡之间算子的性能差异。
-cluster_prof_info_analysis.py脚本基于多卡性能数据的op_summary信息，统计并展示各卡中执行最快、最慢、均值和方差的TopN算子。
+集群算子耗时分析功能是在集群场景下，通过cluster_prof_info_analysis.py脚本，基于多卡性能数据的op_summary信息，统计并展示各卡中执行最快、最慢、均值和方差的TopN算子。
+
+多卡间的算子情况，只能通过查看每张卡各自的性能数据来了解，不能直观对比各卡之间算子的性能差异。
 
 ## 使用前准备
 
 **环境准备**
 
-将cluster_prof_info_analysis.py脚本拷贝到一个文件夹里，并安装对应的Python库。
+将[cluster_prof_info_analysis.py](../../msprof_analyze/cluster_analyse/cluster_kernels_analysis/cluster_prof_info_analysis.py)脚本拷贝到一个文件夹里，并安装对应的Python库。
 
 ```bash
 pip install pandas
