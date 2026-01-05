@@ -104,8 +104,8 @@ echo "please mannually move ascend_pytorch_profiler_0.db file to other place"
 使用以下命令执行 GPU/NPU 校准分析：
 
 ```bash
-msprof-analyze cluster -m calibrate \
-  --profiling_path /path/to/profile \
+msprof-analyze cluster -m calibrate_npu_gpu \
+  --profiling_path /path/to/npu_profile \
   --gpu_path /path/to/gpu_profile.sqlite \
   --npu_path /path/to/ascend_pytorch_profiler_0.db \
   --output_path ./calibration_result \
