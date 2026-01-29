@@ -103,7 +103,7 @@ def ensure_numeric_columns(df, columns, target_type='int64'):
         return df
     for col in columns:
         if col in df.columns:
-            df[col] = pd.to_numeric(df[col], errors='coerce').astype(target_type)
+            df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(target_type)
     return df
 
 
