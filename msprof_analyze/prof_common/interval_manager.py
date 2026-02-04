@@ -1,11 +1,24 @@
-import pandas as pd
+# Copyright (c) 2026, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 
 class IntervalManager:
     def __init__(self):
         pass
 
-    def merge_intervals(self, intervals: list) -> list:
+    def merge_intervals(self, intervals: list) ->list:
         """
         :param:
             intervals: list of intervals are tuples(start, end)
@@ -23,14 +36,16 @@ class IntervalManager:
             if not (isinstance(interval[0], (int, float)) and isinstance(interval[1], (int, float))):
                 raise TypeError("The elements in the tuple must be numbers.")
         # Standard + sorting
-        normalize = [(min(x, y), max(x, y)) for x,y in intervals]
+        normalize = [(min(x, y), max(x, y)) for x, y in intervals]
         normalize.sort(key=lambda x: x[0])
 
         # Merge process
         merged = [normalize[0]]
+        if len(intervals) < 2:
+            return merged
         for current in normalize[1:]:
             last = merged[-1]
-            if current[0] <=  last[1]:
+            if current[0] <= last[1]:
                 merged[-1] = (last[0], max(last[1], current[1]))
             else:
                 merged.append(current)
@@ -66,19 +81,3 @@ class IntervalManager:
             uncovered_durations.append(a_length - total_cover)
 
         return uncovered_durations
-
-    def column_names_exist(self, df: pd.DataFrame, required_columns: list) -> set:
-        """
-        Check whether the DataFrame contains all required column names.
-        :param df: The DataFrame to be checked.
-        :param required_columns: A list of required column names.
-        :param table_name: The name of the DataFrame for logging purposes.
-        :return: A set of missing column names. If there are no missing columns, an empty set is returned.
-        """
-        # Get DataFrame actual columns
-        actual_columns_set = set(df.columns)
-        required_columns_set = set(required_columns)
-
-        # Find missing columns
-        missing_columns = required_columns_set - actual_columns_set
-        return missing_columns

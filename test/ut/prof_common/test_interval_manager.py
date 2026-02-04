@@ -1,5 +1,20 @@
+# Copyright (c) 2026, Huawei Technologies Co., Ltd.
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
 import unittest
-import pandas as pd
 from msprof_analyze.prof_common.interval_manager import IntervalManager
 
 
@@ -15,7 +30,7 @@ class TestIntervalManager(unittest.TestCase):
 
     def test_merge_intervals_single_interval(self):
         """Test merging a list with a single interval."""
-        intervals =[(1, 5)]
+        intervals = [(1, 5)]
         result = self.interval_manager.merge_intervals(intervals)
         self.assertEqual(result, [(1, 5)])
 
@@ -84,41 +99,6 @@ class TestIntervalManager(unittest.TestCase):
         summary_lst = [(1, 5)]
         with self.assertRaises(ValueError):
             self.interval_manager.compute_uncovered_durations(communication_lst, summary_lst)
-
-    def test_column_names_exist_all_columns_present(self):
-        """Test column names exist all columns present."""
-        df = pd.DataFrame({"A": [1, 2, 3], "B": [4, 5, 6]})
-        required_columns = ["A", "B"]
-        result = self.interval_manager.column_names_exist(df, required_columns)
-        self.assertEqual(result, set())
-
-    def test_column_names_exist_some_columns_missing(self):
-        """Test column names exist some_columns missing all columns present."""
-        df = pd.DataFrame({"A": [1, 2, 3], "B": [4, 5, 6]})
-        required_columns = ["A", "C"]
-        result = self.interval_manager.column_names_exist(df, required_columns)
-        self.assertEqual(result, {"C"})
-
-    def test_column_names_exist_all_columns_missing(self):
-        """Test column names exist all_columns missing all columns present."""
-        df = pd.DataFrame({"A": [1, 2, 3], "B": [4, 5, 6]})
-        required_columns = ["C", "D"]
-        result = self.interval_manager.column_names_exist(df, required_columns)
-        self.assertEqual(result, {"C", "D"})
-
-    def test_column_names_exist_empty_dataframe(self):
-        """Test column names exist empty dataframe."""
-        df = pd.DataFrame()
-        required_columns = ["A", "B"]
-        result = self.interval_manager.column_names_exist(df, required_columns)
-        self.assertEqual(result, {"A", "B"})
-
-    def test_column_names_exist_empty_required_columns(self):
-        """Test column names exist empty required columns."""
-        df = pd.DataFrame({"A": [1, 2, 3], "B": [4, 5, 6]})
-        required_columns = []
-        result = self.interval_manager.column_names_exist(df, required_columns)
-        self.assertEqual(result, set())
 
 
 if __name__ == "__main__":
