@@ -24,7 +24,7 @@ msprof-analyze需要传入采集的性能数据文件夹，如何采集性能数
 **命令格式**
 
 ```
-msprof-analyze -m computational [--export_type <export_type>] [--step_id <step_id>] [--parallel_types <parallel_types>] -d <cluster_data> [-o <output_path>]
+msprof-analyze -m computational_op_masking [--export_type <export_type>] [--step_id <step_id>] [--parallel_types <parallel_types>] -d <cluster_data> [-o <output_path>]
 ```
 
 **参数说明**  
@@ -46,8 +46,7 @@ msprof-analyze -m computational [--export_type <export_type>] [--step_id <step_i
 执行集群性能数据细粒度拆解。
 
 ```
-msprof-analyze -m cluster_time_summary -d ./xxx/cluster_data -o ./xxx/output_path
-msprof-analyze -m computational --export_type db --step_id 11 --parallel_types "edp,dp;dp;edp" -d ./xxx/cluster_data -o ./xxx/output_path
+msprof-analyze -m computational_op_masking --export_type db --step_id 11 --parallel_types "edp,dp;dp;edp" -d ./xxx/cluster_data -o ./xxx/output_path
 ```
 
 

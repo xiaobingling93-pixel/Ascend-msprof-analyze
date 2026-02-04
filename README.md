@@ -198,11 +198,12 @@ msprof-analyze cluster -m [feature_option] -d <profiling_path> [global_option] [
 
 #### 计算类特性
 
-| 分析能力    | 介绍                                                          | 文档链接 |
-|---------|-------------------------------------------------------------|-----|
-| compute_op_sum | device侧运行的计算类算子汇总。                                          | -  |
-| freq_analysis | 识别aicore是否存在空闲（频率为800MHz）、异常（频率不为1800MHz或800MHz）的情况并给出分析结果。 | -  |
-| ep_load_balance | moe负载信息汇总分析。                                                | - |
+| 分析能力                      | 介绍          | 文档链接 |
+|---------------------------|-------------|---|
+| compute_op_sum            | device侧运行的计算类算子汇总。 | - |
+| freq_analysis             | 识别aicore是否存在空闲（频率为800MHz）、异常（频率不为1800MHz或800MHz）的情况并给出分析结果。 | - |
+| ep_load_balance           | moe负载信息汇总分析。 | - |
+| computational_op_masking  | 通信算子掩盖线性度计算。| [link](./docs/zh/computational_op_masking_instruct.md) |
 
 #### 通信类特性
 
