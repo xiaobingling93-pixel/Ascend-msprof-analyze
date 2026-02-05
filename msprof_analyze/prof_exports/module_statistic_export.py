@@ -118,7 +118,7 @@ QUEYR_FWD_BWD_FLOW = """
 class FrameworkOpToKernelExport(BaseStatsExport):
 
     def __init__(self, db_path, recipe_name, table_name):
-        super().__init__(db_path, recipe_name, step_range=None)
+        super().__init__(db_path, recipe_name, param_dict=None)
         if table_name in [Constant.TABLE_COMPUTE_TASK_INFO, Constant.TABLE_COMMUNICATION_SCHEDULE_TASK_INFO]:
             self._query = (QUERY_COMPUTE_TASK + QUERY_TASK_LINK_PYTORCH_API).format(compute_table=table_name)
         elif table_name == Constant.TABLE_COMMUNICATION_OP:
@@ -126,15 +126,24 @@ class FrameworkOpToKernelExport(BaseStatsExport):
         else:
             logger.error(f"FrameworkOpToKernelExport not support {table_name}")
 
+    def get_param_order(self):
+        return []
+
 
 class ModuleMstxRangeExport(BaseStatsExport):
 
     def __init__(self, db_path, recipe_name):
-        super().__init__(db_path, recipe_name, step_range=None)
+        super().__init__(db_path, recipe_name, param_dict=None)
         self._query = QUERY_MSTX_RANGE_WITH_DOMAIN
+
+    def get_param_order(self):
+        return []
 
 
 class FwdBwdFlowExport(BaseStatsExport):
     def __init__(self, db_path, recipe_name):
-        super().__init__(db_path, recipe_name, step_range=None)
+        super().__init__(db_path, recipe_name, param_dict=None)
         self._query = QUEYR_FWD_BWD_FLOW
+
+    def get_param_order(self):
+        return []

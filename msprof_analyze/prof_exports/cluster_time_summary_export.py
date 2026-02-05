@@ -30,13 +30,16 @@ class CommunicationTimeExport(BaseStatsExport):
         JOIN STRING_IDS si_group ON COMMUNICATION_OP.groupName = si_group.id
         JOIN STRING_IDS si_op ON COMMUNICATION_OP.opName = si_op.id
         JOIN CANN_API ON CANN_API.connectionId = COMMUNICATION_OP.connectionId
-        {}
+        WHERE CANN_API.startNs >= ? and CANN_API.startNs <= ?
     """
 
-    def __init__(self, db_path, recipe_name, step_range):
-        super().__init__(db_path, recipe_name, step_range)
-        filter_statement = "WHERE CANN_API.startNs >= ? and CANN_API.startNs <= ?" if step_range else ""
-        self._query = self.QUERY.format(filter_statement)
+
+    def __init__(self, db_path, recipe_name, param_dict):
+        super().__init__(db_path, recipe_name, param_dict)
+        self._query = self.QUERY
+
+    def get_param_order(self):
+        return [Constant.START_NS, Constant.END_NS]
 
 
 class CommunicationOpWithStepExport(BaseStatsExport):
@@ -54,14 +57,16 @@ class CommunicationOpWithStepExport(BaseStatsExport):
         JOIN CANN_API ON CANN_API.connectionId = COMMUNICATION_OP.connectionId
         LEFT JOIN STEP_TIME step_time 
             ON CANN_API.startNs >= step_time.startNs AND CANN_API.startNs <= step_time.endNs
-        {}
+        WHERE CANN_API.startNs >= ? and CANN_API.startNs <= ?
     """
 
-    def __init__(self, db_path, recipe_name, step_range):
-        super().__init__(db_path, recipe_name, step_range)
-        filter_statement = "WHERE CANN_API.startNs >= ? and CANN_API.startNs <= ?" if step_range else ""
-        self._query = self.QUERY.format(filter_statement)
 
+    def __init__(self, db_path, recipe_name, param_dict):
+        super().__init__(db_path, recipe_name, param_dict)
+        self._query = self.QUERY
+
+    def get_param_order(self):
+        return [Constant.START_NS, Constant.END_NS]
 
 class MemoryAndDispatchTimeExport(BaseStatsExport):
     QUERY = """
@@ -108,12 +113,16 @@ class MemoryAndDispatchTimeExport(BaseStatsExport):
     LEFT JOIN STEP_TIME step_time
         ON overlap.apiStartNs >= step_time.startNs
         AND overlap.apiStartNs <= step_time.endNs
-    {}
+    WHERE overlap.apiStartNs >= ? and overlap.apiStartNs <= ?
     ORDER BY overlap.startNs, overlap.endNs
     """
 
-    def __init__(self, db_path, recipe_name, step_range):
-        super().__init__(db_path, recipe_name, step_range)
-        filter_statement = "WHERE overlap.apiStartNs >= ? and overlap.apiStartNs <= ?" if step_range else ""
-        self._query = self.QUERY.format(filter_statement)
+
+
+    def __init__(self, db_path, recipe_name, param_dict):
+        super().__init__(db_path, recipe_name, param_dict)
+        self._query = self.QUERY
         self.mode = None
+
+    def get_param_order(self):
+        return [Constant.START_NS, Constant.END_NS]
