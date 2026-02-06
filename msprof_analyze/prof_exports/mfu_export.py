@@ -53,18 +53,24 @@ QUERY_OPERATOR_ARGS = """
     LEFT JOIN
         ENUM_MSTX_EVENT_TYPE mstx_type ON mstx_type.id = mstx.eventType
     WHERE
-        mstx_type.name = 'marker' AND str_domain.value = {op_args_domain}
+        mstx_type.name = 'marker' AND str_domain.value = ?
     ORDER BY mstx.startNs
 """
 
 
 class KernelShapeExport(BaseStatsExport):
     def __init__(self, db_path, recipe_name):
-        super().__init__(db_path, recipe_name, {})
+        super().__init__(db_path, recipe_name, param_dict=None)
         self._query = QUERY_KERNEL_SHAPES
+
+    def get_param_order(self):
+        return []
 
 
 class OperatorArgsExport(BaseStatsExport):
-    def __init__(self, db_path, recipe_name, op_args_domain):
-        super().__init__(db_path, recipe_name, {})
-        self._query = QUERY_OPERATOR_ARGS.format(op_args_domain=f"'{op_args_domain}'")
+    def __init__(self, db_path, recipe_name, param_dict):
+        super().__init__(db_path, recipe_name, param_dict)
+        self._query = QUERY_OPERATOR_ARGS
+
+    def get_param_order(self):
+        return ["op_args_domain"]

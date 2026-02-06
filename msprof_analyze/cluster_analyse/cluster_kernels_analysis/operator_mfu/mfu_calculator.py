@@ -118,7 +118,7 @@ class MFUCalculator:
     def _query_operator_args(self, args_domain):
         if not DBManager.check_tables_in_db(self.profiler_db_path, TableConstant.TABLE_MSTX_EVENTS):
             return pd.DataFrame()
-        args_export = OperatorArgsExport(self.profiler_db_path, "", op_args_domain=args_domain)
+        args_export = OperatorArgsExport(self.profiler_db_path, "", {"op_args_domain": args_domain})
         op_args_df = args_export.read_export_db()
         if op_args_df is None or op_args_df.empty:
             return pd.DataFrame()
