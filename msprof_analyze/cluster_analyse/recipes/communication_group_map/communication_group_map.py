@@ -71,6 +71,11 @@ class CommunicationGroupMap(BaseRecipeAnalysis):
         else:
             logger.error(f"CommGroupMap: {self._export_type} is not supported for export type.")
 
+    def generate_communication_group_mapping(self, context):
+        mapper_res = self.mapper_func(context)
+        self.reducer_func(mapper_res)
+        return self.group_df
+
     def reducer_func(self, mapper_res):
         # concat and process all comm group
         comm_group_df_list = [df for df, _ in mapper_res]
