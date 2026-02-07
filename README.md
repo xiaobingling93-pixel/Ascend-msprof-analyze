@@ -206,17 +206,19 @@ msprof-analyze cluster -m [feature_option] -d <profiling_path> [global_option] [
 
 #### 通信类特性
 
-| 分析能力    | 介绍                                                                                        | 文档链接 |
-|---------|-------------------------------------------------------------------------------------------|-----|
-| communication_matrix | 通信矩阵分析。                                                                                   | -  |
-| communication_time| 通信耗时分析。                                                                                   | -   |
-| all | 默认值，会执行communication_matrix通信矩阵和communication_time通信耗时分析能力，并导出cluster_step_trace_time交付件。 | -  |
-| communication_group_map | 集群场景通信域与并行策略呈现。                                                                           | -   |
-| communication_time_sum | 集群场景通信时间和带宽汇总分析。                                                                          | -   |
-| communication_matrix_sum | 集群场景通信矩阵汇总分析。                                                                             | -   |
-| hccl_sum | 通信类算子信息汇总。                                                                                | -   |
-| pp_chart | pp流水图数据分析，针对pp并行下各个阶段的耗时分析与可视化能力。                                                         | [link](./docs/zh/pp_chart_instruct.md) |
-| slow_rank | 根据当前的快慢卡统计算法，展示各个rank得出的快慢卡影响次数，识别慢卡出现的原因。                                                | -  |
+| 分析能力                     | 介绍                                                                                       | 文档链接                                                   |
+|--------------------------|------------------------------------------------------------------------------------------|--------------------------------------------------------|
+| communication_matrix     | 通信矩阵分析。                                                                                  | -                                                      |
+| communication_time       | 通信耗时分析。                                                                                  | -                                                      |
+| all                      | 默认值，会执行communication_matrix通信矩阵和communication_time通信耗时分析能力，并导出cluster_step_trace_time交付件。 | -                                                      |
+| communication_group_map  | 集群场景通信域与并行策略呈现。                                                                          | -                                                      |
+| communication_time_sum   | 集群场景通信时间和带宽汇总分析。                                                                         | -                                                      |
+| communication_matrix_sum | 集群场景通信矩阵汇总分析。                                                                            | -                                                      |
+| hccl_sum                 | 通信类算子信息汇总。                                                                               | -                                                      |
+| pp_chart                 | pp流水图数据分析，针对pp并行下各个阶段的耗时分析与可视化能力。                                                        | [link](./docs/zh/pp_chart_instruct.md)                 |
+| slow_rank                | 根据当前的快慢卡统计算法，展示各个rank得出的快慢卡影响次数，识别慢卡出现的原因。                                               | -                                                      |
+| communication_bottleneck | 对于长耗时通信算子，识别快慢卡，并推测造成通信等待的Host/Device侧操作。                                                | [link](./docs/zh/communication_bottleneck_instruct.md) |
+
 
 #### Host下发类特性
 
