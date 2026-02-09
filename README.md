@@ -222,10 +222,11 @@ msprof-analyze cluster -m [feature_option] -d <profiling_path> [global_option] [
 
 #### Host下发类特性
 
-| 分析能力    | 介绍                                     | 文档链接 |
-|---------|----------------------------------------|-----|
-| cann_api_sum | CANN层API的汇总。 | -  |
-| mstx_sum | MSTX自定义打点汇总。 | -  |
+| 分析能力          | 介绍           | 文档链接                                        |
+|---------------|--------------|---------------------------------------------|
+| cann_api_sum  | CANN层API的汇总。 | -                                           |
+| mstx_sum      | MSTX自定义打点汇总。 | -                                           |
+| free_analysis | 空闲时间原因分析。    | [link](./docs/zh/free_analysis_instruct.md) |
 
 #### 其他特性
 | 分析能力   | 类别 | 介绍                                     | 文档链接 |

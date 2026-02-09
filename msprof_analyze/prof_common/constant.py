@@ -120,6 +120,7 @@ class Constant(object):
     DB = "db"
     NOTEBOOK = "notebook"
     EXCEL = "excel"
+    CSV = "csv"
     INVALID = "invalid"
 
     # db name
