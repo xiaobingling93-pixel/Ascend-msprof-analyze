@@ -24,6 +24,7 @@ from msprof_analyze.prof_exports.communication_bottleneck_export import CannTask
     DeviceMemoryTaskExport, ComputeTaskExport, CommunicationTaskExport, AllDeviceNodeLaunchPytorchTaskExport, \
     TargetCommunicationOpWithNameExport, CommunicationOpExport
 from msprof_analyze.prof_common.file_manager import FileManager
+from msprof_analyze.prof_common.utils import convert_ns_to_us_str, convert_ns_to_us
 
 logger = get_logger()
 
@@ -41,16 +42,16 @@ class TaskDiffSummary:
             return None
 
         return (
-            f"{self.level}: max duration-diff op "
-            f"{self.max_duration_task['task_name']}, diff {self.max_duration_task['diff_duration']} ns, "
-            "max start-time-diff op "
-            f"{self.max_start_diff_task['task_name']}, diff {self.max_start_diff_task['diff_start_ns']} ns."
+            f"{self.level}: max duration-diff op {self.max_duration_task['task_name']}, "
+            f"diff {convert_ns_to_us(self.max_duration_task['diff_duration'])} us, "
+            f"max start-time-diff op {self.max_start_diff_task['task_name']}, "
+            f"diff {convert_ns_to_us(self.max_start_diff_task['diff_start_ns'])} us."
         )
 
 
 class BottleneckReason:
     """封装通信瓶颈分析结果"""
-    
+
     def __init__(self):
         self.start_ns = None
         self.end_ns = None
@@ -58,18 +59,17 @@ class BottleneckReason:
         self.comm_name = None
         self.slow_rank_id = None
         self.fast_rank_id = None
-        self.reason_string = None  # 原因描述
+        self.reason = None  # 原因描述
     
     def to_dict(self):
-        """转换为字典格式，用于DataFrame（兼容原有格式）"""
         return {
-            "startNs": self.start_ns,
-            "endNs": self.end_ns,
-            "duration": self.duration,
-            "commName": self.comm_name,
+            "startTime(us)": convert_ns_to_us_str(self.start_ns),
+            "endTime(us)": convert_ns_to_us_str(self.end_ns),
+            "duration(us)": convert_ns_to_us(self.duration),
+            "communicationOp": self.comm_name,
             "slowRankId": self.slow_rank_id,
             "fastRankId": self.fast_rank_id,
-            "reasonString": self.reason_string
+            "reason": self.reason
         }
 
 
@@ -183,9 +183,12 @@ class CommunicatonBottleneckAnalysis(BaseRecipeAnalysis):
             'threshold', {}).get('device_bound_proportion', self.DEFAULT_DEVICE_BOUND_PROPORTION_THRESHOLD)
 
     def run(self, context):
+        if self.target_rank_id not in self._data_map.keys():
+            logger.error(f"Target rank_id {self.target_rank_id} not found in profiling path.")
+            return
         comm_df = self.obtain_top_communication_ops(self.target_rank_id)
         self.comm_reasons = self.locate_anomaly_reasons(context, comm_df)
-        
+
         if self._export_type == Constant.DB:
             self.save_db()
         elif self._export_type == Constant.TEXT:
@@ -204,7 +207,6 @@ class CommunicatonBottleneckAnalysis(BaseRecipeAnalysis):
         if comm_df is None or comm_df.empty:
             logger.warning(f"No communication time data found for rank {rank_id}.")
             return None
-
         return comm_df.head(self.max_analysis_num)
 
     def locate_anomaly_reasons(self, context, comm_df):
@@ -229,7 +231,7 @@ class CommunicatonBottleneckAnalysis(BaseRecipeAnalysis):
         mapper_res = self.mapper_func(context)
         valid_res = [res for res in mapper_res if res is not None and not res.empty]
         if not valid_res:
-            reason.reason_string = "[Failed] No data found for the communication operator"
+            reason.reason = "[Failed] No data found for the communication operator"
             return reason
 
         # Get quickest and slowest NPU
@@ -240,7 +242,7 @@ class CommunicatonBottleneckAnalysis(BaseRecipeAnalysis):
         # Check if time difference is small
         time_diff_ratio = (quick_npu_info["duration"] - slow_npu_info["duration"]) / quick_npu_info["duration"]
         if time_diff_ratio < self.slow_npu_happen_threshold:
-            reason.reason_string = "[Completed] No slow NPU detected: execution time difference is less than 5%"
+            reason.reason = "[Completed] No slow NPU detected: execution time difference is less than 5%"
             return reason
         
         # Calculate clock shift and analyze slow NPU
@@ -289,7 +291,7 @@ class CommunicatonBottleneckAnalysis(BaseRecipeAnalysis):
     def analyze_slow_npu(self, reason, clock_shift, fast_start_ns, slow_start_ns, slow_end_ns):
         bottleneck, has_data = self._judge_bottleneck_type(reason, fast_start_ns - clock_shift, slow_end_ns)
         if not has_data:
-            reason.reason_string = "[Failed] Insufficient data for analyzing slow NPU bottleneck"
+            reason.reason = "[Failed] Insufficient data for analyzing slow NPU bottleneck"
             return
         
         if bottleneck == "Device":
@@ -298,28 +300,26 @@ class CommunicatonBottleneckAnalysis(BaseRecipeAnalysis):
             self._analyze_host_bound(reason, fast_start_ns, slow_start_ns, clock_shift)
 
     def save_db(self):
-        if self.comm_reasons is None or not self.comm_reasons:
-            logger.warning("No communication reasons to save.")
+        comm_reason_df = self._build_comm_reason_df()
+        if comm_reason_df is None:
             return
-        
-        reason_dicts = [reason.to_dict() for reason in self.comm_reasons]
-        comm_reason_df = pd.DataFrame(reason_dicts)
-        
-        self.dump_data(
-            comm_reason_df,
-            Constant.DB_CLUSTER_COMMUNICATION_ANALYZER,
-            self.TABLE_DB_NAME
-        )
+        self.dump_data(comm_reason_df, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER, self.TABLE_DB_NAME, index=False)
 
     def save_csv(self):
-        if self.comm_reasons is None or not self.comm_reasons:
-            logger.warning("No communication reasons to save.")
+        comm_reason_df = self._build_comm_reason_df()
+        if comm_reason_df is None:
             return
-        
-        # 将reason列表转换为DataFrame
-        reason_dicts = [reason.to_dict() for reason in self.comm_reasons]
-        comm_reason_df = pd.DataFrame(reason_dicts)
-        self.dump_data(comm_reason_df, self.EVENT_SUMMARY_FILE)
+        csv_columns = {
+            "startTime(us)": "Start Time(us)",
+            "endTime(us)": "End Time(us)",
+            "duration(us)": "Duration(us)",
+            "communicationOp": "Communication Op",
+            "slowRankId": "Slow Rank ID",
+            "fastRankId": "Fast Rank ID",
+            "reason": "Reason",
+        }
+        csv_df = comm_reason_df.rename(columns=csv_columns)
+        self.dump_data(csv_df, self.EVENT_SUMMARY_FILE, index=False)
 
     def _mapper_func(self, data_map, analysis_class):
         profiler_db_path = data_map.get(Constant.PROFILER_DB_PATH)
@@ -361,14 +361,14 @@ class CommunicatonBottleneckAnalysis(BaseRecipeAnalysis):
         device_summary = self._build_task_diff_summary(slow_task_before_df, fast_task_before_df,
                                                        clock_shift, level="Device")
         if not device_summary:
-            reason.reason_string = "[Device-bound] Tasks are not aligned between slow and fast NPU from the beginning"
+            reason.reason = "[Device-bound] Tasks are not aligned between slow and fast NPU from the beginning"
             return
 
         reason_string = device_summary.to_reason_string()
         if reason_string is None:
-            reason.reason_string = "[Device-bound] Failed to find device task differences"
+            reason.reason = "[Device-bound] Failed to find device task differences"
             return
-        reason.reason_string = "[Device-bound]" + reason_string
+        reason.reason = "[Device-bound]" + reason_string
 
     def _analyze_host_bound(self, reason, fast_start_ns, slow_start_ns, clock_shift):
         slow_pytorch_df, slow_cann_df = self.query_host_task_before_time(reason.slow_rank_id, 0, slow_start_ns)
@@ -378,7 +378,7 @@ class CommunicatonBottleneckAnalysis(BaseRecipeAnalysis):
         cann_summary = self._build_task_diff_summary(slow_cann_df, fast_cann_df, clock_shift, level="CANN")
 
         if not pytorch_summary:
-            reason.reason_string = "[Host-bound] Tasks are not aligned between slow and fast NPU from the beginning"
+            reason.reason = "[Host-bound] Tasks are not aligned between slow and fast NPU from the beginning"
             return
 
         reason_strings = []
@@ -392,9 +392,9 @@ class CommunicatonBottleneckAnalysis(BaseRecipeAnalysis):
                 reason_strings.append(cann_reason)
 
         if reason_strings:
-            reason.reason_string = "[Host-bound] " + " | ".join(reason_strings)
+            reason.reason = "[Host-bound] " + " | ".join(reason_strings)
         else:
-            reason.reason_string = "[Host-bound] Failed to find host task differences"
+            reason.reason = "[Host-bound] Failed to find host task differences"
 
     def _build_task_diff_summary(self, slow_df, fast_df, clock_shift, level):
         task_record_df, is_unalign = self.compute_diff_from_fast_and_slow_npu(
@@ -405,3 +405,10 @@ class CommunicatonBottleneckAnalysis(BaseRecipeAnalysis):
         max_diff_duration_task = task_record_df.sort_values(by=["diff_duration"], ascending=False).iloc[0]
         max_diff_start_task = task_record_df.sort_values(by=["diff_start_ns"], ascending=False).iloc[0]
         return TaskDiffSummary(level, max_diff_start_task, max_diff_duration_task)
+
+    def _build_comm_reason_df(self):
+        if self.comm_reasons is None or not self.comm_reasons:
+            logger.warning("No communication reasons to save.")
+            return None
+        reason_dicts = [reason.to_dict() for reason in self.comm_reasons]
+        return pd.DataFrame(reason_dicts)
