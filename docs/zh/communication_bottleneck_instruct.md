@@ -95,15 +95,32 @@ msprof_analyze/cluster_analyse/recipes/communication_bottleneck/config.json
 
 ## 输出结果文件说明
 
-字段说明如下：
+**CommunicationBottleneck表**  
 
-| 字段 | 说明 |
-| ---- | ---- |
-| startNs | 通信操作的开始时间戳，INTEGER类型，单位为ns。|
-| endNs | 通信操作的结束时间戳，INTEGER类型，单位为ns。|
-| duration | 通信操作的持续时间，INTEGER类型，单位为ns。 |
-| commName | 通信操作的名称，TEXT类型。 |
-| slowRankId | 慢卡rank ID，INTEGER类型，当存在慢卡时有效。 |
-| fastRankId | 快卡rank ID，INTEGER类型，当存在慢卡时有效。 |
-| reasonString | 分析结果说明字符串，TEXT类型。 |
+表字段如下：
+
+| 字段名称       | 说明                               |
+| -------------- |----------------------------------|
+| startTime(us)  | 目标卡上通信算子的开始时间戳，TEXT类型，单位为微秒(us)。 |
+| endTime(us)    | 目标卡上通信算子的结束时间戳，TEXT类型，单位为微秒(us)。  |
+| duration(us)   | 目标卡上通信算子的持续时间，REAL类型，单位为微秒(us)。  |
+| communicationOp| 通信算子的名称，TEXT类型。                  |
+| slowRankId     | 慢卡卡号，INTEGER类型，当存在慢卡时有效。         |
+| fastRankId     | 快卡卡号，INTEGER类型，当存在慢卡时有效。         |
+| reason         | 分析结果，TEXT类型。                     |
+
+
+**communication_bottleneck.csv**  
+
+CSV文件列名如下：
+
+| 字段名称         | 说明                              |
+|------------------|---------------------------------|
+| Start Time(us)   | 目标卡上通信算子的开始时间戳，TEXT类型，单位为微秒(us)。 |
+| End Time(us)     | 目标卡上通信算子的结束时间戳，TEXT类型，单位为微秒(us)。 |
+| Duration(us)     | 目标卡上通信算子的持续时间，REAL类型，单位为微秒(us)。 |
+| Communication Op | 通信算子的名称，TEXT类型。                 |
+| Slow Rank ID     | 慢卡卡号，INTEGER类型，当存在慢卡时有效。                  |
+| Fast Rank ID     | 快卡卡号，INTEGER类型，当存在慢卡时有效。                  |
+| Reason           | 分析结果，TEXT类型，文本描述形式。             |
 
