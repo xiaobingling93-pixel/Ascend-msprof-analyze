@@ -16,28 +16,23 @@
 # limitations under the License.
 
 import os
-import tempfile
-import pandas as pd
 
+from msprof_analyze.cluster_analyse.common_func.excel_utils import ExcelUtils
 from msprof_analyze.cluster_analyse.recipes.base_recipe_analysis import BaseRecipeAnalysis
 from msprof_analyze.cluster_analyse.recipes.calibrate_npu_gpu.gpu_analyzer import GPUAnalyzer
-from msprof_analyze.cluster_analyse.recipes.calibrate_npu_gpu.npu_analyzer import NPUAnalyzer
 from msprof_analyze.cluster_analyse.recipes.calibrate_npu_gpu.comparator import Comparator
+from msprof_analyze.cluster_analyse.recipes.module_statistic.module_statistic import ModuleStatistic
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.logger import get_logger
-from msprof_analyze.prof_common.path_manager import PathManager
 
 logger = get_logger()
 
 
 class CalibrateNpuGpu(BaseRecipeAnalysis):
-    """GPU/NPU 性能校准分析"""
-
     def __init__(self, params):
         super().__init__(params)
-        logger.info("CalibrateAnalysis init.")
-        self.gpu_path = self._extra_args.get('gpu_path', '')
-        self.npu_path = self._extra_args.get('npu_path', '')
+        self.npu_module_statistic_analyzer = ModuleStatistic(params=params)
+        self.baseline_profiling_path = self._extra_args.get('baseline_profiling_path', '')
         self.fuzzy_threshold = float(self._extra_args.get('fuzzy_threshold', 0.8))
 
     @property
@@ -47,71 +42,70 @@ class CalibrateNpuGpu(BaseRecipeAnalysis):
     @classmethod
     def add_parser_argument(cls, parser):
         BaseRecipeAnalysis.add_parser_argument(parser)
-        parser.add_argument('--gpu_path', type=str, required=True,
-                           help='Path to GPU profile SQLite file (required for calibrate mode)')
-        parser.add_argument('--npu_path', type=str, required=True,
-                           help='Path to NPU profile DB file (required for calibrate mode)')
+        parser.add_argument('--baseline_profiling_path', type=str, required=True,
+                           help='Path to baseline profile (GPU or NPU)')
         parser.add_argument('--fuzzy_threshold', type=float, default=0.8,
-                           help='Fuzzy matching threshold between NPU and GPU operations (default: 0.8)')
+                           help='Fuzzy matching threshold between profiles (default: 0.8)')
 
-    def _mapper_func(self, data_map, analysis_class):
-        """
-        calibrate 模式不需要标准的 mapper 处理，返回空列表
-        """
-        return []
+    def export_excel(self, output_path, file_name, df_compare):
+        index_cols = ['Parent Module_gpu', 'Module_gpu', 'Parent Module_npu', 'Module_npu', 'Module Time Ratio (NPU/GPU)']
+        column_width_config = {
+            "Parent Module_npu": 20,
+            "Module_npu": 20,
+            "Parent Module_gpu": 20,
+            "Module_gpu": 20,
+
+            "match_type": 10,
+
+            "Op Name_gpu": 20,
+            "Op Count_gpu": 10,
+            "Kernel List_gpu": 40,
+            "Total Kernel Duration(ns)_gpu": 10,
+            "Total Kernel Duration(%)_gpu": 10,
+            "Avg Kernel Duration(ns)_gpu": 10,
+
+            "Op Name_npu": 20,
+            "Op Count_npu": 10,
+            "Kernel List_npu": 40,
+            "Total Kernel Duration(ns)_npu": 10,
+            "Total Kernel Duration(%)_npu": 10,
+            "Avg Kernel Duration(ns)_npu": 10,
+
+            "Module Time Ratio (NPU/GPU)": 20
+        }
+
+        excel_utils = ExcelUtils()
+        excel_utils.create_excel_writer(output_path, file_name, df_compare)
+        excel_utils.merge_duplicate_cells(index_cols)
+        excel_utils.set_column_width(column_width_config)
+        excel_utils.set_row_height(0, 27)
+        excel_utils.save_and_close()
+        excel_utils.clear()
 
     def run(self, context):
-        """执行校准分析"""
-        # 检查必需参数
-        if not self.gpu_path or not self.npu_path:
-            logger.error("Both --gpu_path and --npu_path are required for calibrate mode.")
+        if not self.baseline_profiling_path or not os.path.exists(self.baseline_profiling_path):
+            logger.error("Please make sure the profiling path of baseline is properly indicated")
             return
 
-        # 检查文件存在性
-        if not os.path.exists(self.gpu_path):
-            logger.error(f"GPU profile file not found: {self.gpu_path}")
-            return
-        if not os.path.exists(self.npu_path):
-            logger.error(f"NPU profile file not found: {self.npu_path}")
-            return
+        logger.info("Analyzing GPU profile...")
+        gpu_analyzer = GPUAnalyzer(self.baseline_profiling_path)
+        gpu_df_dict = gpu_analyzer.get_aggregated_df()
+        
+        logger.info("Analyzing NPU profile...")
+        npu_dfs = self.npu_module_statistic_analyzer.run(context, save=False)
 
-        # 确保输出目录存在
-        PathManager.make_dir_safety(self._output_path)
-
-        # 生成输出文件路径
-        output_excel = os.path.join(self._output_path, 'compare_profile_report.xlsx')
-
-        # 使用临时目录处理中间文件
-        with tempfile.TemporaryDirectory() as tmpdir:
-            # 分析 GPU
-            logger.info("Analyzing GPU profile...")
-            gpu_analyzer = GPUAnalyzer(self.gpu_path)
-            gpu_df = gpu_analyzer.get_aggregated_df().reset_index()
-            if gpu_df is None or gpu_df.empty:
-                logger.error("GPU analysis failed.")
-                return
-
-            # 分析 NPU
-            logger.info("Analyzing NPU profile...")
-            npu_analyzer = NPUAnalyzer(self.npu_path)
-            npu_df = npu_analyzer.get_aggregated_df().reset_index()
-            if npu_df is None or npu_df.empty:
-                logger.error("NPU analysis failed.")
-                return
-
-            # 比较结果
+        for rank_id, npu_df in npu_dfs:
+            file_name_to_save = f'compare_profile_report_{rank_id}.xlsx'
+            gpu_df = gpu_df_dict[rank_id].reset_index()
             logger.info("Comparing GPU and NPU profiles...")
             comparator = Comparator(gpu_df, npu_df)
             compare_df = comparator.compare(self.fuzzy_threshold)
-            comparator.export_excel(output_excel)
+            self.export_excel(self.output_path, file_name_to_save, compare_df)
+            logger.info(f"Calibration report generated: {os.path.join(self.output_path, file_name_to_save)}")
 
-        logger.info(f"Calibration report generated: {output_excel}")
-
-        # 根据导出类型处理结果
         if self._export_type == "db":
             self.save_db(compare_df)
         elif self._export_type == "excel":
-            # Excel 已经在上面生成了，无需额外操作
             pass
         elif self._export_type == "notebook":
             self.save_notebook(compare_df)
@@ -119,7 +113,6 @@ class CalibrateNpuGpu(BaseRecipeAnalysis):
             logger.error(f"Unsupported export type: {self._export_type}")
 
     def save_db(self, df):
-        """保存结果到数据库"""
         if df is None or df.empty:
             logger.warning("No data to save to database.")
             return
@@ -128,7 +121,6 @@ class CalibrateNpuGpu(BaseRecipeAnalysis):
         logger.info("Calibration result saved to database.")
 
     def save_notebook(self, df):
-        """生成 Notebook 报告"""
         if df is None or df.empty:
             logger.warning("No data to generate notebook.")
             return

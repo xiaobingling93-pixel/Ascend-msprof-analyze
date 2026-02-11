@@ -16,8 +16,7 @@
 # limitations under the License.
 
 from .gpu_analyzer import GPUAnalyzer
-from .npu_analyzer import NPUAnalyzer
 from .comparator import Comparator
 from .calibrate_npu_gpu import CalibrateNpuGpu
 
-__all__ = ['GPUAnalyzer', 'NPUAnalyzer', 'Comparator', 'CalibrateNpuGpu']
+__all__ = ['GPUAnalyzer', 'Comparator', 'CalibrateNpuGpu']
