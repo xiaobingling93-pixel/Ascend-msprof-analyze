@@ -114,6 +114,10 @@ class Comparator:
         df_merged['Total Kernel Duration(%)_gpu'] = df_merged['Total Kernel Duration(ns)_gpu'] / df_merged['Total Kernel Duration(ns)_gpu'].sum() * 100
         df_merged['Total Kernel Duration(%)_npu'] = df_merged['Total Kernel Duration(ns)_npu'] / df_merged['Total Kernel Duration(ns)_npu'].sum() * 100
 
+        # 格式化百分比显示
+        df_merged['Total Kernel Duration(%)_gpu'].apply(lambda x: f"{x:.2f}%" if pd.notnull(x) else ' ')
+        df_merged['Total Kernel Duration(%)_npu'].apply(lambda x: f"{x:.2f}%" if pd.notnull(x) else ' ')
+
         # 计算 Module 层级的耗时比率：NPU / GPU
         gpu_module_sum = df_gpu.groupby('match_key')['Total Kernel Duration(ns)'].sum()
         npu_module_sum = df_npu.groupby('match_key')['Total Kernel Duration(ns)'].sum()
@@ -123,6 +127,7 @@ class Comparator:
         
         # 映射回 merged dataframe
         df_merged['Module Time Ratio (NPU/GPU)'] = df_merged['match_key'].map(module_ratio)
+        df_merged['Module Time Ratio (NPU/GPU)'] = df_merged['Module Time Ratio (NPU/GPU)'].apply(lambda x: f"{x:.2f}" if pd.notnull(x) else ' ')
 
         match_cols = ['Parent Module_gpu', 'Module_gpu', 'Parent Module_npu', 'Module_npu', 'match_type']
         cols = match_cols + [

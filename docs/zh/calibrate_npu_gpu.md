@@ -7,7 +7,7 @@ msprof-analyze 提供了 `calibrate_npu_gpu` 功能，用于自动对比 NPU 和
 * **跨平台分析**：支持 GPU（NVIDIA）Nsys SQLite 格式和 NPU（Ascend）PyTorch Profiler DB 格式的性能数据
 * **模块匹配**：使用规则匹配和模糊匹配（Levenshtein 距离），自动对齐 GPU 和 NPU 的模块层次结构
 * **性能差异分析**：精确计算 GPU 与 NPU 在相同模块下的时间比例，识别性能退化点
-* **可视化报告**：生成 Excel 格式的对比报告，高亮显示性能差异超过阈值的模块
+* **可视化报告**：生成 Excel 格式的对比报告
 
 ## 操作指导
 
@@ -21,7 +21,7 @@ msprof-analyze 提供了 `calibrate_npu_gpu` 功能，用于自动对比 NPU 和
 #!/bin/bash
 
 echo "Start Profiling"
-export CUDA_VISIBLE_DEVICES=0
+export CUDA_VISIBLE_DEVICES=0,1
 dir_model="/path/to/model"
 dir_ouput_prof="/path/to/model_profile_gpu"
 
@@ -40,6 +40,7 @@ vllm bench latency \
     --num-iters 1 \
     --batch-size 16 \
     --input-len 512 \
+    --model-parallel-size 2 \
     --output-len 8
 ```
 
@@ -68,10 +69,10 @@ dir_ouput_prof="/path/to/model_profile_npu"
 
 # 通过 VLLM_TORCH_PROFILER_DIR 环境变量开启性能采集，设置性能数据落盘位置，也可以在终端设置该环境变量
 export VLLM_TORCH_PROFILER_DIR=${dir_ouput_prof}
-export ASCEND_RT_VISIBLE_DEVICES=0
+export ASCEND_RT_VISIBLE_DEVICES=0,1
 
 echo "Start Profiling"
-# 修改benchmark代码加入mstx打点，见附录
+# 修改benchmark代码加入mstx打点
 # 增加profile选项启动llm.start_profile()
 vllm bench latency \
     --enforce-eager \
@@ -81,16 +82,14 @@ vllm bench latency \
     --batch-size 16 \
     --input-len 512 \
     --output-len 8 \
+    --model-parallel-size 2 \
     --profile
-
-echo "please mannually move ascend_pytorch_profiler_0.db file to other place"
 ```
 
 **关键配置说明：**
 * **环境变量**：`VLLM_TORCH_PROFILER_DIR` 设置性能数据输出目录
 * **打点配置**：需修改 vLLM-Ascend 代码，在 `experimental_config` 中设置 `msprof_tx=True` 和 `export_type=['text', 'db']`
 * **eager 模式**：当前只支持 eager 模式，请使用 `--enforce-eager` 确保算子逐条执行
-* **输出文件**：采集完成后会在指定目录生成 `ascend_pytorch_profiler_0.db` 文件
 
 #### 3. 数据文件要求
 
@@ -106,8 +105,7 @@ echo "please mannually move ascend_pytorch_profiler_0.db file to other place"
 ```bash
 msprof-analyze cluster -m calibrate_npu_gpu \
   --profiling_path /path/to/npu_profile \
-  --gpu_path /path/to/gpu_profile.sqlite \
-  --npu_path /path/to/ascend_pytorch_profiler_0.db \
+  --baseline_profiling_path /path/to/gpu_profile.sqlite \
   --output_path ./calibration_result \
   --export_type excel
 ```
@@ -115,22 +113,16 @@ msprof-analyze cluster -m calibrate_npu_gpu \
 **参数说明：**
 * `-m calibrate_npu_gpu`：指定使用校准分析模式
 * `--profiling_path`：NPU 性能数据路径
-* `--gpu_path`：GPU 性能数据文件路径（必需）
-* `--npu_path`：NPU 性能数据文件路径（必需）
+* `--baselin_profiling_path`：GPU 性能数据文件路径（必需）
 * `--output_path`：分析结果输出目录
 * `--export_type`：导出类型，默认为 `excel`
 * `--fuzzy_threshold`：NPU/GPU module name fuzzy 匹配的阈值，默认为 `0.8`
-
-**可选参数：**
-* `--parallel_mode`：并行模式，默认 `concurrent`
-* `--rank_list`：Rank ID 列表，默认 `all`
-* `--data_simplification`：数据简化开关，默认关闭
 
 ### 输出说明
 
 #### 1. Excel 输出（默认）
 
-当 `--export_type excel` 时，在输出目录生成 `compare_profile_report.xlsx` 文件，包含以下信息：
+当 `--export_type excel` 时，在输出目录生成 `compare_profile_report_{rank_id}.xlsx` 文件，包含以下信息：
 
 | 字段 | 说明 |
 |------|------|
@@ -140,17 +132,18 @@ msprof-analyze cluster -m calibrate_npu_gpu \
 | Module_npu | NPU 侧的模块名称 |
 | match_type | 匹配类型：`rule`（规则匹配）或 `fuzzy`（模糊匹配） |
 | Op Name_gpu | GPU 侧的算子名称列表 |
+| Op Count_gpu | GPU 侧算子出现次数 |
 | Kernel List_gpu | GPU 侧的 Kernel 名称列表 |
-| Total Time (ns)_gpu | GPU 侧总执行时间（纳秒） |
-| Total Time (ns)_npu | NPU 侧总执行时间（纳秒） |
-| Time Ratio (NPU/GPU) | NPU 与 GPU 时间比例（>1 表示 NPU 更慢） |
+| Total Kernel Duration(ns)_gpu | GPU 侧总执行时间（纳秒） |
+| Total Kernel Duration(%)_gpu | GPU 侧总执行时间占比（百分比） |
+| Avg Kernel Duration(ns)_gpu | GPU 侧平均执行时间（纳秒） |
 | Op Name_npu | NPU 侧的算子名称列表 |
+| Op Count_npu | NPU 侧算子出现次数 |
 | Kernel List_npu | NPU 侧的 Kernel 名称列表 |
-
-**报告特性：**
-* **自动高亮**：`Time Ratio (NPU/GPU) > 1.5` 的单元格以红色背景标记
-* **匹配标注**：使用模糊匹配的行以黄色背景标记
-* **排序规则**：按 GPU 父模块和时间降序排列，便于快速定位性能瓶颈
+| Total Kernel Duration(ns)_npu | NPU 侧总执行时间（纳秒） |
+| Total Kernel Duration(%)_npu | NPU 侧总执行时间占比（百分比） |
+| Avg Kernel Duration(ns)_npu | NPU 侧平均执行时间（纳秒） |
+| Module Time Ratio (NPU/GPU) | Module 级别的 NPU-GPU 耗时对比 |
 
 
 ## 附录
