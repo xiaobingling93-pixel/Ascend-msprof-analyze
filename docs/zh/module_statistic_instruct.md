@@ -45,22 +45,22 @@
 **命令格式**  
 
 ```
-msprof-analyze -m module_statistic -d ./result --export_type excel
+msprof-analyze -m module_statistic -d ./result --export_type text
 ```
 **参数说明**
 
-| 参数 | 可选/必选 | 说明                                              |
-| ---- | --------- | ------------------------------------------------- |
-| -m   | 必选      | 设置为module_statistic 使能模型结构拆解能力。|
-| -d   | 必选      | 集群性能数据文件夹路径。 |
-| -o   | 可选      | 指定输出文件路径。          |
-| --export_type   | 可选      | 指定输出文件类型，可选db或excel。          |
+| 参数 | 可选/必选 | 说明                              |
+| ---- | --------- |---------------------------------|
+| -m   | 必选      | 设置为module_statistic 使能模型结构拆解能力。 |
+| -d   | 必选      | 集群性能数据文件夹路径。                    |
+| -o   | 可选      | 指定输出文件路径。                       |
+| --export_type   | 可选      | 指定输出文件类型，可选db或text。             |
 
 更多参数详细介绍请参见msprof-analyze的[参数说明](../../README.md#参数说明)。
 
 **输出说明**  
 * 输出结果体现模型层级，算子调用顺序，NPU上执行的Kernel以及统计时间。
-* `export_type`设置为`excel`时，每张卡生成独立的module_statistic_{rank_id}.xlsx文件，如下图所示：  
+* `export_type`设置为`text`时，每张卡生成独立的module_statistic_{rank_id}.xlsx文件，如下图所示：  
 ![vllm_module_statistic](./figures/vllm_module_statistic.png)
 
 * `export_type`设置为`db`时，结果统一保存到 cluster_analysis.db 的 ModuleStatistic，字段说明如下：  

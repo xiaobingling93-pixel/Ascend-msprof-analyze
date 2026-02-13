@@ -51,7 +51,7 @@ msprof-analyze -m cluster_time_summary -d ./xxx/cluster_data -o ./xxx/output_pat
 
 **输出说明**  
 
-* 存储位置：输出路径下的cluster_analysis_output/cluster_analysis.db  
+* 存储位置：导出类型设置为db时，在输出路径下生成cluster_analysis_output/cluster_analysis.db；导出类型设置为text时，在输出路径下生成cluster_analysis_output/ClusterTimeSummary/cluster_time_summary_{timestamp}.csv。
 
 * 数据表名：ClusterTimeSummary
 
@@ -76,7 +76,9 @@ ClusterTimeSummary表字段如下：
 | memory                                   | REAL    | 拷贝耗时。                                     |
 | memoryNotOverlapComputationCommunication | REAL    | 未被计算、通信掩盖的拷贝耗时。                 |
 
-上表中时间相关字段，统一使用微秒（us）
+上表中时间相关字段，统一使用微秒（us）。
+
+cluster_time_summary_{timestamp}.csv除了表头格式有所调整，数据和db保持一致。
 
 **输出结果分析：**
 * 通过分析计算、通信、内存拷贝、空闲时间占比，找到性能瓶颈。

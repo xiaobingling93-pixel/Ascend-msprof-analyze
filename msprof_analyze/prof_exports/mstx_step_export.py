@@ -13,7 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
+import pandas as pd
+
 from msprof_analyze.prof_exports.base_stats_export import BaseStatsExport
+from msprof_analyze.prof_common.logger import get_logger
+
+logger = get_logger()
 
 QUERY = """
 SELECT
@@ -29,6 +35,9 @@ ORDER BY
 
 class MstxStepExport(BaseStatsExport):
 
-    def __init__(self, db_path, recipe_name, step_range):
-        super().__init__(db_path, recipe_name, step_range)
+    def __init__(self, db_path, recipe_name, param_dict):
+        super().__init__(db_path, recipe_name, param_dict)
         self._query = QUERY
+
+    def get_param_order(self):
+        return []

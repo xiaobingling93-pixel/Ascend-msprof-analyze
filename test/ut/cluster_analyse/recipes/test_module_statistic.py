@@ -71,9 +71,9 @@ class TestModuleStatistic(unittest.TestCase):
     @patch("msprof_analyze.cluster_analyse.recipes.module_statistic.module_statistic.ModuleStatistic.mapper_func")
     @patch("msprof_analyze.cluster_analyse.recipes.module_statistic.module_statistic.ModuleStatistic.save_db")
     @patch("msprof_analyze.cluster_analyse.recipes.module_statistic.module_statistic.ModuleStatistic.save_excel")
-    def test_run_when_export_type_is_excel_then_save_csv_called(self, mock_save_excel, mock_save_db, mock_mapper_func):
-        """测试run方法，export_type为EXCEL时应调用save_csv"""
-        self.analysis._export_type = Constant.EXCEL
+    def test_run_when_export_type_is_text_then_save_csv_called(self, mock_save_excel, mock_save_db, mock_mapper_func):
+        """测试run方法，export_type为TEXT时应调用save_csv"""
+        self.analysis._export_type = Constant.TEXT
         mock_mapper_func.return_value = [(0, pd.DataFrame({"a": [1]}))]
         self.analysis.run(context=None)
         mock_save_excel.assert_called()
@@ -151,9 +151,9 @@ class TestModuleStatistic(unittest.TestCase):
         self.assertIn('parentModule', out.columns)
         self.assertIn('opName', out.columns)
 
-    def test_format_stat_df_columns_when_export_type_excel_then_rename(self):
-        """测试_format_stat_df_columns，export_type为EXCEL时应重命名列"""
-        self.analysis._export_type = Constant.EXCEL
+    def test_format_stat_df_columns_when_export_type_text_then_rename(self):
+        """测试_format_stat_df_columns，export_type为text时应重命名列"""
+        self.analysis._export_type = Constant.TEXT
         stat_df = pd.DataFrame({
             'module_parent': ['a'],
             'module': ['b'],
@@ -258,7 +258,7 @@ class TestModuleStatistic(unittest.TestCase):
             'device_time': [2.0, 2.0, 3.0, 2.0],
             'mfu_list': [[0.5], [0.2], [0.5], [0.3]]
         })
-        self.analysis._export_type = Constant.EXCEL
+        self.analysis._export_type = Constant.TEXT
         out1 = self.analysis._aggregate_module_operator_stats(df1)
         self.assertEqual(len(out1), 2)
         self.assertIn('Op Name', out1.columns)

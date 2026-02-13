@@ -120,6 +120,7 @@ class Constant(object):
     DB = "db"
     NOTEBOOK = "notebook"
     EXCEL = "excel"
+    CSV = "csv"
     INVALID = "invalid"
 
     # db name
@@ -452,11 +453,13 @@ class Constant(object):
     START_NS = "startNs"
     END_NS = "endNs"
 
+
     # hccl_sum
     UINT32_BITS = 32
     UINT32_MASK = 0xffffffff
 
     INVALID_RANK_NUM = 4294967295
+    MAX_INTEGER = 9223372036854775807  # Default MAX value: 2^63 - 1 for 64-bit integer
 
     # slow rank
     MAX_DIXON_NUM = 100

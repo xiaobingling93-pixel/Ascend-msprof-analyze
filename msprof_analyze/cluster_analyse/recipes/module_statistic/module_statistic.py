@@ -48,7 +48,7 @@ class ModuleStatistic(BaseRecipeAnalysis):
     def run(self, context, save=True):
         if self._export_type != Constant.DB and self._export_type != Constant.EXCEL:
             logger.error(f"Invalid export type: {self._export_type} for module analysis, "
-                         f"required to be {Constant.DB} or {Constant.EXCEL}")
+                         f"required to be {Constant.DB} or {Constant.TEXT}")
             return
         mapper_res = self.mapper_func(context)
         if not save:
@@ -56,7 +56,7 @@ class ModuleStatistic(BaseRecipeAnalysis):
         if self._export_type == Constant.DB:
             total_df = self.reducer_func(mapper_res)
             self.save_db(total_df)
-        elif self._export_type == Constant.EXCEL:
+        elif self._export_type == Constant.TEXT:
             self.save_excel(mapper_res)
 
     def reducer_func(self, mapper_res):
@@ -352,7 +352,7 @@ class ModuleStatistic(BaseRecipeAnalysis):
                     'avg_kernel_duration': 'avgKernelDuration(ns)',
                     'avg_mfu': 'avgMFU'
                 }
-            elif self._export_type == Constant.EXCEL:
+            elif self._export_type == Constant.TEXT:
                 column_mapping = {
                     'module_parent': 'Parent Module',
                     'module': 'Module',

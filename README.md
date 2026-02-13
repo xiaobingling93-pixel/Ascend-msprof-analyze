@@ -156,16 +156,16 @@ msprof-analyze cluster -m [feature_option] -d <profiling_path> [global_option] [
 #### 全局参数
 主要包括输入输出与格式参数、执行参数以及帮助信息等。
 
-   | 参数名                | 说明                                                                                                                                                                                                       | 是否必选 |
-   | --------------------- |----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------| -------- |
-   | --profiling_path或-d  | 性能数据汇集目录。未配置-o参数时，运行分析脚本之后会在该目录下自动创建cluster_analysis_output文件夹，保存分析数据。                                                                                                                                   | 是       |
-   | --output_path或-o     | 自定义输出路径，运行分析脚本之后会在该目录下自动创建cluster_analysis_output文件夹，保存分析数据。                                                                                                                                             | 否       |
-   | --mode或-m            | 分析能力选项，取值详见[分析能力特性说明](#分析特性介绍)表。  默认参数为all，all会执行step_trace_time、communication_matrix通信矩阵和communication_time通信耗时分析能力。                                                                                    | 否       |
-   | --export_type         | 设置导出的数据形式。取值为db（.db格式文件）和notebook（Jupyter Notebook文件），默认值为db。                                                                                                                                            | 否       |
+   | 参数名                | 说明                                                                                                                                                                                                     | 是否必选 |
+   | --------------------- |--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------| -------- |
+   | --profiling_path或-d  | 性能数据汇集目录。未配置-o参数时，运行分析脚本之后会在该目录下自动创建cluster_analysis_output文件夹，保存分析数据。                                                                                                                                 | 是       |
+   | --output_path或-o     | 自定义输出路径，运行分析脚本之后会在该目录下自动创建cluster_analysis_output文件夹，保存分析数据。                                                                                                                                           | 否       |
+   | --mode或-m            | 分析能力选项，取值详见[分析能力特性说明](#分析特性介绍)表。  默认参数为all，all会执行step_trace_time、communication_matrix通信矩阵和communication_time通信耗时分析能力。                                                                                  | 否       |
+   | --export_type         | 设置导出的数据形式。取值为db（.db格式文件）、notebook（Jupyter Notebook文件）、text（泛指json/csv/excel等文本格式文件），默认值为db。                                                                                                                               | 否       |
    | --force               | 强制执行，用户对force行为负责，配置后可强制跳过如下情况：<br/>        指定的目录、文件的用户属主不属于当前用户，忽略属主判断直接执行。<br/>        csv文件大于5G、json文件大于10G、db文件大于8G，忽略文件过大判断直接执行。<br/>        指定的目录、文件的读写权限，忽略权限判断直接执行。<br/>配置该参数表示开启强制执行，默认未配置表示关闭。 | 否       |
-   | --parallel_mode       | 设置收集多卡、多节点db数据时的并发方式。取值为concurrent（使用concurrent.feature进程池实现并发）。                                                                                                                                         | 否       |
-   | -v，-V<br/>--version | 查看版本号。                                                                                                                                                                                                   | 否 |
-   | -h，-H<br>--help     | 命令行参数帮助信息。                                                                                                                                                                                               | 否 |
+   | --parallel_mode       | 设置收集多卡、多节点db数据时的并发方式。取值为concurrent（使用concurrent.feature进程池实现并发）。                                                                                                                                       | 否       |
+   | -v，-V<br/>--version | 查看版本号。                                                                                                                                                                                                 | 否 |
+   | -h，-H<br>--help     | 命令行参数帮助信息。                                                                                                                                                                                             | 否 |
 
 #### 分析能力参数
 
@@ -206,24 +206,27 @@ msprof-analyze cluster -m [feature_option] -d <profiling_path> [global_option] [
 
 #### 通信类特性
 
-| 分析能力    | 介绍                                                                                        | 文档链接 |
-|---------|-------------------------------------------------------------------------------------------|-----|
-| communication_matrix | 通信矩阵分析。                                                                                   | -  |
-| communication_time| 通信耗时分析。                                                                                   | -   |
-| all | 默认值，会执行communication_matrix通信矩阵和communication_time通信耗时分析能力，并导出cluster_step_trace_time交付件。 | -  |
-| communication_group_map | 集群场景通信域与并行策略呈现。                                                                           | -   |
-| communication_time_sum | 集群场景通信时间和带宽汇总分析。                                                                          | -   |
-| communication_matrix_sum | 集群场景通信矩阵汇总分析。                                                                             | -   |
-| hccl_sum | 通信类算子信息汇总。                                                                                | -   |
-| pp_chart | pp流水图数据分析，针对pp并行下各个阶段的耗时分析与可视化能力。                                                         | [link](./docs/zh/pp_chart_instruct.md) |
-| slow_rank | 根据当前的快慢卡统计算法，展示各个rank得出的快慢卡影响次数，识别慢卡出现的原因。                                                | -  |
+| 分析能力                     | 介绍                                                                                       | 文档链接                                                   |
+|--------------------------|------------------------------------------------------------------------------------------|--------------------------------------------------------|
+| communication_matrix     | 通信矩阵分析。                                                                                  | -                                                      |
+| communication_time       | 通信耗时分析。                                                                                  | -                                                      |
+| all                      | 默认值，会执行communication_matrix通信矩阵和communication_time通信耗时分析能力，并导出cluster_step_trace_time交付件。 | -                                                      |
+| communication_group_map  | 集群场景通信域与并行策略呈现。                                                                          | -                                                      |
+| communication_time_sum   | 集群场景通信时间和带宽汇总分析。                                                                         | -                                                      |
+| communication_matrix_sum | 集群场景通信矩阵汇总分析。                                                                            | -                                                      |
+| hccl_sum                 | 通信类算子信息汇总。                                                                               | -                                                      |
+| pp_chart                 | pp流水图数据分析，针对pp并行下各个阶段的耗时分析与可视化能力。                                                        | [link](./docs/zh/pp_chart_instruct.md)                 |
+| slow_rank                | 根据当前的快慢卡统计算法，展示各个rank得出的快慢卡影响次数，识别慢卡出现的原因。                                               | -                                                      |
+| communication_bottleneck | 对于长耗时通信算子，识别快慢卡，并推测造成通信等待的Host/Device侧操作。                                                | [link](./docs/zh/communication_bottleneck_instruct.md) |
+
 
 #### Host下发类特性
 
-| 分析能力    | 介绍                                     | 文档链接 |
-|---------|----------------------------------------|-----|
-| cann_api_sum | CANN层API的汇总。 | -  |
-| mstx_sum | MSTX自定义打点汇总。 | -  |
+| 分析能力          | 介绍           | 文档链接                                        |
+|---------------|--------------|---------------------------------------------|
+| cann_api_sum  | CANN层API的汇总。 | -                                           |
+| mstx_sum      | MSTX自定义打点汇总。 | -                                           |
+| free_analysis | 空闲时间原因分析。    | [link](./docs/zh/free_analysis_instruct.md) |
 
 #### 其他特性
 | 分析能力   | 类别 | 介绍                                     | 文档链接 |
