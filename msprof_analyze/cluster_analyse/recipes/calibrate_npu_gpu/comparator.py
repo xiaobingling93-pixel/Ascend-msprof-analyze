@@ -41,6 +41,9 @@ class Comparator:
             'Op Name': 'first',
         }
         df = df.groupby(['Parent Module', 'Module', 'Op Name']).agg(agg_rules)
+        df['Total Kernel Duration(us)'] = df['Total Kernel Duration(ns)'] / 1000
+        df['Avg Kernel Duration(us)'] = df['Avg Kernel Duration(ns)'] / 1000
+        df.drop(columns=['Total Kernel Duration(ns)', 'Avg Kernel Duration(ns)'], inplace=True)
 
         return df
 
@@ -80,25 +83,29 @@ class Comparator:
             df_npu.loc[rows_to_update, 'match_type'] = 'fuzzy'
             df_npu.loc[rows_to_update, 'match_key'] = df_npu.loc[rows_to_update, 'match_key'].map(match_map)
 
-        df_gpu = df_gpu.sort_values(['match_key', 'Total Kernel Duration(ns)'], ascending=[True, False])
-        df_npu = df_npu.sort_values(['match_key', 'Total Kernel Duration(ns)'], ascending=[True, False])
+        df_gpu = df_gpu.sort_values(['match_key', 'Total Kernel Duration(us)'], ascending=[True, False])
+        df_npu = df_npu.sort_values(['match_key', 'Total Kernel Duration(us)'], ascending=[True, False])
 
         df_gpu['row_id'] = df_gpu.groupby('match_key').cumcount()
         df_npu['row_id'] = df_npu.groupby('match_key').cumcount()
 
+        merge_keys = ['match_key', 'row_id']
+
+        gpu_rename_map = {col: f'(GPU) {col}' for col in df_gpu.columns if col not in merge_keys}
+        npu_rename_map = {col: f'(NPU) {col}' for col in df_npu.columns if col not in merge_keys}
+
         df_merged = pd.merge(
-            df_gpu,
-            df_npu,
-            on=['match_key', 'row_id'],
-            how='outer',
-            suffixes=('_gpu', '_npu')
+            df_gpu.rename(columns=gpu_rename_map),
+            df_npu.rename(columns=npu_rename_map),
+            on=merge_keys,
+            how='outer'
         )
 
         split_keys = df_merged['match_key'].str.rsplit('/', n=1, expand=True)
 
-        for suffix in ['_gpu', '_npu']:
-            col_parent = f'Parent Module{suffix}'
-            col_module = f'Module{suffix}'
+        for prefix in ['(GPU) ', '(NPU) ']:
+            col_parent = f'{prefix}Parent Module'
+            col_module = f'{prefix}Module'
             
             if col_parent not in df_merged.columns:
                 df_merged[col_parent] = np.nan
@@ -111,31 +118,35 @@ class Comparator:
         df_merged.drop(columns=['row_id'], inplace=True)
 
         # 计算耗时占比：Duration / sum(Duration)
-        df_merged['Total Kernel Duration(%)_gpu'] = df_merged['Total Kernel Duration(ns)_gpu'] / df_merged['Total Kernel Duration(ns)_gpu'].sum() * 100
-        df_merged['Total Kernel Duration(%)_npu'] = df_merged['Total Kernel Duration(ns)_npu'] / df_merged['Total Kernel Duration(ns)_npu'].sum() * 100
+        df_merged['(GPU) Total Kernel Duration(%)'] = df_merged['(GPU) Total Kernel Duration(us)'] / df_merged['(GPU) Total Kernel Duration(us)'].sum() * 100
+        df_merged['(NPU) Total Kernel Duration(%)'] = df_merged['(NPU) Total Kernel Duration(us)'] / df_merged['(NPU) Total Kernel Duration(us)'].sum() * 100
 
         # 格式化百分比显示
-        df_merged['Total Kernel Duration(%)_gpu'] = df_merged['Total Kernel Duration(%)_gpu'].apply(lambda x: f"{x:.2f}%" if pd.notnull(x) else ' ')
-        df_merged['Total Kernel Duration(%)_npu'] = df_merged['Total Kernel Duration(%)_npu'].apply(lambda x: f"{x:.2f}%" if pd.notnull(x) else ' ')
+        df_merged['(GPU) Total Kernel Duration(%)'] = df_merged['(GPU) Total Kernel Duration(%)'].apply(lambda x: f"{x:.2f}%" if pd.notnull(x) else ' ')
+        df_merged['(NPU) Total Kernel Duration(%)'] = df_merged['(NPU) Total Kernel Duration(%)'].apply(lambda x: f"{x:.2f}%" if pd.notnull(x) else ' ')
 
         # 计算 Module 层级的耗时比率：NPU / GPU
-        gpu_module_sum = df_gpu.groupby('match_key')['Total Kernel Duration(ns)'].sum()
-        npu_module_sum = df_npu.groupby('match_key')['Total Kernel Duration(ns)'].sum()
-        
+        gpu_module_sum = df_gpu.groupby('match_key')['(GPU) Total Kernel Duration(us)'].sum()
+        npu_module_sum = df_npu.groupby('match_key')['(NPU) Total Kernel Duration(us)'].sum()
+
         # 计算 Ratio
         module_ratio = npu_module_sum / gpu_module_sum
-        
-        # 映射回 merged dataframe
-        df_merged['Module Time Ratio (NPU/GPU)'] = df_merged['match_key'].map(module_ratio)
-        df_merged['Module Time Ratio (NPU/GPU)'] = df_merged['Module Time Ratio (NPU/GPU)'].apply(lambda x: f"{x:.2f}" if pd.notnull(x) else ' ')
 
-        match_cols = ['Parent Module_gpu', 'Module_gpu', 'Parent Module_npu', 'Module_npu', 'match_type']
+        # 计算 diff
+        module_diff = npu_module_sum - gpu_module_sum
+
+        # 映射回 merged dataframe
+        df_merged['(NPU/GPU) Module Time Ratio'] = df_merged['match_key'].map(module_ratio)
+        df_merged['(NPU-GPU,us) Module Time Diff'] = df_merged['match_key'].map(module_diff)
+        df_merged['(NPU/GPU) Module Time Ratio'] = df_merged['(NPU/GPU) Module Time Ratio'].apply(lambda x: f"{x:.2f}" if pd.notnull(x) else ' ')
+
+        match_cols = ['(GPU) Parent Module', '(GPU) Module', '(NPU) Parent Module', '(NPU) Module', 'match_type']
         cols = match_cols + [
-            'Op Name_gpu', 'Op Count_gpu', 'Kernel List_gpu',
-            'Total Kernel Duration(ns)_gpu', 'Total Kernel Duration(%)_gpu', 'Avg Kernel Duration(ns)_gpu',
-            'Op Name_npu', 'Op Count_npu', 'Kernel List_npu',
-            'Total Kernel Duration(ns)_npu', 'Total Kernel Duration(%)_npu', 'Avg Kernel Duration(ns)_npu',
-            'Module Time Ratio (NPU/GPU)',
+            '(GPU) Op Name', '(GPU) Op Count', '(GPU) Kernel List',
+            '(GPU) Total Kernel Duration(us)', '(GPU) Total Kernel Duration(%)', '(GPU) Avg Kernel Duration(us)',
+            '(NPU) Op Name', '(NPU) Op Count', '(NPU) Kernel List',
+            '(NPU) Total Kernel Duration(us)', '(NPU) Total Kernel Duration(%)', '(NPU) Avg Kernel Duration(us)',
+            '(NPU/GPU) Module Time Ratio', '(NPU-GPU,us) Module Time Diff'
         ]
         final_cols = [c for c in cols if c in df_merged.columns]
 
@@ -145,7 +156,7 @@ class Comparator:
         df_merged = df_merged.fillna(' ')
 
         df_merged_final = df_merged[final_cols].sort_values(
-            ['Parent Module_gpu', 'Module Time Ratio (NPU/GPU)', 'Total Kernel Duration(ns)_gpu'],
+            ['(GPU) Parent Module', '(NPU-GPU,us) Module Time Diff', '(GPU) Total Kernel Duration(us)'],
             ascending=[True, False, False]
         ).reset_index(drop=True)
 

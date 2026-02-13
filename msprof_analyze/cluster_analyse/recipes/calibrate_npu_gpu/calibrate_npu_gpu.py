@@ -48,30 +48,31 @@ class CalibrateNpuGpu(BaseRecipeAnalysis):
                            help='Fuzzy matching threshold between profiles (default: 0.8)')
 
     def export_excel(self, output_path, file_name, df_compare):
-        index_cols = ['Parent Module_gpu', 'Module_gpu', 'Parent Module_npu', 'Module_npu', 'Module Time Ratio (NPU/GPU)']
+        index_cols = ['(GPU) Parent Module', '(GPU) Module', '(NPU) Parent Module', '(NPU) Module', '(NPU/GPU) Module Time Ratio']
         column_width_config = {
-            "Parent Module_npu": 20,
-            "Module_npu": 20,
-            "Parent Module_gpu": 20,
-            "Module_gpu": 20,
+            "(NPU) Parent Module": 20,
+            "(NPU) Module": 20,
+            "(GPU) Parent Module": 20,
+            "(GPU) Module": 20,
 
             "match_type": 10,
 
-            "Op Name_gpu": 20,
-            "Op Count_gpu": 10,
-            "Kernel List_gpu": 40,
-            "Total Kernel Duration(ns)_gpu": 10,
-            "Total Kernel Duration(%)_gpu": 10,
-            "Avg Kernel Duration(ns)_gpu": 10,
+            "(NPU) Op Name": 20,
+            "(NPU) Op Count": 10,
+            "(NPU) Kernel List": 40,
+            "(NPU) Total Kernel Duration(us)": 10,
+            "(NPU) Total Kernel Duration(%)": 10,
+            "(NPU) Avg Kernel Duration(us)": 10,
 
-            "Op Name_npu": 20,
-            "Op Count_npu": 10,
-            "Kernel List_npu": 40,
-            "Total Kernel Duration(ns)_npu": 10,
-            "Total Kernel Duration(%)_npu": 10,
-            "Avg Kernel Duration(ns)_npu": 10,
+            "(GPU) Op Name": 20,
+            "(GPU) Op Count": 10,
+            "(GPU) Kernel List": 40,
+            "(GPU) Total Kernel Duration(us)": 10,
+            "(GPU) Total Kernel Duration(%)": 10,
+            "(GPU) Avg Kernel Duration(us)": 10,
 
-            "Module Time Ratio (NPU/GPU)": 20
+            "(NPU/GPU) Module Time Ratio": 20,
+            "(NPU-GPU,us) Module Time Diff": 20
         }
 
         excel_utils = ExcelUtils()
