@@ -71,8 +71,8 @@ class CalibrateNpuGpu(BaseRecipeAnalysis):
             "(GPU) Total Kernel Duration(%)": 10,
             "(GPU) Avg Kernel Duration(us)": 10,
 
-            "(NPU/GPU) Module Time Ratio": 20,
-            "(NPU-GPU,us) Module Time Diff": 20
+            "(NPU/GPU) Module Time Ratio": 10,
+            "(NPU-GPU,us) Module Time Diff": 10
         }
 
         excel_utils = ExcelUtils()

@@ -92,11 +92,13 @@ class Comparator:
         merge_keys = ['match_key', 'row_id']
 
         gpu_rename_map = {col: f'(GPU) {col}' for col in df_gpu.columns if col not in merge_keys}
-        npu_rename_map = {col: f'(NPU) {col}' for col in df_npu.columns if col not in merge_keys}
+        npu_rename_map = {col: f'(NPU) {col}' for col in df_npu.columns if col not in merge_keys + ['match_type']}
+        df_gpu = df_gpu.rename(columns=gpu_rename_map)
+        df_npu = df_npu.rename(columns=npu_rename_map)
 
         df_merged = pd.merge(
-            df_gpu.rename(columns=gpu_rename_map),
-            df_npu.rename(columns=npu_rename_map),
+            df_gpu,
+            df_npu,
             on=merge_keys,
             how='outer'
         )
@@ -142,10 +144,10 @@ class Comparator:
 
         match_cols = ['(GPU) Parent Module', '(GPU) Module', '(NPU) Parent Module', '(NPU) Module', 'match_type']
         cols = match_cols + [
-            '(GPU) Op Name', '(GPU) Op Count', '(GPU) Kernel List',
-            '(GPU) Total Kernel Duration(us)', '(GPU) Total Kernel Duration(%)', '(GPU) Avg Kernel Duration(us)',
             '(NPU) Op Name', '(NPU) Op Count', '(NPU) Kernel List',
             '(NPU) Total Kernel Duration(us)', '(NPU) Total Kernel Duration(%)', '(NPU) Avg Kernel Duration(us)',
+            '(GPU) Op Name', '(GPU) Op Count', '(GPU) Kernel List',
+            '(GPU) Total Kernel Duration(us)', '(GPU) Total Kernel Duration(%)', '(GPU) Avg Kernel Duration(us)',
             '(NPU/GPU) Module Time Ratio', '(NPU-GPU,us) Module Time Diff'
         ]
         final_cols = [c for c in cols if c in df_merged.columns]
