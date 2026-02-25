@@ -46,7 +46,7 @@ class ModuleStatistic(BaseRecipeAnalysis):
         return os.path.basename(os.path.dirname(__file__))
 
     def run(self, context, save=True):
-        if self._export_type != Constant.DB and self._export_type != Constant.EXCEL:
+        if self._export_type != Constant.DB and self._export_type != Constant.TEXT:
             logger.error(f"Invalid export type: {self._export_type} for module analysis, "
                          f"required to be {Constant.DB} or {Constant.TEXT}")
             return

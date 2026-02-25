@@ -145,9 +145,9 @@ class CalibrateNpuGpu(BaseRecipeAnalysis):
             comparator = Comparator(gpu_df, npu_df)
             compare_df = comparator.compare(self.fuzzy_threshold)
 
-            if self._export_type == "db":
+            if self._export_type == Constant.DB:
                 self.save_db(compare_df)
-            elif self._export_type == "excel":
+            elif self._export_type == Constant.TEXT:
                 self.export_excel(self.output_path, rank_id, compare_df)
             else:
                 logger.error(f"Unsupported export type: {self._export_type}")
