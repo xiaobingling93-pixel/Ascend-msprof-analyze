@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# Copyright (c) 2025, Huawei Technologies Co., Ltd.
+# Copyright (c) 2026, Huawei Technologies Co., Ltd.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0  (the "License");
@@ -16,61 +16,31 @@
 # limitations under the License.
 
 import pandas as pd
-import sqlite3
 from collections import defaultdict
 from msprof_analyze.prof_common.logger import get_logger
+from msprof_analyze.prof_exports.calibrate_npu_gpu_export import GPUNVTXEventsExport, GPUKernelExport
 
 logger = get_logger()
 
 
 class GPUAnalyzer:
-    def __init__(self, sqlite_path):
-        self.sqlite_path = sqlite_path
+    def __init__(self, gpu_db_path, recipe_name):
+        self.gpu_db_path = gpu_db_path
+        self.recipe_name = recipe_name
 
     def load_data(self):
-        conn = sqlite3.connect(self.sqlite_path)
-
-        query_nvtx = """
-        SELECT
-            n.start AS start_ns,
-            n.end AS end_ns,
-            n.globalTid AS thread_id,
-            COALESCE(n.text, s.value, 'Unknown_Region') as name
-        FROM NVTX_EVENTS AS n
-        LEFT JOIN StringIds AS s ON n.textId = s.id
-        WHERE n.eventType = 59
-        ORDER BY n.start
-        """
-
-        query_kernels = """
-        SELECT
-            r.start AS cpu_start_ns,
-            r.globalTid AS thread_id,
-            k.start AS gpu_start_ns,
-            k.end - k.start AS gpu_duration_ns,
-            s.value AS kernel_name,
-            k.deviceId AS rank_id
-        FROM CUPTI_ACTIVITY_KIND_RUNTIME AS r
-        JOIN CUPTI_ACTIVITY_KIND_KERNEL AS k
-            ON r.correlationId = k.correlationId
-        LEFT JOIN StringIds AS s ON k.demangledName = s.id
-        """
-
-        try:
-            df_nvtx = pd.read_sql_query(query_nvtx, conn)
-            df_kernels = pd.read_sql_query(query_kernels, conn)
-
-            if df_nvtx.empty:
-                logger.warning("Warning: No NVTX events found. Check if --trace=nvtx was enabled and logic ran.")
-            if df_kernels.empty:
-                logger.warning("Warning: No Kernels found. Check if CUDA code actually ran.")
-
-        except Exception as e:
-            logger.error(f"Error reading database: {e}")
-            conn.close()
+        nvtx_event_export = GPUNVTXEventsExport(self.gpu_db_path, self.recipe_name)
+        df_nvtx = nvtx_event_export.read_export_db()
+        if df_nvtx is None or df_nvtx.empty:
+            logger.error(f"Can not export nvtx events from {self.gpu_db_path}")
             return None, None
 
-        conn.close()
+        gpu_kernel_export = GPUKernelExport(self.gpu_db_path, self.recipe_name)
+        df_kernels = gpu_kernel_export.read_export_db()
+        if df_kernels is None or df_kernels.empty:
+            logger.error(f"Can not export CUDA kernel events from {self.gpu_db_path}")
+            return None, None
+
         return df_nvtx, df_kernels
 
     def process_hierarchy(self, df_nvtx, df_kernels, user_def_markers=None):

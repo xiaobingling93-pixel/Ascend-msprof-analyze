@@ -107,43 +107,50 @@ msprof-analyze cluster -m calibrate_npu_gpu \
   --profiling_path /path/to/npu_profile \
   --baseline_profiling_path /path/to/gpu_profile.sqlite \
   --output_path ./calibration_result \
-  --export_type excel
+  --export_type excel \
+  --dump_intermediate_results 
 ```
 
 **参数说明：**
 * `-m calibrate_npu_gpu`：指定使用校准分析模式
-* `--profiling_path`：NPU 性能数据路径
-* `--baselin_profiling_path`：GPU 性能数据文件路径（必需）
+* `--profiling_path`：NPU 性能数据路径（必须）
+* `--baselin_profiling_path`：GPU 性能数据文件路径（必须）
 * `--output_path`：分析结果输出目录
 * `--export_type`：导出类型，默认为 `excel`
 * `--fuzzy_threshold`：NPU/GPU module name fuzzy 匹配的阈值，默认为 `0.8`
+* `--dump_intermediate_results`: 保存中间分析结果（GPU/NPU profile 分析结果）
 
 ### 输出说明
 
-#### 1. Excel 输出（默认）
+#### 1. Excel 输出
 
-当 `--export_type excel` 时，在输出目录生成 `compare_profile_report_{rank_id}.xlsx` 文件，包含以下信息：
+msprof-analyze 会在输出目录生成 `compare_profile_report_{rank_id}.xlsx` 文件，包含以下信息：
 
 | 字段 | 说明 |
 |------|------|
-| Parent Module_gpu | GPU 侧的父模块名称 |
-| Module_gpu | GPU 侧的模块名称 |
-| Parent Module_npu | NPU 侧的父模块名称 |
-| Module_npu | NPU 侧的模块名称 |
-| match_type | 匹配类型：`rule`（规则匹配）或 `fuzzy`（模糊匹配） |
-| Op Name_gpu | GPU 侧的算子名称列表 |
-| Op Count_gpu | GPU 侧算子出现次数 |
-| Kernel List_gpu | GPU 侧的 Kernel 名称列表 |
-| Total Kernel Duration(ns)_gpu | GPU 侧总执行时间（纳秒） |
-| Total Kernel Duration(%)_gpu | GPU 侧总执行时间占比（百分比） |
-| Avg Kernel Duration(ns)_gpu | GPU 侧平均执行时间（纳秒） |
-| Op Name_npu | NPU 侧的算子名称列表 |
-| Op Count_npu | NPU 侧算子出现次数 |
-| Kernel List_npu | NPU 侧的 Kernel 名称列表 |
-| Total Kernel Duration(ns)_npu | NPU 侧总执行时间（纳秒） |
-| Total Kernel Duration(%)_npu | NPU 侧总执行时间占比（百分比） |
-| Avg Kernel Duration(ns)_npu | NPU 侧平均执行时间（纳秒） |
-| Module Time Ratio (NPU/GPU) | Module 级别的 NPU-GPU 耗时对比 |
+| (GPU) Parent Module | GPU 侧的父模块名称 |
+| (GPU) Module | GPU 侧的模块名称 |
+| (NPU) Parent Module | NPU 侧的父模块名称 |
+| (NPU) Module | NPU 侧的模块名称 |
+| Match Type | 匹配类型：`rule`（规则匹配）或 `fuzzy`（模糊匹配） |
+| (GPU) Op Name | GPU 侧的算子名称列表 |
+| (GPU) Op Count | GPU 侧算子出现次数 |
+| (GPU) Kernel List | GPU 侧的 Kernel 名称列表 |
+| (GPU) Total Kernel Duration(us) | GPU 侧总执行时间（微秒） |
+| (GPU) Total Kernel Duration(%) | GPU 侧总执行时间占比（百分比） |
+| (GPU) Avg Kernel Duration(us) | GPU 侧平均执行时间（微秒） |
+| (NPU) Op Name | NPU 侧的算子名称列表 |
+| (NPU) Op Count | NPU 侧算子出现次数 |
+| (NPU) Kernel List | NPU 侧的 Kernel 名称列表 |
+| (NPU) Total Kernel Duration(us) | NPU 侧总执行时间（微秒） |
+| (NPU) Total Kernel Duration(%) | NPU 侧总执行时间占比（百分比） |
+| (NPU) Avg Kernel Duration(us) | NPU 侧平均执行时间（微秒） |
+| (NPU/GPU) Module Time Ratio | Module 级别的 NPU/GPU 耗时对比 |
+| (NPU-GPU,us) Module Time Diff | Module 级别的 NPU-GPU 耗时对比（微妙） |
+
+#### 2. 中间输出
+
+指定 `--dump_intermediate_results` 时，保存GPU/NPU中间分析结果在 `{platform}_report_{rank_id}.xlsx` 文件中
 
 
 ## 附录

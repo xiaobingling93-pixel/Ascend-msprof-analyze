@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# Copyright (c) 2025, Huawei Technologies Co., Ltd.
+# Copyright (c) 2026, Huawei Technologies Co., Ltd.
 # All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0  (the "License");
@@ -64,7 +64,7 @@ class Comparator:
         df_gpu['match_key'] = df_gpu['Parent Module'].fillna('').astype(str) + '/' + df_gpu['Module'].astype(str)
         df_npu['match_key'] = df_npu['Parent Module'].fillna('').astype(str) + '/' + df_npu['Module'].astype(str)
         df_npu['match_key'] = df_npu['match_key'].str.replace('Ascend', '', regex=False)
-        df_npu['match_type'] = 'rule'
+        df_npu['Match Type'] = 'rule'
 
         # 模糊匹配
         if enable_fuzzy:
@@ -80,7 +80,7 @@ class Comparator:
                     match_map[n_key] = best_match
 
             rows_to_update = df_npu['match_key'].isin(match_map.keys())
-            df_npu.loc[rows_to_update, 'match_type'] = 'fuzzy'
+            df_npu.loc[rows_to_update, 'Match Type'] = 'fuzzy'
             df_npu.loc[rows_to_update, 'match_key'] = df_npu.loc[rows_to_update, 'match_key'].map(match_map)
 
         df_gpu = df_gpu.sort_values(['match_key', 'Total Kernel Duration(us)'], ascending=[True, False])
@@ -92,7 +92,7 @@ class Comparator:
         merge_keys = ['match_key', 'row_id']
 
         gpu_rename_map = {col: f'(GPU) {col}' for col in df_gpu.columns if col not in merge_keys}
-        npu_rename_map = {col: f'(NPU) {col}' for col in df_npu.columns if col not in merge_keys + ['match_type']}
+        npu_rename_map = {col: f'(NPU) {col}' for col in df_npu.columns if col not in merge_keys + ['Match Type']}
         df_gpu = df_gpu.rename(columns=gpu_rename_map)
         df_npu = df_npu.rename(columns=npu_rename_map)
 
@@ -142,7 +142,7 @@ class Comparator:
         df_merged['(NPU-GPU,us) Module Time Diff'] = df_merged['match_key'].map(module_diff)
         df_merged['(NPU/GPU) Module Time Ratio'] = df_merged['(NPU/GPU) Module Time Ratio'].apply(lambda x: f"{x:.2f}" if pd.notnull(x) else ' ')
 
-        match_cols = ['(GPU) Parent Module', '(GPU) Module', '(NPU) Parent Module', '(NPU) Module', 'match_type']
+        match_cols = ['(GPU) Parent Module', '(GPU) Module', '(NPU) Parent Module', '(NPU) Module', 'Match Type']
         cols = match_cols + [
             '(NPU) Op Name', '(NPU) Op Count', '(NPU) Kernel List',
             '(NPU) Total Kernel Duration(us)', '(NPU) Total Kernel Duration(%)', '(NPU) Avg Kernel Duration(us)',
