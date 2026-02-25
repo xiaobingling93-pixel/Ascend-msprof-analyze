@@ -119,20 +119,34 @@ class Comparator:
         
         df_merged.drop(columns=['row_id'], inplace=True)
 
-        # 计算耗时占比：Duration / sum(Duration)
-        df_merged['(GPU) Total Kernel Duration(%)'] = df_merged['(GPU) Total Kernel Duration(us)'] / df_merged['(GPU) Total Kernel Duration(us)'].sum() * 100
-        df_merged['(NPU) Total Kernel Duration(%)'] = df_merged['(NPU) Total Kernel Duration(us)'] / df_merged['(NPU) Total Kernel Duration(us)'].sum() * 100
+        # 计算耗时占比：Duration / sum(Duration)，增加非零防护
+        gpu_total_sum = df_merged['(GPU) Total Kernel Duration(us)'].sum()
+        npu_total_sum = df_merged['(NPU) Total Kernel Duration(us)'].sum()
+        df_merged['(GPU) Total Kernel Duration(%)'] = np.where(
+            gpu_total_sum != 0,
+            df_merged['(GPU) Total Kernel Duration(us)'] / gpu_total_sum * 100,
+            np.nan
+        )
+        df_merged['(NPU) Total Kernel Duration(%)'] = np.where(
+            npu_total_sum != 0,
+            df_merged['(NPU) Total Kernel Duration(us)'] / npu_total_sum * 100,
+            np.nan
+        )
 
         # 格式化百分比显示
         df_merged['(GPU) Total Kernel Duration(%)'] = df_merged['(GPU) Total Kernel Duration(%)'].apply(lambda x: f"{x:.2f}%" if pd.notnull(x) else ' ')
         df_merged['(NPU) Total Kernel Duration(%)'] = df_merged['(NPU) Total Kernel Duration(%)'].apply(lambda x: f"{x:.2f}%" if pd.notnull(x) else ' ')
 
-        # 计算 Module 层级的耗时比率：NPU / GPU
+        # 计算 Module 层级的耗时比率：NPU / GPU，增加非零防护
         gpu_module_sum = df_gpu.groupby('match_key')['(GPU) Total Kernel Duration(us)'].sum()
         npu_module_sum = df_npu.groupby('match_key')['(NPU) Total Kernel Duration(us)'].sum()
 
-        # 计算 Ratio
-        module_ratio = npu_module_sum / gpu_module_sum
+        # 计算 Ratio，处理除零情况
+        module_ratio = np.where(
+            gpu_module_sum != 0,
+            npu_module_sum / gpu_module_sum,
+            np.nan
+        )
 
         # 计算 diff
         module_diff = npu_module_sum - gpu_module_sum
