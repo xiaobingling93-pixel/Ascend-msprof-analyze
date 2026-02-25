@@ -54,11 +54,17 @@ QUERY_GPU_KERNELS = """
 
 class GPUNVTXEventsExport(BaseStatsExport):
     def __init__(self, db_path, recipe_name):
-        super().__init__(db_path, recipe_name, step_range=None)
+        super().__init__(db_path, recipe_name, param_dict=None)
         self._query = QUERY_GPU_NVTX_EVENTS
+
+    def get_param_order(self):
+        return []
 
 
 class GPUKernelExport(BaseStatsExport):
     def __init__(self, db_path, recipe_name):
-        super().__init__(db_path, recipe_name, step_range=None)
+        super().__init__(db_path, recipe_name, param_dict=None)
         self._query = QUERY_GPU_KERNELS
+
+    def get_param_order(self):
+        return []
