@@ -14,6 +14,7 @@
 # limitations under the License.
 
 from msprof_analyze.prof_exports.base_stats_export import BaseStatsExport
+from msprof_analyze.prof_common.constant import Constant
 
 
 class CommunicationOpWithExport(BaseStatsExport):
@@ -32,13 +33,15 @@ class CommunicationOpWithExport(BaseStatsExport):
             json_each(META_DATA.value) AS j
         WHERE META_DATA.name = "parallel_group_info"
     ) AS D ON STRING_IDS.value = D.key
-    {};
+    WHERE COMMUNICATION_OP.startNs >= ? AND COMMUNICATION_OP.endNs <= ?
     """
 
-    def __init__(self, db_path, recipe_name, step_range):
-        super().__init__(db_path, recipe_name, step_range)
-        filter_statement = "WHERE COMMUNICATION_OP.startNs >= ? AND COMMUNICATION_OP.endNs <= ? "if step_range else""
-        self._query = self.QUERY.format(filter_statement)
+    def __init__(self, db_path, recipe_name, param_dict):
+        super().__init__(db_path, recipe_name, param_dict)
+        self._query = self.QUERY
+
+    def get_param_order(self):
+        return [Constant.START_NS, Constant.END_NS]
 
 
 class ComputeTaskInfoWithExport(BaseStatsExport):
@@ -63,10 +66,12 @@ class ComputeTaskInfoWithExport(BaseStatsExport):
         compute_info
     JOIN 
         TASK as task ON compute_info.globalTaskId = task.globalTaskId
-    {};
+    WHERE task.startNs >= ? AND task.endNs <= ?
     """
 
-    def __init__(self, db_path, recipe_name, step_range):
-        super().__init__(db_path, recipe_name, step_range)
-        filter_statement = "WHERE task.startNs >= ? AND task.endNs <= ?" if step_range else ""
-        self._query = self.QUERY.format(filter_statement)
+    def __init__(self, db_path, recipe_name, param_dict):
+        super().__init__(db_path, recipe_name, param_dict)
+        self._query = self.QUERY
+
+    def get_param_order(self):
+        return [Constant.START_NS, Constant.END_NS]

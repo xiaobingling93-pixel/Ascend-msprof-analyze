@@ -158,7 +158,8 @@ class ComputationalOpMasking(BaseRecipeAnalysis):
 
         profiler_db_path = data_map.get(Constant.PROFILER_DB_PATH)
         step_range = data_map.get(Constant.STEP_RANGE)
-        if step_range:
+        # If step_id does not have a specified input, the default value is -1.
+        if self._step_id != -1:
             step_df = pd.DataFrame.from_dict([step_range])
         else:
             data_service = DatabaseService(profiler_db_path, step_range)
