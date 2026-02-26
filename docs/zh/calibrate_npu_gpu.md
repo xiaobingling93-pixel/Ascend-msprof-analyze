@@ -116,7 +116,7 @@ msprof-analyze cluster -m calibrate_npu_gpu \
 * `--profiling_path`：NPU 性能数据路径（必须）
 * `--baselin_profiling_path`：GPU 性能数据文件路径（必须）
 * `--output_path`：分析结果输出目录
-* `--export_type`：导出类型，默认为 `db`
+* `--export_type`：导出类型，可选`db`或`text`，默认为 `db`
 * `--fuzzy_threshold`：NPU/GPU module name fuzzy 匹配的阈值，默认为 `0.8`
 * `--dump_intermediate_results`: 保存中间分析结果（GPU/NPU profile 分析结果）
 
