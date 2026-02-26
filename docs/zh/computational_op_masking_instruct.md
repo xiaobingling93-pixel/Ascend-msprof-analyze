@@ -63,12 +63,12 @@ ClusterTimeSummary表字段如下：
 | 字段名称                                      | 类型      | 说明                               |
 |-------------------------------------------|---------|----------------------------------|
 | stepId                                    | INTEGER | 卡号。                              |
-| parallelType                              | STRING  | 算子并行方式。                          |
-| stepStartTime                             | REAL    | step开始时间。                        |
-| stepEndTime                               | REAL    | step结束时间。                        |
-| totalCommunicationOperatorTime            | REAL    | step内通信总耗时。                      |
+| parallelType                              | TEXT    | 算子并行方式。                          |
+| stepStartTime                             | INTEGER | step开始时间。                        |
+| stepEndTime                               | INTEGER | step结束时间。                        |
+| totalCommunicationOperatorTime            | INTEGER | step内通信总耗时。                      |
 | timeRatioOfStepCommunicationOperator      | REAL    | step内通信总耗时与step总耗时的比值。           |
-| totalTimeWithoutCommunicationBlackout     | REAL    | step内通信算子被计算算子掩盖的总时间。            |
+| totalTimeWithoutCommunicationBlackout     | INTEGER | step内通信算子被计算算子掩盖的总时间。            |
 | ratioOfUnmaskedCommunication              | REAL    | step内通信算子被计算算子掩盖的总时间与step总耗时的比值。 |
 
 
