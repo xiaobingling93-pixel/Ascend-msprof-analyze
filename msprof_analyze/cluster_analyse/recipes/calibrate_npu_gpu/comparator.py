@@ -30,24 +30,6 @@ class Comparator:
         self.df_npu = df_npu
 
     @staticmethod
-    def agg_kernel(df: pd.DataFrame):
-        agg_rules = {
-            'Kernel List': lambda x: ', '.join(x.dropna().astype(str)),
-            'Total Kernel Duration(ns)': 'sum',
-            'Avg Kernel Duration(ns)': 'mean',
-            'Op Count': 'sum',
-            'Parent Module': 'first',
-            'Module': 'first',
-            'Op Name': 'first',
-        }
-        df = df.groupby(['Parent Module', 'Module', 'Op Name']).agg(agg_rules)
-        df['Total Kernel Duration(us)'] = df['Total Kernel Duration(ns)'] / 1000
-        df['Avg Kernel Duration(us)'] = df['Avg Kernel Duration(ns)'] / 1000
-        df.drop(columns=['Total Kernel Duration(ns)', 'Avg Kernel Duration(ns)'], inplace=True)
-
-        return df
-
-    @staticmethod
     def get_best_fuzzy_match(key, candidates, threshold=0.8):
         if not candidates:
             return None
@@ -56,9 +38,6 @@ class Comparator:
 
     def compare(self, enable_fuzzy=True, fuzzy_threshold=0.6):
         df_gpu, df_npu = self.df_gpu, self.df_npu
-
-        df_gpu = self.agg_kernel(df_gpu)
-        df_npu = self.agg_kernel(df_npu)
 
         # 初始化匹配键
         df_gpu['match_key'] = df_gpu['Parent Module'].fillna('').astype(str) + '/' + df_gpu['Module'].astype(str)
