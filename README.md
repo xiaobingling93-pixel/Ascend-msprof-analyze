@@ -190,11 +190,13 @@ msprof-analyze cluster -m [feature_option] -d <profiling_path> [global_option] [
 
 #### 拆解对比类
 
-| 分析能力                         | 介绍                               | 文档链接                                                   |
-|------------------------------|----------------------------------|------------------------------------------------------------|
+| 分析能力                         | 介绍                                   | 文档链接                                                       |
+|------------------------------|--------------------------------------|------------------------------------------------------------|
 | cluster_time_summary         | 集群性能数据细粒度拆解，替换step_trace_time.csv内容。 | [link](./docs/zh/cluster_time_summary_instruct.md)         |
-| cluster_time_compare_summary | 集群性能数据细粒度比对。                     | [link](./docs/zh/cluster_time_compare_summary_instruct.md) |
-| module_statistic             | 性能数据模型结构拆解。                      | [link](./docs/zh/module_statistic_instruct.md)             |
+| cluster_time_compare_summary | 集群性能数据细粒度比对。                         | [link](./docs/zh/cluster_time_compare_summary_instruct.md) |
+| module_statistic             | 性能数据模型结构拆解。                          | [link](./docs/zh/module_statistic_instruct.md)             |
+| calibrate_npu_gpu            | gpu&npu性能数据模型结构拆解比对。                 | [link](./docs/zh/calibrate_npu_gpu_instruct.md)            |
+
 
 #### 计算类特性
 

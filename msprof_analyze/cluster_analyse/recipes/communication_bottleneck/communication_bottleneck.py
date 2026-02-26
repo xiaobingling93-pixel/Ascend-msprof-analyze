@@ -242,7 +242,8 @@ class CommunicatonBottleneckAnalysis(BaseRecipeAnalysis):
         # Check if time difference is small
         time_diff_ratio = (quick_npu_info["duration"] - slow_npu_info["duration"]) / quick_npu_info["duration"]
         if time_diff_ratio < self.slow_npu_happen_threshold:
-            reason.reason = "[Completed] No slow NPU detected: execution time difference is less than 5%"
+            reason.reason = (f"[Completed] No slow NPU detected: execution time difference is less than "
+                             f"{self.slow_npu_happen_threshold}%")
             return reason
         
         # Calculate clock shift and analyze slow NPU

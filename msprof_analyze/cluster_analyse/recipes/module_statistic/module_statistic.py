@@ -52,7 +52,8 @@ class ModuleStatistic(BaseRecipeAnalysis):
             return
         mapper_res = self.mapper_func(context)
         if not save:
-            return mapper_res
+            valid_res = [(rank, df) for rank, df in mapper_res if df is not None and not df.empty]
+            return valid_res
         if self._export_type == Constant.DB:
             total_df = self.reducer_func(mapper_res)
             self.save_db(total_df)

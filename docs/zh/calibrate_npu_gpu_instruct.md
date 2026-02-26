@@ -1,4 +1,4 @@
-# calibrate_npu_gpu 自动拆解对比 NPU 和 GPU profile 指南
+# NPU 和 GPU 性能数据拆解比对指南
 
 ## 简介
 
@@ -23,7 +23,7 @@ msprof-analyze 提供了 `calibrate_npu_gpu` 功能，用于自动对比 NPU 和
 echo "Start Profiling"
 export CUDA_VISIBLE_DEVICES=0,1
 dir_model="/path/to/model"
-dir_ouput_prof="/path/to/model_profile_gpu"
+dir_output_prof="/path/to/model_profile_gpu"
 
 nsys profile  \
     --stats=true \
@@ -32,7 +32,7 @@ nsys profile  \
     --trace=cuda,nvtx \
     --capture-range=cudaProfilerApi \
     --pytorch=autograd-nvtx \
-    -o ${dir_ouput_prof} \
+    -o ${dir_output_prof} \
 vllm bench latency \
     --enforce-eager \
     --model ${dir_model} \
@@ -53,14 +53,14 @@ vllm bench latency \
 
 #### 2. NPU 性能数据采集
 
-对于 NPU（Ascend）平台，需要使用 PyTorch Profiler 采集性能数据，并确保开启 `msprof_tx` 打点功能：
+对于 NPU（Ascend）平台，需要使用 PyTorch Profiler 采集性能数据，并确保开启 `mstx` 打点功能：
 
 ```bash
 #!/bin/bash
 
 # eager模式
-# 使用 vllm 的 profiler 能力，如果要支持 msprof_tx 需要修改 vllm-ascend/vllm_ascend/worker/worker_v1.py
-# - 修改 experimental_config 中的 msprof_tx 为 True，开启自定义打点功能
+# 使用 vllm 的 profiler 能力，如果要支持 mstx 需要修改 vllm-ascend/vllm_ascend/worker/worker_v1.py
+# - 修改 experimental_config 中的 mstx 为 True，开启自定义打点功能
 # - 数据导出类型 export_type 添加 db
 # - vllm 推理时候打开 enforce_eager=True
 
@@ -112,13 +112,16 @@ msprof-analyze cluster -m calibrate_npu_gpu \
 ```
 
 **参数说明：**
-* `-m calibrate_npu_gpu`：指定使用校准分析模式
-* `--profiling_path`：NPU 性能数据路径（必须）
-* `--baselin_profiling_path`：GPU 性能数据文件路径（必须）
-* `--output_path`：分析结果输出目录
-* `--export_type`：导出类型，可选`db`或`text`，默认为 `db`
-* `--fuzzy_threshold`：NPU/GPU module name fuzzy 匹配的阈值，默认为 `0.8`
-* `--dump_intermediate_results`: 保存中间分析结果（GPU/NPU profile 分析结果）
+
+| 参数                          | 可选/必选      | 说明                                         |
+|-----------------------------|------------|--------------------------------------------|
+| -m                          | 必选         | 设置为calibrate_npu_gpu，指定使用校准分析模式。           |
+| --profiling_path            | 必选         | NPU 性能数据路径。                                |
+| --baseline_profiling_path   | 必选         | GPU 性能数据文件路径。                              |
+| --output_path               | 可选         | 分析结果输出目录。                                  |
+| --export_type               | 可选         | 导出类型，可选`db`或`text`，默认为 `db`。               |
+| --fuzzy_threshold           | 可选         | NPU/GPU module name fuzzy 匹配的阈值，默认为 `0.8`。 |
+| --dump_intermediate_results | 可选         | 保存中间分析结果（GPU/NPU profile 分析结果）。            |
 
 ### 输出说明
 
@@ -126,27 +129,27 @@ msprof-analyze cluster -m calibrate_npu_gpu \
 
 msprof-analyze 会在输出目录生成 `compare_profile_report_{rank_id}.xlsx` 文件，包含以下信息：
 
-| 字段 | 说明 |
-|------|------|
-| (GPU) Parent Module | GPU 侧的父模块名称 |
-| (GPU) Module | GPU 侧的模块名称 |
-| (NPU) Parent Module | NPU 侧的父模块名称 |
-| (NPU) Module | NPU 侧的模块名称 |
+| 字段 | 说明                               |
+|------|----------------------------------|
+| (GPU) Parent Module | GPU 侧的父模块名称                      |
+| (GPU) Module | GPU 侧的模块名称                       |
+| (NPU) Parent Module | NPU 侧的父模块名称                      |
+| (NPU) Module | NPU 侧的模块名称                       |
 | Match Type | 匹配类型：`rule`（规则匹配）或 `fuzzy`（模糊匹配） |
-| (GPU) Op Name | GPU 侧的算子名称列表 |
-| (GPU) Op Count | GPU 侧算子出现次数 |
-| (GPU) Kernel List | GPU 侧的 Kernel 名称列表 |
-| (GPU) Total Kernel Duration(us) | GPU 侧总执行时间（微秒） |
-| (GPU) Total Kernel Duration(%) | GPU 侧总执行时间占比（百分比） |
-| (GPU) Avg Kernel Duration(us) | GPU 侧平均执行时间（微秒） |
-| (NPU) Op Name | NPU 侧的算子名称列表 |
-| (NPU) Op Count | NPU 侧算子出现次数 |
-| (NPU) Kernel List | NPU 侧的 Kernel 名称列表 |
-| (NPU) Total Kernel Duration(us) | NPU 侧总执行时间（微秒） |
-| (NPU) Total Kernel Duration(%) | NPU 侧总执行时间占比（百分比） |
-| (NPU) Avg Kernel Duration(us) | NPU 侧平均执行时间（微秒） |
-| (NPU/GPU) Module Time Ratio | Module 级别的 NPU/GPU 耗时对比 |
-| (NPU-GPU,us) Module Time Diff | Module 级别的 NPU-GPU 耗时对比（微妙） |
+| (GPU) Op Name | GPU 侧的算子名称列表                     |
+| (GPU) Op Count | GPU 侧算子出现次数                      |
+| (GPU) Kernel List | GPU 侧的 Kernel 名称列表               |
+| (GPU) Total Kernel Duration(us) | GPU 侧总执行时间（微秒）                   |
+| (GPU) Total Kernel Duration(%) | GPU 侧总执行时间占比（百分比）                |
+| (GPU) Avg Kernel Duration(us) | GPU 侧平均执行时间（微秒）                  |
+| (NPU) Op Name | NPU 侧的算子名称列表                     |
+| (NPU) Op Count | NPU 侧算子出现次数                      |
+| (NPU) Kernel List | NPU 侧的 Kernel 名称列表               |
+| (NPU) Total Kernel Duration(us) | NPU 侧总执行时间（微秒）                   |
+| (NPU) Total Kernel Duration(%) | NPU 侧总执行时间占比（百分比）                |
+| (NPU) Avg Kernel Duration(us) | NPU 侧平均执行时间（微秒）                  |
+| (NPU/GPU) Module Time Ratio | Module 级别的 NPU/GPU 耗时对比          |
+| (NPU-GPU,us) Module Time Diff | Module 级别的 NPU-GPU 耗时对比（微秒）      |
 
 #### 2. 中间输出
 
