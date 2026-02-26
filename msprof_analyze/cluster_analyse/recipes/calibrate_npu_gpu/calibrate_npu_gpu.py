@@ -16,7 +16,7 @@
 # limitations under the License.
 
 import copy
-import numpy as np
+import pandas as pd
 import os
 
 from msprof_analyze.cluster_analyse.common_func.excel_utils import ExcelUtils
@@ -36,6 +36,7 @@ class CalibrateNpuGpu(BaseRecipeAnalysis):
         super().__init__(params)
         module_statistic_params = copy.copy(params)
         module_statistic_params.pop('args')
+        module_statistic_params['export_type'] = Constant.TEXT
         self.npu_module_statistic_analyzer = ModuleStatistic(params=module_statistic_params)
         self.baseline_profiling_path = self._extra_args.get('baseline_profiling_path', '')
         self.fuzzy_threshold = float(self._extra_args.get('fuzzy_threshold', 0.8))
@@ -55,7 +56,27 @@ class CalibrateNpuGpu(BaseRecipeAnalysis):
         parser.add_argument('--dump_intermediate_results', action='store_true',
                            help='Whether to dump intermediate analysis results to Excel files')
 
-    def export_excel(self, output_path, rank_id, df_compare):
+    @staticmethod
+    def agg_kernel(df: pd.DataFrame):
+        agg_rules = {
+            'Kernel List': lambda x: ', '.join(x.dropna().astype(str)),
+            'Total Kernel Duration(ns)': 'sum',
+            'Avg Kernel Duration(ns)': 'mean',
+            'Op Count': 'sum',
+            'Parent Module': 'first',
+            'Module': 'first',
+            'Op Name': 'first',
+        }
+        df = df.groupby(['Parent Module', 'Module', 'Op Name']).agg(agg_rules)
+        df['Total Kernel Duration(us)'] = df['Total Kernel Duration(ns)'] / 1000
+        df['Avg Kernel Duration(us)'] = df['Avg Kernel Duration(ns)'] / 1000
+        df.drop(columns=['Total Kernel Duration(ns)', 'Avg Kernel Duration(ns)'], inplace=True)
+
+        return df
+
+    def export(self, output_path, rank_id, df_compare,
+                     df_npu: pd.DataFrame = None,
+                     df_gpu: pd.DataFrame = None):
         columns_width_configs = {
             'npu': {
                 'module': {
@@ -94,23 +115,38 @@ class CalibrateNpuGpu(BaseRecipeAnalysis):
             }
         }
         excel_utils = ExcelUtils()
-        if self.dump_intermediate_results:
-            for platform in ['npu', 'gpu']:
-                intermediate_file_name = f'{platform}_report_{rank_id}.xlsx'
-                index_cols = columns_width_configs[platform]["module"].keys()
-                width_configs = columns_width_configs[platform]["module"] | columns_width_configs[platform]["op_and_kernel"]
-                platform_df = df_compare[width_configs.keys()].copy()
-                op_name_key = f"({platform.upper()}) Op Name"
-                platform_df = platform_df[platform_df[op_name_key] != ' ']
-                excel_utils.create_excel_writer(output_path, intermediate_file_name, platform_df)
-                excel_utils.merge_duplicate_cells(index_cols)
-                excel_utils.set_column_width(width_configs)
-                excel_utils.set_row_height(0, 27)
-                excel_utils.save_and_close()
-                excel_utils.clear()
-                logger.info(f"{platform} report generated: {os.path.join(output_path, intermediate_file_name)}")
 
-        file_name = f'compare_profile_report_{rank_id}.xlsx'
+        def save_to_excel(df_to_save, file_name_to_save, _index_cols, _width_configs):
+            excel_utils.create_excel_writer(output_path, file_name_to_save, df_to_save)
+            excel_utils.merge_duplicate_cells(_index_cols)
+            excel_utils.set_column_width(_width_configs)
+            excel_utils.set_row_height(0, 27)
+            excel_utils.save_and_close()
+            excel_utils.clear()
+
+        if self.dump_intermediate_results:
+            for platform, platform_df in zip(['npu', 'gpu'], [df_npu, df_gpu]):
+                if platform_df is None or platform_df.empty:
+                    logger.warning(f"No {platform.upper()} data to dump.")
+                    continue
+
+                index_cols = columns_width_configs[platform]["module"].keys()
+                index_cols = map(lambda x: x.replace(f"({platform.upper()}) ", ""), index_cols)
+                width_configs = columns_width_configs[platform]["module"] | columns_width_configs[platform]["op_and_kernel"]
+                width_configs = {k.replace(f"({platform.upper()}) ", ""): v for k, v in width_configs.items()}
+                width_configs = {k: v for k, v in width_configs.items() if k in platform_df.columns}
+                platform_df = platform_df[width_configs.keys()].reset_index(drop=True)
+
+                if self._export_type == Constant.DB:
+                    self.save_db(platform_df, f"{platform.upper()}ProfileRank{rank_id}")
+                    logger.info(f"{platform} profile data saved to database for rank {rank_id}.")
+                elif self._export_type == Constant.TEXT:
+                    intermediate_file_name = f'{platform}_report_{rank_id}.xlsx'
+                    save_to_excel(platform_df, intermediate_file_name, index_cols, width_configs)
+                    logger.info(f"{platform} report generated: {os.path.join(output_path, intermediate_file_name)}")
+                else:
+                    logger.error(f"Unsupported export type: {self._export_type}")
+
         index_cols = \
             columns_width_configs["npu"]["module"].keys() | \
                 columns_width_configs["gpu"]["module"].keys() | \
@@ -120,13 +156,15 @@ class CalibrateNpuGpu(BaseRecipeAnalysis):
                 columns_width_configs["match_type"] | \
                     columns_width_configs["npu"]["op_and_kernel"] | columns_width_configs["gpu"]["op_and_kernel"] | \
                         columns_width_configs["compare"]
-        excel_utils.create_excel_writer(output_path, file_name, df_compare)
-        excel_utils.merge_duplicate_cells(index_cols)
-        excel_utils.set_column_width(width_configs)
-        excel_utils.set_row_height(0, 27)
-        excel_utils.save_and_close()
-        excel_utils.clear()
-        logger.info(f"Calibration report generated: {os.path.join(self.output_path, file_name)}")
+        if self._export_type == Constant.DB:
+            self.save_db(df_compare, f"CompareProfileReportRank{rank_id}")
+            logger.info(f"Calibration report saved to database for rank {rank_id}.")
+        elif self._export_type == Constant.TEXT:
+            compare_file_name = f'compare_profile_report_{rank_id}.xlsx'
+            save_to_excel(df_compare, compare_file_name, index_cols, width_configs)
+            logger.info(f"Calibration report generated: {os.path.join(self.output_path, compare_file_name)}")
+        else:
+            logger.error(f"Unsupported export type: {self._export_type}")
 
     def run(self, context):
         PathManager.check_input_file_path(self.baseline_profiling_path)
@@ -135,27 +173,32 @@ class CalibrateNpuGpu(BaseRecipeAnalysis):
         logger.info("Analyzing GPU profile...")
         gpu_analyzer = GPUAnalyzer(self.baseline_profiling_path, self._recipe_name)
         gpu_df_dict = gpu_analyzer.get_aggregated_df()
-        
-        logger.info("Analyzing NPU profile...")
-        npu_dfs = self.npu_module_statistic_analyzer.run(context, save=False)
 
-        for rank_id, npu_df in npu_dfs:
-            gpu_df = gpu_df_dict[rank_id].reset_index()
+        if not gpu_df_dict:
+            logger.error("Failed to analyze GPU profile.")
+            return
+
+        logger.info("Analyzing NPU profile...")
+        npu_df_dict = self.npu_module_statistic_analyzer.run(context, save=False)
+
+        if not npu_df_dict:
+            logger.error("Failed to analyze NPU profile.")
+            return
+
+        for rank_id, npu_df in npu_df_dict:
+            gpu_df = gpu_df_dict[rank_id]
+            npu_df = self.agg_kernel(npu_df.reset_index())
+            gpu_df = self.agg_kernel(gpu_df.reset_index())
             logger.info("Comparing GPU and NPU profiles...")
             comparator = Comparator(gpu_df, npu_df)
             compare_df = comparator.compare(self.fuzzy_threshold)
 
-            if self._export_type == Constant.DB:
-                self.save_db(compare_df)
-            elif self._export_type == Constant.TEXT:
-                self.export_excel(self.output_path, rank_id, compare_df)
-            else:
-                logger.error(f"Unsupported export type: {self._export_type}")
+            self.export(self.output_path, rank_id, compare_df, npu_df, gpu_df)
 
-    def save_db(self, df):
+    def save_db(self, df, table_name):
         if df is None or df.empty:
             logger.warning("No data to save to database.")
             return
+
         self.dump_data(df, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER,
-                       "CalibrateResult", index=False)
-        logger.info("Calibration result saved to database.")
+                       table_name, index=False)

@@ -195,6 +195,10 @@ class GPUAnalyzer:
     
     def get_aggregated_df(self):
         df_dict = self.analyze()
+        if not df_dict:
+            logger.error("No data to aggregate.")
+            return None
+
         final_df_dict = {}
         for tid, df in df_dict.items():
             grouped = df.groupby(['Parent Module', 'Module', 'Op Name', 'Kernel Name']).agg(
