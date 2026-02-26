@@ -45,12 +45,14 @@ class ModuleStatistic(BaseRecipeAnalysis):
     def base_dir(self):
         return os.path.basename(os.path.dirname(__file__))
 
-    def run(self, context):
+    def run(self, context, save=True):
         if self._export_type != Constant.DB and self._export_type != Constant.TEXT:
             logger.error(f"Invalid export type: {self._export_type} for module analysis, "
                          f"required to be {Constant.DB} or {Constant.TEXT}")
             return
         mapper_res = self.mapper_func(context)
+        if not save:
+            return mapper_res
         if self._export_type == Constant.DB:
             total_df = self.reducer_func(mapper_res)
             self.save_db(total_df)
