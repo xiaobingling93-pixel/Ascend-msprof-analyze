@@ -54,7 +54,7 @@ class ComputationalOpMasking(BaseRecipeAnalysis):
         "ratioOfUnmaskedCommunication",
     ]
     parallel_types = [("dp", "edp"), ("edp",), ("dp",), ("ep",), ("pp",), ("mp",), ("tp",)]
-    step_columns = ["startNs", "endNs"]
+    step_columns = ["id", "startNs", "endNs"]
 
     def __init__(self, params):
         super().__init__(params)
