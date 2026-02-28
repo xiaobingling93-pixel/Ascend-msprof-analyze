@@ -31,7 +31,7 @@ msprof-analyze -m computational_op_masking [--export_type <export_type>] [--step
 
 | 参数                | 可选/必选 | 说明                                                                                   |
 |-------------------|-------|--------------------------------------------------------------------------------------|
-| -m                | 必选    | 设置为cluster_time_summary，集群性能数据细粒度拆解能力。                                               |
+| -m                | 必选    | 设置为computational_op_masking，集群性能数据细粒度拆解能力。                                               |
 | --export_type     | 可选    | 设置为导出文件格式为db，默认格式是db，仅支持db格式数据保存。                                                    |
 | --step_id         | 可选    | 设置step取该step结果进行保存，不设置默认输出所有step的结果。                                                 |
 | --parallel_types  | 可选    | 设置计算不同并行模式下，通信算子被计算算子掩盖的程度。例如："edp,dp;dp;edp" 实际含义：[('edp','dp'), ('dp',), ('edp',)] |
@@ -54,11 +54,11 @@ msprof-analyze -m computational_op_masking --export_type db --step_id 11 --paral
 
 * 存储位置：输出路径下的cluster_analysis_output/cluster_analysis.db  
 
-* 数据表名：COMPUTATIONAL_OPERATOR_MASKING_LINEARITY
+* 数据表名：ComputationalOperatorMaskingLinearity
 
 ## 输出结果文件说明
 
-ClusterTimeSummary表字段如下：
+ComputationalOperatorMaskingLinearity表字段如下：
 
 | 字段名称                                      | 类型      | 说明                               |
 |-------------------------------------------|---------|----------------------------------|
