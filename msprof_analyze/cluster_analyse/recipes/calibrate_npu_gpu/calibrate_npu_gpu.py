@@ -186,7 +186,10 @@ class CalibrateNpuGpu(BaseRecipeAnalysis):
             return
 
         for rank_id, npu_df in npu_df_dict:
-            gpu_df = gpu_df_dict[rank_id]
+            gpu_df = gpu_df_dict.get(rank_id, pd.DataFrame())
+            if gpu_df.empty or npu_df.empty:
+                logger.warning(f"No data for rank {rank_id} in GPU or NPU profiles, skipping comparison.")
+                continue
             npu_df = self.agg_kernel(npu_df.reset_index())
             gpu_df = self.agg_kernel(gpu_df.reset_index())
             logger.info("Comparing GPU and NPU profiles...")
