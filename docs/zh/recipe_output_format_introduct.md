@@ -1,13 +1,12 @@
-## recipe结果和cluster_analysis.db交付件表结构说明
+# recipe结果和cluster_analysis.db交付件表结构说明
 
-说明：
+> [!NOTE] 说明
+>
+> - msprof-analyze配置--mode参数时可分析并输出cluster_analysis.db交付件，本节介绍该交付件的表结构和字段说明。
+>
+> - 部分分析能力不会生成cluster_analysis.db。
 
-msprof-analyze配置--mode参数时可分析并输出cluster_analysis.db交付件，本节介绍该交付件的表结构和字段说明。
-
-注意：部分分析能力不会生成cluster_analysis.db。
-
-
-### cluster_step_trace_time.csv
+## cluster_step_trace_time.csv
 
 数据解析模式为communication_matrix、communication_time或all时均生成。
 
@@ -53,7 +52,7 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 
 以上时间理论上都应该保持相对持平，即最大值与最小值的差值不超过5%，否则就可能出现慢卡。
 
-### cluster_communication_matrix.json
+## cluster_communication_matrix.json
 
 数据解析模式为communication_matrix或all时生成。
 
@@ -67,22 +66,23 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
     "Bandwidth(GB/s)": 681.4466
 }
 ```
+
 **Tips**：可以根据rank互联的带宽以及链路类型，判断是否有慢链路的问题。
 
 - "LOCAL"是片内拷贝，速度最高。
 - “HCCS”或“PCIE”是节点内片间拷贝，速度居中。
 - “RDMA”是节点间拷贝，速度最低。
 
-### cluster_communication.json
+## cluster_communication.json
 
 数据解析模式为communication_time或all时生成。
 主要为通信耗时数据。
 
-### compute_op_sum
+## compute_op_sum
 
 设置-m compute_op_sum时，会生成以下表。
 
-#### ComputeOpAllRankStats
+### ComputeOpAllRankStats
 
 说明：
 
@@ -104,7 +104,7 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 | MaxNs    | REAL    | 耗时的最大值                           |
 | SumNs    | REAL    | 耗时的总和                             |
 
-#### ComputeOpPerRankStatsByOpType
+### ComputeOpPerRankStatsByOpType
 
 说明：
 
@@ -127,7 +127,7 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 | SumNs    | REAL    | 耗时的总和                             |
 | Rank     | INTEGER | rank_id                               |
 
-#### ComputeOpPerRankStatsByOpName
+### ComputeOpPerRankStatsByOpName
 
 说明：
 
@@ -153,11 +153,11 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 | SumNs       | REAL    | 耗时的总和                             |
 | Rank        | INTEGER | rank_id                               |
 
-### cann_api_sum
+## cann_api_sum
 
 设置-m cann_api_sum时，会生成以下表。
 
-#### CannApiSum
+### CannApiSum
 
 说明：
 
@@ -181,7 +181,7 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 | minRank        | TEXT    | minNs对应的rank的集合              |
 | maxRank        | TEXT    | maxNs对应的rank的集合              |
 
-#### CannApiSumRank
+### CannApiSumRank
 
 说明：
 
@@ -204,11 +204,11 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 | stdev         | REAL    | 耗时的标准差       |
 | rank          | INTEGER | rank_id           |
 
-### hccl_sum
+## hccl_sum
 
 设置-m hccl_sum时，会生成以下表。
 
-#### HcclAllRankStats
+### HcclAllRankStats
 
 说明：
 
@@ -229,7 +229,7 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 | MaxNs    | REAL    | 耗时的最大值    | 
 | SumNs    | REAL    | 耗时的总和      |
 
-#### HcclPerRankStats
+### HcclPerRankStats
 
 说明：
 
@@ -251,7 +251,7 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 | SumNs    | REAL    | 耗时的总和      |
 | Rank     | INTEGER | rank_id        |
 
-#### HcclGroupNameMap
+### HcclGroupNameMap
 
 说明：
 
@@ -265,7 +265,7 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 | GroupId   | TEXT | 通信域的hash值的后三位 |
 | Ranks     | TEXT | 该通信域的所有rank |
 
-#### HcclTopOpStats
+### HcclTopOpStats
 
 说明：
 
@@ -288,11 +288,11 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 | MinRank  | INTEGER | 该通信算子耗时最小的rank |
 | MaxRank  | INTEGER | 该通信算子耗时最大的rank |
 
-### mstx_sum 
+## mstx_sum 
 
 设置-m mstx_sum时，会生成以下表。
 
-#### MSTXAllFrameworkStats
+### MSTXAllFrameworkStats
 
 说明：
 
@@ -314,7 +314,7 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 | SumNs    | REAL    | 总和 |
 | StepId   | INTEGER | 迭代id |
 
-#### MSTXAllCannStats
+### MSTXAllCannStats
 
 说明：
 
@@ -336,7 +336,7 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 | SumNs    | REAL    | 总和 |
 | StepId   | INTEGER | 迭代id |
 
-#### MSTXAllDeviceStats
+### MSTXAllDeviceStats
 
 说明：
 
@@ -358,7 +358,7 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 | SumNs    | REAL    | 总和 |
 | StepId   | INTEGER | 迭代id |
 
-#### MSTXMarkStats
+### MSTXMarkStats
 
 说明：
 
@@ -375,11 +375,11 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 | Rank                | INTEGER | global rank |
 | StepId              | INTEGER | 迭代id |
 
-### communication_group_map
+## communication_group_map
 
 设置-m communication_group_map，会生成以下表。
 
-#### CommunicationGroupMapping
+### CommunicationGroupMapping
 
 说明：
 
@@ -395,13 +395,13 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 | group_id   | TEXT | HCCL内部定义的通信域名字，例如：{ip_address}%enp67s0f5_60000_0_1708156014257149 |
 | pg_name    | TEXT | 业务定义的通信域名字，例如："dp"，"dp_cp"，"mp"等等                                 |
 
-### cluster_time_summary
+## cluster_time_summary
 
 设置-m cluster_time_summary时，会生成以下表。
 
 说明：和cluster_step_trace_time.csv相似，之后考虑替代它。
 
-#### ClusterTimeSummary
+### ClusterTimeSummary
 
 说明：
 
@@ -426,13 +426,13 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 | memoryNotOverlapComputationCommunication | REAL | 不被计算和通信掩盖的异步拷贝的总耗时 | 
 | taskLaunchDelayAvgTime                   | REAL | 下发耗时，指所有task从host侧api的开始时间到device侧task的开始时间的平均耗时 |
 
-### cluster_time_compare_summary
+## cluster_time_compare_summary
 
 设置-m cluster_time_compare_summary时，会生成以下表。
 
 说明：该分析能力需要基于cluster_time_summary的结果，集群数据和标杆集群数据都要有cluster_analysis.db，db里面要有ClusterTimeSummary这个表。
 
-#### ClusterTimeCompareSummary
+### ClusterTimeCompareSummary
 
 说明：结果表示当前集群与标杆集群的比较结果，比如computationDiff表示当前集群与标杆集群的计算时间的差值，如果当前集群的计算时间比标杆集群多，则computationDiff为正数，反之为负数。
 
@@ -451,19 +451,19 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 | taskLaunchDelayAvgTimeBase   | REAL | 标杆集群数据的下发耗时 |
 | taskLaunchDelayAvgTimeDiff | REAL | 下发耗时的差值 |
 
-
-### freq_analysis
+## freq_analysis
 
 说明：
 
 基于db格式的集群性能数据，分析aicore frequency，提供npu降频一键检测能力。频率分为三种情况：
+
 * 正常情况下，应当稳定在1800MHz；
 * 当npu空闲时间较长时，设备会自动降频，会掉到800MHz；
 * 当npu因为各种原因，出现降频现象时，除了1800MHz，800MHz，还会出现其他异常频率。
 
 设置-m freq_analysis时，如果发生降频，会生成以下表。
 
-#### FreeFrequencyRanks
+### FreeFrequencyRanks
 
 说明：
 
@@ -476,7 +476,7 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 | rankId          | INTEGER | global rank |
 | aicoreFrequency | TEXT    | [800, 1800] |
 
-#### AbnormalFrequencyRanks
+### AbnormalFrequencyRanks
 
 说明：
 
@@ -489,7 +489,7 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 | rankId          | INTEGER | global rank |
 | aicoreFrequency | TEXT    | 异常频率列表；例如：[800, 1150, 1450, 1800] |
 
-### ep_load_balance
+## ep_load_balance
 
 说明：
 
@@ -497,7 +497,7 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 
 设置-m ep_load_balance时，会生成以下表。
 
-#### EPTokensSummary
+### EPTokensSummary
 
 说明：
 
@@ -511,7 +511,7 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 | epRanks            | TEXT    | 同一个ep(Expert Parallelism)的rank集合，例如0,1 |
 | inputShapesSummary | INTEGER | 该rank的GroupedMatmul算子的inputshapes的第一个维度的总和 |
 
-#### TopEPTokensInfo
+### TopEPTokensInfo
 
 说明：
 
@@ -524,9 +524,7 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 | epRanks    | TEXT    | 负载不均的ep(Expert Parallelism)的rank集合，例如0,1 |
 | tokensDiff | INTEGER | 同一个ep内最大值与最小值之间的差值 |
 
-
-
-### mstx2commop
+## mstx2commop
 
 设置-m mstx2commop时，不会生成cluster_analysis.db，会将通信内置打点数据转换成通信算子。
 
@@ -536,11 +534,11 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 
 设置Level_none时，统一db里面没有COMMUNICATION_OP，该分析能力会将通信内置打点数据转换成通信算子，并且可以在MindStudio Insight中呈现。
 
-### slow_rank
+## slow_rank
 
 设置-m slow_rank时，会生成以下表。
 
-#### SlowRank
+### SlowRank
 
 说明：
 
@@ -553,7 +551,7 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 | rankId          | INTEGER | 慢卡    |
 | slowAffectCount | INTEGER | 该rank影响了多少次通信 |
 
-#### SlowOpStats
+### SlowOpStats
 
 说明：
 
@@ -579,7 +577,7 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 | MinRank   | INTEGER | 该通信算子耗时最小的rank |
 | MaxRank   | INTEGER | 该通信算子耗时最大的rank |
 
-### p2p_pairing
+## p2p_pairing
 
 设置-m p2p_pairing时，不会生成cluster_analysis.db。
 
@@ -589,15 +587,15 @@ O列：TP Index，指集群数据按照并行策略切分后所属TP组的索引
 
 会在集群数据的ascend_pytorch_profiler_{rank_id}.db的COMMUNICATION_OP表中新增一列opConnectionId。 根据这个opConnectionId可以把不同rank的P2P算子连线。
 
-
-### pp_chart
+## pp_chart
 
 说明： 这个能力需要首先要使用轻量化打点在前反向前后打点，然后使用msprof-analyze进行处理，最后用MindStudio Insight进行显示。
 
-#### 打点
+### 打点
 
 以DualpipeV2为例，找到前反向代码，在dualpipev_schedules.py里面添加如下代码（仅为示例，需要注意这段代码添加的位置）：
-```
+
+```python
 import torch_npu
 def step_wrapper(func, msg: str):
     def wrapper(*args, **kwargs):
@@ -626,7 +624,7 @@ WeightGradStore.pop = step_wrapper(WeightGradStore.pop, "WeightGradStore.pop")
 
 同时，采集profiling数据时，需要添加metadata：
 
-```
+```python
 prof.add_metadata('pp_info', json.dumps(
     {
         'pp_type': 'dualpipev',
@@ -636,7 +634,7 @@ prof.add_metadata('pp_info', json.dumps(
 # microbatch_num需要替换成实际的值
 ```
 
-#### StepTaskInfo
+### StepTaskInfo
 
 说明：
 
@@ -651,17 +649,17 @@ prof.add_metadata('pp_info', json.dumps(
 | endNs   | INTEGER | 在device上结束时间 |
 | type    | INTEGER | 类型，不同类型显示不同颜色 |
 
-#### 通信
+### 通信
 
 当profiler_level设为Level_none时，COMMUNICATION_OP这个表不存在，需要使用mstx2commop这个分析能力将通信内置打点转换为通信算子，这样就会生成这个表。pp流水图也可以显示send和recv。
 
 有了COMMUNICATION_OP这个表，需要使用分析能力p2p_pairing。这样pp流水图也可以显示send和recv的连线，但是这个能力需要level1及以上。
 
-#### communication_group.json
+### communication_group.json
 
 记录通信域信息，解析analysis.db生成的交付件，collective表示集合通信域，P2P表示点对点通信，用户无须关注该文件。
 
-#### stats.ipynb
+### stats.ipynb
 
 - 数据解析模式为cann_api_sum时生成，保存在cluster_analysis_output/CannApiSum目录下。
 

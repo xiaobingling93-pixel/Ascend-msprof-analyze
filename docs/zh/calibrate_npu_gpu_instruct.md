@@ -45,6 +45,7 @@ vllm bench latency \
 ```
 
 **关键参数说明：**
+
 * `--stats=true`：nsys 在完成 profile 采集后会自动生成 sqlite 数据库文件
 * `--trace=cuda,nvtx`：启用 CUDA 和 NVTX 跟踪，NVTX 标记用于模块层次解析
 * `--pytorch=autograd-nvtx`：启用 PyTorch autograd 的 NVTX 标记
@@ -87,6 +88,7 @@ vllm bench latency \
 ```
 
 **关键配置说明：**
+
 * **环境变量**：`VLLM_TORCH_PROFILER_DIR` 设置性能数据输出目录
 * **打点配置**：需修改 vLLM-Ascend 代码，在 `experimental_config` 中设置 `msprof_tx=True` 和 `export_type=['text', 'db']`
 * **eager 模式**：当前只支持 eager 模式，请使用 `--enforce-eager` 确保算子逐条执行
@@ -94,6 +96,7 @@ vllm bench latency \
 #### 3. 数据文件要求
 
 确保采集到的性能数据文件满足以下要求：
+
 * **GPU 文件**：Nsys 导出的 SQLite 文件（扩展名通常为 `.sqlite`）
 * **NPU 文件**：PyTorch Profiler 生成的 DB 文件（通常为 `ascend_pytorch_profiler_0.db`）
 * **数据完整性**：文件中必须包含完整的模块层次信息（NVTX/mstx 打点）和 Kernel 执行信息
@@ -154,7 +157,6 @@ msprof-analyze 会在输出目录生成 `compare_profile_report_{rank_id}.xlsx` 
 #### 2. 中间输出
 
 指定 `--dump_intermediate_results` 时，保存GPU/NPU中间分析结果在 `{platform}_report_{rank_id}.xlsx` 文件中
-
 
 ## 附录
 

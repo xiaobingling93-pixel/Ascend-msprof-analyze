@@ -9,7 +9,6 @@
 * 算子MFU计算：自动计算MatMul、FlashAttention等核心算子的算力利用率（MFU）。
 * 性能分析：精确统计并输出Device侧Kernel的执行耗时。
 
-
 ## 使用前准备
 
 **环境准备**
@@ -44,9 +43,10 @@
 
 **命令格式**  
 
-```
+```bash
 msprof-analyze -m module_statistic -d ./result --export_type text
 ```
+
 **参数说明**
 
 | 参数 | 可选/必选 | 说明                              |
@@ -59,6 +59,7 @@ msprof-analyze -m module_statistic -d ./result --export_type text
 更多参数详细介绍请参见msprof-analyze的[参数说明](../../README.md#参数说明)。
 
 **输出说明**  
+
 * 输出结果体现模型层级，算子调用顺序，NPU上执行的Kernel以及统计时间。
 * `export_type`设置为`text`时，每张卡生成独立的module_statistic_{rank_id}.xlsx文件，如下图所示：  
 ![vllm_module_statistic](./figures/vllm_module_statistic.png)
@@ -77,13 +78,13 @@ msprof-analyze -m module_statistic -d ./result --export_type text
   | rankID                  | 集群场景的节点识别ID，集群场景下设备的唯一标识，INTEGER类型                                                      |
   | avgMFU                  | Device侧Kernel的MFU（平均算力利用率），TEXT类型 <br> 当前仅支持对MatMul和FlashAttention两类算子进行计算，若无相关数据则该列不输出 |
 
-
-
 ## 附录
+
 ### 性能数据采集样例代码
 
 对于复杂模型结构，建议采用选择性打点策略以降低性能开销，核心性能打点实现代码如下：
-```
+
+```python
 original_call = nn.Module.__call__
 
 module_list = ["Attention", "QKVParallelLinear"]
@@ -98,8 +99,10 @@ def custom_call(self, *args, **kwargs):
 
 nn.Module.__call__ = custom_call
 ```
+
 （可选）对FlashAttention算子的调用接口增加mstx打点功能，以便自动测算该类型算子的MFU，打点代码如下：
-```
+
+```python
 import json
 import torch
 import torch_npu
@@ -130,10 +133,9 @@ def custom_origin_scaled_dot_product_attention(*args, **kwargs):
 torch.nn.functional.scaled_dot_product_attention = custom_origin_scaled_dot_product_attention
 ```
 
-
-
 完整样例代码如下：
-```
+
+```python
 import random
 import torch
 import torch_npu

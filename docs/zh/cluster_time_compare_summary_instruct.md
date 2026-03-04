@@ -52,7 +52,7 @@ msprof-analyze -m cluster_time_compare_summary -d <cluster_data> --bp <base_clus
 
 2. 执行cluster_time_compare_summary，传入两个拆解分析后的文件夹路径。
 
-   ```
+   ```bash
    msprof-analyze -m cluster_time_compare_summary -d ./xxx/cluster_data --bp ./xxx/base_cluster_data -o ./xxx/output_path
    ```
 
@@ -60,7 +60,6 @@ msprof-analyze -m cluster_time_compare_summary -d <cluster_data> --bp <base_clus
 
 * 存储位置：输出路径下的cluster_analysis_output/cluster_analysis.db
 * 数据表名：ClusterTimeCompareSummary
-
 
 ## 输出结果文件说明
 

@@ -1,6 +1,7 @@
 # pp流水图数据分析
 
 ## 简介
+
 本节介绍如何采集pp流水图数据、使用msprof-analyze工具分析pp流水图，以及使用MindStudio Insight工具呈现pp流水图进行数据分析。
 
 **pp流水图**指的是将实际pp域内的流水排布进行可视化呈现，可以分析全局通信与前向反向关键耗时信息。对于transformer的模型1F1B、DualpipeV等pp并行策略，当前无法可视化展示。
@@ -14,7 +15,7 @@
 
 **环境准备**
 
-安装msprof-analyze工具，详情请参见《[msprof-analyze安装指南](../../README.md#🔧-安装)》。
+安装msprof-analyze工具，具体请参见《[msprof-analyze工具安装指南](install_guide.md)》。
 
 **数据准备**
 
@@ -50,7 +51,7 @@
    backward_step = step_wrapper(backward_step, "backward_step")
    ```
 
-1. 保存上述脚本文件后，执行训练。训练完成后，在设置的输出路径下生成性能数据文件，用于后续msprof-analyze工具分析。
+2. 保存上述脚本文件后，执行训练。训练完成后，在设置的输出路径下生成性能数据文件，用于后续msprof-analyze工具分析。
 
 **场景二：DualPipeV，找到前向反向代码**
 
@@ -122,9 +123,10 @@
 
 **命令格式**
 
-```
+```bash
 msprof-analyze cluster -m pp_chart -d <cluster_data_path>
 ```
+
 **参数说明**
 
 | 参数 | 可选/必选 | 说明                                              |
@@ -137,7 +139,7 @@ msprof-analyze cluster -m pp_chart -d <cluster_data_path>
 
 执行数据分析，命令示例如下：
 
-```
+```bash
 msprof-analyze cluster -m pp_chart -d ./cluster_data
 ```
 

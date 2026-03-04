@@ -26,7 +26,7 @@ msprof-analyze需要传入采集的性能数据文件夹，如何采集性能数
 
 **命令格式**
 
-```
+```bash
 msprof-analyze -m cluster_time_summary -d <cluster_data> [-o <output_path>]
 ```
 
@@ -44,10 +44,9 @@ msprof-analyze -m cluster_time_summary -d <cluster_data> [-o <output_path>]
 
 执行集群性能数据细粒度拆解。
 
-```
+```bash
 msprof-analyze -m cluster_time_summary -d ./xxx/cluster_data -o ./xxx/output_path
 ```
-
 
 **输出说明**  
 
@@ -81,6 +80,7 @@ ClusterTimeSummary表字段如下：
 cluster_time_summary_{timestamp}.csv除了表头格式有所调整，数据和db保持一致。
 
 **输出结果分析：**
+
 * 通过分析计算、通信、内存拷贝、空闲时间占比，找到性能瓶颈。
 * 通过比较集群内各卡耗时指标差异，定位性能问题。例如，computing计算耗时波动显著，通常表明存在卡间不同步、计算卡性能不均的情况，而通信传输耗时差异过大时，则需优先排查参数面网络是否存在拥塞或配置异常。
 * 配合使用cluster_time_compare_summary功能，可有效定位集群性能劣化根因。

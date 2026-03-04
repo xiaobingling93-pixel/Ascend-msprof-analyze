@@ -122,7 +122,6 @@ To apply the Mulan PSL v2 to your work, for easy identification by recipients, y
 &emsp;&emsp;ii. Create a file named "LICENSE" which contains the whole context of this License in the first directory of your software package;<br>
 &emsp;&emsp;iii. Attach the statement to the appropriate annotated syntax at the beginning of each source file.
 
-
 ```
 Copyright (c) Huawei Technologies Co., Ltd. [Year of First Publication]-[Year of Latest Update]. All Rights Reserved.
 MindIE is licensed under Mulan PSL v2. 
