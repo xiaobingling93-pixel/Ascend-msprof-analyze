@@ -105,12 +105,13 @@ class TestClusterTimeSummary(unittest.TestCase):
         self.assertAlmostEqual(res["stepTime"].tolist(), [35.0, 40.0])
 
     @mock.patch("msprof_analyze.prof_common.database_service.DatabaseService.query_data")
-    def test_calculate_step_time_when_query_fail_then_return_none(self, mock_query_data):
+    def test_calculate_step_time_when_step_time_is_not_existed_then_return_df(self, mock_query_data):
         mock_query_data.return_value = {Constant.TABLE_STEP_TIME: pd.DataFrame()}
         recipe = ClusterTimeSummary(self.PARAMS)
         res = recipe.calculate_step_time({Constant.PROFILER_DB_PATH: "/rank0/ascend_pytorch_profiler_0.db",
                                           Constant.RANK_ID: 1}, "ClusterTimeSummary")
-        self.assertIsNone(res)
+        expected_res = pd.DataFrame({"rank": [1], "step": [-1], "stepTime": [None]})
+        self.assertTrue(res.equals(expected_res))
 
     @mock.patch("msprof_analyze.prof_common.database_service.DatabaseService.query_data")
     def test_calculate_step_trace_time_when_query_success_when_return_valid_df(self, mock_query_data):

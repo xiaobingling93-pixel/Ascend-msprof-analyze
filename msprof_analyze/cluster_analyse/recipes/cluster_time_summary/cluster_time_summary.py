@@ -99,9 +99,11 @@ class ClusterTimeSummary(BaseRecipeAnalysis):
         data_service.add_table_for_query(Constant.TABLE_STEP_TIME, ["id", "startNs", "endNs"])
         df = data_service.query_data().get(Constant.TABLE_STEP_TIME)
         if df is None or df.empty:
-            logger.warning(f"There is no STEP_TIME data in {profiler_db_path}.")
-            return None
-        df["stepTime"] = (df["endNs"] - df["startNs"]) / Constant.TIME_UNIT_SCALE
+            df = pd.DataFrame(
+                {"id": [-1], "stepTime": None}
+            )
+        else:
+            df["stepTime"] = (df["endNs"] - df["startNs"]) / Constant.TIME_UNIT_SCALE
         result_df = df[["id", "stepTime"]].rename(columns={"id": "step"})
         result_df.insert(0, "rank", rank_id)
         return result_df
@@ -118,13 +120,16 @@ class ClusterTimeSummary(BaseRecipeAnalysis):
             logger.warning(f"There is no TABLE_STEP_TRACE data in {analysis_db_path}.")
             return None
         df.insert(0, "rank", rank_id)
-        df["step"] = df["step"].astype(int)
+        df["step"] = df["step"].fillna("-1").astype(int)
         return df
 
     def calculate_communication_time(self, data_map, analysis_class):
         analysis_db_path = data_map.get(Constant.PROFILER_DB_PATH)
+        profiler_db_path = data_map.get(Constant.PROFILER_DB_PATH)
         step_range = data_map.get(Constant.STEP_RANGE)
-        df = CommunicationOpWithStepExport(analysis_db_path, analysis_class, step_range).read_export_db()
+        df = CommunicationOpWithStepExport(analysis_db_path, analysis_class, step_range,
+            step_exits=DBManager.check_tables_in_db(profiler_db_path,
+                                                    Constant.TABLE_COMM_ANALYZER_TIME,)).read_export_db()
         if df is None or df.empty:
             logger.warning(f"There is no communication op data in {analysis_db_path}.")
             return None
@@ -188,8 +193,8 @@ class ClusterTimeSummary(BaseRecipeAnalysis):
         profiler_db_path = data_map.get(Constant.PROFILER_DB_PATH)
         rank_id = data_map.get(Constant.RANK_ID)
         step_range = data_map.get(Constant.STEP_RANGE)
-        df = (MemoryAndDispatchTimeExport(profiler_db_path, analysis_class, step_range).
-              read_export_db())
+        df = MemoryAndDispatchTimeExport(profiler_db_path, analysis_class, step_range,
+            step_exits=DBManager.check_tables_in_db(profiler_db_path, Constant.TABLE_STEP_TIME)).read_export_db()
         if df is None or df.empty:
             logger.warning(f"Can not get memcpy task info from {profiler_db_path}.")
             return pd.DataFrame(columns=columns)
