@@ -52,21 +52,20 @@ msprof-analyze支持源码编译安装，在编译过程中会产生临时程序
 
 2. 工具在运行异常时会退出进程并打印报错信息，属于正常现象。建议用户根据报错提示定位具体错误原因，包括查看打印日志，采集解析过程中生成的结果文件等方式。
 
-
 ## 公网地址声明
 
 | 软件类型 | 软件名                                             | 路径                                                         | 类型     | 内容                                                         | 用途说明                                   |
 | -------- | -------------------------------------------------- | ------------------------------------------------------------ | -------- | ------------------------------------------------------------ | ------------------------------------------ |
-| 开源软件 | msprof-analyze advisor | /msprof_analyze/advisor/config/config.ini           | 公网地址 | https://www.hiascend.com/document/detail/zh/canncommercial/80RC2/devaids/auxiliarydevtool/atlasprofiling_16_0038.html | MindStudio Ascend PyTorch Profiler参考示例 |
-| 开源软件 | msprof-analyze advisor | /msprof_analyze/advisor/config/config.ini           | 公网地址 | https://gitcode.com/Ascend/msprof-analyze/blob/master/docs/zh/fused_operator_api_replacement_example.md | Advisor优化手段参考示例                    |
-| 开源软件 | msprof-analyze advisor | /msprof_analyze/advisor/config/config.ini           | 公网地址 | https://www.hiascend.com/document/detail/zh/canncommercial/80RC2/devaids/auxiliarydevtool/aoe_16_043.html | Advisor优化手段参考示例                    |
-| 开源软件 | msprof-analyze advisor | /msprof_analyze/advisor/config/config.ini           | 公网地址 | https://www.mindspore.cn/lite/docs/en/master/use/cloud_infer/converter_tool_ascend.html#aoe-auto-tuning | Advisor优化手段参考示例                    |
-| 开源软件 | msprof-analyze advisor | /msprof_analyze/advisor/config/config.ini           | 公网地址 | https://www.hiascend.com/document/detail/zh/canncommercial/700/modeldevpt/ptmigr/AImpug_000060.html | Advisor优化手段参考示例                    |
-| 开源软件 | msprof-analyze         | /config/config.ini                   | 公网地址 | https://gitcode.com/Ascend/msprof-analyze | msprof-analyze工具地址                     |
-| 开源软件 | msprof-analyze         | /LICENSE                             | 公网地址 | http://www.apache.org/licenses/LICENSE-2.0                   | 开源软件协议地址                           |
-| 开源软件 | msprof-analyze advisor | /msprof_analyze/advisor/rules/aicpu_rules.yaml      | 公网地址 | https://gitcode.com/Ascend/msprof-analyze/blob/master/docs/zh/aicpu_operator_replacement_example.md | AICPU算子替换样例                        |
-| 开源软件 | msprof-analyze advisor | /msprof_analyze/advisor/rules/environment_variable_info.yaml | 公网地址 | https://support.huawei.com/enterprise/zh/doc/EDOC1100371278/5eeeed85?idPath=23710424 | 组网指南                                   |
-| 开源软件 | msprof-analyze         | /config/config.ini                   | 公网地址 | pmail_mindstudio@huawei.com                                  | 公网邮箱                                   |
+| 开源软件 | msprof-analyze advisor | /msprof_analyze/advisor/config/config.ini           | 公网地址 | <https://www.hiascend.com/document/detail/zh/canncommercial/80RC2/devaids/auxiliarydevtool/atlasprofiling_16_0038.html> | MindStudio Ascend PyTorch Profiler参考示例 |
+| 开源软件 | msprof-analyze advisor | /msprof_analyze/advisor/config/config.ini           | 公网地址 | <https://gitcode.com/Ascend/msprof-analyze/blob/master/docs/zh/fused_operator_api_replacement_example.md> | Advisor优化手段参考示例                    |
+| 开源软件 | msprof-analyze advisor | /msprof_analyze/advisor/config/config.ini           | 公网地址 | <https://www.hiascend.com/document/detail/zh/canncommercial/80RC2/devaids/auxiliarydevtool/aoe_16_043.html> | Advisor优化手段参考示例                    |
+| 开源软件 | msprof-analyze advisor | /msprof_analyze/advisor/config/config.ini           | 公网地址 | <https://www.mindspore.cn/lite/docs/en/master/use/cloud_infer/converter_tool_ascend.html#aoe-auto-tuning> | Advisor优化手段参考示例                    |
+| 开源软件 | msprof-analyze advisor | /msprof_analyze/advisor/config/config.ini           | 公网地址 | <https://www.hiascend.com/document/detail/zh/canncommercial/700/modeldevpt/ptmigr/AImpug_000060.html> | Advisor优化手段参考示例                    |
+| 开源软件 | msprof-analyze         | /config/config.ini                   | 公网地址 | <https://gitcode.com/Ascend/msprof-analyze> | msprof-analyze工具地址                     |
+| 开源软件 | msprof-analyze         | /LICENSE                             | 公网地址 | <http://www.apache.org/licenses/LICENSE-2.0>                   | 开源软件协议地址                           |
+| 开源软件 | msprof-analyze advisor | /msprof_analyze/advisor/rules/aicpu_rules.yaml      | 公网地址 | <https://gitcode.com/Ascend/msprof-analyze/blob/master/docs/zh/aicpu_operator_replacement_example.md> | AICPU算子替换样例                        |
+| 开源软件 | msprof-analyze advisor | /msprof_analyze/advisor/rules/environment_variable_info.yaml | 公网地址 | <https://support.huawei.com/enterprise/zh/doc/EDOC1100371278/5eeeed85?idPath=23710424> | 组网指南                                   |
+| 开源软件 | msprof-analyze         | /config/config.ini                   | 公网地址 | <pmail_mindstudio@huawei.com>                                  | 公网邮箱                                   |
 
 ## 公开接口声明
 

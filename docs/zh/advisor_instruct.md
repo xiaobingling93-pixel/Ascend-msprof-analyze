@@ -10,7 +10,7 @@ Ascend PyTorch Profiler采集方法请参见《[性能调优工具](https://www.
 
 **环境准备**
 
-* 命令行方式使用advisor功能，需要安装msprof-analyze，具体请参见《[msprof-analyze](../../README.md#工具安装🔧-安装)》。
+* 命令行方式使用advisor功能，需要安装msprof-analyze，具体请参见《[msprof-analyze工具安装指南](install_guide.md)》。
 * Jupyter Notebook方式使用advisor功能，需要做以下准备：
 
   1.安装Jupyter Notebook工具，Jupyter Notebook工具的具体安装和使用指导请至Jupyter Notebook工具官网查找。
@@ -21,7 +21,7 @@ Ascend PyTorch Profiler采集方法请参见《[性能调优工具](https://www.
 
   2.下载msprof-analyze源码。
 
-   ```
+   ```bash
    git clone https://gitcode.com/Ascend/msprof-analyze
    ```
 
@@ -164,9 +164,7 @@ msprof-analyze advisor命令行包含如下三个子命令：
    
    ![schedule](./figures/schedule.png)
 
-
 ## advisor功能介绍（Jupyter Notebook方式）
-
 
 1. 进入msprof_analyze\advisor目录执行如下命令启动Jupyter Notebook工具。
 
@@ -187,7 +185,6 @@ msprof-analyze advisor命令行包含如下三个子命令：
 3. 单击运行按钮执行性能数据分析。
 
    分析结果详细内容会在.ipynb页面下展示。
-
 
 ## 输出结果文件说明
 
@@ -229,7 +226,7 @@ overall模块仅识别问题，不提供调优建议。
 
 comparison模块内容如下图示例，识别标杆和待比对性能数据的Kernel和API数据，无标杆场景的comparison是集群内部快慢卡的性能数据对比。包括：
 
-- Kernel compare of Rank* Step* and Rank* Step*：Kernel的待比对总耗时、待比对平均耗时、待比对最大耗时、待比对最小耗时和待比对执行次数，以及标杆的对应数据，最后计算Diff Total Ratio（标杆总耗时/待比对总耗时）和Diff Avg Ratio（标杆平均耗时/待比对平均耗时）。
+- Kernel compare of Rank*Step* and Rank*Step*：Kernel的待比对总耗时、待比对平均耗时、待比对最大耗时、待比对最小耗时和待比对执行次数，以及标杆的对应数据，最后计算Diff Total Ratio（标杆总耗时/待比对总耗时）和Diff Avg Ratio（标杆平均耗时/待比对平均耗时）。
 
   Diff Total Ratio和Diff Avg Ratio大于1则表示当前环境性能更优，小于1则表示当前环境有待优化，等于1则表示当前环境与标杆环境性能接近。
 
@@ -237,7 +234,7 @@ comparison模块内容如下图示例，识别标杆和待比对性能数据的K
 
   其中inf表示分母为0（未获取到待对比数据或待对比数据为0），None表示未获取到数据。
 
-- Api compare of Rank* Step* and Rank* Step*：API的待比对总耗时、待比对API自身耗时（除去API调用的子API的耗时）、待比对平均耗时和待比对执行次数，以及标杆的对应数据，最后计算Diff Total Ratio（标杆总耗时/待比对总耗时）、Diff Self Ratio（标杆API自身耗时/待比对API自身耗时）、Diff Avg Ratio（标杆平均耗时/待比对平均耗时）和Diff Calls Ratio（标杆执行次数/待比对执行次数）。
+- Api compare of Rank*Step* and Rank*Step*：API的待比对总耗时、待比对API自身耗时（除去API调用的子API的耗时）、待比对平均耗时和待比对执行次数，以及标杆的对应数据，最后计算Diff Total Ratio（标杆总耗时/待比对总耗时）、Diff Self Ratio（标杆API自身耗时/待比对API自身耗时）、Diff Avg Ratio（标杆平均耗时/待比对平均耗时）和Diff Calls Ratio（标杆执行次数/待比对执行次数）。
 
   Diff Total Ratio、Diff Self Ratio、Diff Avg Ratio和Diff Calls Ratio大于1则表示当前环境性能更优，小于1则表示当前环境有待优化，等于1则表示当前环境与标杆环境性能接近。
 

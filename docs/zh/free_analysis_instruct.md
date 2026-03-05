@@ -28,7 +28,7 @@ msprof-analyze需要传入采集的性能数据文件夹，如何采集性能数
 
 **命令格式**
 
-```
+```bash
 msprof-analyze -m free_analysis -d <cluster_data> [-o <output_path>] [--export_type <export_type>] [--top_num <top_num>]
 ```
 
@@ -48,10 +48,9 @@ msprof-analyze -m free_analysis -d <cluster_data> [-o <output_path>] [--export_t
 
 执行空闲时间原因分析。
 
-```
+```bash
 msprof-analyze -m free_analysis -d ./xxx/cluster_data -o ./xxx/output_path --top_num 10 --export_type text
 ```
-
 
 **输出说明**
 
@@ -61,10 +60,8 @@ msprof-analyze -m free_analysis -d ./xxx/cluster_data -o ./xxx/output_path --top
 
 ## 输出结果文件说明
 
-
 本工具分析结果如下图示例：
 ![输出结果展示](./figures/free_analysis.png)
-
 
 **FreeAnalysis表**  
 
@@ -79,7 +76,6 @@ msprof-analyze -m free_analysis -d ./xxx/cluster_data -o ./xxx/output_path --top
 | pytorchIdleTime(us) | PyTorch层idle时间，REAL类型，单位为ns。无数据时可能为0或NULL。 |
 | cannIdleTime(us) | CANN层idle时间，REAL类型，单位为ns。无数据时可能为0或NULL。    |
 | reason | 空闲原因描述，TEXT类型，单位为ns。                       |
-
 
 **free_analysis.csv**  
 

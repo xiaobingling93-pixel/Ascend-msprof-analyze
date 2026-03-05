@@ -30,7 +30,7 @@ msprof-analyze需要传入采集的性能数据文件夹，如何采集性能数
 
 **命令格式**
 
-```
+```bash
 msprof-analyze -m communication_bottleneck -d <cluster_data> [-o <output_path>] [--rank_id <rank_id>] [--top_num <top_num>] [--export_type <export_type>]
 ```
 
@@ -54,7 +54,7 @@ msprof-analyze -m communication_bottleneck -d <cluster_data> [-o <output_path>] 
 
 2. 执行通信瓶颈分析，分析rank 0中耗时最长的10个通信操作。
 
-```
+```bash
 msprof-analyze -m communication_bottleneck -d ./xxx/cluster_data -o ./xxx/output_path --rank_id 0 --top_num 10
 ```
 
@@ -66,7 +66,8 @@ msprof-analyze -m communication_bottleneck -d ./xxx/cluster_data -o ./xxx/output
 ## 配置说明
 
 通信瓶颈分析功能支持通过配置文件自定义分析阈值。配置文件位于：
-```
+
+```bash
 msprof_analyze/cluster_analyse/recipes/communication_bottleneck/config.json
 ```
 
@@ -92,7 +93,6 @@ msprof_analyze/cluster_analyse/recipes/communication_bottleneck/config.json
 | start_ns_shifted | 可选 | start_ns_shifted参数含义，int类型，默认值1000000。起始时间偏移阈值（纳秒），偏移小于此值时认为对齐，约为1ms。 |
 | device_bound_proportion | 可选 | device_bound_proportion参数含义，float类型，默认值0.5。当Device Bound问题占比超过此比例时，判定为Device侧瓶颈。 |
 
-
 ## 输出结果文件说明
 
 **CommunicationBottleneck表**  
@@ -109,7 +109,6 @@ msprof_analyze/cluster_analyse/recipes/communication_bottleneck/config.json
 | fastRankId     | 快卡卡号，INTEGER类型，当存在慢卡时有效。         |
 | reason         | 分析结果，TEXT类型。                     |
 
-
 **communication_bottleneck.csv**  
 
 CSV文件列名如下：
@@ -123,4 +122,3 @@ CSV文件列名如下：
 | Slow Rank ID     | 慢卡卡号，INTEGER类型，当存在慢卡时有效。                  |
 | Fast Rank ID     | 快卡卡号，INTEGER类型，当存在慢卡时有效。                  |
 | Reason           | 分析结果，TEXT类型，文本描述形式。             |
-

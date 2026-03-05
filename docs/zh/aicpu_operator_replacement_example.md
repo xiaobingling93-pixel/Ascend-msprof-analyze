@@ -9,7 +9,7 @@
 
 ## 类型转换方式
 
-当前PyTorch支持的dtype类型如下，详见[Link](https://pytorch.org/docs/stable/tensor_attributes.html)。
+当前PyTorch支持的dtype类型如下，具体请参见[Tensor Attributes](https://pytorch.org/docs/stable/tensor_attributes.html)。
 
 图1 PyTorch支持的dtype
 
