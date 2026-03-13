@@ -68,6 +68,9 @@ class CommunicationGroupMap(BaseRecipeAnalysis):
         self.reducer_func(mapper_res)
         if self._export_type == Constant.DB:
             self.save_db()
+        elif self._export_type == Constant.TEXT:
+            logger.info("Reset export_type to db")
+            self.save_db()  # It may be invoked by other recipe, so it must be set to 'db' here.
         else:
             logger.error(f"CommGroupMap: {self._export_type} is not supported for export type.")
 

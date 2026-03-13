@@ -250,17 +250,22 @@ class MstxSum(BaseRecipeAnalysis):
         if self._export_type == Constant.DB:
             self.save_db()
         elif self._export_type == Constant.NOTEBOOK:
+            self.save_csv()
             self.save_notebook()
+        elif self._export_type == Constant.TEXT:
+            self.save_csv()
         else:
             logger.error("Unknown export type.")
 
     def save_notebook(self):
+        self.create_notebook("stats.ipynb")
+        self.add_helper_file("cluster_display.py")
+
+    def save_csv(self):
         self.dump_data(self.mark_stats, "mark_stats.csv", index=False)
         self.dump_data(self.all_fwk_stats, "all_fwk_stats.csv")
         self.dump_data(self.all_cann_stats, "all_cann_stats.csv")
         self.dump_data(self.all_device_stats, "all_device_stats.csv")
-        self.create_notebook("stats.ipynb")
-        self.add_helper_file("cluster_display.py")
 
     def save_db(self):
         self.dump_data(self.mark_stats, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER, self.TABLE_MARK_STATS)

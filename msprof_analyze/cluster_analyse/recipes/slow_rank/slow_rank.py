@@ -116,29 +116,30 @@ class SlowRankAnalysis(BaseRecipeAnalysis):
 
         analyzer = SlowRankVoteAnalysis(comm_ops_df)
         self.perpector_df, self.stat_df = analyzer.run()
-
+        if self.perpector_df is None or self.perpector_df.empty:
+            logger.info(f"No slow rank found, skip data dump.")
+            return
         if self._export_type == Constant.DB:
             self.save_db()
         elif self._export_type == Constant.NOTEBOOK:
+            self.save_csv()
             self.save_notebook()
+        elif self._export_type == Constant.TEXT:
+            self.save_csv()
         else:
             logger.error("SlowRank analysis is not supported for notebook export type.")
 
     def save_db(self, ):
-        if self.perpector_df is None or self.perpector_df.empty:
-            logger.info(f"No slow rank found, skip data dump.")
-            return
         self.dump_data(self.perpector_df, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER, "SlowRank")
         self.dump_data(self.stat_df, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER, "SlowOpStats", index=False)
 
     def save_notebook(self):
-        if self.perpector_df is None or self.perpector_df.empty:
-            logger.info(f"No slow rank found, skip data dump.")
-            return
-        self.dump_data(self.perpector_df, "rank_stats.csv")
-        self.dump_data(self.stat_df, "slow_op_stats.csv", index=False)
         self.create_notebook("stats.ipynb")
         self.add_helper_file("cluster_display.py")
+
+    def save_csv(self):
+        self.dump_data(self.perpector_df, "rank_stats.csv")
+        self.dump_data(self.stat_df, "slow_op_stats.csv", index=False)
 
     def _mapper_func(self, data_map, analysis_class):
         profiler_db_path = data_map.get(Constant.PROFILER_DB_PATH)

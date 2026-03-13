@@ -237,6 +237,9 @@ class ClusterTimeSummary(BaseRecipeAnalysis):
         merged_df = all_dfs[0]
         for df in all_dfs[1:]:
             merged_df = pd.merge(merged_df, df, on=['rank', 'step'], how='outer')
+        # 缺少step id的情况下需要补充stepTime
+        merged_df.loc[merged_df["stepTime"].isna(), "stepTime"] = merged_df["computing"] + merged_df[
+            "communication_not_overlapped"] + merged_df["free"]
         # 将所有NaN替换为0
         merged_df = merged_df.fillna(0)
         # 根据 step 和 rank 列对合并后的 DataFrame 进行排序
