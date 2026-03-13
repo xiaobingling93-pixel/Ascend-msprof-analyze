@@ -128,18 +128,24 @@ class ComputationalOpMasking(BaseRecipeAnalysis):
         self.mapper_func(context)
         context.wait_all_futures()
         self.linearity_ret = self.aggregate_stats(context)
+        if self.linearity_ret.empty:
+            logger.warning("No data available for linearity analysis.")
+            return
         if self._export_type == Constant.DB:
             self.save_db()
+        elif self._export_type == Constant.TEXT:
+            self.save_csv()
         else:
             logger.error("Unknown export type.")
 
     def save_db(self):
-        if self.linearity_ret.empty:
-            logger.warning("No data available for linearity analysis.")
         self.dump_data(data=self.linearity_ret,
                        file_name=Constant.DB_CLUSTER_COMMUNICATION_ANALYZER,
                        table_name=Constant.TABLE_COMPUTATIONAL_OPERATOR_MASKING_LINEARITY,
                        index=False)
+
+    def save_csv(self):
+        self.dump_data(data=self.linearity_ret, file_name="computational_operator_masking_linearity.csv", index=False)
 
     def get_linearity_df(self, data_map, analysis_class) -> pd.DataFrame:
         """
