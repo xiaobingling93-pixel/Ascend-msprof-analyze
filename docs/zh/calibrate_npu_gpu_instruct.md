@@ -13,7 +13,7 @@ NPU 和 GPU 性能数据拆解比对（ `calibrate_npu_gpu` ）是 msprof-analyz
 
 ### 环境准备
 
-完成msprof_analyze工具安装，具体请参见msprof-analyze的[msprof-analyze工具安装指南](./install_guide.md)。
+完成msprof_analyze工具安装，具体请参见《[msprof-analyze工具安装指南](./install_guide.md)》。
 
 ### 数据准备
 
@@ -55,7 +55,6 @@ NPU 和 GPU 性能数据拆解比对（ `calibrate_npu_gpu` ）是 msprof-analyz
    * `--pytorch=autograd-nvtx`：启用 PyTorch autograd 的 NVTX 标记。
    * `--capture-range=cudaProfilerApi`：捕获 `cudaProfilerStart/Stop` 范围内的性能数据。
    * `--enforce-eager`：禁用 CUDA Graph，确保算子逐条执行以便准确计时。
-
 
 2. NPU 性能数据采集
 
@@ -208,13 +207,17 @@ import torch.cuda.profiler as cuda_profiler
 original_call = nn.Module.__call__
 
 def custom_call(self, *args, **kwargs):
++   # 自定义调用方法，添加msTX打点
     module_name = self.__class__.__name__
 -    nvtx.push_range(module_name)
++    mstx_id = torch_npu.npu.mstx.range_start(module_name, domain="Module")    # Module开始打点，设置domain为Module
     tmp = original_call(self, *args, **kwargs)
-    nvtx.pop_range()
+-    nvtx.pop_range()
++    torch_npu.npu.mstx.range_end(mstx_id, domain="Module")    # Module结束打点，设置domain为Module
     return tmp
 nn.Module.__call__ = custom_call
-# --- END OF INJECTION ---
+-# --- END OF INJECTION ---
++# 替换默认调用方法
 
 ... # original code
 
@@ -235,7 +238,8 @@ def main(args: argparse.Namespace):
                 ),
             )
 
-    def run_to_completion(profile_dir: str | None = None):
+-    def run_to_completion(profile_dir: str | None = None):
++    def run_to_completion(profile_dir: Optional[str] = None):
         if profile_dir:
             llm.start_profile()
             llm_generate()
@@ -257,14 +261,14 @@ def main(args: argparse.Namespace):
         run_to_completion(profile_dir=profile_dir)
         return
 
-    cuda_profiler.start() # Modification 2: inform nsys to start profiling at this point
+-    cuda_profiler.start() # Modification 2: inform nsys to start profiling at this point
 
     # Benchmark.
     latencies = []
     for _ in tqdm(range(args.num_iters), desc="Profiling iterations"):
         latencies.append(run_to_completion(profile_dir=None))
 
-    cuda_profiler.stop() # Modification 3: inform nsys to stop profiling at this point
+-    cuda_profiler.stop() # Modification 3: inform nsys to stop profiling at this point
 
     ... # original code
 ```
