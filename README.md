@@ -17,7 +17,7 @@
 
 MindStudio Profiler Analyze（`msprof-analyze`）是面向 AI 训练与推理场景的性能分析工具，基于采集得到的 profiling 数据进行统计、比对和诊断，帮助定位计算、通信、调度及集群场景下的性能瓶颈。
 
-## 功能介绍
+## 📖 功能介绍
 
 | 功能点 | 功能简介                                                                         | 资料链接 | 源码目录                                                       |
 | --- |------------------------------------------------------------------------------| --- |------------------------------------------------------------|
@@ -26,7 +26,7 @@ MindStudio Profiler Analyze（`msprof-analyze`）是面向 AI 训练与推理场
 | **集群分析** | 汇总集群通信数据，输出结果支持在 MindStudio Insight 中可视化查看。                                  | [点击查看](./docs/zh/user_guide/cluster_analyse_instruct.md) | [点击查看](./msprof_analyze/cluster_analyse)                   |
 | **扩展分析** | 基于 DB 类型性能数据，提供可自定义的 Recipe 分析规则，目前已涵盖拆解对比、Host 下发、计算、通信等 20 余种多维度分析能力，便于灵活扩展。 | [点击查看](./docs/zh/advanced_features/README.md) | [点击查看](./msprof_analyze/cluster_analyse/recipes) |
 
-### 工具安装
+## 🛠️ 工具安装
 
 推荐直接通过 `pip` 安装：
 
@@ -36,7 +36,7 @@ pip install -U msprof-analyze
 
 如需 whl 包下载、源码编译，请参见 [《安装指南》](./docs/zh/getting_started/install_guide.md)。
 
-## 快速入门
+## 🚀 快速入门
 
 `msprof-analyze` 常用分析命令如下：
 
@@ -53,7 +53,7 @@ msprof-analyze compare -d ./ascend_pt -bp ./gpu_trace.json -o ./compare_output
 
 以 ResNet50 模型训练任务为例，[《快速入门》](./docs/zh/getting_started/quick_start.md)贯穿从采集性能数据、执行 Advisor 分析到查看分析结果的完整流程，帮助您快速体验工具的核心功能。
 
-## 目录结构
+## 🔍 目录结构
 
 关键目录如下，详细信息参见 [《目录结构说明》](./docs/zh/dir_structure.md)。
 
