@@ -8,14 +8,14 @@
 
 **1F1B和DualPipeV的理论效果图**
 
-![1F1B](./figures/1F1B.png)
-![DualPipeV](./figures/DualPipeV.png)
+![1F1B](../figures/1F1B.png)
+![DualPipeV](../figures/DualPipeV.png)
 
 ## 使用前准备
 
 **环境准备**
 
-完成msprof_analyze工具安装，具体请参见《[msprof-analyze工具安装指南](./install_guide.md)》。
+完成msprof_analyze工具安装，具体请参见《[msprof-analyze工具安装指南](../getting_started/install_guide.md)》。
 
 **数据准备**
 
@@ -156,12 +156,12 @@ StepTaskInfo表字段如下：
 | endNs   | 前向反向task在device上结束时间，INTEGER类型。 |
 | type    | 类型，不同类型显示不同颜色，INTEGER类型。 |
 
-用户无需关注该表字段的具体含义，可以直接使用MindStudio Insight呈现。MindStudio Insight工具的详细安装和操作请参见《[MindStudio Insight工具用户指南](https://gitcode.com/Ascend/msinsight/blob/master/docs/zh/user_guide/quick_start/system_start.md)》。
+用户无需关注该表字段的具体含义，可以直接使用MindStudio Insight呈现。MindStudio Insight工具的详细安装和操作请参见《[MindStudio Insight工具用户指南](https://gitcode.com/Ascend/msinsight)》。
 
 在MindStudio Insight工具导入分析后的性能数据，在Summary页面点击Generate后按照如下截图配置。
 
-![操作步骤](./figures/pp_chart_operation_steps.png)
+![操作步骤](../figures/pp_chart_operation_steps.png)
 
 如下为pp_chart完成pp流水图分析后的呈现效果。
 
-![操作步骤](./figures/pp_chart_effect.png)
+![操作步骤](../figures/pp_chart_effect.png)
