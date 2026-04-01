@@ -21,9 +21,12 @@ from msprof_analyze.cluster_analyse.recipes.calibrate_npu_gpu.calibrate_npu_gpu 
 from msprof_analyze.cluster_analyse.recipes.calibrate_npu_gpu.gpu_analyzer import GPUAnalyzer
 from msprof_analyze.cluster_analyse.recipes.calibrate_npu_gpu.comparator import Comparator
 from msprof_analyze.prof_common.constant import Constant
+from msprof_analyze.prof_common.path_manager import PathManager
 
 
 class TestCalibrateNpuGpu(unittest.TestCase):
+    OUTPUT_PATH = "./tmp_calibrate_npu_gpu_ut"
+
     def setUp(self):
         self.params = {
             Constant.COLLECTION_PATH: "/tmp",
@@ -31,7 +34,7 @@ class TestCalibrateNpuGpu(unittest.TestCase):
             Constant.RECIPE_NAME: "CalibrateNpuGpu",
             Constant.PARALLEL_MODE: "concurrent",
             Constant.EXPORT_TYPE: Constant.TEXT,
-            Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: "/tmp_output",
+            Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: self.OUTPUT_PATH,
             Constant.RANK_LIST: Constant.ALL,
             Constant.EXTRA_ARGS: [
                 '--baseline_profiling_path', '/fake/gpu/path',
@@ -40,6 +43,9 @@ class TestCalibrateNpuGpu(unittest.TestCase):
             ]
         }
         self.analysis = CalibrateNpuGpu(self.params)
+
+    def tearDown(self):
+        PathManager.remove_path_safety(self.OUTPUT_PATH)
 
     def test_init_params(self):
         """测试__init__方法，验证参数初始化正确"""
@@ -56,7 +62,7 @@ class TestCalibrateNpuGpu(unittest.TestCase):
             Constant.RECIPE_NAME: "CalibrateNpuGpu",
             Constant.PARALLEL_MODE: "concurrent",
             Constant.EXPORT_TYPE: Constant.TEXT,
-            Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: "/tmp_output",
+            Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: self.OUTPUT_PATH,
             Constant.RANK_LIST: Constant.ALL,
             Constant.EXTRA_ARGS: [
                 '--baseline_profiling_path', '/fake/gpu/path'
@@ -463,3 +469,7 @@ class TestComparator(unittest.TestCase):
         result = comparator.compare(enable_fuzzy=False)
 
         self.assertIsNotNone(result)
+
+
+if __name__ == "__main__":
+    unittest.main()
