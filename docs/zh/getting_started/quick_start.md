@@ -84,7 +84,7 @@ msprof-analyze advisor all \
 
 ## 附录
 
-train.py:  ResNet50 训练示例，使用 `torch_npu.profiler` 采集性能数据
+train_sample.py:  ResNet50 训练示例，使用 `torch_npu.profiler` 采集性能数据
 
 ```python
 import torch
@@ -185,7 +185,6 @@ class ResNet50:
                     avg_loss = total_loss / len(data_loader)
                     print(f"[Epoch {epoch + 1}/{epochs}] Average Loss: {avg_loss:.4f}")
                     prof.step()
-
 
 
 def train():
