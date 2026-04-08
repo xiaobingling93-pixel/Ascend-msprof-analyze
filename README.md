@@ -19,12 +19,12 @@ MindStudio Profiler Analyze（`msprof-analyze`）是面向 AI 训练与推理场
 
 ## 📖 功能介绍
 
-| 功能点 | 功能简介                                                                         | 资料链接 | 源码目录                                                       |
+| 功能名称 | 功能简介                                                                         | 文档 | 源码目录                                                       |
 | --- |------------------------------------------------------------------------------| --- |------------------------------------------------------------|
-| **专家建议** | 基于性能数据自动识别计算、调度、通信等潜在问题，并输出优化建议。                                             | [点击查看](./docs/zh/user_guide/advisor_instruct.md) | [点击查看](./msprof_analyze/advisor)                           |
-| **性能比对** | 支持 GPU/NPU、NPU/NPU 等多种场景的性能差异分析。                                             | [点击查看](./docs/zh/user_guide/compare_tool_instruct.md) | [点击查看](./msprof_analyze/compare_tools)                     |
-| **集群分析** | 汇总集群通信数据，输出结果支持在 MindStudio Insight 中可视化查看。                                  | [点击查看](./docs/zh/user_guide/cluster_analyse_instruct.md) | [点击查看](./msprof_analyze/cluster_analyse)                   |
-| **扩展分析** | 基于 DB 类型性能数据，提供可自定义的 Recipe 分析规则，目前已涵盖拆解对比、Host 下发、计算、通信等 20 余种多维度分析能力，便于灵活扩展。 | [点击查看](./docs/zh/advanced_features/README.md) | [点击查看](./msprof_analyze/cluster_analyse/recipes) |
+| 专家建议 | 基于性能数据自动识别计算、调度、通信等潜在问题，并输出优化建议。                                             | [专家建议](./docs/zh/user_guide/advisor_instruct.md) | [advisor](./msprof_analyze/advisor)                    |
+| 性能比对 | 支持 GPU/NPU、NPU/NPU 等多种场景的性能差异分析。                                             | [性能比对](./docs/zh/user_guide/compare_tool_instruct.md) | [compare_tools](./msprof_analyze/compare_tools)        |
+| 集群分析 | 汇总集群通信数据，输出结果支持在 MindStudio Insight 中可视化查看。                                  | [集群分析](./docs/zh/user_guide/cluster_analyse_instruct.md) | [cluster_analyse](./msprof_analyze/cluster_analyse)    |
+| 扩展分析 | 基于 DB 类型性能数据，提供可自定义的 Recipe 分析规则，目前已涵盖拆解对比、Host 下发、计算、通信等 20 余种多维度分析能力，便于灵活扩展。 | [扩展分析](./docs/zh/advanced_features/README.md) | [recipes](./msprof_analyze/cluster_analyse/recipes) |
 
 ## 🛠️ 工具安装
 
@@ -34,7 +34,7 @@ MindStudio Profiler Analyze（`msprof-analyze`）是面向 AI 训练与推理场
 pip install -U msprof-analyze
 ```
 
-如需 whl 包下载、源码编译，请参见 [《安装指南》](./docs/zh/getting_started/install_guide.md)。
+如需 whl 包下载、源码编译，请参见 《[msprof-analyze工具安装指南](./docs/zh/getting_started/install_guide.md)》。
 
 ## 🚀 快速入门
 
@@ -51,11 +51,11 @@ msprof-analyze advisor all -d ./prof_data -o ./advisor_output
 msprof-analyze compare -d ./ascend_pt -bp ./gpu_trace.json -o ./compare_output
 ```
 
-以 ResNet50 模型训练任务为例，[《快速入门》](./docs/zh/getting_started/quick_start.md)贯穿从采集性能数据、执行 Advisor 分析到查看分析结果的完整流程，帮助您快速体验工具的核心功能。
+以 ResNet50 模型训练任务为例，《[快速入门](./docs/zh/getting_started/quick_start.md)》贯穿从采集性能数据、执行 Advisor 分析到查看分析结果的完整流程，帮助您快速体验工具的核心功能。
 
 ## 🔍 目录结构
 
-关键目录如下，详细信息参见 [《目录结构说明》](./docs/zh/dir_structure.md)。
+关键目录如下，详细信息参见 《[目录结构说明](./docs/zh/dir_structure.md)》。
 
 ```text
 msprof-analyze
@@ -75,11 +75,11 @@ msprof-analyze
 
 ## 📝 相关说明
 
-- [《自定义分析规则开发指导》](docs/zh/advanced_features/custom_analysis_guide.md)
-- [《版本说明》](docs/zh/release_notes.md)
-- [《License 声明》](docs/zh/legal/license_notice.md)
-- [《安全声明》](docs/zh/legal/security_statement.md)
-- [《免责声明》](docs/zh/legal/disclaimer.md)
+- 《[自定义分析规则开发指导](docs/zh/advanced_features/custom_analysis_guide.md)》
+- 《[版本说明](docs/zh/release_notes.md)》
+- 《[License 声明](docs/zh/legal/license_notice.md)》
+- 《[安全声明](docs/zh/legal/security_statement.md)》
+- 《[免责声明](docs/zh/legal/disclaimer.md)》
 
 ## 💬 建议与交流
 
