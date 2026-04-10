@@ -680,3 +680,44 @@ prof.add_metadata('pp_info', json.dumps(
 - 数据解析模式为slow_link时生成，保存在cluster_analysis_output/SlowLink目录下。
 
   可使用jupyter notebook工具或MindStudio Insight工具打开，主要展示集群场景异常慢链路数据分析（将集群所有链路进行汇总并以图表展示），集群慢链路汇总耗时分析（展示检测到可能存在慢链路的数据）。
+
+## export_summary
+
+设置-m export_summary时，会在各卡的ASCEND_PROFILER_OUTPUT目录下生成以下文件。
+
+### api_statistic.csv
+
+说明：
+
+基于db格式的集群性能数据，导出各卡的API统计信息。
+
+格式：
+
+| 字段名 | 类型 | 含义 |
+| ------ | ---- | ---- |
+| API Name | TEXT | API名称 |
+| Count | INTEGER | 调用次数 |
+| Total Time(us) | REAL | 总耗时（微秒） |
+| Avg Time(us) | REAL | 平均耗时（微秒） |
+| Min Time(us) | REAL | 最小耗时（微秒） |
+| Max Time(us) | REAL | 最大耗时（微秒） |
+
+### kernel_details.csv
+
+说明：
+
+基于db格式的集群性能数据，导出各卡的Kernel详情信息。
+
+格式：
+
+| 字段名 | 类型 | 含义 |
+| ------ | ---- | ---- |
+| op_name | TEXT | 算子名称 |
+| op_type | TEXT | 算子类型 |
+| task_type | TEXT | 任务类型 |
+| task_duration | REAL | 任务耗时（微秒） |
+| input_shapes | TEXT | 输入形状 |
+| output_shapes | TEXT | 输出形状 |
+| block_dim | TEXT | Block维度 |
+| input_data_types | TEXT | 输入数据类型 |
+| output_data_types | TEXT | 输出数据类型 |
