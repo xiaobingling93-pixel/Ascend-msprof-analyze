@@ -39,7 +39,7 @@ Successfully installed msprof-analyze-{version}
    ```bash
    sha256sum msprof_analyze-1.0-py3-none-any.whl
    xx *msprof_analyze-1.0-py3-none-any.whl
-      ```
+   ```
 
 3. whl包安装。
 
