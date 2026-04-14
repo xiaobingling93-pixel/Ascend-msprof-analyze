@@ -48,6 +48,7 @@ class Constant(object):
     COMM_MATRIX_JSON = "communication_matrix.json"
     STEP_TIME_CSV = "step_trace_time.csv"
     KERNEL_DETAILS_CSV = "kernel_details.csv"
+    API_STATISTIC_CSV = "api_statistic.csv"
 
     # file authority
     FILE_AUTHORITY = 0o640

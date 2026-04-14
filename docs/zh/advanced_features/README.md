@@ -95,6 +95,7 @@ msprof-analyze -m free_analysis -d ./cluster_data -o ./output
 
 | 分析能力   | 类别 | 介绍                                     | 文档链接 |
 |---------|----| ------------------------------------|-----|
+| export_summary | 数据导出类 | 导出集群中各卡的API统计信息和Kernel详情信息，生成api_statistic.csv和kernel_details.csv文件。 | [集群算子信息导出](./export_summary_instruct.md) |
 | mstx2commop | 数据处理类 | 将通过MSTX内置通信打点的通信信息转换成通信算子表格式。 | -  |
 | p2p_pairing | 数据处理类 | P2P算子生成全局关联索引，输出的关联索引会作为一个新的字段`opConnectionId`附在`COMMUNICATION_OP`的表中。 | -  |
 
