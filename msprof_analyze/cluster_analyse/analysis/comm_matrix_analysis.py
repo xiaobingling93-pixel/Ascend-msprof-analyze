@@ -18,7 +18,6 @@ import os
 from collections import defaultdict
 
 from msprof_analyze.cluster_analyse.analysis.base_analysis import BaseAnalysis
-from msprof_analyze.prof_common.db_manager import DBManager
 from msprof_analyze.cluster_analyse.common_func.utils import increase_shared_value
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.logger import get_logger
@@ -30,7 +29,6 @@ logger = get_logger()
 
 class CommMatrixAnalysis(BaseAnalysis):
     SAVED_JSON = "cluster_communication_matrix.json"
-    COMMUNICATION_MATRIX_TABLE = "ClusterCommAnalyzerMatrix"
 
     def __init__(self, param: dict):
         super().__init__(param)
@@ -55,17 +53,7 @@ class CommMatrixAnalysis(BaseAnalysis):
         logger.info("CommMatrixAnalysis completed")
 
     def dump_db(self):
-        res_comm_matrix = self.adapter.transfer_matrix_from_json_to_db(self.comm_ops_struct)
-        output_path = os.path.join(self.cluster_analysis_output_path, Constant.CLUSTER_ANALYSIS_OUTPUT)
-        result_db = os.path.join(output_path, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER)
-        DBManager.create_tables(result_db, self.COMMUNICATION_MATRIX_TABLE)
-        conn, cursor = DBManager.create_connect_db(result_db)
-        if res_comm_matrix:
-            res_matrix_value = [list(data.values()) for data in res_comm_matrix]
-            sql = "insert into {} values ({value})".format(self.COMMUNICATION_MATRIX_TABLE,
-                                                           value="?," * (len(res_matrix_value[0]) - 1) + "?")
-            DBManager.executemany_sql(conn, sql, res_matrix_value)
-        DBManager.destroy_db_connect(conn, cursor)
+        raise RuntimeError("CommMatrixAnalysis only supports text-mode output.")
 
     def compute_total_info(self, step_dict: dict):
         self.merge_same_links(step_dict)

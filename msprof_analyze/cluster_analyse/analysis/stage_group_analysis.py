@@ -34,7 +34,6 @@ class StageInfoAnalysis:
         self.cluster_analysis_output_dir = os.path.join(self.cluster_analysis_output_path,
                                                         Constant.CLUSTER_ANALYSIS_OUTPUT)
         self.data_type = param.get(Constant.DATA_TYPE)
-        self.simplified_mode = param.get(Constant.DATA_SIMPLIFICATION)
         self.communication_data_dict = param.get(Constant.COMM_DATA_DICT, {})
         self.collective_group_dict = {}
         self.p2p_link = []
@@ -91,10 +90,7 @@ class StageInfoAnalysis:
         cluster_analysis_db = os.path.join(self.cluster_analysis_output_dir,
                                            Constant.DB_CLUSTER_COMMUNICATION_ANALYZER)
         data_service = DatabaseService(cluster_analysis_db, {})
-        if self.simplified_mode:
-            table_communication_group = Constant.TABLE_COMMUNICATION_GROUP_MAPPING
-        else:
-            table_communication_group = Constant.TABLE_COMMUNICATION_GROUP
+        table_communication_group = Constant.TABLE_COMMUNICATION_GROUP_MAPPING
         data_service.add_table_for_query(table_communication_group)
         data_dict = data_service.query_data()
         comm_group_df = data_dict.get(table_communication_group, None)

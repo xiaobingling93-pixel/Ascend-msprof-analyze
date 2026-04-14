@@ -18,7 +18,7 @@ from unittest import TestCase
 
 import pandas as pd
 
-from test.st.utils import execute_cmd, select_count, select_by_query
+from test.st.utils import execute_cmd, read_sql, select_count, select_by_query
 from msprof_analyze.prof_common.file_manager import FileManager
 from msprof_analyze.prof_common.path_manager import PathManager
 from test.st.cluster_analyse.cluster_communication_analyzer_bandwidth_db \
@@ -95,6 +95,41 @@ class TestClusterAnalysePytorchDb(TestCase):
                          round(db_cluster_step_trace_time.communication_not_overlapped_and_exclude_receive),
                          "Cluster step trace time db vs text 'communication_not_overlapped_and_exclude_receive' "
                          "property wrong.")
+
+    def test_host_info_data(self):
+        query = "select hostName from HostInfo"
+        data = read_sql(self.db_path, query)
+        self.assertEqual(data["hostName"].tolist(), ["n122-120-121"])
+
+    def test_rank_device_map_data(self):
+        query = "select * from RankDeviceMap"
+        data = read_sql(self.db_path, query)
+        self.assertEqual(len(data), 16)
+
+    def test_step_trace_time_data_count(self):
+        query = "select * from ClusterStepTraceTime"
+        data = read_sql(self.db_path, query)
+        self.assertEqual(len(data), 16)
+        self.assertIn(14945901.524, data["computing"].tolist())
+
+    def test_comm_group_map_data(self):
+        query = "select * from CommunicationGroupMapping"
+        data = read_sql(self.db_path, query)
+        self.assertEqual(len(data), 33)
+        data = data[data["group_name"] == '7519234732706649132']
+        self.assertEqual(data["rank_set"].tolist(), ["(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15)"])
+
+    def test_comm_matrix_total_count(self):
+        query = "SELECT * FROM ClusterCommunicationMatrix WHERE hccl_op_name = 'Total Op Info'"
+        data = read_sql(self.db_path, query)
+        self.assertEqual(len(data), 312)
+
+    def test_comm_bandwidth_total_data(self):
+        query = "select * from ClusterCommunicationBandwidth where hccl_op_name = 'Total Op Info' and " \
+                "group_name='12703750860003234865' order by count"
+        data = read_sql(self.db_path, query)
+        self.assertEqual(len(data), 2)
+        self.assertEqual(data["count"].tolist(), [2, 36])
 
     def test_msprof_analyze_text_db_communication_analyzer_matrix_compare(self):
         """

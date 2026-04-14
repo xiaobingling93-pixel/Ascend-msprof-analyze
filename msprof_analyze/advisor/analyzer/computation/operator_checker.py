@@ -154,8 +154,7 @@ class OperatorChecker(VersionControl):
             else:
                 logger.warning(
                     "Skip dynamic shape check because of not containing ge_info.db file in host filefloder.\n"
-                    "To enable dynamic shape check, "
-                    "please try to set data_simplification=False in experimental_config.\n"
+                    "To enable dynamic shape check, please provide complete profiling data.\n"
                     "More details please refer to link : %s", Config().ascend_profiler_url)
         else:
             # CANN 8.0.RC1 之后 op_state 属性从 op_summary 文件中获取

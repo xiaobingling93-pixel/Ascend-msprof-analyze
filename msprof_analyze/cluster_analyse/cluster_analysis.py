@@ -21,7 +21,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 from msprof_analyze.cluster_analyse.analysis.analysis_facade import AnalysisFacade
 from msprof_analyze.cluster_analyse.cluster_data_preprocess.prof_data_allocate import ProfDataAllocate
-from msprof_analyze.cluster_analyse.communication_group.communication_group_generator import CommunicationGroupGenerator
+from msprof_analyze.cluster_analyse.communication_group.communication_json_group import CommunicationJsonGroup
 from msprof_analyze.prof_common.additional_args_manager import AdditionalArgsManager
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.file_manager import FileManager
@@ -101,15 +101,14 @@ class Interface:
             Constant.PROFILING_TYPE: data_dict.get(Constant.PROFILING_TYPE),
             Constant.IS_MSPROF: prof_type == Constant.MSPROF,
             Constant.IS_MINDSPORE: prof_type == Constant.MINDSPORE,
-            Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: self.cluster_analysis_output_path,
-            Constant.DATA_SIMPLIFICATION: True
+            Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: self.cluster_analysis_output_path
         })
         if self.analysis_mode in COMM_FEATURE_LIST:
             FileManager.create_output_dir(self.cluster_analysis_output_path)
             PathManager.check_output_directory_path(self.cluster_analysis_output_path)
             logger.info("Begin generate communication data.")
-            if data_type == Constant.TEXT or not params.get(Constant.DATA_SIMPLIFICATION):
-                comm_data_dict = CommunicationGroupGenerator(params).generate()
+            if data_type == Constant.TEXT:
+                comm_data_dict = CommunicationJsonGroup(params).generate()
                 logger.info("Communication data read completed.")
                 params[Constant.COMM_DATA_DICT] = comm_data_dict
             AnalysisFacade(params).cluster_analyze()

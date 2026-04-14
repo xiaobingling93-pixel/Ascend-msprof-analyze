@@ -17,6 +17,7 @@ import os
 import re
 import logging
 import sqlite3
+import pandas as pd
 
 COMMAND_SUCCESS = 0
 ST_DATA_PATH = os.getenv("MSTT_PROFILER_ST_DATA_PATH",
@@ -75,6 +76,17 @@ def select_by_query(db_path: str, query: str, db_class):
     dbs = [db_class(*row) for row in rows]
     destroy_db_connect(conn, cursor)
     return dbs[0]
+
+
+def read_sql(db_path: str, query: str):
+    """
+    Execute a SQL query and return the result as a pandas DataFrame.
+    """
+    conn, cursor = create_connect_db(db_path)
+    try:
+        return pd.read_sql(query, conn)
+    finally:
+        destroy_db_connect(conn, cursor)
 
 
 def create_connect_db(db_file: str) -> tuple:

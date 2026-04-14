@@ -52,7 +52,6 @@ class TestBaseAnalysis(unittest.TestCase):
                     "3985311255877281649": {0, 1}
                 }
             },
-            Constant.DATA_SIMPLIFICATION: False
         }
         self.analysis = ConcreteBaseAnalysis(self.param)
 
@@ -135,13 +134,3 @@ class TestBaseAnalysis(unittest.TestCase):
         with patch.object(logger, 'warning') as mock_warning:
             self.analysis.dump_data()
             mock_warning.assert_called_once_with("There is no final comm ops data generated.")
-
-    def test_dump_data_when_too_many_ranks_but_with_simplification(self):
-        self.analysis.data_type = "db"
-        self.analysis.data_map = {i: f"rank_{i}" for i in range(self.analysis.MAX_RANKS + 1)}
-        self.analysis.data_simplification = True
-        self.analysis.comm_ops_struct = {"p2p": {"step4": {"hcom": "communication"}}}
-        
-        with patch.object(self.analysis, 'dump_db') as mock_dump_db:
-            self.analysis.dump_data()
-            mock_dump_db.assert_called_once()

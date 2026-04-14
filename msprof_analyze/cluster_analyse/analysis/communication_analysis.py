@@ -14,15 +14,10 @@
 # limitations under the License.
 
 import copy
-import os
 from collections import defaultdict
 
 from msprof_analyze.cluster_analyse.analysis.base_analysis import BaseAnalysis
-from msprof_analyze.cluster_analyse.common_func.table_constant import TableConstant
-from msprof_analyze.prof_common.db_manager import DBManager
 from msprof_analyze.cluster_analyse.common_func.utils import increase_shared_value
-from msprof_analyze.cluster_analyse.prof_bean.communication_bandwidth_bean import CommunicationBandwidthBean
-from msprof_analyze.cluster_analyse.prof_bean.communication_time_bean import CommunicationTimeBean
 from msprof_analyze.prof_common.constant import Constant
 from msprof_analyze.prof_common.logger import get_logger
 
@@ -31,8 +26,6 @@ logger = get_logger()
 
 class CommunicationAnalysis(BaseAnalysis):
     SAVED_JSON = "cluster_communication.json"
-    COMMUNICATION_BANDWIDTH_TABLE = "ClusterCommAnalyzerBandwidth"
-    COMMUNICATION_TIME_TABLE = "ClusterCommAnalyzerTime"
 
     def __init__(self, param: dict):
         super().__init__(param)
@@ -43,13 +36,6 @@ class CommunicationAnalysis(BaseAnalysis):
         for size, size_info in op_dict.items():
             total_dict[size][0] += size_info[0]
             total_dict[size][1] += size_info[1]
-
-    @staticmethod
-    def execute(conn, res_data, table_name):
-        if res_data:
-            res_value = [list(data.values()) for data in res_data]
-            sql = "insert into {} values ({value})".format(table_name, value="?," * (len(res_value[0]) - 1) + "?")
-            DBManager.executemany_sql(conn, sql, res_value)
 
     def run(self, completed_processes, lock):
         if not self.communication_ops:
@@ -63,16 +49,7 @@ class CommunicationAnalysis(BaseAnalysis):
         logger.info("CommunicationAnalysis completed")
 
     def dump_db(self):
-        res_comm_time, res_comm_bandwidth = self.adapter.transfer_comm_from_json_to_db(self.comm_ops_struct)
-        output_path = os.path.join(self.cluster_analysis_output_path, Constant.CLUSTER_ANALYSIS_OUTPUT)
-        result_db = os.path.join(output_path, Constant.DB_CLUSTER_COMMUNICATION_ANALYZER)
-        DBManager.create_tables(result_db, self.COMMUNICATION_TIME_TABLE, self.COMMUNICATION_BANDWIDTH_TABLE)
-        conn, cursor = DBManager.create_connect_db(result_db)
-        try:
-            self.execute(conn, res_comm_time, self.COMMUNICATION_TIME_TABLE)
-            self.execute(conn, res_comm_bandwidth, self.COMMUNICATION_BANDWIDTH_TABLE)
-        finally:
-            DBManager.destroy_db_connect(conn, cursor)
+        raise RuntimeError("CommunicationAnalysis only supports text-mode output.")
 
     def compute_total_info(self, comm_ops: dict):
         if not comm_ops:
@@ -134,11 +111,3 @@ class CommunicationAnalysis(BaseAnalysis):
             bandwidth_dict[Constant.BANDWIDTH_GB_S] = \
                 self.compute_ratio(bandwidth_dict.get(Constant.TRANSIT_SIZE_MB, 0),
                                    bandwidth_dict.get(Constant.TRANSIT_TIME_MS, 0))
-
-
-class CommunicationBandwidthParams:
-    def __init__(self, rank_id, step_id, transport_type, package_size):
-        self.rank_id = rank_id
-        self.step_id = step_id
-        self.transport_type = transport_type
-        self.package_size = package_size

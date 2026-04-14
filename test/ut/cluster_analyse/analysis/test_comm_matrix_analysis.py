@@ -178,22 +178,6 @@ class TestCommMatrixAnalysis(unittest.TestCase):
         result = self.analysis.compute_ratio(100, 0)
         self.assertEqual(result, 0)
     
-    @patch('msprof_analyze.cluster_analyse.analysis.comm_matrix_analysis.DBManager')
-    @patch('msprof_analyze.cluster_analyse.analysis.comm_matrix_analysis.os.path.join')
-    @patch('msprof_analyze.cluster_analyse.analysis.comm_matrix_analysis.os.path.exists')
-    def test_dump_db_when_db_exists_and_matrix_converts_successfully(self, mock_exists, mock_join, mock_db_manager):
-        mock_exists.return_value = True
-        mock_join.return_value = "/mock/fixed/path"
-        mock_adapter = MagicMock()
-        mock_adapter.transfer_matrix_from_json_to_db.return_value = [
-            {'field1': 'value1', 'field2': 'value2'}
-        ]
-        self.analysis.adapter = mock_adapter
-        mock_conn = MagicMock()
-        mock_cursor = MagicMock()
-        mock_db_manager.create_connect_db.return_value = (mock_conn, mock_cursor)
-        self.analysis.cluster_analysis_output_path = "/mock/path"
-        self.analysis.dump_db()
-        mock_db_manager.create_tables.assert_called_once()
-        mock_db_manager.executemany_sql.assert_called_once()
-        mock_db_manager.destroy_db_connect.assert_called_once_with(mock_conn, mock_cursor)
+    def test_dump_db_when_called_then_raise_runtime_error(self):
+        with self.assertRaises(RuntimeError):
+            self.analysis.dump_db()
