@@ -8,7 +8,7 @@
 pip install -U msprof-analyze
 ```
 
-更多安装方式请参见 [《安装指南》](./install_guide.md)。
+更多安装方式请参见 《[安装指南](./install_guide.md)》。
 
 ## 第二步：生成样例 profiling 数据
 
@@ -77,10 +77,10 @@ msprof-analyze advisor all \
 
 ## 下一步阅读
 
-- [《专家建议》](../user_guide/advisor_instruct.md)
-- [《性能比对》](../user_guide/compare_tool_instruct.md)
-- [《集群分析》](../user_guide/cluster_analyse_instruct.md)
-- [《高级特性导航》](../advanced_features/README.md)
+- 《[专家建议](../user_guide/advisor_instruct.md)》
+- 《[性能比对](../user_guide/compare_tool_instruct.md)》
+- 《[集群分析](../user_guide/cluster_analyse_instruct.md)》
+- 《[高级特性导航](../advanced_features/README.md)》
 
 ## 附录
 
