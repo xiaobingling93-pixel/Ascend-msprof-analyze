@@ -33,7 +33,7 @@ logger = get_logger()
 
 
 class ComparisonGenerator:
-    DB_PATTERN = "*_ascend_pt/ASCEND_PROFILER_OUTPUT/ascend_pytorch_profiler.db"
+    DB_PATTERN = "PROF_*/msprof_*.db"
     COL_MESSAGE = "message"
     COL_NAME = "Name"
     COL_DURATION = "Duration(us)"
@@ -75,7 +75,7 @@ class ComparisonGenerator:
         res_autofuse_enabled = glob.glob(os.path.join(self.autofuse_enabled_path, self.DB_PATTERN))
         if not res_autofuse_disabled or not res_autofuse_enabled:
             logger.error(f"Invalid profiling data: {self.output_path}, "
-                         f"please check if the ascend_pytorch_profiler.db file exists.")
+                         f"please check if the msprof_*.db file exists.")
             return
         db_autofuse_disabled = res_autofuse_disabled[0]
         db_autofuse_enabled = res_autofuse_enabled[0]
@@ -188,16 +188,24 @@ class ComparisonGenerator:
             return
         # Execute msprof to collect performance data when disabling autofuse and enabling autofuse
         os.environ["AUTOFUSE_FLAGS"] = "--enable_autofuse=false"
-        cmd = ["python3", py_path, "-f", self.whole_graph, "-d", self.subgraph_dir, "-p", self.dump_path,
-               "-o", self.autofuse_disabled_path]
+        cmd = [
+            msprof_bin,
+            f"--application=python3 {py_path} -f {self.whole_graph} -d {self.subgraph_dir} -p {self.dump_path}",
+            "--msproftx=on",
+            f"--output={self.autofuse_disabled_path}"
+        ]
         if subprocess_cmd(cmd):
             logger.info("Collected profiling data with autofuse disabled.")
         else:
             logger.error("Failed to collect profiling data with autofuse disabled.")
             return
         os.environ["AUTOFUSE_FLAGS"] = "--enable_autofuse=true"
-        cmd = ["python3", py_path, "-f", self.whole_graph, "-d", self.subgraph_dir, "-p", self.dump_path,
-               "-o", self.autofuse_enabled_path]
+        cmd = [
+            msprof_bin,
+            f"--application=python3 {py_path} -f {self.whole_graph} -d {self.subgraph_dir} -p {self.dump_path}",
+            "--msproftx=on",
+            f"--output={self.autofuse_enabled_path}"
+        ]
         if subprocess_cmd(cmd):
             logger.info("Collected profiling data with autofuse enabled.")
         else:

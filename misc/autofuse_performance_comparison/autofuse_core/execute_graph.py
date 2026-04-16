@@ -16,8 +16,9 @@ import importlib
 import numpy as np
 import os
 import sys
-import torch
-import torch_npu
+import acl
+import mstx
+from ge.ge_global import GeApi
 
 so_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "lib64")
 sys.path.append(os.path.realpath(so_path))
@@ -31,8 +32,50 @@ from msprof_analyze.prof_common.logger import get_logger
 logger = get_logger()
 
 
+def acl_check(ret: int, msg: str) -> bool:
+    if ret != 0:
+        logger.error(f"{msg}, ret = {ret}")
+        return False
+    return True
+
+
+class ACLContextManager:
+    def __init__(self, device_id=0):
+        self.device_id = device_id
+        self.context = None
+        self.stream = None
+
+    def __enter__(self):
+        _ = acl_check(acl.init(), "acl init failed")
+        _ = acl_check(acl.rt.set_device(self.device_id), "set device failed")
+        self.context, ret = acl.rt.create_context(self.device_id)
+        _ = acl_check(ret, "create context failed")
+        self.stream, ret = acl.rt.ctx_get_current_default_stream()
+        _ = acl_check(ret, "get default stream failed")
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.context:
+            _ = acl_check(acl.rt.destroy_context(self.context), "destroy context failed")
+        _ = acl_check(acl.rt.reset_device(self.device_id), "reset device failed")
+        _ = acl_check(acl.finalize(), "finalize acl failed")
+
+
+class GEContextManager:
+    def __init__(self, config: dict):
+        self.config = config
+
+    def __enter__(self):
+        _ = acl_check(GeApi.ge_initialize(self.config), "GE initialize failed")
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        _ = acl_check(GeApi.ge_finalize(), "GE finalize failed")
+
+
 class Autofuse:
-    DOMAIN = "autofuse"
+    MSTX_MESSAGE = "autofuse"
+
     def __init__(self, params):
         self.module = importlib.import_module("ExecuteGraph_C")
         self.whole_graph = params.whole_graph
@@ -44,18 +87,15 @@ class Autofuse:
     @staticmethod
     def get_ops(json_path):
         data = FileManager.read_json_file(json_path)
-        graphs = data["graph"]
-        len_ops_list = []
-        max_ops_graph_index = 0
+        graphs = data.get("graph", [])
         max_ops_num = 0
-        for i in range(len(graphs)):
-            graph = graphs[i]
-            len_ops = len(graph["op"])
-            len_ops_list.append(len_ops)
-            if len_ops > max_ops_num:
-                max_ops_num = len_ops
-                max_ops_graph_index = i
-        return graphs[max_ops_graph_index]["op"] if graphs else []
+        max_idx = 0
+        for i, g in enumerate(graphs):
+            cnt = len(g.get("op", []))
+            if cnt > max_ops_num:
+                max_ops_num = cnt
+                max_idx = i
+        return graphs[max_idx].get("op", []) if graphs else []
 
     def extract_value(self, op):
         op_name = op.get("name")
@@ -65,88 +105,70 @@ class Autofuse:
             "inputs_data_path": [],
             "outputs_data_path": [],
         }
-        for input_data in op.get("input_desc", []):
-            input_shape = input_data.get("shape", {}).get("dim", [])
-            input_dtype = input_data.get("dtype")
-            if not input_shape and input_dtype is None:
-                continue
-            self.fused_ops[op_name]["inputs_shape"].append(input_shape)
-            self.fused_ops[op_name]["inputs_dtype"].append(STRING_TO_DTYPE[input_dtype])
+        for desc in op.get("input_desc", []):
+            shape = desc.get("shape", {}).get("dim", [])
+            dtype = desc.get("dtype")
+            if shape or dtype is not None:
+                self.fused_ops[op_name]["inputs_shape"].append(shape)
+                self.fused_ops[op_name]["inputs_dtype"].append(STRING_TO_DTYPE[dtype])
 
     def get_dump_data(self):
         for file in os.listdir(self.dump_path):
             if not file.endswith(".npy"):
                 continue
             parts = file.split(".")
-            if len (parts) < 5:
+            if len(parts) < 5:
                 continue
-            op_name = parts[1]
-            arg_type = parts[-3]
+            op_name, arg_type = parts[1], parts[-3]
             if op_name not in self.fused_ops:
                 continue
-            file_path = os.path.join(self.dump_path, file)
+            path = os.path.join(self.dump_path, file)
             if arg_type == "input":
-                self.fused_ops[op_name]["inputs_data_path"].append(file_path)
+                self.fused_ops[op_name]["inputs_data_path"].append(path)
             elif arg_type == "output":
-                self.fused_ops[op_name]["outputs_data_path"].append(file_path)
-            else:
-                logger.warning(f"Unknown arg_type '{arg_type}'")
-                continue
-
-    def get_prof_config(self):
-        experimental_config = torch_npu.profiler._ExperimentalConfig(
-            export_type=[
-                torch_npu.profiler.ExportType.Db
-            ],
-            profiler_level=torch_npu.profiler.ProfilerLevel.Level1,
-            aic_metrics=torch_npu.profiler.AiCMetrics.PipeUtilization,
-            mstx_domain_include=[self.DOMAIN],
-            mstx=True,
-        )
-        prof = torch_npu.profiler.profile(
-            activities=[
-                torch_npu.profiler.ProfilerActivity.NPU
-            ],
-            on_trace_ready=torch_npu.profiler.tensorboard_trace_handler(self.output_path),
-            experimental_config=experimental_config)
-        return prof
+                self.fused_ops[op_name]["outputs_data_path"].append(path)
 
     def execute_graph(self, graph_path, inputs_data, inputs_shape, inputs_dtype, outputs_data):
         self.module.execute_graph(graph_path, inputs_data, inputs_shape, inputs_dtype, outputs_data)
 
+    def run_single_op(self, op_name, op_data, acl_mgr):
+        subgraph = os.path.join(self.subgraph_dir, f"{op_name}_origin_subgraph.air")
+        if not os.path.exists(subgraph):
+            logger.warning(f"subgraph not exists: {op_name}")
+            return
+        # load data
+        inputs = [np.load(p) for p in op_data["inputs_data_path"]]
+        outputs = [np.load(p) for p in op_data["outputs_data_path"]]
+        if not inputs or not outputs:
+            logger.error(f"input/output missing for {op_name}")
+            return
+        if len(inputs) != len(op_data["inputs_shape"]):
+            logger.error(f"shape mismatch for {op_name}")
+            return
+        # mstx
+        range_id = mstx.range_start(f"autofuse_{op_name}", acl_mgr.stream)
+        try:
+            self.execute_graph(
+                subgraph, inputs,
+                op_data["inputs_shape"],
+                op_data["inputs_dtype"],
+                outputs
+            )
+        except Exception as e:
+            logger.error(f"execute {op_name} failed: {e}")
+        finally:
+            acl.rt.set_context(acl_mgr.context)
+            mstx.range_end(range_id)
+
     def run(self):
-        ops = self.get_ops(self.whole_graph)
-        for op in ops:
+        for op in self.get_ops(self.whole_graph):
             self.extract_value(op)
         self.get_dump_data()
-        prof = self.get_prof_config()
-        stream = torch_npu.npu.current_stream()
-        prof.start()
-        for op_name, op_data in self.fused_ops.items():
-            subgraph = os.path.join( self.subgraph_dir, f"{op_name}.txt")
-            if not os.path.exists(subgraph):
-                logger.warning(f"The subgraph file for fused op '{op_name}' not exists")
-                continue
-            inputs_data = [np.load(file) for file in op_data["inputs_data_path"]]
-            outputs_data = [np.load(file) for file in op_data["outputs_data_path"]]
-            if not inputs_data:
-                logger.error(f"No input .npy files found for fused op '{op_name}' in '{self.dump_path}'")
-                continue
-            if not outputs_data:
-                logger.error(f"No output .npy files found for fused op '{op_name}' in '{self.dump_path}'")
-                continue
-            if len(inputs_data) != len(op_data["inputs_shape"]):
-                logger.error(f"The number of input data does not match the number of "
-                             f"input shapes for fused op '{op_name}'")
-                continue
-            range_id = torch_npu.npu.mstx.range_start(op_name, stream, domain=self.DOMAIN)
-            try:
-                self.execute_graph(subgraph, inputs_data, op_data["inputs_shape"],
-                                   op_data["inputs_dtype"], outputs_data)
-            except Exception as e:
-                logger.error(f"Execute graph failed for fused op '{op_name}': {e}")
-            torch_npu.npu.mstx.range_end(range_id, domain=self.DOMAIN)
-        prof.stop()
+        device_id = 0
+        ge_config = {"ge.execDeviceId": str(device_id), "ge.graphRunMode": "0"}
+        with GEContextManager(ge_config), ACLContextManager(device_id) as acl_mgr:
+            for op_name, op_data in self.fused_ops.items():
+                self.run_single_op(op_name, op_data, acl_mgr)
 
 
 if __name__ == "__main__":

@@ -31,11 +31,6 @@ void ExecuteGraph(const std::string &graphPath, const std::vector<uint8_t *> &in
 {
     Graph graph("graph");
     graph.LoadFromFile(graphPath.c_str());
-    std::map<AscendString, AscendString> options_initializer;
-    auto ret = GEInitialize(options_initializer);
-    if (ret != SUCCESS) {
-        ERROR("GEInitialize failed, the error code is %d, the graphPath is %s", ret, graphPath.c_str());
-    }
     std::map<AscendString, AscendString> options;
     Session session(options);
     session.AddGraph(1, graph, options);
@@ -53,13 +48,9 @@ void ExecuteGraph(const std::string &graphPath, const std::vector<uint8_t *> &in
     }
     // execute graph
     std::vector<Tensor> outputs;
-    ret = session.RunGraph(1, inputs, outputs);
+    auto ret = session.RunGraph(1, inputs, outputs);
     if (ret != SUCCESS) {
         ERROR("RunGraph failed, the error code is %d, the graphPath is %s", ret, graphPath.c_str());
-    }
-    ret = GEFinalize();
-    if (ret != SUCCESS) {
-        ERROR("GEFinalize failed, the error code is %d, the graphPath is %s", ret, graphPath.c_str());
     }
 }
 

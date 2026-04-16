@@ -17,10 +17,13 @@ import unittest
 import sys
 from unittest.mock import patch, MagicMock
 
-mock_torch = mock.Mock()
-mock_torch_npu = mock.Mock()
-sys.modules["torch"] = mock_torch
-sys.modules["torch_npu"] = mock_torch_npu
+
+mock_acl = mock.Mock()
+mock_mstx = mock.Mock()
+mock_ge_global = mock.Mock()
+sys.modules["acl"] = mock_acl
+sys.modules["mstx"] = mock_mstx
+sys.modules["ge.ge_global"] = mock_ge_global
 from misc.autofuse_performance_comparison.autofuse_core.execute_graph import Autofuse
 
 
@@ -64,7 +67,7 @@ class TestExecuteGraph(unittest.TestCase):
         mock_read_json.assert_called_once_with("test.json")
 
     @patch('misc.autofuse_performance_comparison.autofuse_core.execute_graph.FileManager.read_json_file')
-    def test_get_ops_should_return_raise_error_when_key_not_exists(self, mock_read_json):
+    def test_get_ops_should_return_empty_list_when_key_not_exists(self, mock_read_json):
         mock_data = {
             "model": [
                 {
@@ -83,8 +86,7 @@ class TestExecuteGraph(unittest.TestCase):
             ]
         }
         mock_read_json.return_value = mock_data
-        with self.assertRaises(KeyError):
-            result = Autofuse.get_ops("test.json")
+        self.assertFalse(Autofuse.get_ops("test.json"))
 
     @patch('misc.autofuse_performance_comparison.autofuse_core.execute_graph.importlib')
     def test_extract_value_should_record_input_shape_and_dtype(self, mock_importlib):
