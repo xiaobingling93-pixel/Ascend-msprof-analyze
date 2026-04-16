@@ -40,11 +40,9 @@ LEFT JOIN STRING_IDS AS PMU_IDS
     ON TASK_PMU_INFO.name = PMU_IDS.id
 LEFT JOIN STRING_IDS AS MESSAGE_IDS
     ON MSTX_EVENTS.message = MESSAGE_IDS.id
-LEFT JOIN STRING_IDS AS DOMAIN_IDS
-    ON MSTX_EVENTS.domainId = DOMAIN_IDS.id
 WHERE
     PMU_IDS.value IN ('aic_scalar_time', 'aic_mte2_time', 'aiv_scalar_time', 'aiv_vec_time', 'aiv_mte2_time', 'aiv_mte3_time')
-    AND DOMAIN_IDS.value = 'autofuse'
+    AND MESSAGE_IDS.value LIKE 'autofuse%'
 GROUP BY
     COMPUTE_TASK_INFO.globalTaskId
 ORDER BY
