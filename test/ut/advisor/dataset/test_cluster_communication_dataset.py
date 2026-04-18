@@ -295,7 +295,7 @@ class TestClusterCommunicationDataset(unittest.TestCase):
         mock_read_export_db.return_value = self.test_bandwidth_df
 
         # Call the method under test
-        self.dataset.process_bandwidth_db(None, False)
+        self.dataset.process_bandwidth_db(None)
 
         # Verify the bandwidth calculations
         self.assertIn("-1_12", self.dataset.rank_bw_dict)
@@ -316,7 +316,7 @@ class TestClusterCommunicationDataset(unittest.TestCase):
         mock_read_export_db.return_value = self.test_hccl_df
 
         # Call the method under test
-        self.dataset.process_hccl_info_db(None, False)
+        self.dataset.process_hccl_info_db(None)
 
         # Verify the HCCL info is properly stored
         self.assertIn('(0, 4, 8, 12)', self.dataset.hccl_dict)

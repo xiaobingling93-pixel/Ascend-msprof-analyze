@@ -16,6 +16,7 @@
 import unittest
 from unittest.mock import patch
 import os
+import shutil
 import pandas as pd
 
 from msprof_analyze.cluster_analyse.recipes.export_summary.export_summary import ExportSummary

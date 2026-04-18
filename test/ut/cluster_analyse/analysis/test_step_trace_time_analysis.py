@@ -31,7 +31,6 @@ def _build_analysis(**kwargs):
         Constant.DATA_MAP: kwargs.get("data_map", {}),
         Constant.COMM_DATA_DICT: kwargs.get("comm_data_dict", {}),
         Constant.DATA_TYPE: kwargs.get("data_type", Constant.TEXT),
-        Constant.DATA_SIMPLIFICATION: kwargs.get("data_simplification", False),
         Constant.IS_MSPROF: kwargs.get("is_msprof", False),
         Constant.IS_MINDSPORE: kwargs.get("is_mindspore", False),
     }

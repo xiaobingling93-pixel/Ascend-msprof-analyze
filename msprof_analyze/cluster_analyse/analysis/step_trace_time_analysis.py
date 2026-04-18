@@ -57,7 +57,6 @@ class StepTraceTimeAnalysis:
         self.step_time_dict = {}
         self.step_data_list = []
         self.data_type = param.get(Constant.DATA_TYPE)
-        self.data_simplification = param.get(Constant.DATA_SIMPLIFICATION)
         self.distributed_args = None
         self.is_msprof = param.get(Constant.IS_MSPROF)
         self.is_mindspore = param.get(Constant.IS_MINDSPORE)
@@ -245,7 +244,6 @@ class StepTraceTimeAnalysis:
         params = {
             Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: self.cluster_analysis_output_path,
             Constant.DATA_TYPE: self.data_type,
-            Constant.DATA_SIMPLIFICATION: self.data_simplification,
             Constant.COMM_DATA_DICT: self.communication_data_dict
         }
         stage_analyzer = StageInfoAnalysis(params)

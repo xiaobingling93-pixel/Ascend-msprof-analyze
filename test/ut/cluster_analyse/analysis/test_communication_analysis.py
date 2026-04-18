@@ -211,20 +211,6 @@ class TestCommunicationAnalysis(unittest.TestCase):
             mock_time_ratio.assert_called_once()
             mock_bandwidth_ratio.assert_called_once()
     
-    @patch('msprof_analyze.cluster_analyse.analysis.communication_analysis.DBManager')
-    @patch('msprof_analyze.cluster_analyse.analysis.communication_analysis.os.path.join')
-    @patch('msprof_analyze.cluster_analyse.analysis.communication_analysis.os.path.exists')
-    def test_dump_db_when_db_exists_and_adapter_converts_successfully(self, mock_exists, mock_join, mock_db_manager):
-        mock_exists.return_value = True
-        mock_join.return_value = "/mock/fixed/path"
-        mock_adapter = MagicMock()
-        mock_adapter.transfer_comm_from_json_to_db.return_value = ([{'time': 'data'}], [{'bandwidth': 'data'}])
-        self.analysis.adapter = mock_adapter
-        mock_conn = MagicMock()
-        mock_cursor = MagicMock()
-        mock_db_manager.create_connect_db.return_value = (mock_conn, mock_cursor)
-        
-        self.analysis.dump_db()
-        mock_db_manager.create_tables.assert_called_once()
-        self.assertEqual(mock_db_manager.executemany_sql.call_count, 2)
-        mock_db_manager.destroy_db_connect.assert_called_once_with(mock_conn, mock_cursor)
+    def test_dump_db_when_called_then_raise_runtime_error(self):
+        with self.assertRaises(RuntimeError):
+            self.analysis.dump_db()

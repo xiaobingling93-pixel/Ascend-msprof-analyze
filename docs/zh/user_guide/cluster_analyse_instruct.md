@@ -68,7 +68,7 @@ Ascend PyTorch Profiler 支持以下两种结果格式，二者满足其一即�
 
    ```bash
    # 命令行运行方式
-   msprof-analyze cluster -d {cluster profiling data path} [-m mode] [-o output_path] [--data_simplification] [--force]
+   msprof-analyze cluster -d {cluster profiling data path} [-m mode] [-o output_path] [--force]
    # 示例
    msprof-analyze cluster -m all -d ./cluster_data -o ./output
    ```
@@ -77,7 +77,7 @@ Ascend PyTorch Profiler 支持以下两种结果格式，二者满足其一即�
    
    ```bash
    # 脚本运行方式
-   python3 cluster_analysis.py -d {cluster profiling data path} [-m mode] [-o output_path] [--data_simplification] [--force]
+   python3 cluster_analysis.py -d {cluster profiling data path} [-m mode] [-o output_path] [--force]
    # 示例
    python3 cluster_analysis.py -d ./cluster_data -o ./output
    ```

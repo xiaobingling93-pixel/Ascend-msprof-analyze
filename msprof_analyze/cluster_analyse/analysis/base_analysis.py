@@ -23,8 +23,6 @@ logger = get_logger()
 
 
 class BaseAnalysis:
-    MAX_RANKS = 1000
-
     def __init__(self, param: dict):
         self.collection_path = param.get(Constant.COLLECTION_PATH)
         self.cluster_analysis_output_path = param.get(Constant.CLUSTER_ANALYSIS_OUTPUT_PATH)
@@ -36,7 +34,6 @@ class BaseAnalysis:
         self.collective_group_dict = param.get(Constant.COMM_DATA_DICT, {}).get(Constant.COLLECTIVE_GROUP)
         self.comm_ops_struct = {}
         self.adapter = DataTransferAdapter()
-        self.data_simplification = param.get(Constant.DATA_SIMPLIFICATION, False)
 
     @staticmethod
     def compute_ratio(dividend: float, divisor: float):
@@ -69,11 +66,7 @@ class BaseAnalysis:
         if self.data_type == Constant.TEXT:
             self.dump_json()
         else:
-            if len(self.data_map) >= self.MAX_RANKS and not self.data_simplification:
-                logger.warning("The number of ranks is too large to dump to db, it will be dumped to json file.")
-                self.dump_json()
-            else:
-                self.dump_db()
+            self.dump_db()
 
     @abstractmethod
     def dump_db(self):

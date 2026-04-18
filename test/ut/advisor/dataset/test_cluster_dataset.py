@@ -53,13 +53,3 @@ class TestClusterDataset(unittest.TestCase):
 
         mock_listdir.return_value = ['other_file']
         self.assertFalse(self.dataset.is_cluster_analysis_output_exist())
-
-    @patch('msprof_analyze.prof_common.db_manager.DBManager.check_tables_in_db')
-    def test_is_db_cluster_analysis_data_simplification(self, mock_check_tables):
-        mock_check_tables.return_value = True
-        self.assertTrue(self.dataset.is_db_cluster_analysis_data_simplification())
-
-        mock_check_tables.return_value = False
-        self.assertFalse(self.dataset.is_db_cluster_analysis_data_simplification())
-
-

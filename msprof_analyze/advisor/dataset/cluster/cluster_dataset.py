@@ -23,8 +23,6 @@ from collections import defaultdict
 import numpy as np
 import pandas as pd
 
-from msprof_analyze.prof_common.db_manager import DBManager
-
 from msprof_analyze.prof_common.database_service import DatabaseService
 
 from msprof_analyze.advisor.dataset.dataset import Dataset
@@ -58,11 +56,6 @@ class ClusterDataset(ABC, Dataset):
                 return True
         return False
 
-    def is_db_cluster_analysis_data_simplification(self):
-        db_path = os.path.join(self.output_path, Constant.CLUSTER_ANALYSIS_OUTPUT,
-                               Constant.DB_CLUSTER_COMMUNICATION_ANALYZER)
-        return DBManager.check_tables_in_db(db_path, "CommunicationGroupMapping")
-
     def cluster_analyze(self):
         if self.is_cluster_analysis_output_exist():
             return
@@ -72,7 +65,6 @@ class ClusterDataset(ABC, Dataset):
             Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: self.output_path
         }
         if self.data_type == Constant.DB:
-            parameter[Constant.DATA_SIMPLIFICATION] = True
             parameter[Constant.PARALLEL_MODE] = Constant.CONCURRENT_MODE
             parameter[Constant.EXPORT_TYPE] = Constant.DB
         logger.info("cluster analysis is in the process, please wait...")
@@ -296,15 +288,14 @@ class ClusterCommunicationDataset(ClusterDataset):
         return True
 
     def parse_from_db(self):
-        data_simplification = self.is_db_cluster_analysis_data_simplification()
         db_path = os.path.join(self.output_path, Constant.CLUSTER_ANALYSIS_OUTPUT,
                                Constant.DB_CLUSTER_COMMUNICATION_ANALYZER)
 
-        self.process_bandwidth_db(db_path, data_simplification)
-        self.process_hccl_info_db(db_path, data_simplification)
+        self.process_bandwidth_db(db_path)
+        self.process_hccl_info_db(db_path)
 
-    def process_hccl_info_db(self, db_path, data_simplification):
-        export = ClusterCommunicationInfoExport(db_path, data_simplification)
+    def process_hccl_info_db(self, db_path):
+        export = ClusterCommunicationInfoExport(db_path)
         df = export.read_export_db()
         df['sdma_dict'] = df['sdma_dict'].apply(lambda x: json.loads(x) if pd.notna(x) else {})
         df['rdma_dict'] = df['rdma_dict'].apply(lambda x: json.loads(x) if pd.notna(x) else {})
@@ -314,8 +305,8 @@ class ClusterCommunicationDataset(ClusterDataset):
                                  row.elapsed_time, row.sdma_dict, row.rdma_dict)
             self.hccl_dict[group][op_name][step].append(hccl_info)
 
-    def process_bandwidth_db(self, db_path, data_simplification):
-        export = ClusterBandwidthInfoExport(db_path, data_simplification)
+    def process_bandwidth_db(self, db_path):
+        export = ClusterBandwidthInfoExport(db_path)
         df = export.read_export_db()
         processed_steps = df['step'].astype(str).str.lower().str.lstrip('step').replace('', str(Constant.DEFAULT_STEP))
         df['step_rank'] = processed_steps + '_' + df['rank_id'].astype(str)
@@ -335,4 +326,3 @@ class ClusterCommunicationDataset(ClusterDataset):
                 self.rank_bw_dict[row.step_rank][self.RDMA_SIZE_MB] = row.transit_size
                 self.rank_bw_dict[row.step_rank][self.RDMA_TIME_MS] = row.transit_time
                 self.rank_bw_dict[row.step_rank][self.RDMA_BANDWIDTH] = row.bandwidth
-

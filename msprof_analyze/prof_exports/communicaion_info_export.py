@@ -152,12 +152,11 @@ class CommunicationInfoExport(BaseStatsExport):
 
 
 class ClusterAnalysisExport(BaseStatsExport):
-    def __init__(self, db_path, data_simplification):
+    def __init__(self, db_path):
         super().__init__(db_path, "None", param_dict=None)
-        self.cluster_time_table = "ClusterCommunicationTime" if data_simplification else "ClusterCommAnalyzerTime"
-        self.cluster_band_table = "ClusterCommunicationBandwidth" if data_simplification \
-                                  else "ClusterCommAnalyzerBandwidth"
-        self.cluster_group_table = "CommunicationGroupMapping" if data_simplification else "CommunicationGroup"
+        self.cluster_time_table = "ClusterCommunicationTime"
+        self.cluster_band_table = "ClusterCommunicationBandwidth"
+        self.cluster_group_table = "CommunicationGroupMapping"
 
     def get_param_order(self):
         return []
@@ -165,19 +164,19 @@ class ClusterAnalysisExport(BaseStatsExport):
 
 class ClusterStepTraceTimeExport(ClusterAnalysisExport):
     def __init__(self, db_path):
-        super().__init__(db_path, False)
+        super().__init__(db_path)
         self._query = QUERY_CLUSTER_STEP_TRACE_TIME
 
 
 class ClusterCommunicationInfoExport(ClusterAnalysisExport):
-    def __init__(self, db_path, data_simplification):
-        super().__init__(db_path, data_simplification)
+    def __init__(self, db_path):
+        super().__init__(db_path)
         self._query = QUERY_CLUSTER_COMMUNICATION.format(time_table=self.cluster_time_table,
                                                          band_table=self.cluster_band_table,
                                                          group_table=self.cluster_group_table)
 
 
 class ClusterBandwidthInfoExport(ClusterAnalysisExport):
-    def __init__(self, db_path, data_simplification):
-        super().__init__(db_path, data_simplification)
+    def __init__(self, db_path):
+        super().__init__(db_path)
         self._query = QUERY_CLUSTER_BANDWIDTH.format(band_table=self.cluster_band_table)

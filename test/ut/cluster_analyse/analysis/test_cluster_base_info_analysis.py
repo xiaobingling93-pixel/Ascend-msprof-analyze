@@ -29,8 +29,7 @@ class TestClusterBaseInfoAnalysis(unittest.TestCase):
             Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: "/fake/output/path",
             Constant.DATA_MAP: {},
             Constant.DATA_TYPE: Constant.DB,
-            Constant.COMM_DATA_DICT: {},
-            Constant.DATA_SIMPLIFICATION: False
+            Constant.COMM_DATA_DICT: {}
         }
         self.analysis = ClusterBaseInfoAnalysis(self.param)
 

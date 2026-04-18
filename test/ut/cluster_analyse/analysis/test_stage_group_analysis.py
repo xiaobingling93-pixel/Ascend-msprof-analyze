@@ -31,7 +31,6 @@ class TestStageInfoAnalysis(unittest.TestCase):
         self.base_param = {
             Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: "/test/path",
             Constant.DATA_TYPE: Constant.TEXT,
-            Constant.DATA_SIMPLIFICATION: False,
             Constant.COMM_DATA_DICT: {}
         }
         
@@ -80,7 +79,6 @@ class TestStageInfoAnalysis(unittest.TestCase):
         stage_analysis = StageInfoAnalysis(param)
         self.assertEqual(stage_analysis.cluster_analysis_output_path, "/test/path")
         self.assertEqual(stage_analysis.data_type, Constant.TEXT)
-        self.assertFalse(stage_analysis.simplified_mode)
         self.assertEqual(stage_analysis.communication_data_dict, {})
         self.assertEqual(stage_analysis.collective_group_dict, {})
         self.assertEqual(stage_analysis.p2p_link, [])
@@ -259,7 +257,7 @@ class TestStageInfoAnalysis(unittest.TestCase):
         comm_group_df = pd.DataFrame(self.sample_comm_group_data)
         comm_group_df["rank_set"] = comm_group_df["rank_set"].apply(lambda x: "(" + ",".join(str(i) for i in x) + ")")
         mock_query.return_value = {
-            Constant.TABLE_COMMUNICATION_GROUP: comm_group_df
+            Constant.TABLE_COMMUNICATION_GROUP_MAPPING: comm_group_df
         }
         param = self.base_param.copy()
         param[Constant.DATA_TYPE] = Constant.DB
@@ -283,7 +281,6 @@ class TestStageInfoAnalysis(unittest.TestCase):
         mock_exists.return_value = True
         mock_query.return_value = {}
         param = self.base_param.copy()
-        param[Constant.DATA_SIMPLIFICATION] = True
         stage_analysis = StageInfoAnalysis(param)
         result = stage_analysis.load_communication_group_df_for_db()
         self.assertIsNone(result)

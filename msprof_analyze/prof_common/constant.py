@@ -130,7 +130,6 @@ class Constant(object):
     DB_MS_COMMUNICATION_ANALYZER = "communication_analyzer.db"
 
     # db tables
-    TABLE_COMMUNICATION_GROUP = "CommunicationGroup"
     TABLE_COMM_ANALYZER_BANDWIDTH = "CommAnalyzerBandwidth"
     TABLE_COMM_ANALYZER_TIME = "CommAnalyzerTime"
     TABLE_COMM_ANALYZER_MATRIX = "CommAnalyzerMatrix"
@@ -140,8 +139,6 @@ class Constant(object):
     TABLE_CLUSTER_BASE_INFO = "ClusterBaseInfo"
     TABLE_META_DATA = "META_DATA"
     TABLE_COMMUNICATION_GROUP_MAPPING = "CommunicationGroupMapping"
-    TABLE_CLUSTER_COMMUNICATION_MATRIX = "ClusterCommAnalyzerMatrix"
-    TABLE_CLUSTER_COMMUNICATION_BANDWIDTH = "ClusterCommAnalyzerBandwidth"
     TABLE_CLUSTER_COMMUNICATION_TIME = "ClusterCommunicationTime"
     TABLE_CLUSTER_TIME_SUMMARY = "ClusterTimeSummary"
 
@@ -162,7 +159,6 @@ class Constant(object):
 
     STEP = "step"
 
-    DATA_SIMPLIFICATION = "data_simplification"
     FORCE = "force"
 
     # compare tools

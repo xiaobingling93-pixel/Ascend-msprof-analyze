@@ -322,13 +322,12 @@ class TestClusterAnalyseClusterAnalysis(unittest.TestCase):
             mock_logger.error.assert_called_with("The current analysis node only supports DB as input data."
                                                  " Please check.")
 
-    def test_run_with_data_simplification(self):
+    def test_run_with_db_comm_mode(self):
         """
-        test Interface.run method with data simplification enabled
+        test Interface.run method with db communication mode
         """
         with patch(NAMESPACE + '.cluster_analysis.PathManager') as mock_path_manager, \
              patch(NAMESPACE + '.cluster_analysis.logger') as mock_logger, \
-             patch(NAMESPACE + '.cluster_analysis.CommunicationGroupGenerator') as mock_comm_generator, \
              patch(NAMESPACE + '.cluster_analysis.AnalysisFacade') as mock_analysis_facade, \
              patch(NAMESPACE + '.cluster_analysis.FileManager') as mock_file_manager, \
              patch(NAMESPACE + '.cluster_analysis.ProfDataAllocate') as mock_allocator:
@@ -356,15 +355,11 @@ class TestClusterAnalyseClusterAnalysis(unittest.TestCase):
             params = {
                 Constant.PROFILING_PATH: self.profiling_path,
                 Constant.MODE: "communication_time",
-                Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: self.output_path,
-                Constant.DATA_SIMPLIFICATION: True
+                Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: self.output_path
             }
 
             interface = Interface(params)
             interface.run()
-
-            # Verify communication group generator is NOT called when data simplification is enabled
-            mock_comm_generator.assert_not_called()
 
             # Verify analysis facade is called
             mock_analysis_facade.assert_called()
@@ -376,7 +371,6 @@ class TestClusterAnalyseClusterAnalysis(unittest.TestCase):
         """
         with patch(NAMESPACE + '.cluster_analysis.PathManager') as mock_path_manager, \
              patch(NAMESPACE + '.cluster_analysis.logger') as mock_logger, \
-             patch(NAMESPACE + '.cluster_analysis.CommunicationGroupGenerator') as mock_comm_generator, \
              patch(NAMESPACE + '.cluster_analysis.AnalysisFacade') as mock_analysis_facade, \
              patch(NAMESPACE + '.cluster_analysis.FileManager') as mock_file_manager, \
              patch(NAMESPACE + '.cluster_analysis.ProfDataAllocate') as mock_allocator:
@@ -397,11 +391,6 @@ class TestClusterAnalyseClusterAnalysis(unittest.TestCase):
             # Mock file manager
             mock_file_manager.create_output_dir.return_value = None
 
-            # Mock communication group generator
-            mock_comm_generator_instance = MagicMock()
-            mock_comm_generator_instance.generate.return_value = {"comm_data": "test"}
-            mock_comm_generator.return_value = mock_comm_generator_instance
-
             # Mock analysis facade
             mock_analysis_facade_instance = MagicMock()
             mock_analysis_facade.return_value = mock_analysis_facade_instance
@@ -415,9 +404,50 @@ class TestClusterAnalyseClusterAnalysis(unittest.TestCase):
             interface = Interface(params)
             interface.run()
             
-            # Verify communication group generation not called for 'all' mode
-            mock_comm_generator.assert_not_called()
-
             # Verify analysis facade
             mock_analysis_facade.assert_called()
             mock_analysis_facade_instance.cluster_analyze.assert_called()
+
+    def test_run_with_text_comm_mode_generates_comm_data(self):
+        """
+        test Interface.run method generates communication data for text input
+        """
+        with patch(NAMESPACE + '.cluster_analysis.PathManager') as mock_path_manager, \
+             patch(NAMESPACE + '.cluster_analysis.CommunicationJsonGroup') as mock_comm_group_cls, \
+             patch(NAMESPACE + '.cluster_analysis.AnalysisFacade') as mock_analysis_facade, \
+             patch(NAMESPACE + '.cluster_analysis.FileManager') as mock_file_manager, \
+             patch(NAMESPACE + '.cluster_analysis.ProfDataAllocate') as mock_allocator:
+
+            mock_path_manager.check_input_directory_path.return_value = None
+            mock_path_manager.check_path_owner_consistent.return_value = None
+            mock_path_manager.check_path_writeable.return_value = None
+
+            mock_allocator_instance = MagicMock()
+            mock_allocator_instance.allocate_prof_data.return_value = True
+            mock_allocator_instance.data_map = {"rank0": "data0"}
+            mock_allocator_instance.data_type = Constant.TEXT
+            mock_allocator_instance.prof_type = Constant.PYTORCH
+            mock_allocator.return_value = mock_allocator_instance
+
+            mock_file_manager.create_output_dir.return_value = None
+
+            mock_comm_group_instance = MagicMock()
+            mock_comm_group_instance.generate.return_value = {"comm_data": "test"}
+            mock_comm_group_cls.return_value = mock_comm_group_instance
+
+            mock_analysis_facade_instance = MagicMock()
+            mock_analysis_facade.return_value = mock_analysis_facade_instance
+
+            params = {
+                Constant.PROFILING_PATH: self.profiling_path,
+                Constant.MODE: "communication_time",
+                Constant.CLUSTER_ANALYSIS_OUTPUT_PATH: self.output_path
+            }
+
+            interface = Interface(params)
+            interface.run()
+
+            mock_comm_group_cls.assert_called_once()
+            mock_comm_group_instance.generate.assert_called_once()
+            mock_analysis_facade.assert_called_once()
+            mock_analysis_facade_instance.cluster_analyze.assert_called_once()

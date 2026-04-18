@@ -33,9 +33,9 @@ logger = get_logger()
 
 
 class AnalysisFacade:
-    default_module = {CommunicationAnalysis, StepTraceTimeAnalysis, CommMatrixAnalysis, HostInfoAnalysis,
-                      ClusterBaseInfoAnalysis}
-    simplified_module = {StepTraceTimeAnalysis, ClusterBaseInfoAnalysis, HostInfoAnalysis}
+    text_module = {CommunicationAnalysis, StepTraceTimeAnalysis, CommMatrixAnalysis, HostInfoAnalysis,
+                   ClusterBaseInfoAnalysis}
+    db_module = {StepTraceTimeAnalysis, ClusterBaseInfoAnalysis, HostInfoAnalysis}
 
     def __init__(self, params: dict):
         self.params = params
@@ -43,11 +43,11 @@ class AnalysisFacade:
     def cluster_analyze(self):
         # 多个profiler用多进程处理
         process_list = []
-        if self.params.get(Constant.DATA_SIMPLIFICATION) and self.params.get(Constant.DATA_TYPE) == Constant.DB:
-            analysis_module = self.simplified_module
+        if self.params.get(Constant.DATA_TYPE) == Constant.DB:
+            analysis_module = self.db_module
             self.cluster_analyze_with_recipe()
         else:
-            analysis_module = self.default_module
+            analysis_module = self.text_module
 
         num_processes = len(analysis_module)
         completed_processes = Value('i', 0)
